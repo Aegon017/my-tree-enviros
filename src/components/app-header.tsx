@@ -1,0 +1,324 @@
+"use client";
+
+import {
+  ChevronDown,
+  Heart,
+  MapPin,
+  Menu,
+  Phone,
+  Search,
+  ShoppingCart,
+  User,
+  X,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+
+const NOTICE_TEXT = "Get Up to 20% OFF On First Time Purchase";
+const PHONE_NUMBER = "+91 89777 30565";
+const LOCATIONS = [
+  "Hyderabad",
+  "Bangalore",
+  "Mumbai",
+  "Delhi",
+  "Chennai",
+  "Kolkata",
+];
+const TOP_BAR_LINKS = [
+  { name: "My Account", href: "/account" },
+  { name: "About Us", href: "/about" },
+  { name: "Blog", href: "/blog" },
+  { name: "Wishlist", href: "/wishlist" },
+  { name: "Cart", href: "/cart" },
+  { name: "Login", href: "/login" },
+];
+const MAIN_NAV_ITEMS = [
+  { href: "/", label: "Home" },
+  { href: "/sponsor", label: "Sponsor A Tree" },
+  { href: "/feed", label: "Feed The Tree" },
+  { href: "/adopt", label: "Adopt A Tree" },
+  { href: "/seedballs", label: "Seed Balls" },
+  { href: "/shop", label: "Shop" },
+];
+const ICON_LINKS = [
+  { href: "/search", icon: Search, label: "Search" },
+  { href: "/account", icon: User, label: "Account" },
+  { href: "/wishlist", icon: Heart, label: "Wishlist" },
+  { href: "/cart", icon: ShoppingCart, label: "Cart" },
+];
+
+export default function Header() {
+  const pathname = usePathname();
+  const isMobile = useIsMobile();
+
+  return (
+    <header className="w-full sticky top-0 z-50 bg-background shadow-sm">
+      <TopNotice />
+      <TopBar />
+      <HeaderMiddle />
+      {!isMobile && <HeaderBottom pathname={pathname} />}
+    </header>
+  );
+}
+
+function TopNotice() {
+  const [show, setShow] = useState(true);
+
+  if (!show) return null;
+
+  return (
+    <div className="bg-primary text-primary-foreground px-2 sm:px-4">
+      <div className="container mx-auto max-w-6xl py-1.5 sm:py-2 flex justify-center items-center gap-2 sm:gap-4">
+        <span className="font-semibold text-xs sm:text-sm text-center">
+          {NOTICE_TEXT}
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShow(false)}
+          className="text-primary-foreground hover:bg-background/80 h-6 w-6 sm:h-8 sm:w-8 p-0"
+          aria-label="Close notice"
+        >
+          <X className="w-3 h-3 sm:w-4 sm:h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function TopBar() {
+  const [selectedLocation, setSelectedLocation] = useState(LOCATIONS[0]);
+  return (
+    <div className="bg-muted text-muted-foreground text-xs">
+      <div className="container mx-auto max-w-6xl py-1.5 sm:py-2 px-2 flex justify-between items-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="p-0 h-auto font-normal text-muted-foreground hover:bg-muted/80 text-xs flex items-center"
+            >
+              <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
+              <span className="truncate max-w-[80px] xs:max-w-[100px] sm:max-w-none">
+                {selectedLocation}
+              </span>
+              <ChevronDown className="w-3 h-3 ml-1 flex-shrink-0" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="w-40 max-h-60 overflow-y-auto"
+          >
+            {LOCATIONS.map((location) => (
+              <DropdownMenuItem
+                key={location}
+                onClick={() => setSelectedLocation(location)}
+                className={cn(
+                  "cursor-pointer text-xs",
+                  selectedLocation === location && "bg-accent",
+                )}
+              >
+                {location}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <div className="hidden md:flex items-center">
+          {TOP_BAR_LINKS.map((item, index) => (
+            <div key={item.name} className="flex items-center">
+              <Link
+                href={item.href}
+                className="hover:text-foreground px-2 transition-colors"
+              >
+                {item.name}
+              </Link>
+              {index < TOP_BAR_LINKS.length - 1 && (
+                <Separator
+                  orientation="vertical"
+                  className="h-3 bg-border mx-1"
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex md:hidden items-center px-2">
+          <Link
+            href="/login"
+            className="hover:text-foreground transition-colors text-xs"
+          >
+            Login
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeaderMiddle() {
+  const isMobile = useIsMobile();
+
+  return (
+    <div className="border-b">
+      <div className="container mx-auto max-w-6xl px-3 sm:px-4 flex items-center justify-between py-2">
+        <div className="flex items-center">
+          {isMobile ? (
+            <MobileNavigation />
+          ) : (
+            <div className="flex items-center gap-3">
+              <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">CALL US NOW</p>
+                <Link
+                  href={`tel:${PHONE_NUMBER}`}
+                  className="font-semibold text-sm hover:text-primary transition-colors"
+                >
+                  {PHONE_NUMBER}
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Link href="/" className="flex-shrink-0 mx-2 sm:mx-4">
+          <Image
+            src="/logo.png"
+            width={isMobile ? 90 : 120}
+            height={isMobile ? 90 : 120}
+            alt="My Tree Enviros Logo"
+            className="object-contain"
+          />
+        </Link>
+
+        <div className="flex items-center space-x-1 sm:space-x-2">
+          {ICON_LINKS.map(({ href, icon: Icon, label }) => (
+            <Button
+              key={label}
+              variant="ghost"
+              size="icon"
+              asChild
+              className="text-muted-foreground hover:text-primary h-8 w-8 sm:h-9 sm:w-9"
+              aria-label={label}
+            >
+              <Link href={href}>
+                <Icon className="w-4 h-4" />
+              </Link>
+            </Button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeaderBottom({ pathname }: { pathname: string }) {
+  return (
+    <nav className="border-t">
+      <div className="container mx-auto max-w-6xl overflow-x-auto">
+        <div className="flex justify-center min-w-max">
+          {MAIN_NAV_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "relative px-3 py-2.5 sm:px-4 sm:py-3 text-sm font-medium transition-all hover:text-primary whitespace-nowrap",
+                pathname === item.href
+                  ? "text-primary"
+                  : "text-muted-foreground",
+              )}
+            >
+              {item.label}
+              {pathname === item.href && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function MobileNavigation() {
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
+          <Menu className="w-5 h-5" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-[280px] sm:w-[340px] p-0">
+        <SheetHeader className="text-left p-4 border-b">
+          <SheetTitle className="text-lg">Navigation Menu</SheetTitle>
+        </SheetHeader>
+
+        <nav className="mt-2 flex flex-col">
+          {MAIN_NAV_ITEMS.map((item) => (
+            <SheetClose asChild key={item.href}>
+              <Link
+                href={item.href}
+                className={cn(
+                  "px-4 py-3 text-base font-medium border-b transition-colors",
+                  pathname === item.href
+                    ? "text-primary bg-primary/5"
+                    : "text-foreground hover:bg-accent",
+                )}
+              >
+                {item.label}
+              </Link>
+            </SheetClose>
+          ))}
+        </nav>
+
+        <div className="mt-6 pt-4 border-t mx-4">
+          <div className="flex items-center gap-3 py-2">
+            <Phone className="w-4 h-4 text-primary flex-shrink-0" />
+            <Link
+              href={`tel:${PHONE_NUMBER}`}
+              className="font-medium text-sm hover:text-primary transition-colors"
+            >
+              {PHONE_NUMBER}
+            </Link>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-1">
+            {TOP_BAR_LINKS.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="text-sm py-2 px-2 text-muted-foreground hover:text-primary transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
