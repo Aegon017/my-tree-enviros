@@ -72,12 +72,14 @@ export default function Header() {
   const isMobile = useIsMobile();
 
   return (
-    <header className="w-full sticky top-0 z-50 bg-background shadow-sm">
+    <>
       <TopNotice />
-      <TopBar />
-      <HeaderMiddle />
+      <div className={cn("bg-background z-50", isMobile && "sticky top-0")}>
+        <TopBar />
+        <HeaderMiddle />
+      </div>
       {!isMobile && <HeaderBottom pathname={pathname} />}
-    </header>
+    </>
   );
 }
 
@@ -96,7 +98,7 @@ function TopNotice() {
           variant="ghost"
           size="sm"
           onClick={() => setShow(false)}
-          className="text-primary-foreground hover:bg-background/80 h-6 w-6 sm:h-8 sm:w-8 p-0"
+          className="text-primary-foreground hover:bg-background/20 h-6 w-6 sm:h-8 sm:w-8 p-0"
           aria-label="Close notice"
         >
           <X className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -108,9 +110,10 @@ function TopNotice() {
 
 function TopBar() {
   const [selectedLocation, setSelectedLocation] = useState(LOCATIONS[0]);
+
   return (
     <div className="bg-muted text-muted-foreground text-xs">
-      <div className="container mx-auto max-w-6xl py-1.5 sm:py-2 px-2 flex justify-between items-center">
+      <div className="container mx-auto max-w-6xl py-1.5 sm:py-2 flex justify-between items-center px-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -180,7 +183,7 @@ function HeaderMiddle() {
 
   return (
     <div className="border-b">
-      <div className="container mx-auto max-w-6xl px-3 sm:px-4 flex items-center justify-between py-2">
+      <div className="container mx-auto max-w-6xl px-3 sm:px-4 flex items-center justify-between">
         <div className="flex items-center">
           {isMobile ? (
             <MobileNavigation />
@@ -233,7 +236,7 @@ function HeaderMiddle() {
 
 function HeaderBottom({ pathname }: { pathname: string }) {
   return (
-    <nav className="border-t">
+    <nav className="border-t sticky top-0 z-50 bg-background shadow-xl">
       <div className="container mx-auto max-w-6xl overflow-x-auto">
         <div className="flex justify-center min-w-max">
           {MAIN_NAV_ITEMS.map((item) => (
