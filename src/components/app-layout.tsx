@@ -1,19 +1,19 @@
-import type { ReactNode } from 'react'
-import Footer from './app-footer'
-import Header from './app-header'
+import type { ReactNode } from "react";
+import Footer from "./app-footer";
+import Header from "./app-header";
 
 interface Props {
-    children: ReactNode
+  children: ReactNode;
 }
 
-const AppLayout = ( { children }: Props ) => {
-    return (
-        <>
-            <Header />
-            { children }
-            <Footer />
-        </>
-    )
-}
+const AppLayout = ({ children }: Props) => {
+  return (
+    <>
+      <Header />
+      {children}
+      <Footer />
+    </>
+  );
+};
 
-export default AppLayout
+export default AppLayout;

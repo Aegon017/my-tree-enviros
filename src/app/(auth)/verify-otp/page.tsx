@@ -1,4 +1,4 @@
-import { VerifyOtpForm } from "@/components/verify-otp-form"
+import { VerifyOtpForm } from "@/components/verify-otp-form";
 
 export default function SigninPage() {
   return (
@@ -7,5 +7,5 @@ export default function SigninPage() {
         <VerifyOtpForm />
       </div>
     </div>
-  )
+  );
 }

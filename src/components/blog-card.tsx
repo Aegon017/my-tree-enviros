@@ -17,12 +17,14 @@ const BlogCard = ({
   description,
   commentCount,
   imageUrl,
-  imageAlt = "Blog post image"
+  imageAlt = "Blog post image",
 }: BlogCardProps) => {
-  const formattedDate = date.toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short'
-  }).toUpperCase();
+  const formattedDate = date
+    .toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "short",
+    })
+    .toUpperCase();
 
   return (
     <Card className="group w-full max-w-md overflow-hidden bg-transparent border-0 shadow-none transition-all duration-300 hover:-translate-y-1.5 rounded-xl cursor-pointer p-0">
@@ -35,10 +37,12 @@ const BlogCard = ({
         />
         {/* Gradient overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
+
         {/* Date badge */}
         <div className="absolute top-4 left-4 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg shadow-md">
-          <span className="text-xs font-semibold tracking-wide">{formattedDate}</span>
+          <span className="text-xs font-semibold tracking-wide">
+            {formattedDate}
+          </span>
         </div>
       </div>
 
@@ -54,7 +58,9 @@ const BlogCard = ({
 
         <div className="flex items-center text-sm text-muted-foreground pt-3 border-t border-border group-hover:text-foreground transition-colors duration-300">
           <MessageCircle className="h-4 w-4 mr-2 group-hover:text-primary transition-colors duration-300" />
-          <span>{commentCount} {commentCount === 1 ? 'COMMENT' : 'COMMENTS'}</span>
+          <span>
+            {commentCount} {commentCount === 1 ? "COMMENT" : "COMMENTS"}
+          </span>
         </div>
       </CardContent>
     </Card>

@@ -1,4 +1,4 @@
 export interface BreadcrumbItemType {
-    title: string;
-    href: string;
+  title: string;
+  href: string;
 }
