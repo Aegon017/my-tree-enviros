@@ -1,13 +1,13 @@
-import { Eye, Heart, ShoppingCart, Star } from "lucide-react";
+import { Markup } from "interweave";
+import { Heart, ShoppingCart, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import type { Product } from "@/types/product";
 import { storage } from "@/lib/storage";
+import type { Product } from "@/types/product";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 interface Props {
@@ -59,7 +59,7 @@ const EcommerceCard = ( { product }: Props ) => {
       );
     } catch ( err ) {
       setIsFavorite( !newStatus );
-      toast.error( "Failed to update wishlist" );
+      toast.error( `Failed to update wishlist - ${ err }` );
     }
   }, [ isFavorite, id, name ] );
 
@@ -72,7 +72,7 @@ const EcommerceCard = ( { product }: Props ) => {
       await new Promise( resolve => setTimeout( resolve, 500 ) );
       toast.success( `${ name } has been added to your cart` );
     } catch ( err ) {
-      toast.error( "Failed to add item to cart" );
+      toast.error( `Failed to add item to cart - ${ err }` );
     } finally {
       setIsAddingToCart( false );
     }
@@ -157,10 +157,9 @@ const EcommerceCard = ( { product }: Props ) => {
               <span className="ml-1 text-xs text-muted-foreground">({ reviews?.length || 0 })</span>
             </div>
           </div>
-
-          <div
+          <Markup
             className="text-sm text-muted-foreground mb-4 line-clamp-2 prose prose-sm prose-muted"
-            dangerouslySetInnerHTML={ { __html: description } }
+            content={ description }
           />
         </Link>
 

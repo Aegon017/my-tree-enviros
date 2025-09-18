@@ -5,10 +5,10 @@ import { useState } from "react"
 import useSWR from "swr"
 import AppLayout from "@/components/app-layout"
 import BlogCard from "@/components/blog-card"
+import BlogCardSkeleton from "@/components/skeletons/blog-card-skeleton"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Blog } from "@/types/blog"
-import BlogCardSkeleton from "@/components/skeletons/blog-card-skeleton"
+import type { Blog } from "@/types/blog"
 
 interface ApiResponse {
     data: Blog[]
@@ -20,11 +20,9 @@ interface ApiResponse {
 }
 
 const fetcher = async ( url: string ) => {
-    const response = await fetch( url )
-    if ( !response.ok ) {
-        throw new Error( 'Failed to fetch blogs' )
-    }
-    return response.json()
+    const res = await fetch( url )
+    if ( !res.ok ) throw new Error( 'Failed to fetch blogs' )
+    return res.json()
 }
 
 const Page = () => {
@@ -65,8 +63,6 @@ const Page = () => {
         )
     }
 
-    const blogs = data?.data;
-
     return (
         <AppLayout>
             <div className="container max-w-6xl mx-auto py-8 px-4">
@@ -76,17 +72,19 @@ const Page = () => {
                         Insights, stories, and updates from the My Tree Enviros team
                     </p>
                 </div>
+
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
                     { isLoading ? (
                         Array.from( { length: 6 } ).map( ( _, i ) => (
                             <BlogCardSkeleton key={ i } />
                         ) )
                     ) : (
-                        blogs?.map( ( blog: Blog ) => (
+                        data?.data?.map( ( blog: Blog ) => (
                             <BlogCard key={ blog.id } blog={ blog } />
                         ) )
                     ) }
                 </div>
+
                 { data?.meta && data.meta.total_pages > 1 && (
                     <div className="flex justify-center mt-12">
                         <div className="flex gap-2">
@@ -100,7 +98,7 @@ const Page = () => {
                     </div>
                 ) }
             </div>
-        </AppLayout >
+        </AppLayout>
     )
 }
 

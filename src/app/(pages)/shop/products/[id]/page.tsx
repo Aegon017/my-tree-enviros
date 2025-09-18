@@ -1,228 +1,366 @@
-'use client'
-import { useState } from "react";
-import { Heart, ShoppingCart, Star, Minus, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import type { Product, Review } from "@/types/product";
+'use client';
 
-interface ProductDetailPageProps {
-    product: Product;
+import { Markup } from 'interweave';
+import { Check, Heart, Minus, Plus, ShoppingCart, Star } from 'lucide-react';
+import Image from 'next/image';
+import { use, useState } from 'react';
+import useSWR from 'swr';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Lens } from '@/components/ui/lens';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { storage } from '@/lib/storage';
+import type { Product } from '@/types/product';
+
+interface ApiResponse {
+    data: Product;
 }
 
-export default function ProductDetailPage( { product }: ProductDetailPageProps ) {
+interface Props {
+    params: Promise<{ id: number }>;
+}
+
+const fetcher = async ( url: string, token: string | unknown ) => {
+    const response = await fetch( url, {
+        headers: {
+            Authorization: `Bearer ${ token }`,
+            'Content-Type': 'application/json',
+        },
+    } );
+    if ( !response.ok ) throw new Error( 'Failed to fetch product' );
+    return response.json();
+};
+
+export default function ProductPage( { params }: Props ) {
+    const { id } = use( params );
+    const token = storage.getToken();
     const [ quantity, setQuantity ] = useState( 1 );
-    const [ isFavorite, setIsFavorite ] = useState( product.wishlist_tag );
 
-    const handleAddToCart = () => {
-        toast.success( "Added to cart successfully!" );
+    const { data: response, error, isLoading } = useSWR<ApiResponse>(
+        token ? [ `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/product/${ id }`, token ] : null,
+        ( [ url, token ] ) => fetcher( url, token ),
+        { revalidateOnFocus: false, shouldRetryOnError: false }
+    );
+
+    const product = response?.data;
+    const productImage = product?.main_image_url;
+    const averageRating = 0;
+
+    const handleQuantityChange = ( value: number ) => {
+        if ( product && value >= 1 && value <= product.quantity ) {
+            setQuantity( value );
+        }
     };
 
-    const handleAddToWishlist = () => {
-        setIsFavorite( !isFavorite );
-        // Here you would make an API call to update the wishlist
-        toast.success( isFavorite ? "Removed from wishlist" : "Added to wishlist!" );
-    };
-
-    const discountPercentage = product.discount_price && product.discount_price < product.price
-        ? Math.round( ( ( product.price - product.discount_price ) / product.price ) * 100 )
-        : 0;
-
-    const averageRating = product.reviews?.length
-        ? product.reviews.reduce( ( sum, r ) => sum + r.rating, 0 ) / product.reviews.length
-        : 0;
+    if ( error ) {
+        return (
+            <div className="container mx-auto p-6 flex items-center justify-center h-96">
+                <Card className="w-full max-w-md">
+                    <CardContent className="pt-6 text-center">
+                        <h2 className="text-xl font-bold text-destructive mb-2">Error Loading Product</h2>
+                        <p className="text-muted-foreground">Sorry, we couldn't load the product details. Please try again later.</p>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-background">
-            <div className="container mx-auto px-4 py-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Product Image */ }
-                    <div className="space-y-4">
-                        <div className="relative aspect-square overflow-hidden rounded-xl border border-border">
-                            <img
-                                src={ product.main_image_url }
-                                alt={ product.name }
-                                className="w-full h-full object-cover"
-                            />
-                            { discountPercentage > 0 && (
-                                <Badge className="absolute top-3 left-3 bg-primary">
-                                    { discountPercentage }% OFF
-                                </Badge>
-                            ) }
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+            <nav className="flex mb-6" aria-label="Breadcrumb">
+                <ol className="inline-flex items-center space-x-1 md:space-x-3">
+                    <li className="inline-flex items-center">
+                        <a href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <div className="flex items-center">
+                            <span className="mx-2 text-muted-foreground">/</span>
+                            <a
+                                href={ `/category/${ product?.category.slug }` }
+                                className="text-sm font-medium text-muted-foreground hover:text-foreground"
+                            >
+                                { isLoading ? <Skeleton className="h-4 w-20" /> : product?.category.name }
+                            </a>
                         </div>
-                    </div>
+                    </li>
+                    <li aria-current="page">
+                        <div className="flex items-center">
+                            <span className="mx-2 text-muted-foreground">/</span>
+                            <span className="text-sm font-medium text-foreground">
+                                { isLoading ? <Skeleton className="h-4 w-40" /> : product?.name }
+                            </span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
 
-                    {/* Product Info */ }
-                    <div className="space-y-6">
-                        <div>
-                            <Badge variant="secondary" className="mb-2">
-                                { product.category.name }
-                            </Badge>
-                            <h1 className="text-3xl font-bold tracking-tight">{ product.name }</h1>
-                            { product.nick_name && (
-                                <p className="text-muted-foreground mt-1">{ product.nick_name }</p>
-                            ) }
-                            { product.botanical_name && (
-                                <p className="text-sm text-muted-foreground italic mt-1">
-                                    Botanical: { product.botanical_name }
-                                </p>
-                            ) }
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                    { isLoading ? (
+                        <Skeleton className="h-96 w-full rounded-xl" />
+                    ) : (
+                        <>
+                            <div className="relative aspect-square overflow-hidden rounded-xl bg-muted">
+                                <Lens zoomFactor={2}>
+                                    <Image
+                                        src={ productImage || '/placeholder-image.jpg' }
+                                        alt={ product?.name || '' }
+                                        height={ 1200 }
+                                        width={ 1200 }
+                                        className="object-cover"
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw"
+                                        priority
+                                    />
+                                </Lens>
 
-                            <div className="flex items-center mt-2">
+                                <Button variant="secondary" size="icon" className="absolute top-2 right-2 rounded-full z-50">
+                                    <Heart className="h-5 w-5" />
+                                </Button>
+                            </div>
+
+                            { productImage && (
+                                <div className="flex justify-center">
+                                    <div className="relative h-20 w-20 border rounded-md overflow-hidden">
+                                        <Image
+                                            src={ productImage }
+                                            alt={ `${ product?.name } thumbnail` }
+                                            fill
+                                            className="object-cover"
+                                            sizes="80px"
+                                        />
+                                    </div>
+                                </div>
+                            ) }
+                        </>
+                    ) }
+                </div>
+
+                <div className="space-y-6">
+                    {/* ... rest of the product details section remains unchanged ... */ }
+                    { isLoading ? (
+                        <>
+                            <Skeleton className="h-8 w-3/4" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-2/3" />
+                        </>
+                    ) : (
+                        <>
+                            <div>
+                                <Badge variant="outline" className="mb-2">
+                                    { product?.category.name }
+                                </Badge>
+                                <h1 className="text-3xl font-bold tracking-tight">{ product?.name }</h1>
+                                <p className="text-muted-foreground italic mt-1">{ product?.nick_name }</p>
+                            </div>
+
+                            <div className="flex items-center gap-2">
                                 <div className="flex">
-                                    { [ ...Array( 5 ) ].map( ( _, i ) => (
+                                    { [ 1, 2, 3, 4, 5 ].map( ( star ) => (
                                         <Star
-                                            key={ i }
-                                            className={ `w-5 h-5 ${ i < Math.floor( averageRating )
-                                                ? "fill-primary text-primary"
-                                                : i < averageRating
-                                                    ? "fill-muted/50 text-muted"
-                                                    : "text-muted-foreground/30"
+                                            key={ star }
+                                            className={ `h-5 w-5 ${ star <= Math.round( averageRating ) ? 'fill-primary text-primary' : 'text-muted'
                                                 }` }
                                         />
                                     ) ) }
                                 </div>
-                                <span className="ml-2 text-sm text-muted-foreground">
-                                    ({ product.reviews.length } Reviews)
-                                </span>
+                                <span className="text-sm text-muted-foreground">({ product?.reviews?.length || 0 } reviews)</span>
                             </div>
-                        </div>
 
-                        <div className="flex items-baseline gap-2">
-                            { product.discount_price && product.discount_price < product.price ? (
-                                <>
-                                    <span className="text-3xl font-bold">₹{ product.discount_price.toLocaleString() }</span>
-                                    <span className="text-xl text-muted-foreground line-through">
-                                        ₹{ product.price.toLocaleString() }
-                                    </span>
-                                </>
-                            ) : (
-                                <span className="text-3xl font-bold">₹{ product.price.toLocaleString() }</span>
-                            ) }
-                        </div>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-3xl font-bold">
+                                    ${ product?.discount_price?.toFixed( 2 ) || product?.price.toFixed( 2 ) }
+                                </span>
+                                { product?.discount_price && product.discount_price < product.price && (
+                                    <>
+                                        <span className="text-lg text-muted-foreground line-through">
+                                            ${ product.price.toFixed( 2 ) }
+                                        </span>
+                                        <Badge variant="destructive" className="ml-2">
+                                            Save ${ ( product.price - product.discount_price ).toFixed( 2 ) }
+                                        </Badge>
+                                    </>
+                                ) }
+                            </div>
 
-                        <div
-                            className="text-muted-foreground prose prose-sm"
-                            dangerouslySetInnerHTML={ { __html: product.description } }
-                        />
+                            <Markup content={ product?.description }></Markup>
 
-                        <Separator />
+                            <div>
+                                <h3 className="font-semibold text-sm">Botanical Name</h3>
+                                <p className="text-muted-foreground">{ product?.botanical_name }</p>
+                            </div>
 
-                        <div className="space-y-4">
-                            <div className="flex items-center space-x-4">
-                                <span className="font-medium">Quantity:</span>
-                                <div className="flex items-center border rounded-md">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={ () => setQuantity( Math.max( 1, quantity - 1 ) ) }
-                                    >
-                                        <Minus className="h-3 w-3" />
-                                    </Button>
-                                    <Input
-                                        type="number"
-                                        value={ quantity }
-                                        onChange={ ( e ) => setQuantity( Math.max( 1, parseInt( e.target.value ) || 1 ) ) }
-                                        className="w-12 h-8 text-center border-0"
-                                    />
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={ () => setQuantity( quantity + 1 ) }
-                                    >
-                                        <Plus className="h-3 w-3" />
-                                    </Button>
+                            <div className="flex items-center gap-2">
+                                { product && product.quantity > 0 ? (
+                                    <>
+                                        <Check className="h-5 w-5 text-green-500" />
+                                        <span className="text-green-500">In Stock</span>
+                                    </>
+                                ) : (
+                                    <span className="text-destructive">Out of Stock</span>
+                                ) }
+                            </div>
+
+                            { product && product.quantity > 0 && (
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center border rounded-md">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-10 w-10"
+                                            onClick={ () => handleQuantityChange( quantity - 1 ) }
+                                            disabled={ quantity <= 1 }
+                                        >
+                                            <Minus className="h-4 w-4" />
+                                        </Button>
+                                        <Input
+                                            type="number"
+                                            min="1"
+                                            max={ product.quantity }
+                                            value={ quantity }
+                                            onChange={ ( e ) => handleQuantityChange( Number( e.target.value ) ) }
+                                            className="w-16 text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-10 w-10"
+                                            onClick={ () => handleQuantityChange( quantity + 1 ) }
+                                            disabled={ quantity >= product.quantity }
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <span className="text-sm text-muted-foreground">{ product.quantity } available</span>
                                 </div>
-                                <span className="text-sm text-muted-foreground">
-                                    { product.quantity > 0 ? `${ product.quantity } available` : 'Out of stock' }
-                                </span>
-                            </div>
+                            ) }
 
                             <div className="flex gap-3">
-                                <Button
-                                    className="flex-1"
-                                    size="lg"
-                                    onClick={ handleAddToCart }
-                                    disabled={ product.quantity === 0 }
-                                >
+                                <Button size="lg" className="flex-1" disabled={ !product || product.quantity === 0 }>
                                     <ShoppingCart className="mr-2 h-5 w-5" />
                                     Add to Cart
                                 </Button>
-                                <Button
-                                    variant="outline"
-                                    size="lg"
-                                    className="px-3"
-                                    onClick={ handleAddToWishlist }
-                                >
-                                    <Heart className={ `h-5 w-5 ${ isFavorite ? 'fill-destructive text-destructive' : '' }` } />
+                                <Button variant="outline" size="lg">
+                                    <Heart className="mr-2 h-5 w-5" />
+                                    Wishlist
                                 </Button>
                             </div>
 
-                            <div className="text-sm text-muted-foreground">
-                                <p>SKU: { product.sku }</p>
-                                <p className="mt-1">Category: { product.category.name }</p>
+                            <div className="pt-4 border-t">
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span className="font-semibold">SKU:</span> { product?.sku }
+                                    </div>
+                                    <div>
+                                        <span className="font-semibold">Category:</span> { product?.category.name }
+                                    </div>
+                                    <div>
+                                        <span className="font-semibold">Type:</span> { product?.type === 1 ? 'Physical' : 'Digital' }
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        </>
+                    ) }
                 </div>
+            </div>
 
-                {/* Product Details Tabs */ }
+            { !isLoading && product && (
                 <div className="mt-12">
                     <Tabs defaultValue="description" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2 max-w-md">
+                        <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="description">Description</TabsTrigger>
-                            <TabsTrigger value="reviews">Reviews ({ product.reviews.length })</TabsTrigger>
+                            <TabsTrigger value="additional">Additional Info</TabsTrigger>
+                            <TabsTrigger value="reviews">Reviews ({ product.reviews?.length || 0 })</TabsTrigger>
                         </TabsList>
-
-                        <TabsContent value="description" className="mt-6">
-                            <div
-                                className="prose max-w-none"
-                                dangerouslySetInnerHTML={ { __html: product.description } }
-                            />
+                        <TabsContent value="description" className="pt-4">
+                            <Card>
+                                <CardContent className="pt-6">
+                                    <Markup content={ product.description }></Markup>
+                                </CardContent>
+                            </Card>
                         </TabsContent>
-
-                        <TabsContent value="reviews" className="mt-6">
-                            <div className="space-y-6">
-                                { product.reviews.length > 0 ? (
-                                    product.reviews.map( ( review ) => (
-                                        <div key={ review.id } className="border rounded-lg p-4">
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <h4 className="font-medium">{ review.user_name || "Anonymous" }</h4>
-                                                    <div className="flex items-center mt-1">
-                                                        <div className="flex">
-                                                            { [ ...Array( 5 ) ].map( ( _, i ) => (
-                                                                <Star
-                                                                    key={ i }
-                                                                    className={ `w-4 h-4 ${ i < review.rating
-                                                                        ? "fill-primary text-primary"
-                                                                        : "text-muted-foreground/30"
-                                                                        }` }
-                                                                />
-                                                            ) ) }
+                        <TabsContent value="additional" className="pt-4">
+                            <Card>
+                                <CardContent className="pt-6">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <h4 className="font-semibold">Botanical Name</h4>
+                                            <p className="text-muted-foreground">{ product.botanical_name }</p>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-semibold">SKU</h4>
+                                            <p className="text-muted-foreground">{ product.sku }</p>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-semibold">Category</h4>
+                                            <p className="text-muted-foreground">{ product.category.name }</p>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-semibold">Type</h4>
+                                            <p className="text-muted-foreground">{ product.type === 1 ? 'Physical' : 'Digital' }</p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                        <TabsContent value="reviews" className="pt-4">
+                            <Card>
+                                <CardContent className="pt-6">
+                                    { product.reviews && product.reviews.length > 0 ? (
+                                        <div className="space-y-6">
+                                            { product.reviews.map( ( review ) => (
+                                                <div key={ review.id } className="border-b pb-4 last:border-0 last:pb-0">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="flex">
+                                                                { [ 1, 2, 3, 4, 5 ].map( ( star ) => (
+                                                                    <Star
+                                                                        key={ star }
+                                                                        className={ `h-4 w-4 ${ star <= review.rating ? 'fill-primary text-primary' : 'text-muted'
+                                                                            }` }
+                                                                    />
+                                                                ) ) }
+                                                            </div>
+                                                            <span className="font-semibold">User { review.user_id }</span>
                                                         </div>
-                                                        <span className="ml-2 text-sm text-muted-foreground">
+                                                        <span className="text-sm text-muted-foreground">
                                                             { new Date( review.created_at ).toLocaleDateString() }
                                                         </span>
                                                     </div>
+                                                    <p className="mt-2">{ review.review }</p>
+                                                </div>
+                                            ) ) }
+                                        </div>
+                                    ) : (
+                                        <p className="text-muted-foreground">No reviews yet.</p>
+                                    ) }
+
+                                    <div className="mt-8 pt-6 border-t">
+                                        <h4 className="text-lg font-semibold mb-4">Add a Review</h4>
+                                        <form className="space-y-4">
+                                            <div className="flex items-center gap-2">
+                                                <span>Your Rating:</span>
+                                                <div className="flex">
+                                                    { [ 1, 2, 3, 4, 5 ].map( ( star ) => (
+                                                        <Star key={ star } className="h-5 w-5 text-muted cursor-pointer hover:text-primary" />
+                                                    ) ) }
                                                 </div>
                                             </div>
-                                            <p className="mt-3 text-muted-foreground">{ review.comment }</p>
-                                        </div>
-                                    ) )
-                                ) : (
-                                    <p className="text-muted-foreground">No reviews yet.</p>
-                                ) }
-                            </div>
+                                            <Textarea placeholder="Your review" className="min-h-32" />
+                                            <Button type="submit">Submit Review</Button>
+                                        </form>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </TabsContent>
                     </Tabs>
                 </div>
-            </div>
+            ) }
         </div>
     );
 }
