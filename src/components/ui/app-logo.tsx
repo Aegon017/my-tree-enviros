@@ -16,6 +16,7 @@ const AppLogo = () => {
         height={isMobile ? 90 : 120}
         alt="My Tree Enviros Logo"
         className="object-contain"
+        priority
       />
     </Link>
   );
