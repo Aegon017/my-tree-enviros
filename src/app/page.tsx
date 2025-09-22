@@ -1,14 +1,22 @@
 "use client";
 
 import Autoplay from "embla-carousel-autoplay";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
-import Image, { StaticImageData } from "next/image";
+import useSWR from "swr";
+import AppLayout from "@/components/app-layout";
 import BasicTreeCard from "@/components/basic-tree-card";
+import BlogCard from "@/components/blog-card";
 import EcommerceCard from "@/components/ecommerce-card";
 import PromoTreeCard from "@/components/promo-tree-card";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
+import BlogCardSkeleton from "@/components/skeletons/blog-card-skeleton";
+import EcommerceCardSkeleton from "@/components/skeletons/ecommerce-card-skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
@@ -17,19 +25,10 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import neemTree from "../../public/neem-tree.webp";
-import BlogCard from "@/components/blog-card";
-import AppLayout from "@/components/app-layout";
-import type { Product } from "@/types/product";
-import useSWR from "swr";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import EcommerceCardSkeleton from "@/components/skeletons/ecommerce-card-skeleton";
 import { storage } from "@/lib/storage";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Blog } from "@/types/blog";
-import { AlertCircle, RefreshCw } from "lucide-react";
-import BlogCardSkeleton from "@/components/skeletons/blog-card-skeleton";
+import type { Blog } from "@/types/blog";
+import type { Product } from "@/types/product";
+import neemTree from "../../public/neem-tree.webp";
 
 interface PromoCard {
   id: number;
@@ -38,12 +37,6 @@ interface PromoCard {
   description: string;
   linkText: string;
   linkUrl: string;
-}
-
-interface CarouselItemType {
-  id: string;
-  content: string;
-  bgColor: string;
 }
 
 interface TreeCard {
@@ -60,34 +53,6 @@ interface BlogApiResponse {
     total_count: number;
   };
 }
-
-const carouselItems: CarouselItemType[] = [
-  {
-    id: "1",
-    content: "Promotion 1",
-    bgColor: "bg-amber-200",
-  },
-  {
-    id: "2",
-    content: "Promotion 2",
-    bgColor: "bg-emerald-100",
-  },
-  {
-    id: "3",
-    content: "Promotion 3",
-    bgColor: "bg-sky-100",
-  },
-  {
-    id: "4",
-    content: "Promotion 4",
-    bgColor: "bg-rose-100",
-  },
-  {
-    id: "5",
-    content: "Promotion 5",
-    bgColor: "bg-violet-100",
-  },
-];
 
 const treeCards: TreeCard[] = [
   { id: "tree-1", name: "NEEM TREE", image: neemTree },
@@ -118,53 +83,63 @@ const promoCards: PromoCard[] = [
   },
 ];
 
-const blogFetcher = async ( url: string ) => {
-  const res = await fetch( url );
-  if ( !res.ok ) throw new Error( "Failed to fetch blogs" );
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch data");
   return res.json();
 };
 
-const productFetcher = async ( url: string ) => {
-  const res = await fetch( url, {
+const productFetcher = async (url: string) => {
+  const res = await fetch(url, {
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${ storage.getToken() }`,
+      Authorization: `Bearer ${storage.getToken()}`,
     },
-  } );
-  if ( !res.ok ) throw new Error( "Failed to fetch products" );
+  });
+  if (!res.ok) throw new Error("Failed to fetch products");
   return res.json();
 };
 
 export default function Home() {
-  const plugin = useRef( Autoplay( { delay: 2000, stopOnInteraction: true } ) );
-  const blogPlugin = useRef( Autoplay( { delay: 4000, stopOnInteraction: true } ) );
-  const [ blogRetryCount, setBlogRetryCount ] = useState( 0 );
+  const plugin = useRef(Autoplay({ delay: 2000, stopOnInteraction: true }));
+  const blogPlugin = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }));
+  const [blogRetryCount, setBlogRetryCount] = useState(0);
 
-  const { data: productsData, error: productsError, isLoading: productsLoading } = useSWR(
-    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/products`,
-    productFetcher
+  const {
+    data: productsData,
+    error: productsError,
+    isLoading: productsLoading,
+  } = useSWR(
+    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/products`,
+    productFetcher,
+  );
+
+  const { data: slidersData } = useSWR(
+    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/sliders`,
+    fetcher,
   );
 
   const {
     data: blogsData,
     error: blogsError,
     isLoading: blogsLoading,
-    mutate: mutateBlogs
+    mutate: mutateBlogs,
   } = useSWR<BlogApiResponse>(
-    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/blogs?retry=${ blogRetryCount }`,
-    blogFetcher,
-    { revalidateOnFocus: false, shouldRetryOnError: false }
+    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/blogs?retry=${blogRetryCount}`,
+    fetcher,
+    { revalidateOnFocus: false, shouldRetryOnError: false },
   );
 
+  const sliders = slidersData?.data ?? [];
   const products = productsData?.data?.data;
   const blogs = blogsData?.data;
 
   const handleBlogRetry = () => {
-    setBlogRetryCount( prev => prev + 1 );
+    setBlogRetryCount((prev) => prev + 1);
     mutateBlogs();
   };
 
-  if ( productsError ) {
+  if (productsError) {
     return (
       <AppLayout>
         <Section className="bg-background py-12">
@@ -174,7 +149,7 @@ export default function Home() {
             </AlertDescription>
           </Alert>
           <div className="text-center mt-4">
-            <Button onClick={ () => window.location.reload() }>Try Again</Button>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
           </div>
         </Section>
       </AppLayout>
@@ -185,29 +160,28 @@ export default function Home() {
     <AppLayout>
       <div className="min-h-screen">
         <Carousel
-          opts={ {
-            align: "start",
-            loop: true,
-          } }
-          plugins={ [ plugin.current ] }
+          opts={{ align: "start", loop: true }}
+          plugins={[plugin.current]}
           className="w-full relative"
-          onMouseEnter={ plugin.current.stop }
-          onMouseLeave={ plugin.current.reset }
+          onMouseEnter={plugin.current.stop}
+          onMouseLeave={plugin.current.reset}
         >
           <CarouselContent>
-            { carouselItems.map( ( item ) => (
-              <CarouselItem key={ item.id }>
+            {sliders.map((slider: Slider) => (
+              <CarouselItem key={slider.id}>
                 <Card className="overflow-hidden p-0 rounded-none">
-                  <CardContent
-                    className={ `${ item.bgColor } flex items-center justify-center p-0 h-80 md:h-96` }
-                  >
-                    <span className="text-4xl font-semibold">
-                      { item.content }
-                    </span>
+                  <CardContent className="flex items-center justify-center p-0 h-80 md:h-96 relative">
+                    <Image
+                      src={slider.main_image_url}
+                      alt={slider.title}
+                      fill
+                      priority
+                      className="object-cover object-center"
+                    />
                   </CardContent>
                 </Card>
               </CarouselItem>
-            ) ) }
+            ))}
           </CarouselContent>
           <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2" />
           <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2" />
@@ -220,30 +194,30 @@ export default function Home() {
             align="center"
           />
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 justify-center gap-6">
-            { treeCards.map( ( tree ) => (
+            {treeCards.map((tree) => (
               <Link
-                key={ tree.id }
+                key={tree.id}
                 href="/"
                 className="transition-transform hover:scale-105"
               >
-                <BasicTreeCard name={ tree.name } image={ tree.image } />
+                <BasicTreeCard name={tree.name} image={tree.image} />
               </Link>
-            ) ) }
+            ))}
           </div>
         </Section>
 
         <Section className="bg-muted py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            { promoCards.map( ( promo ) => (
+            {promoCards.map((promo) => (
               <PromoTreeCard
-                key={ promo.id }
-                image={ promo.image }
-                title={ promo.title }
-                description={ promo.description }
-                linkText={ promo.linkText }
-                linkUrl={ promo.linkUrl }
+                key={promo.id}
+                image={promo.image}
+                title={promo.title}
+                description={promo.description}
+                linkText={promo.linkText}
+                linkUrl={promo.linkUrl}
               />
-            ) ) }
+            ))}
           </div>
         </Section>
 
@@ -254,13 +228,13 @@ export default function Home() {
             align="center"
           />
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-            { productsLoading
-              ? Array.from( { length: 6 } ).map( ( _, i ) => (
-                <EcommerceCardSkeleton key={ i } />
-              ) )
-              : products?.map( ( product: Product ) => (
-                <EcommerceCard key={ product.id } product={ product } />
-              ) ) }
+            {productsLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <EcommerceCardSkeleton key={`skeleton-${Date.now()}-${i}`} />
+                ))
+              : products?.map((product: Product) => (
+                  <EcommerceCard key={product.id} product={product} />
+                ))}
           </div>
         </Section>
 
@@ -271,7 +245,7 @@ export default function Home() {
             align="center"
           />
 
-          { blogsError ? (
+          {blogsError ? (
             <div className="max-w-4xl mx-auto mt-8">
               <Alert variant="destructive" className="mb-6">
                 <AlertCircle className="h-4 w-4" />
@@ -281,7 +255,10 @@ export default function Home() {
                 </AlertDescription>
               </Alert>
               <div className="flex justify-center">
-                <Button onClick={ handleBlogRetry } className="flex items-center gap-2">
+                <Button
+                  onClick={handleBlogRetry}
+                  className="flex items-center gap-2"
+                >
                   <RefreshCw className="h-4 w-4" />
                   Retry Loading
                 </Button>
@@ -289,37 +266,34 @@ export default function Home() {
             </div>
           ) : (
             <Carousel
-              opts={ {
-                align: "start",
-                loop: true,
-              } }
-              plugins={ [ blogPlugin.current ] }
+              opts={{ align: "start", loop: true }}
+              plugins={[blogPlugin.current]}
               className="w-full max-w-6xl mx-auto mt-8"
-              onMouseEnter={ blogPlugin.current.stop }
-              onMouseLeave={ blogPlugin.current.reset }
+              onMouseEnter={blogPlugin.current.stop}
+              onMouseLeave={blogPlugin.current.reset}
             >
               <CarouselContent>
-                { blogsLoading ? (
-                  Array.from( { length: 3 } ).map( ( _, i ) => (
-                    <BlogCardSkeleton key={ i } />
-                  ) )
-                ) : (
-                  blogs?.map( ( blog: Blog ) => (
-                    <CarouselItem
-                      key={ blog.id }
-                      className="md:basis-1/2 lg:basis-1/3"
-                    >
-                      <BlogCard blog={ blog } />
-                    </CarouselItem>
-                  ) )
-                ) }
+                {blogsLoading
+                  ? Array.from({ length: 3 }).map((_, i) => (
+                      <BlogCardSkeleton
+                        key={`blog-skeleton-${Date.now()}-${i}`}
+                      />
+                    ))
+                  : blogs?.map((blog: Blog) => (
+                      <CarouselItem
+                        key={blog.id}
+                        className="md:basis-1/2 lg:basis-1/3"
+                      >
+                        <BlogCard blog={blog} />
+                      </CarouselItem>
+                    ))}
               </CarouselContent>
               <div className="flex justify-center mt-8 gap-4">
                 <CarouselPrevious className="static transform-none" />
                 <CarouselNext className="static transform-none" />
               </div>
             </Carousel>
-          ) }
+          )}
         </Section>
       </div>
     </AppLayout>
