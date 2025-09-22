@@ -1,7 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation';
+import { useCallback, useState } from "react";
+import useSWR from "swr";
+import AppLayout from "@/components/app-layout";
 import { ApplyCoupon } from "@/components/apply-coupon";
+import RazorpayButton from "@/components/razorpay-button";
+import Section from "@/components/section";
 import ShippingAddresses from "@/components/shipping-address";
 import {
   Card,
@@ -11,62 +16,116 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import AppLayout from "@/components/app-layout";
-import Section from "@/components/section";
-import RazorpayButton from "@/components/razorpay-button";
+import { storage } from "@/lib/storage";
+
+interface CartItem {
+  id: number;
+  user_id: number;
+  type: number;
+  product_type: number;
+  product_id: number;
+  quantity: number;
+  coupon_code: string | null;
+  ecom_product: {
+    id: number;
+    price: number;
+  };
+}
+
+interface CartResponse {
+  status: boolean;
+  message: string;
+  data: CartItem[];
+}
+
+interface UserData {
+  email: string;
+  mobile: string;
+  name: string;
+}
+
+// Fetcher function for SWR
+const fetcher = async ( url: string ) => {
+  const response = await fetch( url, {
+    method: "GET",
+    headers: {
+      accept: "application/json",
+      Authorization: `Bearer ${ storage.getToken() }`,
+    },
+  } );
+
+  if ( !response.ok ) {
+    throw new Error( "Failed to fetch cart items" );
+  }
+
+  return response.json();
+};
 
 export default function CheckoutPage() {
-  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
-    null,
+  const [ selectedAddressId, setSelectedAddressId ] = useState<number | null>( null );
+  const [ discountAmount, setDiscountAmount ] = useState<number>( 0 );
+  const [ baseTotal, setBaseTotal ] = useState<number>( 0 );
+  const router = useRouter();
+
+  // Fetch cart data
+  const { data: cartData, error, isLoading } = useSWR<CartResponse>(
+    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      onSuccess: ( data ) => {
+        if ( data.status && data.data ) {
+          const total = data.data.reduce(
+            ( sum, item ) => sum + item.ecom_product.price * item.quantity,
+            0
+          );
+          setBaseTotal( total );
+        }
+      },
+      onError: ( err ) => {
+        console.error( "Failed to fetch cart:", err );
+      },
+    }
   );
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [baseTotal, setBaseTotal] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch cart total from API on component mount
-  useEffect(() => {
-    const fetchCartTotal = async () => {
-      try {
-        // Simulating API call - replace with actual API call
-        setTimeout(() => {
-          setBaseTotal(10000); // Amount in paise (10000 paise = ₹100)
-          setIsLoading(false);
-        }, 500);
-      } catch (error) {
-        console.error("Failed to fetch cart total:", error);
-        setIsLoading(false);
-      }
-    };
+  // Fetch user data (you might need to adjust this based on your auth setup)
+  const { data: userData } = useSWR<UserData>(
+    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/user`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  );
 
-    fetchCartTotal();
-  }, []);
+  const handleAddressSelect = useCallback( ( shipping_address_id: number | null ) => {
+    setSelectedAddressId( shipping_address_id );
+  }, [] );
 
-  const handleAddressSelect = (shipping_address_id: number | null) => {
-    setSelectedAddressId(shipping_address_id);
-  };
+  const handleCouponApplied = useCallback( ( discount: number ) => {
+    setDiscountAmount( discount > 0 ? discount : 0 );
+  }, [] );
 
-  const handleCouponApplied = (discount: number) => {
-    setDiscountAmount(discount);
-  };
+  const handleCouponRemoved = useCallback( () => {
+    setDiscountAmount( 0 );
+  }, [] );
 
-  const handleCouponRemoved = () => {
-    setDiscountAmount(0);
-  };
+  const handlePaymentSuccess = useCallback( ( response: any ) => {
+    router.push(
+      `/payment/success?order_id=${ response.mt_order_id }&transaction_id=${ response.razorpay_payment_id }&amount=${ orderTotal }`
+    );
+  }, [ router, baseTotal, discountAmount ] );
 
-  const handlePaymentSuccess = (response: any) => {
-    console.log("Payment successful:", response);
-    // Redirect to success page or show success message
-  };
+  const handlePaymentFailure = useCallback( ( error: any ) => {
+    const errorMessage = error?.description || error?.message || "Payment failed";
+    router.push(
+      `/payment/failed?error=${ encodeURIComponent( errorMessage ) }&amount=${ orderTotal }`
+    );
+  }, [ router, baseTotal, discountAmount ] );
 
-  const handlePaymentFailure = (error: any) => {
-    console.error("Payment failed:", error);
-    // Show error message to user
-  };
+  const orderTotal = Math.max( 0, baseTotal - discountAmount );
+  const isPaymentDisabled = !selectedAddressId || orderTotal <= 0;
 
-  // Calculate final total (in paise)
-  const orderTotal = baseTotal - discountAmount;
-
-  if (isLoading) {
+  if ( isLoading ) {
     return (
       <AppLayout>
         <div className="container mx-auto p-6">
@@ -89,7 +148,15 @@ export default function CheckoutPage() {
     <AppLayout>
       <Section>
         <div className="container mx-auto p-6">
-          <h1 className="text-2xl font-bold mb-6">Checkout</h1>
+          <h1 className="text-2xl font-bold mb-6" aria-label="Checkout page">
+            Checkout
+          </h1>
+
+          { error && (
+            <div className="bg-red-100 text-red-700 p-4 rounded mb-6" role="alert">
+              Unable to load cart items. Please try again later.
+            </div>
+          ) }
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-6">
@@ -102,18 +169,23 @@ export default function CheckoutPage() {
                 </CardHeader>
                 <CardContent>
                   <ShippingAddresses
-                    onSelect={handleAddressSelect}
-                    selectedAddressId={selectedAddressId}
+                    onSelect={ handleAddressSelect }
+                    selectedAddressId={ selectedAddressId }
                   />
+                  { !selectedAddressId && (
+                    <p className="text-red-500 text-sm mt-2">
+                      Please select a shipping address to proceed.
+                    </p>
+                  ) }
                 </CardContent>
               </Card>
             </div>
 
             <div className="space-y-6">
               <ApplyCoupon
-                onCouponApplied={handleCouponApplied}
-                onCouponRemoved={handleCouponRemoved}
-                currentTotal={baseTotal}
+                onCouponApplied={ handleCouponApplied }
+                onCouponRemoved={ handleCouponRemoved }
+                currentTotal={ baseTotal }
               />
 
               <Card>
@@ -124,31 +196,38 @@ export default function CheckoutPage() {
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>₹{(baseTotal / 100).toFixed(2)}</span>
+                      <span>₹{ baseTotal.toFixed( 2 ) }</span>
                     </div>
 
-                    {discountAmount > 0 && (
+                    { discountAmount > 0 && (
                       <div className="flex justify-between text-green-600">
                         <span>Discount</span>
-                        <span>-₹{(discountAmount / 100).toFixed(2)}</span>
+                        <span>-₹{ discountAmount.toFixed( 2 ) }</span>
                       </div>
-                    )}
+                    ) }
 
                     <div className="flex justify-between font-medium border-t pt-4">
                       <span>Total</span>
-                      <span>₹{(orderTotal / 100).toFixed(2)}</span>
+                      <span>₹{ orderTotal.toFixed( 2 ) }</span>
                     </div>
 
                     <div className="pt-4">
                       <RazorpayButton
                         currency="INR"
-                        type={4}
-                        product_type={2}
-                        shipping_address_id={selectedAddressId}
-                        amount={orderTotal}
-                        onPaymentSuccess={handlePaymentSuccess}
-                        onPaymentFailure={handlePaymentFailure}
+                        type={ 4 }
+                        product_type={ 2 }
+                        shipping_address_id={ selectedAddressId }
+                        amount={ orderTotal }
+                        user={ userData || null }
+                        onPaymentSuccess={ handlePaymentSuccess }
+                        onPaymentFailure={ handlePaymentFailure }
                       />
+                      { isPaymentDisabled && (
+                        <p className="text-red-500 text-sm mt-2">
+                          Please select a shipping address and ensure the total is
+                          valid to proceed with payment.
+                        </p>
+                      ) }
                     </div>
                   </div>
                 </CardContent>

@@ -10,87 +10,88 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { storage } from "@/lib/storage";
 import type { CartItem } from "@/types/cart";
+import Link from "next/link";
 
 interface CartResponse {
   status: boolean;
   data: CartItem[];
 }
 
-const fetcher = (url: string) =>
-  fetch(url, {
-    headers: { Authorization: `Bearer ${storage.getToken()}` },
-  }).then((res) => res.json());
+const fetcher = ( url: string ) =>
+  fetch( url, {
+    headers: { Authorization: `Bearer ${ storage.getToken() }` },
+  } ).then( ( res ) => res.json() );
 
 export default function CartPage() {
   const { data, error, isLoading, mutate } = useSWR<CartResponse>(
-    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/cart`,
+    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart`,
     fetcher,
   );
 
-  const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
+  const [ updatingItems, setUpdatingItems ] = useState<Set<number>>( new Set() );
 
   const updateCartItem = useCallback(
-    async (productId: number, params: CartItem) => {
-      setUpdatingItems((prev) => new Set(prev).add(productId));
+    async ( productId: number, params: CartItem ) => {
+      setUpdatingItems( ( prev ) => new Set( prev ).add( productId ) );
       try {
         await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/cart/add/${productId}`,
+          `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart/add/${ productId }`,
           {
             method: "POST",
             headers: {
               Accept: "application/json",
               "Content-Type": "application/json",
-              Authorization: `Bearer ${storage.getToken()}`,
+              Authorization: `Bearer ${ storage.getToken() }`,
             },
-            body: JSON.stringify(params),
+            body: JSON.stringify( params ),
           },
         );
         mutate();
-      } catch (error) {
-        console.error("Failed to update cart:", error);
+      } catch ( error ) {
+        console.error( "Failed to update cart:", error );
       } finally {
-        setUpdatingItems((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(productId);
+        setUpdatingItems( ( prev ) => {
+          const newSet = new Set( prev );
+          newSet.delete( productId );
           return newSet;
-        });
+        } );
       }
     },
-    [mutate],
+    [ mutate ],
   );
 
   const removeItem = useCallback(
-    async (itemId: number) => {
-      setUpdatingItems((prev) => new Set(prev).add(itemId));
+    async ( itemId: number ) => {
+      setUpdatingItems( ( prev ) => new Set( prev ).add( itemId ) );
       try {
         await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/cart/remove/${itemId}`,
+          `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart/remove/${ itemId }`,
           {
             method: "DELETE",
             headers: {
               Accept: "application/json",
-              Authorization: `Bearer ${storage.getToken()}`,
+              Authorization: `Bearer ${ storage.getToken() }`,
             },
           },
         );
         mutate();
-      } catch (error) {
-        console.error("Failed to remove item:", error);
+      } catch ( error ) {
+        console.error( "Failed to remove item:", error );
       } finally {
-        setUpdatingItems((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(itemId);
+        setUpdatingItems( ( prev ) => {
+          const newSet = new Set( prev );
+          newSet.delete( itemId );
           return newSet;
-        });
+        } );
       }
     },
-    [mutate],
+    [ mutate ],
   );
 
-  if (error)
+  if ( error )
     return <div className="container mx-auto p-6">Failed to load cart</div>;
 
-  if (isLoading) {
+  if ( isLoading ) {
     return (
       <div className="container mx-auto p-6 flex justify-center items-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -100,16 +101,16 @@ export default function CartPage() {
 
   const cartItems = data?.data || [];
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.ecom_product.price * item.quantity,
+    ( sum, item ) => sum + item.ecom_product.price * item.quantity,
     0,
   );
 
   return (
     <AppLayout>
-      <div className="container mx-auto p-6 max-w-6xl min-h-screen">
+      <div className="container mx-auto p-6 max-w-6xl">
         <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
 
-        {cartItems.length === 0 ? (
+        { cartItems.length === 0 ? (
           <div className="text-center py-12">
             <ShoppingBag className="mx-auto h-24 w-24 text-muted-foreground mb-4" />
             <h2 className="text-2xl font-semibold mb-2">Your cart is empty</h2>
@@ -121,9 +122,10 @@ export default function CartPage() {
         ) : (
           <div className="grid gap-8 lg:grid-cols-12">
             <div className="lg:col-span-8">
-              {cartItems.map((item) => {
-                const isUpdating = updatingItems.has(item.ecom_product.id);
-                const cartParams = {
+              { cartItems.map( ( item ) => {
+                const isUpdating = updatingItems.has( item.ecom_product.id );
+                const cartParams: CartItem = {
+                  ...item,
                   quantity: item.quantity,
                   type: item.type || 2,
                   product_type: item.product_type || 2,
@@ -136,13 +138,13 @@ export default function CartPage() {
                 };
 
                 return (
-                  <Card key={item.id} className="mb-4">
+                  <Card key={ item.id } className="mb-4">
                     <CardContent className="p-6">
                       <div className="flex items-center space-x-6">
                         <div className="relative h-24 w-24 rounded-md overflow-hidden">
                           <Image
-                            src={item.ecom_product.main_image_url}
-                            alt={item.name}
+                            src={ item.ecom_product.main_image_url }
+                            alt={ item.name }
                             fill
                             className="object-cover"
                             sizes="96px"
@@ -151,10 +153,10 @@ export default function CartPage() {
                         <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-1">
                             <h3 className="font-semibold text-lg">
-                              {item.ecom_product.name}
+                              { item.ecom_product.name }
                             </h3>
                             <p className="text-sm text-muted-foreground">
-                              {item.ecom_product.botanical_name}
+                              { item.ecom_product.botanical_name }
                             </p>
                           </div>
                           <div className="flex items-center gap-4">
@@ -163,44 +165,44 @@ export default function CartPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-10 w-10"
-                                onClick={() =>
-                                  updateCartItem(item.ecom_product.id, {
+                                onClick={ () =>
+                                  updateCartItem( item.ecom_product.id, {
                                     ...cartParams,
-                                    quantity: Math.max(1, item.quantity - 1),
-                                  })
+                                    quantity: Math.max( 1, item.quantity - 1 ),
+                                  } )
                                 }
-                                disabled={item.quantity <= 1 || isUpdating}
+                                disabled={ item.quantity <= 1 || isUpdating }
                               >
                                 <Minus className="h-4 w-4" />
                               </Button>
                               <Input
                                 type="number"
                                 min="1"
-                                value={item.quantity}
-                                onChange={(e) => {
+                                value={ item.quantity }
+                                onChange={ ( e ) => {
                                   const newQuantity = Math.max(
                                     1,
-                                    parseInt(e.target.value) || 1,
+                                    parseInt( e.target.value ) || 1,
                                   );
-                                  updateCartItem(item.ecom_product.id, {
+                                  updateCartItem( item.ecom_product.id, {
                                     ...cartParams,
                                     quantity: newQuantity,
-                                  });
-                                }}
+                                  } );
+                                } }
                                 className="w-16 text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                disabled={isUpdating}
+                                disabled={ isUpdating }
                               />
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-10 w-10"
-                                onClick={() =>
-                                  updateCartItem(item.ecom_product.id, {
+                                onClick={ () =>
+                                  updateCartItem( item.ecom_product.id, {
                                     ...cartParams,
                                     quantity: item.quantity + 1,
-                                  })
+                                  } )
                                 }
-                                disabled={isUpdating}
+                                disabled={ isUpdating }
                               >
                                 <Plus className="h-4 w-4" />
                               </Button>
@@ -208,8 +210,8 @@ export default function CartPage() {
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() => removeItem(item.id)}
-                              disabled={isUpdating}
+                              onClick={ () => removeItem( item.id ) }
+                              disabled={ isUpdating }
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -217,9 +219,9 @@ export default function CartPage() {
                           <div className="text-right">
                             <p className="text-lg font-bold">
                               $
-                              {(
+                              { (
                                 item.ecom_product.price * item.quantity
-                              ).toFixed(2)}
+                              ).toFixed( 2 ) }
                             </p>
                           </div>
                         </div>
@@ -227,7 +229,7 @@ export default function CartPage() {
                     </CardContent>
                   </Card>
                 );
-              })}
+              } ) }
             </div>
 
             <div className="lg:col-span-4">
@@ -237,7 +239,7 @@ export default function CartPage() {
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span>${ subtotal.toFixed( 2 ) }</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Shipping</span>
@@ -245,17 +247,19 @@ export default function CartPage() {
                     </div>
                     <div className="flex justify-between font-bold text-lg pt-4 border-t">
                       <span>Total</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span>${ subtotal.toFixed( 2 ) }</span>
                     </div>
                   </div>
-                  <Button className="w-full mt-6" size="lg">
-                    Place Order
-                  </Button>
+                  <Link href="/checkout">
+                    <Button className="w-full mt-6" size="lg">
+                      Place Order
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             </div>
           </div>
-        )}
+        ) }
       </div>
     </AppLayout>
   );

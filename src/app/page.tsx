@@ -54,18 +54,18 @@ const promoCards: PromoCard[] = [
   {
     id: 1,
     image: neemTree,
-    title: "Feed A Tree",
-    description: "Nurture the roots of sustainability—feed a tree and help it thrive. Together, let's grow a greener future.",
-    linkText: "Feed Now",
-    linkUrl: "/feed-now",
+    title: "Adopt A Tree",
+    description: "Join us in planting trees and creating a healthier, greener environment for all.",
+    linkText: "Adopt Now",
+    linkUrl: "/adopt-a-tree",
   },
   {
     id: 2,
     image: neemTree,
-    title: "Plant A Tree",
-    description: "Join us in planting trees and creating a healthier, greener environment for all.",
-    linkText: "Plant Now",
-    linkUrl: "/plant-now",
+    title: "Feed A Tree",
+    description: "Nurture the roots of sustainability—feed a tree and help it thrive. Together, let's grow a greener future.",
+    linkText: "Feed Now",
+    linkUrl: "/feed-a-tree",
   },
 ];
 
