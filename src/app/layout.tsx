@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from "sonner";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "My Tree Enviros",
@@ -16,6 +17,14 @@ export default function RootLayout( {
 }> ) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          id="razorpay-checkout-script"
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="beforeInteractive"
+        />
+      </head>
+
       <body>
         <NextTopLoader color="#715130" showSpinner={ false } />
         { children }

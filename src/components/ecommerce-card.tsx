@@ -69,14 +69,42 @@ const EcommerceCard = ( { product }: Props ) => {
     setIsAddingToCart( true );
 
     try {
-      await new Promise( resolve => setTimeout( resolve, 500 ) );
-      toast.success( `${ name } has been added to your cart` );
+      const response = await fetch(
+        `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart/add/${ id }`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            Authorization: `Bearer ${ storage.getToken() }`,
+          },
+          body: JSON.stringify( {
+            quantity: 1,
+            type: 2,
+            product_type: 2,
+            duration: 1,
+            name: "Customer",
+            occasion: "General",
+            message: "Thank you!",
+            location_id: 1,
+            cart_type: 1
+          } ),
+        }
+      );
+
+      const result = await response.json();
+
+      if ( result.status ) {
+        toast.success( `${ name } has been added to your cart` );
+      } else {
+        throw new Error( result.message || 'Failed to add to cart' );
+      }
     } catch ( err ) {
       toast.error( `Failed to add item to cart - ${ err }` );
     } finally {
       setIsAddingToCart( false );
     }
-  }, [ name ] );
+  }, [ id, name ] );
 
   const renderRatingStars = useCallback( ( rating: number ) => {
     return Array.from( { length: 5 }, ( _, index ) => {

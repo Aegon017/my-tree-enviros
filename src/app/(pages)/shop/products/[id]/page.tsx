@@ -5,6 +5,7 @@ import { Check, Heart, Minus, Plus, ShoppingCart, Star } from 'lucide-react';
 import Image from 'next/image';
 import { use, useState } from 'react';
 import useSWR from 'swr';
+import { toast } from 'sonner';
 import AppLayout from '@/components/app-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,22 +41,116 @@ export default function ProductPage( { params }: Props ) {
     const { id } = use( params );
     const token = storage.getToken();
     const [ quantity, setQuantity ] = useState( 1 );
+    const [ isAddingToCart, setIsAddingToCart ] = useState( false );
+    const [ isWishlistLoading, setIsWishlistLoading ] = useState( false );
 
-    const { data: response, error, isLoading } = useSWR<ApiResponse>(
+    const { data: response, error, isLoading, mutate } = useSWR<ApiResponse>(
         token ? [ `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/product/${ id }`, token ] : null,
         ( [ url, token ] ) => fetcher( url, token ),
         { revalidateOnFocus: false, shouldRetryOnError: false }
     );
 
     const product = response?.data;
+    const [ isFavorite, setIsFavorite ] = useState( product?.wishlist_tag ?? false );
     const productImage = product?.main_image_url;
-    const averageRating = 0;
+    const averageRating = product?.reviews?.length ?
+        product.reviews.reduce( ( sum, r ) => sum + r.rating, 0 ) / product.reviews.length : 0;
 
     const handleQuantityChange = ( value: number ) => {
         if ( product && value >= 1 && value <= product.quantity ) {
             setQuantity( value );
         }
     };
+
+    const handleToggleFavorite = async () => {
+        if ( !token ) {
+            toast.error( 'Please login to manage your wishlist' );
+            return;
+        }
+
+        setIsWishlistLoading( true );
+        const newStatus = !isFavorite;
+
+        try {
+            const response = await fetch(
+                `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/wishlist/${ newStatus ? "add" : "remove" }/${ id }`,
+                {
+                    method: newStatus ? "POST" : "DELETE",
+                    headers: {
+                        Accept: "application/json",
+                        Authorization: `Bearer ${ token }`,
+                    },
+                }
+            );
+
+            if ( !response.ok ) throw new Error( "Network error" );
+
+            setIsFavorite( newStatus );
+            toast.success( newStatus
+                ? `Added ${ product?.name } to your wishlist`
+                : `Removed ${ product?.name } from your wishlist`
+            );
+        } catch ( err ) {
+            toast.error( `Failed to update wishlist - ${ err }` );
+        } finally {
+            setIsWishlistLoading( false );
+        }
+    };
+
+    const handleAddToCart = async () => {
+        if ( !token ) {
+            toast.error( 'Please login to add items to cart' );
+            return;
+        }
+
+        if ( !product || product.quantity === 0 ) return;
+
+        setIsAddingToCart( true );
+
+        try {
+            const response = await fetch(
+                `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart/add/${ id }`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        Authorization: `Bearer ${ token }`,
+                    },
+                    body: JSON.stringify( {
+                        quantity,
+                        type: 2,
+                        product_type: 2,
+                        duration: 1,
+                        name: "Customer",
+                        occasion: "General",
+                        message: "Thank you!",
+                        location_id: 1,
+                        cart_type: 1
+                    } ),
+                }
+            );
+
+            const result = await response.json();
+
+            if ( result.status ) {
+                toast.success( `${ product?.name } has been added to your cart` );
+            } else {
+                throw new Error( result.message || 'Failed to add to cart' );
+            }
+        } catch ( err ) {
+            toast.error( `Failed to add item to cart - ${ err }` );
+        } finally {
+            setIsAddingToCart( false );
+        }
+    };
+
+    // Update favorite status when product data loads
+    useState( () => {
+        if ( product ) {
+            setIsFavorite( product.wishlist_tag || false );
+        }
+    }, [ product ] );
 
     if ( error ) {
         return (
@@ -82,7 +177,7 @@ export default function ProductPage( { params }: Props ) {
                                 <div className="relative aspect-square overflow-hidden rounded-xl bg-muted">
                                     <Lens zoomFactor={ 2 }>
                                         <Image
-                                            src={ productImage || '/placeholder-image.jpg' }
+                                            src={ productImage }
                                             alt={ product?.name || '' }
                                             height={ 1200 }
                                             width={ 1200 }
@@ -92,8 +187,17 @@ export default function ProductPage( { params }: Props ) {
                                         />
                                     </Lens>
 
-                                    <Button variant="secondary" size="icon" className="absolute top-2 right-2 rounded-full z-50">
-                                        <Heart className="h-5 w-5" />
+                                    <Button
+                                        variant="secondary"
+                                        size="icon"
+                                        className={ `absolute top-2 right-2 rounded-full z-50 ${ isFavorite
+                                            ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                                            : "bg-background/80 text-muted-foreground hover:bg-background"
+                                            }` }
+                                        onClick={ handleToggleFavorite }
+                                        disabled={ isWishlistLoading }
+                                    >
+                                        <Heart className={ `h-5 w-5 ${ isFavorite ? "fill-current" : "" }` } />
                                     </Button>
                                 </div>
 
@@ -115,7 +219,6 @@ export default function ProductPage( { params }: Props ) {
                     </div>
 
                     <div className="space-y-6">
-                        {/* ... rest of the product details section remains unchanged ... */ }
                         { isLoading ? (
                             <>
                                 <Skeleton className="h-8 w-3/4" />
@@ -214,13 +317,32 @@ export default function ProductPage( { params }: Props ) {
                                 ) }
 
                                 <div className="flex gap-3">
-                                    <Button size="lg" className="flex-1" disabled={ !product || product.quantity === 0 }>
-                                        <ShoppingCart className="mr-2 h-5 w-5" />
-                                        Add to Cart
+                                    <Button
+                                        size="lg"
+                                        className="flex-1"
+                                        disabled={ !product || product.quantity === 0 || isAddingToCart }
+                                        onClick={ handleAddToCart }
+                                    >
+                                        { isAddingToCart ? (
+                                            <>
+                                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-accent-foreground" />
+                                                Adding...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ShoppingCart className="mr-2 h-5 w-5" />
+                                                Add to Cart
+                                            </>
+                                        ) }
                                     </Button>
-                                    <Button variant="outline" size="lg">
-                                        <Heart className="mr-2 h-5 w-5" />
-                                        Wishlist
+                                    <Button
+                                        variant="outline"
+                                        size="lg"
+                                        onClick={ handleToggleFavorite }
+                                        disabled={ isWishlistLoading }
+                                    >
+                                        <Heart className={ `mr-2 h-5 w-5 ${ isFavorite ? "fill-current" : "" }` } />
+                                        { isFavorite ? "In Wishlist" : "Wishlist" }
                                     </Button>
                                 </div>
 
