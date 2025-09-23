@@ -1,16 +1,17 @@
 "use client";
 
-import { Loader2, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
-import Image from "next/image";
+import { Loader2, ShoppingBag } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useState } from "react";
 import useSWR from "swr";
 import AppLayout from "@/components/app-layout";
+import CartItemCard from "@/components/cart-item-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { storage } from "@/lib/storage";
 import type { CartItem } from "@/types/cart";
-import Link from "next/link";
+import Section from "@/components/section";
+import SectionTitle from "@/components/section-title";
 
 interface CartResponse {
   status: boolean;
@@ -107,133 +108,45 @@ export default function CartPage() {
 
   return (
     <AppLayout>
-      <div className="container mx-auto p-6 max-w-6xl">
-        <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
-
+      <Section>
+        <SectionTitle
+          title="Shopping Cart"
+          align="center"
+          subtitle={
+            cartItems.length === 0
+              ? "Your cart is currently empty."
+              : `You have ${ cartItems.length } item${ cartItems.length > 1 ? "s" : "" } in your cart.`
+          }
+        />
         { cartItems.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center">
             <ShoppingBag className="mx-auto h-24 w-24 text-muted-foreground mb-4" />
             <h2 className="text-2xl font-semibold mb-2">Your cart is empty</h2>
             <p className="text-muted-foreground mb-6">
               Add some plants to get started
             </p>
-            <Button>Continue Shopping</Button>
+            <div className="text-center">
+              <Link href="/shop">
+                <Button>Continue Shopping</Button>
+              </Link>
+            </div>
           </div>
         ) : (
-          <div className="grid gap-8 lg:grid-cols-12">
+          <div className="grid gap-4 lg:grid-cols-12">
             <div className="lg:col-span-8">
-              { cartItems.map( ( item ) => {
-                const isUpdating = updatingItems.has( item.ecom_product.id );
-                const cartParams: CartItem = {
-                  ...item,
-                  quantity: item.quantity,
-                  type: item.type || 2,
-                  product_type: item.product_type || 2,
-                  duration: item.duration || 1,
-                  name: item.name || "Customer",
-                  occasion: item.occasion || "General",
-                  message: item.message || "Thank you!",
-                  location_id: item.location_id || 1,
-                  cart_type: item.cart_type || 1,
-                };
-
-                return (
-                  <Card key={ item.id } className="mb-4">
-                    <CardContent className="p-6">
-                      <div className="flex items-center space-x-6">
-                        <div className="relative h-24 w-24 rounded-md overflow-hidden">
-                          <Image
-                            src={ item.ecom_product.main_image_url }
-                            alt={ item.name }
-                            fill
-                            className="object-cover"
-                            sizes="96px"
-                          />
-                        </div>
-                        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="space-y-1">
-                            <h3 className="font-semibold text-lg">
-                              { item.ecom_product.name }
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              { item.ecom_product.botanical_name }
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center border rounded-md">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10"
-                                onClick={ () =>
-                                  updateCartItem( item.ecom_product.id, {
-                                    ...cartParams,
-                                    quantity: Math.max( 1, item.quantity - 1 ),
-                                  } )
-                                }
-                                disabled={ item.quantity <= 1 || isUpdating }
-                              >
-                                <Minus className="h-4 w-4" />
-                              </Button>
-                              <Input
-                                type="number"
-                                min="1"
-                                value={ item.quantity }
-                                onChange={ ( e ) => {
-                                  const newQuantity = Math.max(
-                                    1,
-                                    parseInt( e.target.value ) || 1,
-                                  );
-                                  updateCartItem( item.ecom_product.id, {
-                                    ...cartParams,
-                                    quantity: newQuantity,
-                                  } );
-                                } }
-                                className="w-16 text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                disabled={ isUpdating }
-                              />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10"
-                                onClick={ () =>
-                                  updateCartItem( item.ecom_product.id, {
-                                    ...cartParams,
-                                    quantity: item.quantity + 1,
-                                  } )
-                                }
-                                disabled={ isUpdating }
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={ () => removeItem( item.id ) }
-                              disabled={ isUpdating }
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold">
-                              $
-                              { (
-                                item.ecom_product.price * item.quantity
-                              ).toFixed( 2 ) }
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              } ) }
+              { cartItems.map( ( item ) => (
+                <CartItemCard
+                  key={ item.id }
+                  item={ item }
+                  isUpdating={ updatingItems.has( item.ecom_product.id ) }
+                  onUpdate={ updateCartItem }
+                  onRemove={ removeItem }
+                />
+              ) ) }
             </div>
 
             <div className="lg:col-span-4">
-              <Card className="sticky top-20">
+              <Card className="sticky top-16 py-0">
                 <CardContent className="p-6">
                   <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
                   <div className="space-y-4">
@@ -260,7 +173,7 @@ export default function CartPage() {
             </div>
           </div>
         ) }
-      </div>
-    </AppLayout>
+      </Section>
+    </AppLayout >
   );
 }

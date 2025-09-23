@@ -159,7 +159,7 @@ export default function ProductPage( { params }: Props ) {
     <AppLayout>
       <div className="container mx-auto px-4 py-8 max-w-6xl bg-background">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-4 sticky top-16 self-start">
+          <div className="space-y-4 lg:sticky top-16 self-start">
             { isLoading ? (
               <Skeleton className="h-96 w-full rounded-xl" />
             ) : (

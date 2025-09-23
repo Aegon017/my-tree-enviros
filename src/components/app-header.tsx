@@ -11,7 +11,6 @@ import {
   User,
   X,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -31,9 +30,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/use-auth";
 import AppLogo from "./ui/app-logo";
 
 const NOTICE_TEXT = "Get Up to 20% OFF On First Time Purchase";
@@ -50,8 +49,6 @@ const TOP_BAR_LINKS = [
   { name: "My Account", href: "/account" },
   { name: "About Us", href: "/about" },
   { name: "Blogs", href: "/blogs" },
-  { name: "Wishlist", href: "/wishlist" },
-  { name: "Cart", href: "/cart" },
   { name: "Sign In", href: "/sign-in", isAuth: true },
   { name: "Sign Up", href: "/sign-up", isAuth: true, highlight: true },
 ];
@@ -63,7 +60,6 @@ const MAIN_NAV_ITEMS = [
   { href: "/shop", label: "Shop" },
 ];
 const ICON_LINKS = [
-  { href: "/search", icon: Search, label: "Search" },
   { href: "/account", icon: User, label: "Account" },
   { href: "/wishlist", icon: Heart, label: "Wishlist" },
   { href: "/cart", icon: ShoppingCart, label: "Cart" },

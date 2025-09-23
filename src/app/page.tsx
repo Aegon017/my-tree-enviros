@@ -141,7 +141,7 @@ export default function Home() {
   if ( productsError ) {
     return (
       <AppLayout>
-        <Section className="bg-background py-12">
+        <Section className="bg-background">
           <Alert variant="destructive">
             <AlertDescription>Failed to load products. Please try again later.</AlertDescription>
           </Alert>
@@ -184,7 +184,7 @@ export default function Home() {
           <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2" />
         </Carousel>
 
-        <Section className="bg-background py-12">
+        <Section className="bg-background">
           <SectionTitle
             title="Sponsor A Tree"
             subtitle="Sponsoring a tree is more than just planting—it's a commitment to a sustainable future. With every tree sponsored, you contribute to reducing carbon footprints, improving air quality, and preserving biodiversity."
@@ -220,7 +220,7 @@ export default function Home() {
           </div>
         </Section>
 
-        <Section className="bg-muted py-12">
+        <Section className="bg-muted">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
             { promoCards.map( ( promo ) => (
               <PromoTreeCard
@@ -235,7 +235,7 @@ export default function Home() {
           </div>
         </Section>
 
-        <Section className="bg-background py-12">
+        <Section className="bg-background">
           <SectionTitle
             title="Natural Goodness from Trees"
             subtitle="Discover a wide range of organic products derived directly from nature's bounty. From nourishing oils to flavorful spices and eco-friendly raw materials."
@@ -257,7 +257,7 @@ export default function Home() {
           </div>
         </Section>
 
-        <Section className="bg-muted py-12">
+        <Section className="bg-muted">
           <SectionTitle
             title="Insights from Nature's Wisdom"
             subtitle="Explore our blog for tips, stories, and ideas on sustainable living, tree care, and the impact of organic products."
