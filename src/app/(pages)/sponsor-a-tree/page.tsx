@@ -4,21 +4,15 @@ import Link from "next/link";
 import useSWR from "swr";
 import AppLayout from "@/components/app-layout";
 import BasicTreeCard from "@/components/basic-tree-card";
+import BreadcrumbNav from "@/components/breadcrumb-nav";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import BasicTreeCardSkeleton from "@/components/skeletons/basic-tree-card-skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { storage } from "@/lib/storage";
-import { BreadcrumbItemType } from "@/types/home";
-import BreadcrumbNav from "@/components/breadcrumb-nav";
-
-interface Tree {
-  id: number;
-  name: string;
-  main_image_url: string;
-  slug: string;
-}
+import type { BreadcrumbItemType } from "@/types/home";
+import type { Tree } from "@/types/tree";
 
 interface TreeApiResponse {
   status: boolean;
@@ -83,7 +77,7 @@ const Page = () => {
               : trees.map( ( tree ) => (
                 <Link
                   key={ tree.id }
-                  href={ `/trees/${ tree.slug }` }
+                  href={ `/sponsor-a-tree/${ tree.id }` }
                   className="transition-transform hover:scale-105"
                 >
                   <BasicTreeCard name={ tree.name } image={ tree.main_image_url } />

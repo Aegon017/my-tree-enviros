@@ -32,6 +32,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import AppLogo from "./ui/app-logo";
@@ -47,8 +48,7 @@ const LOCATIONS = [
   "Kolkata",
 ];
 const TOP_BAR_LINKS = [
-  { name: "My Account", href: "/account" },
-  { name: "About Us", href: "/about" },
+  { name: "My Account", href: "/my-account" },
   { name: "Blogs", href: "/blogs" },
   { name: "Sign In", href: "/sign-in", isAuth: true },
   { name: "Sign Up", href: "/sign-up", isAuth: true, highlight: true },

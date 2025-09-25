@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import useSWR from "swr";
 import AppLayout from "@/components/app-layout";
 import { ApplyCoupon } from "@/components/apply-coupon";
@@ -33,6 +34,7 @@ interface CartItem {
   product_type: number;
   product_id: number;
   quantity: number;
+  duration?: number;
   coupon_code: string | null;
   ecom_product: EcomProduct;
 }
@@ -62,9 +64,9 @@ const fetcher = async ( url: string ) => {
   }
 
   const response = await fetch( url, {
-    method: "GET",
     headers: {
       accept: "application/json",
+      Authorization: `Bearer ${ token }`,
       Authorization: `Bearer ${ token }`,
     },
   } );
@@ -76,10 +78,23 @@ const fetcher = async ( url: string ) => {
   return response.json();
 };
 
+const calculateItemPrice = ( item: CartItem ): number => {
+  if ( item.product_type === 2 && item.ecom_product ) {
+    return item.ecom_product.price * item.quantity;
+  }
+
+  if ( item.product_type === 1 && item.product?.price?.length ) {
+    const priceInfo = item.duration
+      ? item.product.price.find( p => p.duration === item.duration )
+      : item.product.price[ 0 ];
+
+    return priceInfo ? parseFloat( priceInfo.price ) * item.quantity : 0;
+  }
+
+  return 0;
+};
+
 export default function CheckoutPage() {
-  const [ selectedAddressId, setSelectedAddressId ] = useState<number | null>( null );
-  const [ discountAmount, setDiscountAmount ] = useState<number>( 0 );
-  const [ baseTotal, setBaseTotal ] = useState<number>( 0 );
   const router = useRouter();
 
   // Fetch cart data
@@ -112,29 +127,24 @@ export default function CheckoutPage() {
   const { data: userData } = useSWR<UserData>(
     `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/user`,
     fetcher,
-    {
-      revalidateOnFocus: false,
-    }
+    { revalidateOnFocus: false }
   );
 
-  const handleAddressSelect = useCallback( ( shipping_address_id: number | null ) => {
-    setSelectedAddressId( shipping_address_id );
-  }, [] );
+  const cartItems = cartData?.status ? cartData.data : [];
 
-  const handleCouponApplied = useCallback( ( discount: number ) => {
-    setDiscountAmount( discount > 0 ? discount : 0 );
-  }, [] );
-
-  const handleCouponRemoved = useCallback( () => {
-    setDiscountAmount( 0 );
-  }, [] );
+  const { baseTotal, hasTreeProducts, hasEcomProducts } = useMemo( () => {
+    const total = cartItems.reduce( ( sum, item ) => sum + calculateItemPrice( item ), 0 );
+    const hasTree = cartItems.some( item => item.product_type === 1 );
+    const hasEcom = cartItems.some( item => item.product_type === 2 );
+    return { baseTotal: total, hasTreeProducts: hasTree, hasEcomProducts: hasEcom };
+  }, [ cartItems ] );
 
   const handlePaymentSuccess = useCallback( ( response: PaymentSuccessResponse ) => {
     const orderTotal = Math.max( 0, baseTotal - discountAmount );
     router.push(
-      `/payment/success?order_id=${ response.mt_order_id }&transaction_id=${ response.razorpay_payment_id }&amount=${ orderTotal }`
+      `/payment/success?order_id=${ response.mt_order_id }&transaction_id=${ response.razorpay_payment_id }&amount=${ response.amount }`
     );
-  }, [ router, baseTotal, discountAmount ] );
+  }, [ router ] );
 
   const handlePaymentFailure = useCallback( ( error: unknown ) => {
     const orderTotal = Math.max( 0, baseTotal - discountAmount );

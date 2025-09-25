@@ -205,7 +205,7 @@ export default function Home() {
               trees.map( ( tree ) => (
                 <Link
                   key={ tree.id }
-                  href={ `/trees/${ tree.slug }` }
+                  href={ `/sponsor-a-tree/${ tree.id }` }
                   className="transition-transform hover:scale-105"
                 >
                   <BasicTreeCard name={ tree.name } image={ tree.main_image_url } />
