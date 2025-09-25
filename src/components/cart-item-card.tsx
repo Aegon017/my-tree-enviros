@@ -107,7 +107,7 @@ export default function CartItemCard( { item, isUpdating, onUpdate, onRemove }: 
                             </div>
 
                             <div className="text-center sm:text-right">
-                                <p className="text-lg font-bold">${ totalPrice }</p>
+                                <p className="text-lg font-bold">₹{ totalPrice }</p>
                             </div>
 
                             <div className="flex justify-center sm:justify-end">

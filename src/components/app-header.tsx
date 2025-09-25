@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Bell,
   ChevronDown,
   Heart,
   MapPin,
@@ -63,6 +64,7 @@ const ICON_LINKS = [
   { href: "/account", icon: User, label: "Account" },
   { href: "/wishlist", icon: Heart, label: "Wishlist" },
   { href: "/cart", icon: ShoppingCart, label: "Cart" },
+  { href: "/notifications", icon: Bell, label: "Notifications" },
 ];
 
 export default function Header() {

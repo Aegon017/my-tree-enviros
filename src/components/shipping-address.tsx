@@ -51,7 +51,7 @@ interface AddressCardProps {
 
 const AddressCard = ( { address, isSelected, onSelect, onEdit, onDelete }: AddressCardProps ) => (
   <Card
-    className={ `cursor-pointer transition-all ${ isSelected ? "border-primary border-2" : "hover:border-primary/50" } mb-4` }
+    className={ `cursor-pointer transition-all ${ isSelected ? "border-primary border-2" : "hover:border-primary/50" }` }
     onClick={ () => onSelect( address.id ) }
   >
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4 sm:px-6">
@@ -422,7 +422,7 @@ export default function ShippingAddresses( {
       </div>
 
       { data?.data && data.data.length > 0 ? (
-        <div>
+        <div className="grid grid-cols-1 gap-4">
           { data.data.map( ( address ) => (
             <AddressCard
               key={ address.id }
