@@ -428,7 +428,6 @@ export default function Page( { params }: Props ) {
                                                             </div>
                                                             <div className="text-right">
                                                                 <div className="flex items-center gap-1">
-                                                                    <DollarSign className="h-5 w-5 text-primary" />
                                                                     <span className="text-3xl font-bold text-primary">
                                                                         ₹{ ( getPriceForDuration( selectedYears ) * quantity ).toLocaleString( "en-IN" ) }
                                                                     </span>
