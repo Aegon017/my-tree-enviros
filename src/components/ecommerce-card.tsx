@@ -213,7 +213,7 @@ const EcommerceCard = ( { product }: Props ) => {
             </div>
           </div>
           <Markup
-            className="text-sm text-muted-foreground mb-4 line-clamp-2 prose prose-sm prose-muted"
+            className="text-sm text-muted-foreground mb-4 line-clamp-2"
             content={ description }
           />
         </Link>

@@ -25,10 +25,10 @@ const BasicTreeCard = ( { name, image }: Props ) => {
       </div>
 
       <div className="px-6 py-4">
-        <h3 className="text-base font-semibold text-card-foreground tracking-tight text-balance leading-relaxed group-hover:text-primary transition-colors duration-300">
+        <h3 className="text-center text-base font-semibold text-card-foreground tracking-tight text-balance leading-relaxed group-hover:text-primary transition-colors duration-300">
           { name }
         </h3>
-        <div className="mt-3 h-px bg-gradient-to-r from-primary/30 to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
+        <div className="mt-2 h-px bg-gradient-to-r from-primary/40 to-primary/40 transform scale-x-0 group-hover:scale-x-60 transition-transform duration-500 origin-center" />
       </div>
     </Card>
   )

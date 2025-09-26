@@ -27,6 +27,7 @@ export interface FeedTree {
     main_image_url: string;
     city: City;
     state: State;
+    donations: Donation[]
 }
 
 export interface City {
@@ -56,4 +57,19 @@ export interface State {
     created_at: string;
     updated_at: string;
     main_img_url: string;
+}
+
+export interface Donation {
+    id: number
+    campaign_id: number
+    amount: string
+    donor_name: string
+    donor_email: string
+    donor_id: number
+    created_at: string
+    updated_at: string
+    created_by: number
+    updated_by: number
+    trash: number
+    status: number
 }

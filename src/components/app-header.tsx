@@ -6,7 +6,6 @@ import {
   MapPin,
   Menu,
   Phone,
-  Search,
   ShoppingCart,
   User,
   X,
@@ -56,7 +55,7 @@ const MAIN_NAV_ITEMS = [
   { href: "/sponsor-a-tree", label: "Sponsor A Tree" },
   { href: "/feed-a-tree", label: "Feed A Tree" },
   { href: "/adopt-a-tree", label: "Adopt A Tree" },
-  { href: "/shop", label: "Shop" },
+  { href: "/store", label: "Store" },
 ];
 const ICON_LINKS = [
   { href: "/my-account", icon: User, label: "My Account" },

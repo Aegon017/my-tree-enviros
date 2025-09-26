@@ -314,9 +314,6 @@ export default function ProductPage( { params }: Props ) {
                 <div className="pt-4 border-t">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="font-semibold">SKU:</span> { product.sku }
-                    </div>
-                    <div>
                       <span className="font-semibold">Category:</span> { product.category.name }
                     </div>
                     <div>
@@ -350,10 +347,6 @@ export default function ProductPage( { params }: Props ) {
                       <div>
                         <h4 className="font-semibold">Botanical Name</h4>
                         <p className="text-muted-foreground">{ product.botanical_name }</p>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold">SKU</h4>
-                        <p className="text-muted-foreground">{ product.sku }</p>
                       </div>
                       <div>
                         <h4 className="font-semibold">Category</h4>

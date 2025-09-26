@@ -64,7 +64,7 @@ export default function Page( { params }: Props ) {
     const [ reviewText, setReviewText ] = useState( "" );
 
     const { data: response, error, isLoading } = useSWR(
-        id ? [ `https://arboraid.co/beta/public/api/tree/${ id }`, token ] : null,
+        id ? [ `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/tree/${ id }`, token ] : null,
         ( [ url, token ] ) => fetcher( url, token ),
         { revalidateOnFocus: false, shouldRetryOnError: false }
     );
@@ -80,12 +80,12 @@ export default function Page( { params }: Props ) {
         : 0;
 
     const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
-        [ `https://arboraid.co/beta/public/api/cart/add/${ id }`, "add" ],
+        [ `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart/add/${ id }`, "add" ],
         cartMutation
     );
 
     const { trigger: sponsorTrigger, isMutating: isSponsoring } = useSWRMutation(
-        [ `https://arboraid.co/beta/public/api/cart/add/${ id }`, "sponsor" ],
+        [ `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart/add/${ id }`, "sponsor" ],
         cartMutation
     );
 
@@ -280,9 +280,6 @@ export default function Page( { params }: Props ) {
                             <>
                                 <div className="space-y-4">
                                     <div className="flex flex-wrap gap-2 items-center">
-                                        <Badge variant="secondary" className="px-3 py-1">
-                                            { tree.sku }
-                                        </Badge>
                                         <Badge variant="outline" className="px-3 py-1">
                                             <Leaf className="h-3 w-3 mr-1" />
                                             { tree.age } years old
@@ -322,13 +319,6 @@ export default function Page( { params }: Props ) {
                                                     <p className="font-semibold">
                                                         { tree.city?.name }, { tree.state?.name }
                                                     </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-white/5 rounded-lg">
-                                                <Trees className="h-5 w-5 text-green-600" />
-                                                <div>
-                                                    <p className="text-sm text-muted-foreground">Available</p>
-                                                    <p className="font-semibold">{ tree.quantity } trees</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -482,93 +472,17 @@ export default function Page( { params }: Props ) {
                 { !isLoading && tree && (
                     <div className="mt-16">
                         <Tabs defaultValue="description" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8">
+                            <TabsList className="grid w-full grid-cols-1 max-w-md mx-auto mb-8">
                                 <TabsTrigger value="description" className="flex items-center gap-2">
-                                    Tree Story
-                                </TabsTrigger>
-                                <TabsTrigger value="reviews" className="flex items-center gap-2">
-                                    <Star className="h-4 w-4" />
-                                    Reviews ({ tree.reviews?.length || 0 })
+                                    About This Tree
                                 </TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="description" className="space-y-6">
                                 <Card>
                                     <CardContent className="p-8">
-                                        <div className="prose prose-lg max-w-none dark:prose-invert">
+                                        <div className="max-w-none">
                                             <Markup content={ tree.description } />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-
-                            <TabsContent value="reviews" className="space-y-6">
-                                <Card>
-                                    <CardContent className="p-8">
-                                        { tree.reviews?.length ? (
-                                            <div className="space-y-6">
-                                                { tree.reviews.map( ( review ) => (
-                                                    <div key={ review.id } className="border-b pb-6 last:border-0 last:pb-0">
-                                                        <div className="flex items-start justify-between mb-3">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="flex">
-                                                                    { Array.from( { length: 5 }, ( _, i ) => (
-                                                                        <Star
-                                                                            key={ i }
-                                                                            className={ `h-4 w-4 ${ i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30" }` }
-                                                                        />
-                                                                    ) ) }
-                                                                </div>
-                                                                <span className="font-semibold">Anonymous User</span>
-                                                            </div>
-                                                            <span className="text-sm text-muted-foreground">
-                                                                { new Date( review.created_at ).toLocaleDateString() }
-                                                            </span>
-                                                        </div>
-                                                        <p className="text-muted-foreground">{ review.review }</p>
-                                                    </div>
-                                                ) ) }
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-8">
-                                                <Star className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-                                                <h4 className="text-lg font-semibold mb-2">No reviews yet</h4>
-                                                <p className="text-muted-foreground">Be the first to sponsor this tree and share your experience!</p>
-                                            </div>
-                                        ) }
-
-                                        <div className="mt-8 pt-8 border-t">
-                                            <h4 className="text-lg font-semibold mb-6">Share Your Experience</h4>
-                                            <form onSubmit={ handleSubmitReview } className="space-y-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-medium">Your Rating:</span>
-                                                    <div className="flex">
-                                                        { Array.from( { length: 5 }, ( _, i ) => (
-                                                            <button
-                                                                key={ i }
-                                                                type="button"
-                                                                onClick={ () => setRating( i + 1 ) }
-                                                                className="p-1 hover:scale-110 transition-transform"
-                                                            >
-                                                                <Star
-                                                                    className={ `h-6 w-6 ${ i < rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30 hover:text-yellow-400/50"
-                                                                        }` }
-                                                                />
-                                                            </button>
-                                                        ) ) }
-                                                    </div>
-                                                </div>
-                                                <Textarea
-                                                    placeholder="Tell us about your sponsorship experience..."
-                                                    className="min-h-32"
-                                                    value={ reviewText }
-                                                    onChange={ ( e ) => setReviewText( e.target.value ) }
-                                                />
-                                                <Button type="submit" disabled={ !rating || !reviewText.trim() }>
-                                                    <Check className="h-4 w-4 mr-2" />
-                                                    Submit Review
-                                                </Button>
-                                            </form>
                                         </div>
                                     </CardContent>
                                 </Card>
