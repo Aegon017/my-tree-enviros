@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import useSWRMutation from "swr/mutation";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,9 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import { storage } from "@/lib/storage";
 
 interface ApplyCouponProps {
@@ -21,7 +21,6 @@ interface ApplyCouponProps {
   currentTotal: number;
 }
 
-// Fetcher function for SWR mutation
 async function applyCouponFetcher(
   url: string,
   { arg }: { arg: { coupon_code: string } },
@@ -96,31 +95,31 @@ export function ApplyCoupon({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex gap-2">
+            <div className="flex gap-2">
             <Input
               type="text"
-              placeholder="Enter coupon code"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value)}
+              placeholder="ENTER COUPON CODE"
+              value={couponCode.toUpperCase()}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
               disabled={isMutating || !!appliedCoupon}
             />
             {appliedCoupon ? (
               <Button
-                onClick={handleChangeCoupon}
-                disabled={isMutating}
-                variant="outline"
+              onClick={handleChangeCoupon}
+              disabled={isMutating}
+              variant="outline"
               >
-                Change
+              CHANGE
               </Button>
             ) : (
               <Button
-                onClick={handleApplyCoupon}
-                disabled={isMutating || !couponCode.trim()}
+              onClick={handleApplyCoupon}
+              disabled={isMutating || !couponCode.trim()}
               >
-                {isMutating ? "Applying..." : "Apply"}
+              {isMutating ? "APPLYING..." : "APPLY"}
               </Button>
             )}
-          </div>
+            </div>
 
           {appliedCoupon && (
             <div className="p-3 bg-muted rounded-lg">

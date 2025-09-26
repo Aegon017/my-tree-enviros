@@ -2,33 +2,29 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import useSWR from "swr";
 import AppLayout from "@/components/app-layout";
 import { ApplyCoupon } from "@/components/apply-coupon";
-import RazorpayButton from "@/components/razorpay-button";
+import RazorpayButton from "@/components/razorpay-button"; // Correct import
 import Section from "@/components/section";
 import ShippingAddresses from "@/components/shipping-address";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { storage } from "@/lib/storage";
-
-interface PriceInfo {
-  id: number;
-  tree_id?: number;
-  duration?: number;
-  price: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface TreeProduct {
-  id: number;
-  price: PriceInfo[];
-}
+import SectionTitle from '@/components/section-title';
 
 interface EcomProduct {
   id: number;
   price: number;
+  name?: string;
 }
 
 interface CartItem {
@@ -40,8 +36,7 @@ interface CartItem {
   quantity: number;
   duration?: number;
   coupon_code: string | null;
-  ecom_product?: EcomProduct;
-  product?: TreeProduct;
+  ecom_product: EcomProduct;
 }
 
 interface CartResponse {
@@ -56,18 +51,30 @@ interface UserData {
   name: string;
 }
 
+interface PaymentSuccessResponse {
+  mt_order_id: string;
+  razorpay_payment_id: string;
+}
+
+// Fetcher function for SWR
 const fetcher = async ( url: string ) => {
   const token = storage.getToken();
-  if ( !token ) throw new Error( "No authentication token" );
+  if ( !token ) {
+    throw new Error( "No authentication token found" );
+  }
 
   const response = await fetch( url, {
     headers: {
       accept: "application/json",
       Authorization: `Bearer ${ token }`,
+      Authorization: `Bearer ${ token }`,
     },
   } );
 
-  if ( !response.ok ) throw new Error( "Failed to fetch data" );
+  if ( !response.ok ) {
+    throw new Error( `Failed to fetch: ${ response.status } ${ response.statusText }` );
+  }
+
   return response.json();
 };
 
@@ -90,12 +97,33 @@ const calculateItemPrice = ( item: CartItem ): number => {
 export default function CheckoutPage() {
   const router = useRouter();
 
-  const { data: cartData, error, isLoading } = useSWR<CartResponse>(
+  // Fetch cart data
+  const {
+    data: cartData,
+    error,
+    isLoading,
+    isValidating
+  } = useSWR<CartResponse>(
     `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart`,
     fetcher,
-    { revalidateOnFocus: false }
+    {
+      revalidateOnFocus: false,
+      onSuccess: ( data ) => {
+        if ( data?.status && data.data ) {
+          const total = data.data.reduce(
+            ( sum, item ) => sum + item.ecom_product.price * item.quantity,
+            0
+          );
+          setBaseTotal( total );
+        }
+      },
+      onError: ( err ) => {
+        console.error( "Failed to fetch cart:", err );
+      },
+    }
   );
 
+  // Fetch user data
   const { data: userData } = useSWR<UserData>(
     `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/user`,
     fetcher,
@@ -111,24 +139,46 @@ export default function CheckoutPage() {
     return { baseTotal: total, hasTreeProducts: hasTree, hasEcomProducts: hasEcom };
   }, [ cartItems ] );
 
-  const handlePaymentSuccess = useCallback( ( response: any ) => {
+  const handlePaymentSuccess = useCallback( ( response: PaymentSuccessResponse ) => {
+    const orderTotal = Math.max( 0, baseTotal - discountAmount );
     router.push(
       `/payment/success?order_id=${ response.mt_order_id }&transaction_id=${ response.razorpay_payment_id }&amount=${ response.amount }`
     );
   }, [ router ] );
 
-  const handlePaymentFailure = useCallback( ( error: any ) => {
-    const errorMessage = error?.description || error?.message || "Payment failed";
-    router.push( `/payment/failed?error=${ encodeURIComponent( errorMessage ) }` );
-  }, [ router ] );
+  const handlePaymentFailure = useCallback( ( error: unknown ) => {
+    const orderTotal = Math.max( 0, baseTotal - discountAmount );
+    let errorMessage = "Payment failed";
 
+    if ( error && typeof error === 'object' ) {
+      if ( 'description' in error && typeof error.description === 'string' ) {
+        errorMessage = error.description;
+      } else if ( 'message' in error && typeof error.message === 'string' ) {
+        errorMessage = error.message;
+      }
+    }
+
+    router.push(
+      `/payment/failed?error=${ encodeURIComponent( errorMessage ) }&amount=${ orderTotal }`
+    );
+  }, [ router, baseTotal, discountAmount ] );
+
+  // Calculate order total using useMemo to prevent unnecessary recalculations
+  const orderTotal = useMemo( () => {
+    return Math.max( 0, baseTotal - discountAmount );
+  }, [ baseTotal, discountAmount ] );
+
+  const isPaymentDisabled = !selectedAddressId || orderTotal <= 0 || isLoading || isValidating;
+
+  // Show loading state
   if ( isLoading ) {
     return (
       <AppLayout>
-        <div className="container mx-auto p-6">
+        <div className="container mx-auto px-4 py-8">
           <Skeleton className="h-8 w-48 mb-6" />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-6">
+              <Skeleton className="h-64 w-full" />
               <Skeleton className="h-64 w-full" />
             </div>
             <div className="space-y-6">
@@ -141,13 +191,24 @@ export default function CheckoutPage() {
     );
   }
 
-  if ( error || !cartData?.status ) {
+  // Show error state
+  if ( error || !cartData?.data ) {
     return (
       <AppLayout>
         <Section>
-          <div className="container mx-auto p-6">
-            <div className="bg-red-100 text-red-700 p-4 rounded" role="alert">
-              Unable to load cart items. Please try again later.
+          <div className="container mx-auto px-4 py-8">
+            <div
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6"
+              role="alert"
+            >
+              <h2 className="font-bold mb-2">Unable to load cart items</h2>
+              <p>Please try again later or contact support if the problem persists.</p>
+              <Button
+                onClick={ () => window.location.reload() }
+                className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+              >
+                Retry
+              </Button>
             </div>
           </div>
         </Section>
@@ -158,224 +219,93 @@ export default function CheckoutPage() {
   return (
     <AppLayout>
       <Section>
-        <CheckoutContent
-          cartItems={ cartItems }
-          userData={ userData }
-          baseTotal={ baseTotal }
-          hasTreeProducts={ hasTreeProducts }
-          hasEcomProducts={ hasEcomProducts }
-          onPaymentSuccess={ handlePaymentSuccess }
-          onPaymentFailure={ handlePaymentFailure }
+        <SectionTitle
+          title="Checkout"
+          align="center"
+          subtitle="Review your order, apply coupons, and complete your purchase"
         />
-      </Section>
-    </AppLayout>
-  );
-}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Shipping Information */ }
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Shipping Information</CardTitle>
+                <CardDescription>
+                  Select your shipping address
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ShippingAddresses
+                  onSelect={ handleAddressSelect }
+                  selectedAddressId={ selectedAddressId }
+                />
+                { !selectedAddressId && (
+                  <p className="text-red-500 text-sm mt-2">
+                    Please select a shipping address to proceed.
+                  </p>
+                ) }
+              </CardContent>
+            </Card>
+          </div>
 
-interface CheckoutContentProps {
-  cartItems: CartItem[];
-  userData?: UserData;
-  baseTotal: number;
-  hasTreeProducts: boolean;
-  hasEcomProducts: boolean;
-  onPaymentSuccess: ( response: any ) => void;
-  onPaymentFailure: ( error: any ) => void;
-}
-
-function CheckoutContent( {
-  cartItems,
-  userData,
-  baseTotal,
-  hasTreeProducts,
-  hasEcomProducts,
-  onPaymentSuccess,
-  onPaymentFailure
-}: CheckoutContentProps ) {
-  const [ selectedAddressId, setSelectedAddressId ] = useState<number | null>( null );
-  const [ discountAmount, setDiscountAmount ] = useState( 0 );
-
-  const applicableDiscount = hasEcomProducts ? discountAmount : 0;
-  const orderTotal = Math.max( 0, baseTotal - applicableDiscount );
-
-  const isPaymentDisabled = useMemo( () => {
-    if ( orderTotal <= 0 ) return true;
-    if ( hasEcomProducts && !selectedAddressId ) return true;
-    return false;
-  }, [ hasEcomProducts, selectedAddressId, orderTotal ] );
-
-  const handleAddressSelect = useCallback( ( shipping_address_id: number | null ) => {
-    setSelectedAddressId( shipping_address_id );
-  }, [] );
-
-  const handleCouponApplied = useCallback( ( discount: number ) => {
-    setDiscountAmount( Math.max( 0, discount ) );
-  }, [] );
-
-  const handleCouponRemoved = useCallback( () => {
-    setDiscountAmount( 0 );
-  }, [] );
-
-  const cartType = 1;
-
-  return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Checkout</h1>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <ShippingSection
-            selectedAddressId={ selectedAddressId }
-            onAddressSelect={ handleAddressSelect }
-          />
-        </div>
-
-        <div className="space-y-6">
-          { hasEcomProducts && (
+          {/* Right Column - Coupon and Order Summary */ }
+          <div className="space-y-6">
             <ApplyCoupon
               onCouponApplied={ handleCouponApplied }
               onCouponRemoved={ handleCouponRemoved }
               currentTotal={ baseTotal }
             />
-          ) }
 
-          <OrderSummary
-            cartItems={ cartItems }
-            baseTotal={ baseTotal }
-            discountAmount={ discountAmount }
-            orderTotal={ orderTotal }
-            hasEcomProducts={ hasEcomProducts }
-            hasTreeProducts={ hasTreeProducts }
-            isPaymentDisabled={ isPaymentDisabled }
-            selectedAddressId={ selectedAddressId }
-            userData={ userData }
-            cartType={ cartType }
-            onPaymentSuccess={ onPaymentSuccess }
-            onPaymentFailure={ onPaymentFailure }
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>₹{ baseTotal.toFixed( 2 ) }</span>
+                  </div>
 
-function ShippingSection( { selectedAddressId, onAddressSelect }: {
-  selectedAddressId: number | null;
-  onAddressSelect: ( id: number | null ) => void;
-} ) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Shipping Information</CardTitle>
-        <CardDescription>Select your shipping address</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ShippingAddresses onSelect={ onAddressSelect } selectedAddressId={ selectedAddressId } />
-        { !selectedAddressId && (
-          <p className="text-red-500 text-sm mt-2">Please select a shipping address to proceed.</p>
-        ) }
-      </CardContent>
-    </Card>
-  );
-}
+                  { discountAmount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount</span>
+                      <span>-₹{ discountAmount.toFixed( 2 ) }</span>
+                    </div>
+                  ) }
 
-interface OrderSummaryProps {
-  cartItems: CartItem[];
-  baseTotal: number;
-  discountAmount: number;
-  orderTotal: number;
-  hasEcomProducts: boolean;
-  hasTreeProducts: boolean;
-  isPaymentDisabled: boolean;
-  selectedAddressId: number | null;
-  userData?: UserData;
-  cartType: number;
-  onPaymentSuccess: ( response: any ) => void;
-  onPaymentFailure: ( error: any ) => void;
-}
+                  <div className="flex justify-between font-bold border-t pt-4 text-lg">
+                    <span>Total</span>
+                    <span>₹{ orderTotal.toFixed( 2 ) }</span>
+                  </div>
 
-function OrderSummary( {
-  cartItems,
-  baseTotal,
-  discountAmount,
-  orderTotal,
-  hasEcomProducts,
-  hasTreeProducts,
-  isPaymentDisabled,
-  selectedAddressId,
-  userData,
-  cartType,
-  onPaymentSuccess,
-  onPaymentFailure
-}: OrderSummaryProps ) {
-  const primaryCartItem = cartItems[ 0 ];
+                  <div className="pt-4">
+                    <RazorpayButton
+                      currency="INR"
+                      type={ 4 }
+                      product_type={ 2 }
+                      shipping_address_id={ selectedAddressId }
+                      amount={ orderTotal }
+                      user={ userData || null }
+                      onPaymentSuccess={ handlePaymentSuccess }
+                      onPaymentFailure={ handlePaymentFailure }
+                    />
 
-  const razorpayProps = {
-    currency: "INR",
-    type: primaryCartItem?.type || 1,
-    product_type: primaryCartItem?.product_type || 1,
-    cart_type: cartType,
-    shipping_address_id: hasEcomProducts ? selectedAddressId : undefined,
-    amount: orderTotal,
-    user: userData || null,
-    onPaymentSuccess,
-    onPaymentFailure
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Order Summary</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          { cartItems.map( ( item ) => (
-            <div key={ item.id } className="flex justify-between text-sm">
-              <span>
-                { item.product_type === 1 ? 'Tree Sponsorship' : 'Product' }
-                { item.quantity > 1 && ` × ${ item.quantity }` }
-                { item.duration && ` (${ item.duration } year)` }
-              </span>
-              <span>₹{ calculateItemPrice( item ).toFixed( 2 ) }</span>
-            </div>
-          ) ) }
-
-          <div className="flex justify-between">
-            <span>Subtotal</span>
-            <span>₹{ baseTotal.toFixed( 2 ) }</span>
-          </div>
-
-          { hasEcomProducts && discountAmount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span>Discount</span>
-              <span>-₹{ discountAmount.toFixed( 2 ) }</span>
-            </div>
-          ) }
-
-          { !hasEcomProducts && hasTreeProducts && (
-            <div className="text-sm text-gray-500 italic">
-              Coupons are not applicable for tree sponsorship items.
-            </div>
-          ) }
-
-          <div className="flex justify-between font-medium border-t pt-4">
-            <span>Total</span>
-            <span>₹{ orderTotal.toFixed( 2 ) }</span>
-          </div>
-
-          <div className="pt-4">
-            <RazorpayButton { ...razorpayProps } disabled={ isPaymentDisabled } />
-            { isPaymentDisabled && (
-              <p className="text-red-500 text-sm mt-2">
-                { hasEcomProducts && !selectedAddressId
-                  ? "Please select a shipping address to proceed with payment."
-                  : orderTotal <= 0
-                    ? "Order total must be greater than zero."
-                    : "Unable to process payment at this time." }
-              </p>
-            ) }
+                    { isPaymentDisabled && (
+                      <p className="text-red-500 text-sm mt-2">
+                        { !selectedAddressId
+                          ? "Please select a shipping address to proceed with payment."
+                          : "Please ensure your cart has valid items to proceed with payment."
+                        }
+                      </p>
+                    ) }
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </Section>
+    </AppLayout>
   );
 }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCallback, useState, useMemo, useEffect } from "react";
 import useSWR from "swr";
 import AppLayout from "@/components/app-layout";
+import CartItemCard from "@/components/cart-item-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

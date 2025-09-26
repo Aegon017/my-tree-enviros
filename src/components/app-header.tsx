@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Bell,
   ChevronDown,
   Heart,
   MapPin,
@@ -30,6 +31,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import AppLogo from "./ui/app-logo";
@@ -58,9 +60,10 @@ const MAIN_NAV_ITEMS = [
   { href: "/store", label: "Store" },
 ];
 const ICON_LINKS = [
-  { href: "/my-account", icon: User, label: "My Account" },
+  { href: "/account", icon: User, label: "Account" },
   { href: "/wishlist", icon: Heart, label: "Wishlist" },
   { href: "/cart", icon: ShoppingCart, label: "Cart" },
+  { href: "/notifications", icon: Bell, label: "Notifications" },
 ];
 
 export default function Header() {

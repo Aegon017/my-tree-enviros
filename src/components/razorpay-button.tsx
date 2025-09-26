@@ -1,6 +1,8 @@
+"use client";
+
 import { useState } from "react";
-import useSWRMutation from "swr/mutation";
 import { toast } from "sonner";
+import useSWRMutation from "swr/mutation";
 import { storage } from "@/lib/storage";
 import { Button } from "./ui/button";
 
@@ -69,12 +71,17 @@ async function checkoutRequest(
   url: string,
   { arg }: { arg: any }
 ): Promise<OrderResponse> {
+  const token = storage.getToken();
+  if ( !token ) {
+    throw new Error( "No authentication token found" );
+  }
+
   const response = await fetch( url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${ storage.getToken() }`,
+      Authorization: `Bearer ${ token }`,
     },
     body: JSON.stringify( arg ),
   } );
@@ -95,12 +102,17 @@ async function checkoutCallbackRequest(
   url: string,
   { arg }: { arg: any }
 ): Promise<CheckoutCallbackResponse> {
+  const token = storage.getToken();
+  if ( !token ) {
+    throw new Error( "No authentication token found" );
+  }
+
   const response = await fetch( url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${ storage.getToken() }`,
+      Authorization: `Bearer ${ token }`,
     },
     body: JSON.stringify( arg ),
   } );
@@ -145,11 +157,15 @@ const RazorpayButton = ( {
       return;
     }
 
+    if ( amount <= 0 ) {
+      toast.error( "Invalid amount for payment" );
+      return;
+    }
+
     if ( isProcessing ) return;
     setIsProcessing( true );
 
     try {
-      // Step 1: Create order
       const orderData = await triggerCheckout( {
         currency,
         type: Number( type ),
@@ -162,10 +178,14 @@ const RazorpayButton = ( {
         throw new Error( orderData.message || "Failed to create order" );
       }
 
-      // Step 2: Immediately open Razorpay payment modal
+      // Check if Razorpay is available
+      if ( !window.Razorpay ) {
+        throw new Error( "Razorpay SDK not loaded" );
+      }
+
       const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
-        amount: Math.round( amount * 100 ), // Convert to paise and round to avoid decimals
+        amount: Math.round( amount * 100 ), // Convert to paise
         currency: currency,
         order_id: orderData.data.razorpay_order_id,
         name: process.env.NEXT_PUBLIC_APP_NAME || "My Tree",
@@ -173,7 +193,6 @@ const RazorpayButton = ( {
         image: "/logo.png",
         handler: async ( response ) => {
           try {
-            // Step 3: Process payment callback
             const callbackData = await triggerCallback( {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -241,8 +260,9 @@ const RazorpayButton = ( {
   return (
     <Button
       onClick={ handlePayment }
-      disabled={ isProcessing || !shipping_address_id }
+      disabled={ isProcessing || !shipping_address_id || amount <= 0 }
       className="w-full"
+      aria-label={ `Pay ₹${ amount.toFixed( 2 ) } via Razorpay` }
     >
       { isProcessing ? "Processing..." : `Pay Now - ₹${ amount.toFixed( 2 ) }` }
     </Button>
