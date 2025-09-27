@@ -1,5 +1,9 @@
+'use client'
+
 import { Calendar, Heart, MapPin, Target } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
+import { useEffect, useState } from "react"
 import AppLayout from "@/components/app-layout"
 import Section from "@/components/section"
 import SectionTitle from "@/components/section-title"
@@ -7,59 +11,98 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import type { FeedTree, FeedTreeResponse } from "@/types/feed-tree"
+import type { FeedTree } from "@/types/feed-tree"
+import { storage } from "@/lib/storage"
 
-async function getFeedTrees(): Promise<FeedTreeResponse> {
-  const res = await fetch( `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/feed-trees`, {
-    headers: {
-      'accept': 'application/json',
-      'Authorization': 'Bearer 427|4LYUrw0XklOJYQdQc5Oku41MweEjXO5EmLuKPfM97e99fba9',
-      'X-CSRF-TOKEN': '',
-    },
-    cache: 'no-store' // or 'force-cache' for static data
-  } )
-
-  if ( !res.ok ) {
-    throw new Error( 'Failed to fetch feed trees' )
-  }
-
-  return res.json()
+const calculateProgress = ( raised: string, goal: string ) => {
+  const raisedNum = parseFloat( raised )
+  const goalNum = parseFloat( goal )
+  return Math.round( ( raisedNum / goalNum ) * 100 )
 }
 
-const Page = async () => {
-  let feedTrees: FeedTree[] = []
+const formatCurrency = ( amount: string ) => {
+  return new Intl.NumberFormat( 'en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  } ).format( parseFloat( amount ) )
+}
 
-  try {
-    const data = await getFeedTrees()
-    feedTrees = data.data
-  } catch ( error ) {
-    console.error( 'Error fetching feed trees:', error )
+const formatDate = ( dateString: string ) => {
+  return new Date( dateString ).toLocaleDateString( 'en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  } )
+}
+
+const isExpired = ( expirationDate: string ) => {
+  return new Date( expirationDate ) < new Date()
+}
+
+const Page = () => {
+  const [ feedTrees, setFeedTrees ] = useState<FeedTree[]>( [] )
+  const [ loading, setLoading ] = useState( true )
+  const [ error, setError ] = useState<string | null>( null )
+
+  useEffect( () => {
+    const fetchFeedTrees = async () => {
+      try {
+        const res = await fetch( `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/feed-trees`, {
+          headers: {
+            'accept': 'application/json',
+            Authorization: `Bearer ${ storage.getToken() }`,
+          },
+          cache: 'no-store',
+        } )
+
+        if ( !res.ok ) throw new Error( "Failed to fetch feed trees" )
+
+        const data = await res.json()
+        setFeedTrees( data.data || [] )
+      } catch ( err ) {
+        console.error( "Error fetching feed trees:", err )
+        setError( "Failed to load feed trees" )
+      } finally {
+        setLoading( false )
+      }
+    }
+
+    fetchFeedTrees()
+  }, [] )
+
+  if ( loading ) {
+    return (
+      <AppLayout>
+        <Section>
+          <SectionTitle
+            title="Feed Tree"
+            align="center"
+            subtitle="Support our campaign to nourish and sustain trees for a greener future."
+          />
+          <div className="flex justify-center items-center py-12">
+            <p className="text-muted-foreground">Loading feed trees...</p>
+          </div>
+        </Section>
+      </AppLayout>
+    )
   }
 
-  const calculateProgress = ( raised: string, goal: string ) => {
-    const raisedNum = parseFloat( raised )
-    const goalNum = parseFloat( goal )
-    return Math.round( ( raisedNum / goalNum ) * 100 )
-  }
-
-  const formatCurrency = ( amount: string ) => {
-    return new Intl.NumberFormat( 'en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    } ).format( parseFloat( amount ) )
-  }
-
-  const formatDate = ( dateString: string ) => {
-    return new Date( dateString ).toLocaleDateString( 'en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    } )
-  }
-
-  const isExpired = ( expirationDate: string ) => {
-    return new Date( expirationDate ) < new Date()
+  if ( error ) {
+    return (
+      <AppLayout>
+        <Section>
+          <SectionTitle
+            title="Feed Tree"
+            align="center"
+            subtitle="Support our campaign to nourish and sustain trees for a greener future."
+          />
+          <div className="flex justify-center items-center py-12">
+            <p className="text-destructive">{ error }</p>
+          </div>
+        </Section>
+      </AppLayout>
+    )
   }
 
   return (
@@ -136,9 +179,11 @@ const Page = async () => {
                       </div>
                     </div>
 
-                    <Button className="w-full" disabled={ expired }>
-                      { expired ? 'Campaign Ended' : 'Support This Tree' }
-                    </Button>
+                    <Link href={ `feed-a-tree/${ tree.id }` }>
+                      <Button className="w-full" disabled={ expired }>
+                        { expired ? 'Campaign Ended' : 'Support This Tree' }
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
               )

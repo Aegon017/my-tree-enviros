@@ -149,7 +149,7 @@ const EcommerceCard = ( { product }: Props ) => {
   return (
     <div className="group bg-background rounded-xl border border-border overflow-hidden transition-all duration-300 hover:shadow-xl h-full flex flex-col">
       <div className="relative h-48 bg-muted/50 overflow-hidden">
-        <Link href={ `/shop/products/${ id }` } className="block h-full w-full">
+        <Link href={ `/store/products/${ id }` } className="block h-full w-full">
           <div className="relative h-48">
             <Image
               src={ main_image_url }
@@ -200,7 +200,7 @@ const EcommerceCard = ( { product }: Props ) => {
           { category.name }
         </div>
 
-        <Link href={ `/shop/products/${ id }` } className="flex-grow">
+        <Link href={ `/store/products/${ id }` } className="flex-grow">
           <div className="flex justify-between items-start mb-2">
             <h3 className="text-lg font-semibold text-foreground line-clamp-1 hover:text-primary transition-colors">
               { name }
