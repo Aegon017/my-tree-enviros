@@ -6,7 +6,7 @@ import { useCallback, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import type { CartItem } from "@/types/cart";
+import type { CartItem } from "@/types/cart.type";
 
 interface Props {
     item: CartItem;

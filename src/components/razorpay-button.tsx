@@ -28,15 +28,6 @@ interface RazorpayOptions {
   };
 }
 
-declare global {
-  interface Window {
-    Razorpay: new ( options: RazorpayOptions ) => {
-      open: () => void;
-      on: ( event: string, callback: ( error: any ) => void ) => void;
-    };
-  }
-}
-
 interface RazorpayButtonProps {
   currency: string;
   type: number;

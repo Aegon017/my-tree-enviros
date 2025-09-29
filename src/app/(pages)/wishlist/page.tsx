@@ -7,6 +7,7 @@ import { useState } from "react"
 import { toast } from "sonner"
 import useSWR from "swr"
 import AppLayout from "@/components/app-layout"
+import PayButton from "@/components/pay-button"
 import Section from "@/components/section"
 import SectionTitle from "@/components/section-title"
 import { Button } from "@/components/ui/button"
@@ -269,6 +270,29 @@ const WishlistPage = () => {
                         />
                     ) ) }
                 </div>
+                <PayButton
+                    options={ {
+                        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY || "",
+                        amount: 50000,
+                        currency: "INR",
+                        name: "Acme Corp",
+                        description: "Test Transaction",
+                        image: "https://example.com/your_logo",
+                        order_id: "order_RAgCTRXLpNjGEX",
+                        callback_url: "https://eneqd3r9zrjok.x.pipedream.net/",
+                        prefill: {
+                            name: "Gaurav Kumar",
+                            email: "gaurav.kumar@example.com",
+                            contact: "9999999999",
+                        },
+                        notes: {
+                            address: "Razorpay Corporate Office",
+                        },
+                        theme: {
+                            color: "#3399cc",
+                        },
+                    } }
+                />
             </Section>
         </AppLayout>
     )

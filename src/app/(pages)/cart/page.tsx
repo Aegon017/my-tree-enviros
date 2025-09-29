@@ -1,24 +1,17 @@
 "use client";
 
-import { Loader2, Minus, Plus, ShoppingBag, Trash2, MapPin, Search } from "lucide-react";
+import { Loader2, MapPin, Minus, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useState, useMemo, useEffect } from "react";
-import useSWR from "swr";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AppLayout from "@/components/app-layout";
-import CartItemCard from "@/components/cart-item-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { storage } from "@/lib/storage";
-import type { CartItem } from "@/types/cart";
-
-interface CartResponse {
-  status: boolean;
-  data: CartItem[];
-}
+import { useCart } from "@/hooks/use-cart";
+import type { CartItem } from "@/types/cart.type";
 
 interface State {
   id: number;
@@ -31,22 +24,10 @@ interface Area {
   locationId: number;
 }
 
-// Constants
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const DEFAULT_IMAGE = "/placeholder.jpg";
 const MAX_DURATION = 50;
 const MIN_QUANTITY = 1;
 
-// API Fetcher
-const fetcher = ( url: string ) =>
-  fetch( url, {
-    headers: { Authorization: `Bearer ${ storage.getToken() }` },
-  } ).then( ( res ) => {
-    if ( !res.ok ) throw new Error( "Failed to fetch cart" );
-    return res.json();
-  } );
-
-// Search Modal Component
 function SearchModal( {
   open,
   onClose,
@@ -88,9 +69,7 @@ function SearchModal( {
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : dropdownData.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No results found
-              </div>
+              <div className="text-center py-8 text-muted-foreground">No results found</div>
             ) : (
               <div className="space-y-2">
                 { dropdownData.map( ( item ) => (
@@ -116,7 +95,6 @@ function SearchModal( {
   );
 }
 
-// Add Detail Modal Component
 function AddDetailModal( {
   open,
   onClose,
@@ -131,11 +109,7 @@ function AddDetailModal( {
     details: { name: string; occasion: string; message: string; location_id: number }
   ) => void;
 } ) {
-  const [ formData, setFormData ] = useState( {
-    name: "",
-    occasion: "",
-    message: "",
-  } );
+  const [ formData, setFormData ] = useState( { name: "", occasion: "", message: "" } );
   const [ selectedState, setSelectedState ] = useState<State | null>( null );
   const [ selectedArea, setSelectedArea ] = useState<Area | null>( null );
   const [ states, setStates ] = useState<State[]>( [] );
@@ -147,7 +121,6 @@ function AddDetailModal( {
   const [ isDropdownVisible, setDropdownVisible ] = useState( false );
   const [ isAreaLoading, setIsAreaLoading ] = useState( false );
 
-  // Reset form when modal closes
   const resetForm = useCallback( () => {
     setFormData( { name: "", occasion: "", message: "" } );
     setSelectedState( null );
@@ -158,7 +131,6 @@ function AddDetailModal( {
     setDropdownData( [] );
   }, [] );
 
-  // Initialize form when item changes or modal opens
   useEffect( () => {
     if ( open && item ) {
       setFormData( {
@@ -171,101 +143,104 @@ function AddDetailModal( {
     }
   }, [ open, item, resetForm ] );
 
-  // Fetch states on modal open
   useEffect( () => {
     const fetchStates = async () => {
       try {
-        const response = await fetch( `${ API_BASE_URL }/api/tree-locations/states`, {
-          headers: { Authorization: `Bearer ${ storage.getToken() }` },
+        const response = await fetch( `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/tree-locations/states`, {
+          headers: { Authorization: `Bearer ${ localStorage.getItem( "token" ) }` },
         } );
         if ( response.ok ) {
-          const data = await response.json();
-          setStates( data.data || [] );
+          const json = await response.json();
+          setStates( json.data || [] );
         }
-      } catch ( error ) {
-        console.error( "Failed to fetch states:", error );
+      } catch ( err ) {
+        console.error( "Failed to fetch states:", err );
       }
     };
 
-    if ( open ) {
-      fetchStates();
-    }
+    if ( open ) fetchStates();
   }, [ open ] );
 
-  // Fetch areas when state is selected
   const fetchAreas = useCallback( async ( stateId: number ) => {
     setIsAreaLoading( true );
     try {
       const response = await fetch(
-        `${ API_BASE_URL }/api/tree-locations/states/${ stateId }/areas`,
+        `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/tree-locations/states/${ stateId }/areas`,
         {
-          headers: { Authorization: `Bearer ${ storage.getToken() }` },
+          headers: { Authorization: `Bearer ${ localStorage.getItem( "token" ) }` },
         }
       );
       if ( response.ok ) {
-        const data = await response.json();
-        const mappedAreas: Area[] = ( data.data || [] ).map( ( area: any ) => ( {
-          id: area.area_id,
-          name: area.area_name,
-          locationId: area.location_id,
+        const json = await response.json();
+        const mapped: Area[] = ( json.data || [] ).map( ( a: any ) => ( {
+          id: a.area_id,
+          name: a.area_name,
+          locationId: a.location_id,
         } ) );
-        setAreas( mappedAreas );
+        setAreas( mapped );
       }
-    } catch ( error ) {
-      console.error( "Failed to fetch areas:", error );
+    } catch ( err ) {
+      console.error( "Failed to fetch areas:", err );
     } finally {
       setIsAreaLoading( false );
     }
   }, [] );
 
-  const handleSelect = useCallback( ( selectedItem: State | Area ) => {
-    if ( currentSearchLevel === "state" ) {
-      const state = selectedItem as State;
-      setSelectedState( state );
-      setSelectedArea( null );
-      setSearchPlaceholder( "Search Area" );
-      fetchAreas( state.id );
-    } else {
-      setSelectedArea( selectedItem as Area );
-    }
-    setSearchText( "" );
-    setDropdownVisible( false );
-  }, [ currentSearchLevel, fetchAreas ] );
+  const handleSelect = useCallback(
+    ( sel: State | Area ) => {
+      if ( currentSearchLevel === "state" ) {
+        const st = sel as State;
+        setSelectedState( st );
+        setSelectedArea( null );
+        setSearchPlaceholder( "Search Area" );
+        fetchAreas( st.id );
+      } else {
+        setSelectedArea( sel as Area );
+      }
+      setSearchText( "" );
+      setDropdownVisible( false );
+    },
+    [ currentSearchLevel, fetchAreas ]
+  );
 
-  const handleSearch = useCallback( ( text: string ) => {
-    setSearchText( text );
-    const list = currentSearchLevel === "state" ? states : areas;
-    const filtered = list.filter( i =>
-      i.name.toLowerCase().includes( text.toLowerCase() )
-    );
-    setDropdownData( filtered );
-  }, [ currentSearchLevel, states, areas ] );
+  const handleSearch = useCallback(
+    ( text: string ) => {
+      setSearchText( text );
+      const list = currentSearchLevel === "state" ? states : areas;
+      const filtered = list.filter( ( i ) => i.name.toLowerCase().includes( text.toLowerCase() ) );
+      setDropdownData( filtered );
+    },
+    [ currentSearchLevel, states, areas ]
+  );
 
-  const openSearchModal = useCallback( ( level: "state" | "area" ) => {
-    setCurrentSearchLevel( level );
-    setDropdownData( level === "state" ? states : areas );
-    setSearchText( "" );
-    setDropdownVisible( true );
-  }, [ states, areas ] );
+  const openSearchModal = useCallback(
+    ( level: "state" | "area" ) => {
+      setCurrentSearchLevel( level );
+      setDropdownData( level === "state" ? states : areas );
+      setSearchText( "" );
+      setDropdownVisible( true );
+    },
+    [ states, areas ]
+  );
 
-  const handleInputChange = useCallback( ( field: keyof typeof formData ) =>
-    ( value: string ) => {
-      setFormData( prev => ( { ...prev, [ field ]: value } ) );
-    }, [] );
+  const handleInputChange = useCallback(
+    ( field: keyof typeof formData ) => ( value: string ) => {
+      setFormData( ( prev ) => ( { ...prev, [ field ]: value } ) );
+    },
+    []
+  );
 
   const handleSubmit = useCallback( () => {
     if ( !formData.name || !formData.occasion || !selectedArea?.locationId || !item ) {
       alert( "Please complete all required fields." );
       return;
     }
-
     onUpdateDetails( item.id, {
       name: formData.name,
       occasion: formData.occasion,
       message: formData.message,
       location_id: selectedArea.locationId,
     } );
-
     resetForm();
     onClose();
   }, [ formData, selectedArea, item, onUpdateDetails, resetForm, onClose ] );
@@ -277,19 +252,16 @@ function AddDetailModal( {
 
   return (
     <>
-      <Dialog open={ open } onOpenChange={ ( open ) => !open && handleClose() }>
+      <Dialog open={ open } onOpenChange={ ( o ) => !o && handleClose() }>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold">Add Details</DialogTitle>
           </div>
 
-          <DialogDescription>
-            Please provide the necessary details for your order.
-          </DialogDescription>
+          <DialogDescription>Please provide the necessary details for your order.</DialogDescription>
 
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-4">
-              {/* State Selection */ }
               <div>
                 <label className="text-sm font-medium">State*</label>
                 <Button
@@ -304,7 +276,6 @@ function AddDetailModal( {
                 </Button>
               </div>
 
-              {/* Area Selection */ }
               { selectedState && (
                 <div>
                   <label className="text-sm font-medium">Area*</label>
@@ -321,7 +292,6 @@ function AddDetailModal( {
                 </div>
               ) }
 
-              {/* Name Input */ }
               <div>
                 <label className="text-sm font-medium">Name*</label>
                 <Input
@@ -332,7 +302,6 @@ function AddDetailModal( {
                 />
               </div>
 
-              {/* Occasion Input */ }
               <div>
                 <label className="text-sm font-medium">Occasion*</label>
                 <Input
@@ -343,7 +312,6 @@ function AddDetailModal( {
                 />
               </div>
 
-              {/* Message Input */ }
               <div>
                 <label className="text-sm font-medium">Special Message</label>
                 <textarea
@@ -368,7 +336,6 @@ function AddDetailModal( {
         </DialogContent>
       </Dialog>
 
-      {/* Search Modal */ }
       <SearchModal
         open={ isDropdownVisible }
         onClose={ () => setDropdownVisible( false ) }
@@ -383,7 +350,6 @@ function AddDetailModal( {
   );
 }
 
-// Individual cart item component
 function CartItemComponent( {
   item,
   isUpdating,
@@ -393,7 +359,7 @@ function CartItemComponent( {
 }: {
   item: CartItem;
   isUpdating: boolean;
-  onUpdateItem: ( productId: number, params: Partial<CartItem> ) => void;
+  onUpdateItem: ( cartId: number, params: { quantity?: number; duration?: number } ) => void;
   onRemoveItem: ( itemId: number ) => void;
   onOpenDetailModal: ( item: CartItem ) => void;
 } ) {
@@ -401,57 +367,54 @@ function CartItemComponent( {
     const product = item.product_type === 1 ? item.product : item.ecom_product;
     const imageUrl = product?.main_image_url || DEFAULT_IMAGE;
     const productName = product?.name || "Product";
-    const itemPrice = item.product_type === 1
-      ? parseFloat( item.product?.price?.find( p => p.duration === item.duration )?.price || "0" )
-      : item.ecom_product?.price || 0;
-
-    return {
-      imageUrl,
-      productName,
-      itemPrice,
-      isTreeProduct: item.product_type === 1
-    };
+    let itemPrice = 0;
+    if ( item.product_type === 1 && item.product?.price ) {
+      const opt = item.product.price.find( ( p ) => p.duration === item.duration );
+      itemPrice = opt ? parseFloat( opt.price ) : 0;
+    } else if ( item.product_type === 2 && item.ecom_product?.price ) {
+      itemPrice = item.ecom_product.price;
+    }
+    return { imageUrl, productName, itemPrice, isTreeProduct: item.product_type === 1 };
   }, [ item ] );
 
-  const handleQuantityChange = useCallback( ( newQuantity: number ) => {
-    onUpdateItem( item.product_id, {
-      ...item,
-      quantity: Math.max( MIN_QUANTITY, newQuantity )
-    } );
-  }, [ onUpdateItem, item ] );
-
-  const handleDurationChange = useCallback( ( newDuration: number ) => {
-    onUpdateItem( item.product_id, {
-      ...item,
-      duration: Math.max( MIN_QUANTITY, Math.min( MAX_DURATION, newDuration ) )
-    } );
-  }, [ onUpdateItem, item ] );
-
-  const handleInputChange = useCallback( ( field: 'quantity' | 'duration' ) =>
-    ( value: number ) => {
-      const clampedValue = Math.max(
-        MIN_QUANTITY,
-        field === 'duration' ? Math.min( MAX_DURATION, value ) : value
-      );
-
-      onUpdateItem( item.product_id, {
-        ...item,
-        [ field ]: clampedValue
+  const handleQuantityChange = useCallback(
+    ( newQ: number ) => {
+      onUpdateItem( item.id, {
+        quantity: Math.max( MIN_QUANTITY, newQ ),
       } );
-    }, [ onUpdateItem, item ] );
+    },
+    [ onUpdateItem, item.id ]
+  );
+
+  const handleDurationChange = useCallback(
+    ( newD: number ) => {
+      onUpdateItem( item.id, {
+        duration: Math.max( MIN_QUANTITY, Math.min( MAX_DURATION, newD ) ),
+      } );
+    },
+    [ onUpdateItem, item.id ]
+  );
+
+  const handleInputChange = useCallback(
+    ( field: "quantity" | "duration" ) =>
+      ( value: number ) => {
+        const clamped = Math.max(
+          MIN_QUANTITY,
+          field === "duration" ? Math.min( MAX_DURATION, value ) : value
+        );
+        onUpdateItem( item.id, {
+          [ field ]: clamped,
+        } );
+      },
+    [ onUpdateItem, item.id ]
+  );
 
   return (
     <Card className="mb-4">
       <CardContent className="p-6">
         <div className="flex items-start space-x-6">
           <div className="relative h-24 w-24 rounded-md overflow-hidden flex-shrink-0">
-            <Image
-              src={ imageUrl }
-              alt={ productName }
-              fill
-              className="object-cover"
-              sizes="96px"
-            />
+            <Image src={ imageUrl } alt={ productName } fill className="object-cover" sizes="96px" />
           </div>
 
           <div className="flex-1 space-y-4 min-w-0">
@@ -482,7 +445,7 @@ function CartItemComponent( {
                       type="number"
                       min={ MIN_QUANTITY.toString() }
                       value={ item.quantity }
-                      onChange={ ( e ) => handleInputChange( 'quantity' )( parseInt( e.target.value ) || MIN_QUANTITY ) }
+                      onChange={ ( e ) => handleInputChange( "quantity" )( parseInt( e.target.value ) || MIN_QUANTITY ) }
                       className="w-16 text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       disabled={ isUpdating }
                     />
@@ -516,7 +479,7 @@ function CartItemComponent( {
                         min={ MIN_QUANTITY.toString() }
                         max={ MAX_DURATION.toString() }
                         value={ item.duration }
-                        onChange={ ( e ) => handleInputChange( 'duration' )( parseInt( e.target.value ) || MIN_QUANTITY ) }
+                        onChange={ ( e ) => handleInputChange( "duration" )( parseInt( e.target.value ) || MIN_QUANTITY ) }
                         className="w-16 text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         disabled={ isUpdating }
                       />
@@ -538,23 +501,13 @@ function CartItemComponent( {
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm font-medium">Details</label>
-                    <Button
-                      variant="outline"
-                      className="w-full mt-1"
-                      onClick={ () => onOpenDetailModal( item ) }
-                    >
+                    <Button variant="outline" className="w-full mt-1" onClick={ () => onOpenDetailModal( item ) }>
                       Edit Name, Occasion & Message
                     </Button>
                   </div>
-                  { item.name && (
-                    <p className="text-sm"><span className="font-medium">Name:</span> { item.name }</p>
-                  ) }
-                  { item.occasion && (
-                    <p className="text-sm"><span className="font-medium">Occasion:</span> { item.occasion }</p>
-                  ) }
-                  { item.message && (
-                    <p className="text-sm"><span className="font-medium">Message:</span> { item.message }</p>
-                  ) }
+                  { item.name && <p className="text-sm"><span className="font-medium">Name:</span> { item.name }</p> }
+                  { item.occasion && <p className="text-sm"><span className="font-medium">Occasion:</span> { item.occasion }</p> }
+                  { item.message && <p className="text-sm"><span className="font-medium">Message:</span> { item.message }</p> }
                 </div>
               ) }
             </div>
@@ -569,9 +522,7 @@ function CartItemComponent( {
                 <Trash2 className="h-4 w-4" />
               </Button>
               <div className="text-right">
-                <p className="text-lg font-bold">
-                  ₹{ ( itemPrice * item.quantity ).toFixed( 2 ) }
-                </p>
+                <p className="text-lg font-bold">₹{ ( itemPrice * item.quantity ).toFixed( 2 ) }</p>
               </div>
             </div>
           </div>
@@ -581,8 +532,7 @@ function CartItemComponent( {
   );
 }
 
-// Order summary component
-function OrderSummary( { subtotal }: { subtotal: number } ) {
+function OrderSummary( { subtotal, onClearCart, isClearing }: { subtotal: number; onClearCart: () => void; isClearing: boolean } ) {
   return (
     <Card className="sticky top-20">
       <CardContent className="p-6">
@@ -602,16 +552,24 @@ function OrderSummary( { subtotal }: { subtotal: number } ) {
           </div>
         </div>
         <Link href="/checkout">
-          <Button className="w-full mt-6" size="lg">
+          <Button className="w-full mt-4" size="lg">
             Place Order
           </Button>
         </Link>
+        <Button
+          variant="outline"
+          className="w-full mt-3"
+          onClick={ onClearCart }
+          disabled={ isClearing }
+        >
+          { isClearing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null }
+          Clear Cart
+        </Button>
       </CardContent>
     </Card>
   );
 }
 
-// Empty cart state component
 function EmptyCart() {
   return (
     <div className="text-center py-12">
@@ -625,7 +583,6 @@ function EmptyCart() {
   );
 }
 
-// Loading component
 function LoadingState() {
   return (
     <div className="container mx-auto p-6 flex justify-center items-center min-h-screen">
@@ -634,7 +591,6 @@ function LoadingState() {
   );
 }
 
-// Error component
 function ErrorState( { onRetry }: { onRetry: () => void } ) {
   return (
     <div className="container mx-auto p-6 text-center">
@@ -646,84 +602,23 @@ function ErrorState( { onRetry }: { onRetry: () => void } ) {
   );
 }
 
-// Main cart page component
 export default function CartPage() {
-  const { data, error, isLoading, mutate } = useSWR<CartResponse>(
-    `${ API_BASE_URL }/api/cart`,
-    fetcher,
-    {
-      revalidateOnFocus: false,
-      shouldRetryOnError: false,
-    }
-  );
+  const {
+    cartItems,
+    loading,
+    error,
+    removeItem,
+    updateDetails,
+    clearCart,
+    addItem,
+  } = useCart();
 
-  const [ updatingItems, setUpdatingItems ] = useState<Set<number>>( new Set() );
+  const cartData = cartItems.data || [];
+
   const [ detailModalOpen, setDetailModalOpen ] = useState( false );
   const [ selectedItem, setSelectedItem ] = useState<CartItem | null>( null );
-
-  const updateCart = useCallback( async (
-    url: string,
-    method: string,
-    itemId: number,
-    body?: object
-  ) => {
-    setUpdatingItems( prev => new Set( prev ).add( itemId ) );
-    try {
-      const response = await fetch( url, {
-        method,
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${ storage.getToken() }`,
-        },
-        ...( body && { body: JSON.stringify( body ) } ),
-      } );
-
-      if ( !response.ok ) throw new Error( `HTTP error! status: ${ response.status }` );
-
-      mutate();
-    } catch ( error ) {
-      console.error( "Cart operation failed:", error );
-    } finally {
-      setUpdatingItems( prev => {
-        const newSet = new Set( prev );
-        newSet.delete( itemId );
-        return newSet;
-      } );
-    }
-  }, [ mutate ] );
-
-  const updateCartItem = useCallback( async (
-    productId: number,
-    params: Partial<CartItem>
-  ) => {
-    await updateCart(
-      `${ API_BASE_URL }/api/cart/add/${ productId }`,
-      "POST",
-      productId,
-      params
-    );
-  }, [ updateCart ] );
-
-  const updateCartDetails = useCallback( async (
-    cartId: number,
-    details: { name: string; occasion: string; message: string; location_id: number }
-  ) => {
-    await updateCart(
-      `${ API_BASE_URL }/api/cart/addDetails/${ cartId }`,
-      "POST",
-      cartId,
-      details
-    );
-  }, [ updateCart ] );
-
-  const removeItem = useCallback( async ( itemId: number ) => {
-    await updateCart(
-      `${ API_BASE_URL }/api/cart/remove/${ itemId }`,
-      "DELETE",
-      itemId
-    );
-  }, [ updateCart ] );
+  const [ updatingItems, setUpdatingItems ] = useState<Set<number>>( new Set() );
+  const [ isClearing, setIsClearing ] = useState( false );
 
   const handleOpenDetailModal = useCallback( ( item: CartItem ) => {
     setSelectedItem( item );
@@ -735,59 +630,131 @@ export default function CartPage() {
     setSelectedItem( null );
   }, [] );
 
-  const cartItems = data?.data || [];
-
-  const subtotal = useMemo( () =>
-    cartItems.reduce( ( sum, item ) => {
-      let itemPrice = 0;
-      if ( item.product_type === 1 && item.product?.price ) {
-        const priceOption = item.product.price.find( p => p.duration === item.duration );
-        itemPrice = priceOption ? parseFloat( priceOption.price ) : 0;
-      } else if ( item.product_type === 2 && item.ecom_product?.price ) {
-        itemPrice = item.ecom_product.price;
+  const wrapAsyncAction = useCallback(
+    async ( itemId: number, fn: () => Promise<any> ) => {
+      setUpdatingItems( ( prev ) => new Set( prev ).add( itemId ) );
+      try {
+        await fn();
+      } catch ( err ) {
+        console.error( "Cart action failed:", err );
+      } finally {
+        setUpdatingItems( ( prev ) => {
+          const s = new Set( prev );
+          s.delete( itemId );
+          return s;
+        } );
       }
-      return sum + itemPrice * item.quantity;
-    }, 0 ),
-    [ cartItems ]
+    },
+    []
   );
 
-  if ( error ) return <ErrorState onRetry={ () => mutate() } />;
-  if ( isLoading ) return <LoadingState />;
+  const handleUpdateItem = useCallback(
+    async ( cartId: number, params: { quantity?: number; duration?: number } ) => {
+      const item = cartData.find( item => item.id === cartId );
+      if ( !item ) return;
+
+      wrapAsyncAction( cartId, async () => {
+        const productType = item.product_type;
+        const productId = productType === 1 ? item.product?.id : item.ecom_product?.id;
+
+        if ( !productId ) return;
+
+        const payload = {
+          product_type: productType,
+          quantity: params.quantity ?? item.quantity,
+          duration: params.duration ?? item.duration,
+          name: item.name || "",
+          occasion: item.occasion || "",
+          message: item.message || "",
+          location_id: item.location_id || 0,
+        };
+
+        await addItem( productId, payload );
+      } );
+    },
+    [ wrapAsyncAction, addItem, cartData ]
+  );
+
+  const handleRemoveItem = useCallback(
+    ( itemId: number ) => {
+      wrapAsyncAction( itemId, () => removeItem( itemId ) );
+    },
+    [ wrapAsyncAction, removeItem ]
+  );
+
+  const handleUpdateDetails = useCallback(
+    ( cartId: number, details: { name: string; occasion: string; message: string; location_id: number } ) => {
+      wrapAsyncAction( cartId, () => updateDetails( cartId, details ) );
+    },
+    [ wrapAsyncAction, updateDetails ]
+  );
+
+  const handleClearCart = useCallback( async () => {
+    setIsClearing( true );
+    try {
+      await clearCart();
+    } catch ( err ) {
+      console.error( "Failed to clear cart:", err );
+    } finally {
+      setIsClearing( false );
+    }
+  }, [ clearCart ] );
+
+  const subtotal = useMemo(
+    () =>
+      cartData.reduce( ( sum, item ) => {
+        let p = 0;
+        if ( item.product_type === 1 && item.product?.price ) {
+          const opt = item.product.price.find( ( pp ) => pp.duration === item.duration );
+          if ( opt ) p = parseFloat( opt.price );
+        } else if ( item.product_type === 2 && item.ecom_product?.price ) {
+          p = item.ecom_product.price;
+        }
+        return sum + p * item.quantity;
+      }, 0 ),
+    [ cartData ]
+  );
+
+  if ( error ) return <ErrorState onRetry={ () => window.location.reload() } />;
+  if ( loading ) return <LoadingState />;
 
   return (
     <AppLayout>
       <div className="container mx-auto p-6 max-w-6xl">
         <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
 
-        { cartItems.length === 0 ? (
+        { cartData.length === 0 ? (
           <EmptyCart />
         ) : (
           <div className="grid gap-8 lg:grid-cols-12">
             <div className="lg:col-span-8">
-              { cartItems.map( ( item ) => (
+              { cartData.map( ( item ) => (
                 <CartItemComponent
                   key={ item.id }
                   item={ item }
                   isUpdating={ updatingItems.has( item.id ) }
-                  onUpdateItem={ updateCartItem }
-                  onRemoveItem={ removeItem }
+                  onUpdateItem={ handleUpdateItem }
+                  onRemoveItem={ handleRemoveItem }
                   onOpenDetailModal={ handleOpenDetailModal }
                 />
               ) ) }
             </div>
 
             <div className="lg:col-span-4">
-              <OrderSummary subtotal={ subtotal } />
+              <OrderSummary
+                subtotal={ subtotal }
+                onClearCart={ handleClearCart }
+                isClearing={ isClearing }
+              />
             </div>
           </div>
         ) }
 
-        {/* Add Detail Modal */ }
         <AddDetailModal
           open={ detailModalOpen }
           onClose={ handleCloseDetailModal }
           item={ selectedItem }
-          onUpdateDetails={ updateCartDetails }
+          onUpdateDetails={ handleUpdateDetails }
         />
       </div>
     </AppLayout>
