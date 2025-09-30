@@ -3,7 +3,6 @@
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
-import AppLayout from "@/components/app-layout";
 import BlogCard from "@/components/blog-card";
 import BreadcrumbNav from "@/components/breadcrumb-nav";
 import BlogCardSkeleton from "@/components/skeletons/blog-card-skeleton";
@@ -21,16 +20,16 @@ interface ApiResponse {
   };
 }
 
-const fetcher = async ( url: string ) => {
-  const res = await fetch( url );
-  if ( !res.ok ) throw new Error( "Failed to fetch blogs" );
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch blogs");
   return res.json();
 };
 
 const Page = () => {
-  const [ retryCount, setRetryCount ] = useState( 0 );
+  const [retryCount, setRetryCount] = useState(0);
   const { data, error, isLoading, mutate } = useSWR<ApiResponse>(
-    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/blogs?retry=${ retryCount }`,
+    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/blogs?retry=${retryCount}`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -39,29 +38,27 @@ const Page = () => {
   );
 
   const handleRetry = () => {
-    setRetryCount( ( prev ) => prev + 1 );
+    setRetryCount((prev) => prev + 1);
     mutate();
   };
 
-  if ( error ) {
+  if (error) {
     return (
-      <AppLayout>
-        <div className="container max-w-4xl mx-auto py-8 px-4">
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error Loading Blogs</AlertTitle>
-            <AlertDescription>
-              Failed to load blog posts. Please try again.
-            </AlertDescription>
-          </Alert>
-          <div className="flex justify-center">
-            <Button onClick={ handleRetry } className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Retry Loading
-            </Button>
-          </div>
+      <div className="container max-w-4xl mx-auto py-8 px-4">
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error Loading Blogs</AlertTitle>
+          <AlertDescription>
+            Failed to load blog posts. Please try again.
+          </AlertDescription>
+        </Alert>
+        <div className="flex justify-center">
+          <Button onClick={handleRetry} className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Retry Loading
+          </Button>
         </div>
-      </AppLayout>
+      </div>
     );
   }
 
@@ -71,9 +68,9 @@ const Page = () => {
   ];
 
   return (
-    <AppLayout>
+    <>
       <div className="container max-w-6xl mx-auto">
-        <BreadcrumbNav items={ breadcrumbItems } className="mb-6 py-4 px-4" />
+        <BreadcrumbNav items={breadcrumbItems} className="mb-6 py-4 px-4" />
       </div>
       <div className="container max-w-6xl mx-auto px-4">
         <div className="text-center mb-12">
@@ -84,32 +81,32 @@ const Page = () => {
         </div>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-          { isLoading
-            ? Array.from( { length: 6 } ).map( ( _, i ) => (
-              <BlogCardSkeleton key={ `skeleton-${ Date.now() }-${ i }` } />
-            ) )
-            : data?.data?.map( ( blog: Blog ) => (
-              <BlogCard key={ blog.id } blog={ blog } />
-            ) ) }
+          {isLoading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <BlogCardSkeleton key={`skeleton-${Date.now()}-${i}`} />
+              ))
+            : data?.data?.map((blog: Blog) => (
+                <BlogCard key={blog.id} blog={blog} />
+              ))}
         </div>
 
-        { data?.meta && data.meta.total_pages > 1 && (
+        {data?.meta && data.meta.total_pages > 1 && (
           <div className="flex justify-center mt-12">
             <div className="flex gap-2">
-              <Button variant="outline" disabled={ data.meta.current_page === 1 }>
+              <Button variant="outline" disabled={data.meta.current_page === 1}>
                 Previous
               </Button>
               <Button
                 variant="outline"
-                disabled={ data.meta.current_page === data.meta.total_pages }
+                disabled={data.meta.current_page === data.meta.total_pages}
               >
                 Next
               </Button>
             </div>
           </div>
-        ) }
+        )}
       </div>
-    </AppLayout>
+    </>
   );
 };
 

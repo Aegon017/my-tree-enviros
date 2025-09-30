@@ -1,4 +1,4 @@
 export enum CheckoutType {
-    Cart = 1,
-    DirectPayment = 2
+  CART = 1,
+  DIRECTPAYMENT = 2,
 }

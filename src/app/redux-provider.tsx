@@ -1,9 +1,16 @@
 "use client";
 
+import type { EnhancedStore } from "@reduxjs/toolkit";
+import type { ReactNode } from "react";
 import { Provider } from "react-redux";
-import { store } from "@/store";
-import { ReactNode } from "react";
+import { store as defaultStore } from "@/store";
 
-export function ReduxProvider( { children }: { children: ReactNode } ) {
-    return <Provider store={ store }>{ children }</Provider>;
+export function ReduxProvider({
+  children,
+  store = defaultStore,
+}: {
+  children: ReactNode;
+  store?: EnhancedStore;
+}) {
+  return <Provider store={store}>{children}</Provider>;
 }

@@ -38,16 +38,36 @@ export default function BlogDetailsSkeleton() {
                     <Skeleton className="h-6 w-32 rounded" />
 
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="icon" disabled className="rounded-full p-0">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled
+                        className="rounded-full p-0"
+                      >
                         <Skeleton className="h-8 w-8 rounded-full" />
                       </Button>
-                      <Button variant="outline" size="icon" disabled className="rounded-full p-0">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled
+                        className="rounded-full p-0"
+                      >
                         <Skeleton className="h-8 w-8 rounded-full" />
                       </Button>
-                      <Button variant="outline" size="icon" disabled className="rounded-full p-0">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled
+                        className="rounded-full p-0"
+                      >
                         <Skeleton className="h-8 w-8 rounded-full" />
                       </Button>
-                      <Button variant="outline" size="icon" disabled className="rounded-full p-0">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled
+                        className="rounded-full p-0"
+                      >
                         <Skeleton className="h-8 w-8 rounded-full" />
                       </Button>
                     </div>

@@ -6,23 +6,21 @@ import type { Options } from "@/types/razorpay";
 import { Button } from "./ui/button";
 
 interface Props {
-    options?: Options;
+  options?: Options;
 }
 
-const PayButton = ( { options }: Props ) => {
-    const handlePayment = useCallback( async () => {
-        if ( !options ) {
-            toast.error( "Payment options are missing." );
-            return;
-        }
-        
-        const rzp = new window.Razorpay( options );
-        rzp.open();
-    }, [ options ] );
+const PayButton = ({ options }: Props) => {
+  const handlePayment = useCallback(async () => {
+    if (!options) {
+      toast.error("Payment options are missing.");
+      return;
+    }
 
-    return (
-        <Button onClick={ handlePayment }>Pay Now</Button>
-    );
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  }, [options]);
+
+  return <Button onClick={handlePayment}>Pay Now</Button>;
 };
 
 export default PayButton;

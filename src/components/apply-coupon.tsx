@@ -95,7 +95,7 @@ export function ApplyCoupon({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-            <div className="flex gap-2">
+          <div className="flex gap-2">
             <Input
               type="text"
               placeholder="ENTER COUPON CODE"
@@ -105,21 +105,21 @@ export function ApplyCoupon({
             />
             {appliedCoupon ? (
               <Button
-              onClick={handleChangeCoupon}
-              disabled={isMutating}
-              variant="outline"
+                onClick={handleChangeCoupon}
+                disabled={isMutating}
+                variant="outline"
               >
-              CHANGE
+                CHANGE
               </Button>
             ) : (
               <Button
-              onClick={handleApplyCoupon}
-              disabled={isMutating || !couponCode.trim()}
+                onClick={handleApplyCoupon}
+                disabled={isMutating || !couponCode.trim()}
               >
-              {isMutating ? "APPLYING..." : "APPLY"}
+                {isMutating ? "APPLYING..." : "APPLY"}
               </Button>
             )}
-            </div>
+          </div>
 
           {appliedCoupon && (
             <div className="p-3 bg-muted rounded-lg">

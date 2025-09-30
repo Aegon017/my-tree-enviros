@@ -14,7 +14,7 @@ interface RazorpayOptions {
   name: string;
   description: string;
   image: string;
-  handler: ( response: any ) => void;
+  handler: (response: any) => void;
   prefill: {
     name: string;
     email: string;
@@ -39,8 +39,8 @@ interface RazorpayButtonProps {
     mobile: string;
     name: string;
   } | null;
-  onPaymentSuccess: ( response: any ) => void;
-  onPaymentFailure: ( error: any ) => void;
+  onPaymentSuccess: (response: any) => void;
+  onPaymentFailure: (error: any) => void;
 }
 
 interface OrderResponse {
@@ -60,30 +60,30 @@ interface CheckoutCallbackResponse {
 
 async function checkoutRequest(
   url: string,
-  { arg }: { arg: any }
+  { arg }: { arg: any },
 ): Promise<OrderResponse> {
   const token = storage.getToken();
-  if ( !token ) {
-    throw new Error( "No authentication token found" );
+  if (!token) {
+    throw new Error("No authentication token found");
   }
 
-  const response = await fetch( url, {
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${ token }`,
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify( arg ),
-  } );
+    body: JSON.stringify(arg),
+  });
 
   const data = await response.json();
 
-  if ( !response.ok ) {
+  if (!response.ok) {
     const errorMsg = data.errors
-      ? Object.values( data.errors ).flat().join( ", " )
+      ? Object.values(data.errors).flat().join(", ")
       : data.message || "Failed to create order";
-    throw new Error( errorMsg );
+    throw new Error(errorMsg);
   }
 
   return data;
@@ -91,36 +91,36 @@ async function checkoutRequest(
 
 async function checkoutCallbackRequest(
   url: string,
-  { arg }: { arg: any }
+  { arg }: { arg: any },
 ): Promise<CheckoutCallbackResponse> {
   const token = storage.getToken();
-  if ( !token ) {
-    throw new Error( "No authentication token found" );
+  if (!token) {
+    throw new Error("No authentication token found");
   }
 
-  const response = await fetch( url, {
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${ token }`,
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify( arg ),
-  } );
+    body: JSON.stringify(arg),
+  });
 
   const data = await response.json();
 
-  if ( !response.ok ) {
+  if (!response.ok) {
     const errorMsg = data.errors
-      ? Object.values( data.errors ).flat().join( ", " )
+      ? Object.values(data.errors).flat().join(", ")
       : data.message || "Failed to process payment callback";
-    throw new Error( errorMsg );
+    throw new Error(errorMsg);
   }
 
   return data;
 }
 
-const RazorpayButton = ( {
+const RazorpayButton = ({
   currency,
   type,
   product_type,
@@ -129,85 +129,87 @@ const RazorpayButton = ( {
   user,
   onPaymentSuccess,
   onPaymentFailure,
-}: RazorpayButtonProps ) => {
-  const [ isProcessing, setIsProcessing ] = useState( false );
+}: RazorpayButtonProps) => {
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { trigger: triggerCheckout } = useSWRMutation(
-    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/checkout`,
-    checkoutRequest
+    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/checkout`,
+    checkoutRequest,
   );
 
   const { trigger: triggerCallback } = useSWRMutation(
-    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/payment/callback`,
-    checkoutCallbackRequest
+    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/payment/callback`,
+    checkoutCallbackRequest,
   );
 
   const handlePayment = async (): Promise<void> => {
-    if ( !shipping_address_id ) {
-      toast.error( "Please select a shipping address" );
+    if (!shipping_address_id) {
+      toast.error("Please select a shipping address");
       return;
     }
 
-    if ( amount <= 0 ) {
-      toast.error( "Invalid amount for payment" );
+    if (amount <= 0) {
+      toast.error("Invalid amount for payment");
       return;
     }
 
-    if ( isProcessing ) return;
-    setIsProcessing( true );
+    if (isProcessing) return;
+    setIsProcessing(true);
 
     try {
-      const orderData = await triggerCheckout( {
+      const orderData = await triggerCheckout({
         currency,
-        type: Number( type ),
-        product_type: Number( product_type ),
-        shipping_address_id: Number( shipping_address_id ),
+        type: Number(type),
+        product_type: Number(product_type),
+        shipping_address_id: Number(shipping_address_id),
         cart_type: 1,
-      } );
+      });
 
-      if ( !orderData.status ) {
-        throw new Error( orderData.message || "Failed to create order" );
+      if (!orderData.status) {
+        throw new Error(orderData.message || "Failed to create order");
       }
 
       // Check if Razorpay is available
-      if ( !window.Razorpay ) {
-        throw new Error( "Razorpay SDK not loaded" );
+      if (!window.Razorpay) {
+        throw new Error("Razorpay SDK not loaded");
       }
 
       const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
-        amount: Math.round( amount * 100 ), // Convert to paise
+        amount: Math.round(amount * 100), // Convert to paise
         currency: currency,
         order_id: orderData.data.razorpay_order_id,
         name: process.env.NEXT_PUBLIC_APP_NAME || "My Tree",
         description: "Credits towards My Tree Enviros",
         image: "/logo.png",
-        handler: async ( response ) => {
+        handler: async (response) => {
           try {
-            const callbackData = await triggerCallback( {
+            const callbackData = await triggerCallback({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               type: 4,
-            } );
+            });
 
-            if ( callbackData.status ) {
-              onPaymentSuccess( {
+            if (callbackData.status) {
+              onPaymentSuccess({
                 ...callbackData.data,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
-              } );
-              toast.success( "Payment successful!" );
+              });
+              toast.success("Payment successful!");
             } else {
-              throw new Error( "Payment verification failed" );
+              throw new Error("Payment verification failed");
             }
-          } catch ( error ) {
+          } catch (error) {
             const errorMessage =
-              error instanceof Error ? error.message : "Payment verification failed";
-            toast.error( errorMessage );
-            onPaymentFailure( error );
+              error instanceof Error
+                ? error.message
+                : "Payment verification failed";
+            toast.error(errorMessage);
+            onPaymentFailure(error);
           } finally {
-            setIsProcessing( false );
+            setIsProcessing(false);
           }
         },
         prefill: {
@@ -223,39 +225,38 @@ const RazorpayButton = ( {
         },
       };
 
-      const rzp1 = new window.Razorpay( options );
+      const rzp1 = new window.Razorpay(options);
 
       // Handle payment failure
-      rzp1.on( "payment.failed", ( error ) => {
-        toast.error( "Payment failed. Please try again." );
-        onPaymentFailure( error );
-        setIsProcessing( false );
-      } );
+      rzp1.on("payment.failed", (error) => {
+        toast.error("Payment failed. Please try again.");
+        onPaymentFailure(error);
+        setIsProcessing(false);
+      });
 
       // Handle modal close without payment
-      rzp1.on( "payment.modal.closed", () => {
-        setIsProcessing( false );
-      } );
+      rzp1.on("payment.modal.closed", () => {
+        setIsProcessing(false);
+      });
 
       rzp1.open();
-
-    } catch ( error: unknown ) {
+    } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Error processing payment";
-      toast.error( errorMessage );
-      onPaymentFailure( error );
-      setIsProcessing( false );
+      toast.error(errorMessage);
+      onPaymentFailure(error);
+      setIsProcessing(false);
     }
   };
 
   return (
     <Button
-      onClick={ handlePayment }
-      disabled={ isProcessing || !shipping_address_id || amount <= 0 }
+      onClick={handlePayment}
+      disabled={isProcessing || !shipping_address_id || amount <= 0}
       className="w-full"
-      aria-label={ `Pay ₹${ amount.toFixed( 2 ) } via Razorpay` }
+      aria-label={`Pay ₹${amount.toFixed(2)} via Razorpay`}
     >
-      { isProcessing ? "Processing..." : `Pay Now - ₹${ amount.toFixed( 2 ) }` }
+      {isProcessing ? "Processing..." : `Pay Now - ₹${amount.toFixed(2)}`}
     </Button>
   );
 };

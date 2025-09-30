@@ -6,16 +6,6 @@ export interface Category {
   status: number;
 }
 
-export interface Review {
-  id: number;
-  product_id: number;
-  user_id: number;
-  rating: number;
-  review: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface Product {
   id: number;
   name: string;

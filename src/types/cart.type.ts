@@ -19,4 +19,5 @@ export interface CartItem {
   created_by: number;
   updated_by: number;
   ecom_product: Product;
+  product: Product;
 }
