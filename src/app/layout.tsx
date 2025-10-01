@@ -14,11 +14,11 @@ export const metadata: Metadata = {
     "From vibrant flowering plants to lush tropical greens, we offer an incredible variety to turn your space into a living paradise.",
 };
 
-export default function RootLayout({
+export default function RootLayout( {
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}> ) {
   return (
     <html lang="en">
       <head>
@@ -30,11 +30,13 @@ export default function RootLayout({
       </head>
 
       <body>
-        <NextTopLoader color="#715130" showSpinner={false} />
-        <Header />
-        <ReduxProvider store={store}>{children}</ReduxProvider>
-        <Footer />
-        <Toaster richColors position="top-right" closeButton={true} />
+        <NextTopLoader color="#715130" showSpinner={ false } />
+        <ReduxProvider store={ store }>
+          <Header />
+          { children }
+          <Footer />
+        </ReduxProvider>
+        <Toaster richColors position="top-right" closeButton={ true } />
       </body>
     </html>
   );

@@ -1,63 +1,62 @@
 "use client";
 
+import { Markup } from "interweave";
 import {
   Calendar,
-  DollarSign,
-  MapPin,
-  ShieldCheck,
-  Trees,
   Leaf,
+  MapPin,
   Minus,
   Plus,
+  ShieldCheck,
   Star,
-  Check,
+  Trees,
 } from "lucide-react";
+import Image from "next/image";
+import { use, useState } from "react";
+import { toast } from "sonner";
+import useSWR from "swr";
+import useSWRMutation from "swr/mutation";
 import BreadcrumbNav from "@/components/breadcrumb-nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Lens } from "@/components/ui/lens";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Tree } from "@/types/tree";
-import { use, useState } from "react";
-import { toast } from "sonner";
 import { storage } from "@/lib/storage";
-import Image from "next/image";
-import { Markup } from "interweave";
-import { Lens } from "@/components/ui/lens";
-import useSWR from "swr";
-import useSWRMutation from "swr/mutation";
+import type { Tree } from "@/types/tree";
 
-const fetcher = (url: string, token: string | null) =>
-  fetch(url, {
+const fetcher = ( url: string, token: string | null ) =>
+  fetch( url, {
     headers: {
       Accept: "application/json",
       Authorization: token
-        ? `Bearer ${token}`
+        ? `Bearer ${ token }`
         : "Bearer 420|xoAHPcuvjeSjE7EVDfQMGsu1l9BkHYIhlz35nEv43a162de5",
       "X-CSRF-TOKEN": "",
     },
-  }).then((res) => {
-    if (!res.ok) throw new Error("Failed to fetch tree data");
+  } ).then( ( res ) => {
+    if ( !res.ok ) throw new Error( "Failed to fetch tree data" );
     return res.json();
-  });
+  } );
 
 async function cartMutation(
   url: string,
   { arg }: { arg: { token: string; body: any } },
 ) {
   const { token, body } = arg;
-  const res = await fetch(url, {
+  const res = await fetch( url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${ token }`,
     },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error("Failed to add to cart");
+    body: JSON.stringify( body ),
+  } );
+  if ( !res.ok ) throw new Error( "Failed to add to cart" );
   return res.json();
 }
 
@@ -67,14 +66,14 @@ interface Props {
   }>;
 }
 
-export default function Page({ params }: Props) {
-  const { id } = use(params);
+export default function Page( { params }: Props ) {
+  const { id } = use( params );
   const token = storage.getToken();
-  const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedYears, setSelectedYears] = useState(1);
-  const [rating, setRating] = useState(0);
-  const [reviewText, setReviewText] = useState("");
+  const [ quantity, setQuantity ] = useState( 1 );
+  const [ selectedImage, setSelectedImage ] = useState( 0 );
+  const [ selectedYears, setSelectedYears ] = useState( 1 );
+  const [ rating, setRating ] = useState( 0 );
+  const [ reviewText, setReviewText ] = useState( "" );
 
   const {
     data: response,
@@ -82,59 +81,59 @@ export default function Page({ params }: Props) {
     isLoading,
   } = useSWR(
     id
-      ? [`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/tree/${id}`, token]
+      ? [ `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/tree/${ id }`, token ]
       : null,
-    ([url, token]) => fetcher(url, token),
+    ( [ url, token ] ) => fetcher( url, token ),
     { revalidateOnFocus: false, shouldRetryOnError: false },
   );
 
   const tree: Tree = response?.data;
   const mainImage = tree
     ? tree.images?.length > 0 && selectedImage > 0
-      ? tree.images[selectedImage - 1].image_url
+      ? tree.images[ selectedImage - 1 ].image_url
       : tree.main_image_url || "/placeholder.jpg"
     : "/placeholder.jpg";
   const averageRating = tree?.reviews?.length
-    ? tree.reviews.reduce((sum, r) => sum + r.rating, 0) / tree.reviews.length
+    ? tree.reviews.reduce( ( sum, r ) => sum + r.rating, 0 ) / tree.reviews.length
     : 0;
 
   const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
-    [`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/cart/add/${id}`, "add"],
+    [ `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart/add/${ id }`, "add" ],
     cartMutation,
   );
 
   const { trigger: sponsorTrigger, isMutating: isSponsoring } = useSWRMutation(
     [
-      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/cart/add/${id}`,
+      `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart/add/${ id }`,
       "sponsor",
     ],
     cartMutation,
   );
 
-  const handleQuantityChange = (value: number) => {
-    if (tree && value >= 1 && value <= tree.quantity) setQuantity(value);
+  const handleQuantityChange = ( value: number ) => {
+    if ( tree && value >= 1 && value <= tree.quantity ) setQuantity( value );
   };
 
-  const handleYearsChange = (value: number) => {
-    if (tree && value >= 1 && value <= 50) setSelectedYears(value);
+  const handleYearsChange = ( value: number ) => {
+    if ( tree && value >= 1 && value <= 50 ) setSelectedYears( value );
   };
 
-  const getPriceForDuration = (duration: number) => {
-    const priceOption = tree?.price?.find((p) => p.duration === duration);
-    return priceOption ? parseFloat(priceOption.price) : 0;
+  const getPriceForDuration = ( duration: number ) => {
+    const priceOption = tree?.price?.find( ( p ) => p.duration === duration );
+    return priceOption ? parseFloat( priceOption.price ) : 0;
   };
 
   const handleAddToCart = async () => {
-    if (!token) {
-      toast.error("Please login to add to cart");
+    if ( !token ) {
+      toast.error( "Please login to add to cart" );
       return;
     }
 
-    if (!tree || quantity === 0 || quantity > tree.quantity) return;
+    if ( !tree || quantity === 0 || quantity > tree.quantity ) return;
 
-    const priceOption = tree.price.find((p) => p.duration === selectedYears);
-    if (!priceOption) {
-      toast.error("Invalid duration selected");
+    const priceOption = tree.price.find( ( p ) => p.duration === selectedYears );
+    if ( !priceOption ) {
+      toast.error( "Invalid duration selected" );
       return;
     }
 
@@ -148,35 +147,35 @@ export default function Page({ params }: Props) {
     };
 
     try {
-      const result = await addTrigger({ token, body });
+      const result = await addTrigger( { token, body } );
 
-      console.log(result);
+      console.log( result );
 
-      if (result.status) {
+      if ( result.status ) {
         toast.success(
-          `Added ${quantity} tree${quantity > 1 ? "s" : ""} to cart`,
+          `Added ${ quantity } tree${ quantity > 1 ? "s" : "" } to cart`,
         );
       } else {
-        throw new Error(result.message || "Failed to add to cart");
+        throw new Error( result.message || "Failed to add to cart" );
       }
-    } catch (err) {
+    } catch ( err ) {
       toast.error(
-        `Failed to add to cart - ${err instanceof Error ? err.message : "Unknown error"}`,
+        `Failed to add to cart - ${ err instanceof Error ? err.message : "Unknown error" }`,
       );
     }
   };
 
   const handleSponsorPlant = async () => {
-    if (!token) {
-      toast.error("Please login to sponsor trees");
+    if ( !token ) {
+      toast.error( "Please login to sponsor trees" );
       return;
     }
 
-    if (!tree || quantity === 0 || quantity > tree.quantity) return;
+    if ( !tree || quantity === 0 || quantity > tree.quantity ) return;
 
-    const priceOption = tree.price.find((p) => p.duration === selectedYears);
-    if (!priceOption) {
-      toast.error("Invalid duration selected");
+    const priceOption = tree.price.find( ( p ) => p.duration === selectedYears );
+    if ( !priceOption ) {
+      toast.error( "Invalid duration selected" );
       return;
     }
 
@@ -190,35 +189,35 @@ export default function Page({ params }: Props) {
     };
 
     try {
-      const result = await sponsorTrigger({ token, body });
+      const result = await sponsorTrigger( { token, body } );
 
-      if (result.status) {
+      if ( result.status ) {
         toast.success(
-          `Sponsored ${quantity} tree${quantity > 1 ? "s" : ""} for ${selectedYears} year${selectedYears > 1 ? "s" : ""}`,
+          `Sponsored ${ quantity } tree${ quantity > 1 ? "s" : "" } for ${ selectedYears } year${ selectedYears > 1 ? "s" : "" }`,
         );
       } else {
-        throw new Error(result.message || "Failed to sponsor tree");
+        throw new Error( result.message || "Failed to sponsor tree" );
       }
-    } catch (err) {
+    } catch ( err ) {
       toast.error(
-        `Failed to sponsor tree - ${err instanceof Error ? err.message : "Unknown error"}`,
+        `Failed to sponsor tree - ${ err instanceof Error ? err.message : "Unknown error" }`,
       );
     }
   };
 
-  const handleSubmitReview = async (e: React.FormEvent) => {
+  const handleSubmitReview = async ( e: React.FormEvent ) => {
     e.preventDefault();
-    if (!token) {
-      toast.error("Please login to submit a review");
+    if ( !token ) {
+      toast.error( "Please login to submit a review" );
       return;
     }
-    if (rating === 0 || !reviewText.trim()) {
-      toast.error("Please provide both rating and review text");
+    if ( rating === 0 || !reviewText.trim() ) {
+      toast.error( "Please provide both rating and review text" );
       return;
     }
-    toast.success("Review submitted successfully!");
-    setRating(0);
-    setReviewText("");
+    toast.success( "Review submitted successfully!" );
+    setRating( 0 );
+    setReviewText( "" );
   };
 
   const breadcrumbItems = [
@@ -227,9 +226,9 @@ export default function Page({ params }: Props) {
     { title: tree?.name || "Tree Details", href: "" },
   ];
 
-  const priceOption = tree?.price?.find((p) => p.duration === selectedYears);
+  const priceOption = tree?.price?.find( ( p ) => p.duration === selectedYears );
 
-  if (error) {
+  if ( error ) {
     return (
       <div className="container mx-auto p-6 flex items-center justify-center min-h-[50vh] bg-background">
         <Card className="w-full max-w-md border-destructive/20">
@@ -243,7 +242,7 @@ export default function Page({ params }: Props) {
             <p className="text-muted-foreground">
               Sorry, we couldn't load the tree details. Please try again later.
             </p>
-            <Button onClick={() => window.location.reload()} variant="outline">
+            <Button onClick={ () => window.location.reload() } variant="outline">
               Retry
             </Button>
           </CardContent>
@@ -254,59 +253,58 @@ export default function Page({ params }: Props) {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl bg-background">
-      <BreadcrumbNav items={breadcrumbItems} className="mb-8" />
+      <BreadcrumbNav items={ breadcrumbItems } className="mb-8" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <div className="space-y-6 sticky top-24 self-start">
-          {isLoading ? (
+        <div className="space-y-6 lg:sticky top-24 self-start">
+          { isLoading ? (
             <Skeleton className="aspect-square rounded-2xl" />
           ) : tree ? (
             <>
               <div className="relative aspect-square overflow-hidden rounded-2xl bg-muted/30 border">
-                <Lens zoomFactor={2.5}>
+                <Lens zoomFactor={ 2.5 }>
                   <Image
-                    src={mainImage}
-                    alt={tree.name}
-                    width={1080}
-                    height={1080}
+                    src={ mainImage }
+                    alt={ tree.name }
+                    width={ 1080 }
+                    height={ 1080 }
                     className="object-cover"
                     priority
                   />
                 </Lens>
               </div>
 
-              {tree.images && tree.images.length > 0 && (
+              { tree.images && tree.images.length > 0 && (
                 <div className="flex gap-3 overflow-x-auto pb-2">
-                  {[
+                  { [
                     tree.main_image_url,
-                    ...tree.images.map((img) => img.image_url),
-                  ].map((imageUrl, index) => (
-                    <button
-                      key={index}
-                      className={`relative h-20 w-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                        selectedImage === index
-                          ? "border-primary ring-2 ring-primary/20"
-                          : "border-muted hover:border-muted-foreground/30"
-                      }`}
-                      onClick={() => setSelectedImage(index)}
+                    ...tree.images.map( ( img ) => img.image_url ),
+                  ].map( ( imageUrl, index ) => (
+                    <Button
+                      key={ `images-${ Date.now() }-${ index }` }
+                      className={ `relative h-20 w-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${ selectedImage === index
+                        ? "border-primary ring-2 ring-primary/20"
+                        : "border-muted hover:border-muted-foreground/30"
+                        }` }
+                      onClick={ () => setSelectedImage( index ) }
                     >
                       <Image
-                        src={imageUrl}
-                        alt={`${tree.name} view ${index + 1}`}
+                        src={ imageUrl }
+                        alt={ `${ tree.name } view ${ index + 1 }` }
                         fill
                         className="object-cover"
                         sizes="80px"
                       />
-                    </button>
-                  ))}
+                    </Button>
+                  ) ) }
                 </div>
-              )}
+              ) }
             </>
-          ) : null}
+          ) : null }
         </div>
 
         <div className="space-y-8">
-          {isLoading ? (
+          { isLoading ? (
             <>
               <Skeleton className="h-8 w-3/4 mb-4" />
               <Skeleton className="h-4 w-full mb-2" />
@@ -318,26 +316,26 @@ export default function Page({ params }: Props) {
                 <div className="flex flex-wrap gap-2 items-center">
                   <Badge variant="outline" className="px-3 py-1">
                     <Leaf className="h-3 w-3 mr-1" />
-                    {tree.age} years old
+                    { tree.age } years old
                   </Badge>
                 </div>
 
                 <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-                  {tree.name}
+                  { tree.name }
                 </h1>
 
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: 5 }, (_, i) => (
+                    { Array.from( { length: 5 }, ( _, i ) => (
                       <Star
-                        key={i}
-                        className={`h-5 w-5 ${i < Math.round(averageRating) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`}
+                        key={ i }
+                        className={ `h-5 w-5 ${ i < Math.round( averageRating ) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30" }` }
                       />
-                    ))}
+                    ) ) }
                   </div>
                   <span className="text-muted-foreground">
-                    {tree.reviews?.length || 0} review
-                    {tree.reviews?.length !== 1 ? "s" : ""}
+                    { tree.reviews?.length || 0 } review
+                    { tree.reviews?.length !== 1 ? "s" : "" }
                   </span>
                 </div>
               </div>
@@ -347,10 +345,10 @@ export default function Page({ params }: Props) {
                   <div className="flex items-center gap-3">
                     <ShieldCheck className="h-6 w-6 text-green-600" />
                     <span className="font-semibold text-green-700 dark:text-green-400">
-                      {tree.price_info}
+                      { tree.price_info }
                     </span>
                   </div>
-                  {tree.city && tree.state && (
+                  { tree.city && tree.state && (
                     <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-white/5 rounded-lg">
                       <MapPin className="h-5 w-5 text-blue-600" />
                       <div>
@@ -358,11 +356,11 @@ export default function Page({ params }: Props) {
                           Location
                         </p>
                         <p className="font-semibold">
-                          {tree.city?.name}, {tree.state?.name}
+                          { tree.city?.name }, { tree.state?.name }
                         </p>
                       </div>
                     </div>
-                  )}
+                  ) }
                 </CardContent>
               </Card>
 
@@ -376,27 +374,27 @@ export default function Page({ params }: Props) {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-3">
-                        <label className="text-sm font-medium flex items-center gap-2">
+                        <Label className="text-sm font-medium flex items-center gap-2">
                           <Trees className="h-4 w-4" />
                           Number of Trees
-                        </label>
+                        </Label>
                         <div className="flex items-center border rounded-lg bg-background justify-between">
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-10 w-10 rounded-r-none"
-                            onClick={() => handleQuantityChange(quantity - 1)}
-                            disabled={quantity <= 1}
+                            onClick={ () => handleQuantityChange( quantity - 1 ) }
+                            disabled={ quantity <= 1 }
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
                           <Input
                             type="number"
                             min="1"
-                            max={tree.quantity}
-                            value={quantity}
-                            onChange={(e) =>
-                              handleQuantityChange(Number(e.target.value))
+                            max={ tree.quantity }
+                            value={ quantity }
+                            onChange={ ( e ) =>
+                              handleQuantityChange( Number( e.target.value ) )
                             }
                             className="w-16 text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
@@ -404,8 +402,8 @@ export default function Page({ params }: Props) {
                             variant="ghost"
                             size="icon"
                             className="h-10 w-10 rounded-l-none"
-                            onClick={() => handleQuantityChange(quantity + 1)}
-                            disabled={quantity >= tree.quantity}
+                            onClick={ () => handleQuantityChange( quantity + 1 ) }
+                            disabled={ quantity >= tree.quantity }
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -413,17 +411,17 @@ export default function Page({ params }: Props) {
                       </div>
 
                       <div className="space-y-3">
-                        <label className="text-sm font-medium flex items-center gap-2">
+                        <Label className="text-sm font-medium flex items-center gap-2">
                           <Calendar className="h-4 w-4" />
                           Duration (Years)
-                        </label>
+                        </Label>
                         <div className="flex items-center border rounded-lg bg-background justify-between">
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-10 w-10 rounded-r-none"
-                            onClick={() => handleYearsChange(selectedYears - 1)}
-                            disabled={selectedYears <= 1}
+                            onClick={ () => handleYearsChange( selectedYears - 1 ) }
+                            disabled={ selectedYears <= 1 }
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
@@ -431,9 +429,9 @@ export default function Page({ params }: Props) {
                             type="number"
                             min="1"
                             max="50"
-                            value={selectedYears}
-                            onChange={(e) =>
-                              handleYearsChange(Number(e.target.value))
+                            value={ selectedYears }
+                            onChange={ ( e ) =>
+                              handleYearsChange( Number( e.target.value ) )
                             }
                             className="w-16 text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
@@ -441,8 +439,8 @@ export default function Page({ params }: Props) {
                             variant="ghost"
                             size="icon"
                             className="h-10 w-10 rounded-l-none"
-                            onClick={() => handleYearsChange(selectedYears + 1)}
-                            disabled={selectedYears >= 50}
+                            onClick={ () => handleYearsChange( selectedYears + 1 ) }
+                            disabled={ selectedYears >= 50 }
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -450,7 +448,7 @@ export default function Page({ params }: Props) {
                       </div>
                     </div>
 
-                    {tree.price && tree.price.length > 0 && (
+                    { tree.price && tree.price.length > 0 && (
                       <div className="space-y-4">
                         <div className="bg-primary/5 p-4 rounded-lg border">
                           <div className="flex justify-between items-center">
@@ -459,19 +457,19 @@ export default function Page({ params }: Props) {
                                 Total Contribution
                               </span>
                               <p className="text-sm text-muted-foreground">
-                                {quantity} tree{quantity > 1 ? "s" : ""} ×{" "}
-                                {selectedYears} year
-                                {selectedYears > 1 ? "s" : ""}
+                                { quantity } tree{ quantity > 1 ? "s" : "" } ×{ " " }
+                                { selectedYears } year
+                                { selectedYears > 1 ? "s" : "" }
                               </p>
                             </div>
                             <div className="text-right">
                               <div className="flex items-center gap-1">
                                 <span className="text-3xl font-bold text-primary">
                                   ₹
-                                  {(
-                                    getPriceForDuration(selectedYears) *
+                                  { (
+                                    getPriceForDuration( selectedYears ) *
                                     quantity
-                                  ).toLocaleString("en-IN")}
+                                  ).toLocaleString( "en-IN" ) }
                                 </span>
                               </div>
                             </div>
@@ -482,24 +480,24 @@ export default function Page({ params }: Props) {
                           <Button
                             variant="outline"
                             className="flex-1"
-                            onClick={handleAddToCart}
-                            disabled={isAdding || !priceOption}
+                            onClick={ handleAddToCart }
+                            disabled={ isAdding || !priceOption }
                           >
-                            {isAdding ? (
+                            { isAdding ? (
                               <>
                                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-accent-foreground" />
                                 Adding...
                               </>
                             ) : (
                               "Add To Cart"
-                            )}
+                            ) }
                           </Button>
                           <Button
                             className="flex-1 bg-green-600 hover:bg-green-700"
-                            onClick={handleSponsorPlant}
-                            disabled={isSponsoring || !priceOption}
+                            onClick={ handleSponsorPlant }
+                            disabled={ isSponsoring || !priceOption }
                           >
-                            {isSponsoring ? (
+                            { isSponsoring ? (
                               <>
                                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-accent-foreground" />
                                 Processing...
@@ -509,20 +507,20 @@ export default function Page({ params }: Props) {
                                 <Leaf className="mr-2 h-5 w-5" />
                                 Sponsor Now
                               </>
-                            )}
+                            ) }
                           </Button>
                         </div>
                       </div>
-                    )}
+                    ) }
                   </div>
                 </CardContent>
               </Card>
             </>
-          ) : null}
+          ) : null }
         </div>
       </div>
 
-      {!isLoading && tree && (
+      { !isLoading && tree && (
         <div className="mt-16">
           <Tabs defaultValue="description" className="w-full">
             <TabsList className="grid w-full grid-cols-1 max-w-md mx-auto mb-8">
@@ -538,14 +536,14 @@ export default function Page({ params }: Props) {
               <Card>
                 <CardContent className="p-8">
                   <div className="max-w-none">
-                    <Markup content={tree.description} />
+                    <Markup content={ tree.description } />
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
         </div>
-      )}
+      ) }
     </div>
   );
 }

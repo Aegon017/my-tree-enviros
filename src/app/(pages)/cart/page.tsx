@@ -733,13 +733,13 @@ export default function CartPage() {
   if ( loading ) return <LoadingState />;
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
+    <div className="container mx-auto py-16 px-4 max-w-6xl">
       <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
 
       { cartData.length === 0 ? (
         <EmptyCart />
       ) : (
-        <div className="grid gap-8 lg:grid-cols-12">
+        <div className="lg:grid gap-8 lg:grid-cols-12">
           <div className="lg:col-span-8">
             { cartData.map( ( item ) => (
               <CartItemComponent
