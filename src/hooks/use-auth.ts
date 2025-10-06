@@ -1,75 +1,21 @@
-import { useEffect, useState } from "react";
+"use client";
 
-export const useAuth = () => {
-  const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+import { useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "@/store";
+import { clearToken as clearTokenAction, setToken as setTokenAction } from "@/store/auth-slice";
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("authToken");
-      if (token) {
-        try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/user`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          );
+export function useAuth() {
+    const dispatch = useDispatch();
+    const { token, isAuthenticated } = useSelector( ( state: RootState ) => state.auth );
 
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-          } else {
-            setError("Failed to fetch user data");
-          }
-        } catch (err) {
-          setError("An error occurred while fetching user data.");
-        }
-      }
+    const login = useCallback( ( token: string ) => {
+        dispatch( setTokenAction( token ) );
+    }, [ dispatch ] );
 
-      setIsLoading(false);
-    };
+    const logout = useCallback( () => {
+        dispatch( clearTokenAction() );
+    }, [ dispatch ] );
 
-    fetchUser();
-  }, []);
-
-  const logout = async () => {
-    const token = localStorage.getItem("authToken");
-
-    if (token) {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/logout`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        if (response.ok) {
-          localStorage.removeItem("token");
-          setUser(null);
-        } else {
-          const data = await response.json();
-          setError(data.message || "Logout failed.");
-        }
-      } catch (err) {
-        setError("An error occurred during logout.");
-      }
-    }
-  };
-
-  return {
-    user,
-    logout,
-    isLoading,
-    error,
-  };
-};
+    return { token, isAuthenticated, login, logout };
+}

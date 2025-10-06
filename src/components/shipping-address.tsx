@@ -50,8 +50,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { storage } from "@/lib/storage";
 import type { ShippingAddress } from "@/types/shipping-address";
+import { authStorage } from "@/lib/auth-storage";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -76,7 +76,7 @@ const fetcher = (url: string) =>
   fetch(url, {
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${storage.getToken()}`,
+      Authorization: `Bearer ${authStorage.getToken()}`,
     },
   }).then((res) => res.json());
 

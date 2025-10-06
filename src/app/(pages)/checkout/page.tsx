@@ -17,7 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { storage } from "@/lib/storage";
+import { authStorage } from "@/lib/auth-storage";
 
 interface ProductPrice {
   duration: number;
@@ -69,7 +69,7 @@ interface PaymentSuccessResponse {
 
 // Fetcher function for SWR
 const fetcher = async (url: string) => {
-  const token = storage.getToken();
+  const token = authStorage.getToken();
   if (!token) {
     throw new Error("No authentication token found");
   }

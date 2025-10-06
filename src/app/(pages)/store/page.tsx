@@ -1,19 +1,19 @@
 "use client";
 
 import useSWR from "swr";
-import EcommerceCard from "@/components/ecommerce-card";
+import { EcommerceCard } from "@/components/ecommerce-card";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import EcommerceCardSkeleton from "@/components/skeletons/ecommerce-card-skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { storage } from "@/lib/storage";
+import { authStorage } from "@/lib/auth-storage";
 import type { Product } from "@/types/product";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url, {
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${storage.getToken()}`,
+      Authorization: `Bearer ${authStorage.getToken()}`,
     },
   });
   if (!res.ok) throw new Error("Failed to fetch");

@@ -9,9 +9,9 @@ import SectionTitle from "@/components/section-title";
 import BasicTreeCardSkeleton from "@/components/skeletons/basic-tree-card-skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { storage } from "@/lib/storage";
 import type { BreadcrumbItemType } from "@/types/home";
 import type { Tree } from "@/types/tree";
+import { authStorage } from "@/lib/auth-storage";
 
 interface TreeApiResponse {
   status: boolean;
@@ -28,7 +28,7 @@ const treesFetcher = async (url: string) => {
   const res = await fetch(url, {
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${storage.getToken()}`,
+      Authorization: `Bearer ${authStorage.getToken()}`,
     },
   });
   if (!res.ok) throw new Error("Failed to fetch trees");

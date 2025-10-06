@@ -1,10 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  isValidPhoneNumber,
-  parsePhoneNumberFromString,
-} from "libphonenumber-js/mobile";
+import axios from "axios";
+import { isValidPhoneNumber, parsePhoneNumberFromString } from "libphonenumber-js/mobile";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,8 +10,8 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import useSWRMutation from "swr/mutation";
 import { z } from "zod";
+
 import { PhoneInput } from "@/components/phone-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,21 +25,21 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { storage } from "@/lib/storage";
+import { authStorage } from "@/lib/auth-storage";
+import api from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import image from "../../public/neem-tree.webp";
 import AppLogo from "./ui/app-logo";
 
-const FormSchema = z.object({
+const FormSchema = z.object( {
   mobile: z
     .string()
-    .min(1, "Phone number is required")
-    .refine((value) => isValidPhoneNumber(value), {
+    .min( 1, "Phone number is required" )
+    .refine( ( value ) => isValidPhoneNumber( value ), {
       message: "Please enter a valid phone number",
-    }),
+    } ),
   referralCode: z.string().optional(),
-  userType: z.enum(["1"]),
-});
+} );
 
 type SignUpPayload = {
   mobile_prefix: string;
@@ -53,100 +51,70 @@ type SignUpPayload = {
 
 type FormData = z.infer<typeof FormSchema>;
 
-const signUpUser = async (url: string, { arg }: { arg: SignUpPayload }) => {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(arg),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Sign Up failed");
-  }
-
-  return response.json();
-};
-
-export function SignupForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function SignupForm( { className, ...props }: React.ComponentProps<"div"> ) {
   const router = useRouter();
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
-      mobile: "",
-      referralCode: "",
-      userType: "1",
-    },
-  });
+  const form = useForm<FormData>( {
+    resolver: zodResolver( FormSchema ),
+    defaultValues: { mobile: "", referralCode: "" },
+  } );
 
-  const { trigger, isMutating } = useSWRMutation(
-    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/signup`,
-    signUpUser,
-  );
+  const getErrorMessage = useCallback( ( error: unknown ): string => {
+    if ( axios.isAxiosError( error ) ) {
+      if ( error.response ) {
+        return ( error.response.data as any )?.message || `Server Error: ${ error.response.status }`;
+      }
+      if ( error.request ) {
+        return "No response from server. Please check your internet connection.";
+      }
+      return error.message;
+    }
+    return error instanceof Error ? error.message : "An unexpected error occurred";
+  }, [] );
 
   const onSubmit = useCallback(
-    async (data: FormData) => {
+    async ( data: FormData ) => {
+      const phoneNumber = parsePhoneNumberFromString( data.mobile );
+
+      if ( !phoneNumber ) {
+        toast.error( "Invalid phone number format" );
+        return;
+      }
+
+      const payload: SignUpPayload = {
+        mobile_prefix: `+${ phoneNumber.countryCallingCode }`,
+        mobile: phoneNumber.nationalNumber,
+        fcm_token: "GDFDFD86676HKKJGG",
+        user_type: 1,
+        referral_code: data.referralCode || "",
+      };
+
       try {
-        const phoneNumber = parsePhoneNumberFromString(data.mobile);
-        if (!phoneNumber) {
-          toast.error("Invalid phone number format");
-          return;
-        }
+        const response = await api.post( "/api/signup", payload );
 
-        const nationalNumber = phoneNumber.nationalNumber;
-        const mobilePrefix = `+${phoneNumber.countryCallingCode || "91"}`;
-
-        const payload = {
-          mobile_prefix: mobilePrefix,
-          mobile: nationalNumber,
-          fcm_token: "GDFDFD86676HKKJGG",
-          user_type: Number(data.userType),
-          referral_code: data.referralCode || "",
-        };
-
-        const result = await trigger(payload);
-
-        if (result.status === true) {
+        if ( response.data.status ) {
           const resetTime = Date.now() + 60000;
-          storage.setResendTime(resetTime);
+          authStorage.setResendTime( resetTime );
 
-          toast.success(
-            result.message || "Verification code sent successfully",
-          );
-          router.push(
-            `/verify-otp?mobile=${encodeURIComponent(nationalNumber)}`,
-          );
+          toast.success( response.data.message || "Verification code sent successfully" );
+          router.push( `/verify-otp?mobile=${ encodeURIComponent( phoneNumber.nationalNumber ) }` );
         } else {
-          toast.error(result.message || "Failed to send verification code");
+          toast.error( response.data.message || "Failed to send verification code" );
         }
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred",
-        );
+      } catch ( error ) {
+        toast.error( getErrorMessage( error ) );
       }
     },
-    [trigger, router],
+    [ router, getErrorMessage ]
   );
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={ cn( "flex flex-col gap-6", className ) } { ...props }>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
           <div className="p-6 md:p-8">
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="flex flex-col gap-6"
-              >
+            <Form { ...form }>
+              <form onSubmit={ form.handleSubmit( onSubmit ) } className="flex flex-col gap-6">
                 <div className="flex flex-col items-center text-center">
                   <AppLogo />
                   <h1 className="text-2xl font-bold">Create Account</h1>
@@ -156,15 +124,15 @@ export function SignupForm({
                 </div>
 
                 <FormField
-                  control={form.control}
+                  control={ form.control }
                   name="mobile"
-                  render={({ field }) => (
+                  render={ ( { field } ) => (
                     <FormItem>
                       <FormLabel>Mobile Number</FormLabel>
                       <FormControl>
                         <PhoneInput
-                          value={field.value}
-                          onChange={field.onChange}
+                          value={ field.value }
+                          onChange={ field.onChange }
                           defaultCountry="IN"
                           international
                           placeholder="Enter your phone number"
@@ -176,43 +144,31 @@ export function SignupForm({
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
-                  )}
+                  ) }
                 />
 
                 <FormField
-                  control={form.control}
+                  control={ form.control }
                   name="referralCode"
-                  render={({ field }) => (
+                  render={ ( { field } ) => (
                     <FormItem>
                       <FormLabel>Referral Code (optional)</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter referral code"
-                          {...field}
-                          className="w-full"
-                        />
+                        <Input placeholder="Enter referral code" { ...field } className="w-full" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )}
+                  ) }
                 />
 
-                {/* Hidden userType field */}
-                <input type="hidden" {...form.register("userType")} />
-
-                <Button type="submit" className="w-full" disabled={isMutating}>
-                  {isMutating && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  {isMutating ? "Creating Account..." : "Create Account"}
+                <Button type="submit" className="w-full" disabled={ form.formState.isSubmitting }>
+                  { form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" /> }
+                  { form.formState.isSubmitting ? "Creating Account..." : "Create Account" }
                 </Button>
 
                 <div className="text-center text-sm">
-                  Already have an account?{" "}
-                  <Link
-                    href="/sign-in"
-                    className="underline underline-offset-4"
-                  >
+                  Already have an account?{ " " }
+                  <Link href="/sign-in" className="underline underline-offset-4">
                     Sign in
                   </Link>
                 </div>
@@ -220,13 +176,12 @@ export function SignupForm({
             </Form>
           </div>
           <div className="bg-muted relative hidden md:grid place-content-center">
-            <Image src={image} alt="My tree enviros" priority />
+            <Image src={ image } alt="My tree enviros" priority />
           </div>
         </CardContent>
       </Card>
-      <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        By clicking continue, you agree to our{" "}
-        <Link href="#">Terms of Service</Link> and{" "}
+      <div className="text-muted-foreground text-center text-xs text-balance *:[a]:hover:text-primary *:[a]:underline *:[a]:underline-offset-4">
+        By clicking continue, you agree to our <Link href="#">Terms of Service</Link> and{ " " }
         <Link href="#">Privacy Policy</Link>.
       </div>
     </div>

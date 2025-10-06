@@ -12,7 +12,7 @@ import {
   Trees,
 } from "lucide-react";
 import Image from "next/image";
-import { use, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
@@ -25,40 +25,16 @@ import { Label } from "@/components/ui/label";
 import { Lens } from "@/components/ui/lens";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { storage } from "@/lib/storage";
+import { authStorage } from "@/lib/auth-storage";
+import api from "@/lib/axios";
 import type { Tree } from "@/types/tree";
 
-const fetcher = ( url: string, token: string | null ) =>
-  fetch( url, {
-    headers: {
-      Accept: "application/json",
-      Authorization: token
-        ? `Bearer ${ token }`
-        : "Bearer 420|xoAHPcuvjeSjE7EVDfQMGsu1l9BkHYIhlz35nEv43a162de5",
-      "X-CSRF-TOKEN": "",
-    },
-  } ).then( ( res ) => {
-    if ( !res.ok ) throw new Error( "Failed to fetch tree data" );
-    return res.json();
-  } );
+const fetcher = ( url: string ) => api.get( url ).then( res => res.data );
 
-async function cartMutation(
-  url: string,
-  { arg }: { arg: { token: string; body: any } },
-) {
-  const { token, body } = arg;
-  const res = await fetch( url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${ token }`,
-    },
-    body: JSON.stringify( body ),
-  } );
-  if ( !res.ok ) throw new Error( "Failed to add to cart" );
-  return res.json();
-}
+const addToCart = async ( url: string, { arg }: { arg: any } ) => {
+  const response = await api.post( url, arg );
+  return response.data;
+};
 
 interface Props {
   params: Promise<{
@@ -68,165 +44,104 @@ interface Props {
 
 export default function Page( { params }: Props ) {
   const { id } = use( params );
-  const token = storage.getToken();
   const [ quantity, setQuantity ] = useState( 1 );
   const [ selectedImage, setSelectedImage ] = useState( 0 );
   const [ selectedYears, setSelectedYears ] = useState( 1 );
-  const [ rating, setRating ] = useState( 0 );
-  const [ reviewText, setReviewText ] = useState( "" );
 
   const {
     data: response,
     error,
     isLoading,
   } = useSWR(
-    id
-      ? [ `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/tree/${ id }`, token ]
-      : null,
-    ( [ url, token ] ) => fetcher( url, token ),
-    { revalidateOnFocus: false, shouldRetryOnError: false },
+    id ? `/api/tree/${ id }` : null,
+    fetcher,
+    { revalidateOnFocus: false }
   );
+
+  const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation( `/api/cart/add/${ id }`, addToCart );
+  const { trigger: sponsorTrigger, isMutating: isSponsoring } = useSWRMutation( `/api/cart/add/${ id }`, addToCart );
 
   const tree: Tree = response?.data;
-  const mainImage = tree
-    ? tree.images?.length > 0 && selectedImage > 0
-      ? tree.images[ selectedImage - 1 ].image_url
-      : tree.main_image_url || "/placeholder.jpg"
-    : "/placeholder.jpg";
-  const averageRating = tree?.reviews?.length
-    ? tree.reviews.reduce( ( sum, r ) => sum + r.rating, 0 ) / tree.reviews.length
-    : 0;
 
-  const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
-    [ `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart/add/${ id }`, "add" ],
-    cartMutation,
+  const allImages = useMemo( () =>
+    tree ? [ tree.main_image_url, ...( tree.images?.map( img => img.image_url ) || [] ) ] : [],
+    [ tree ]
   );
 
-  const { trigger: sponsorTrigger, isMutating: isSponsoring } = useSWRMutation(
-    [
-      `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart/add/${ id }`,
-      "sponsor",
-    ],
-    cartMutation,
+  const maxAvailableDuration = useMemo( () => {
+    if ( !tree?.price ) return 1;
+    return Math.max( ...tree.price.map( p => p.duration ) );
+  }, [ tree?.price ] );
+
+  const mainImage = allImages[ selectedImage ] || "/placeholder.jpg";
+
+  const averageRating = useMemo( () =>
+    tree?.reviews?.length
+      ? tree.reviews.reduce( ( sum, r ) => sum + r.rating, 0 ) / tree.reviews.length
+      : 0,
+    [ tree?.reviews ]
+  );
+
+  const priceOption = useMemo( () =>
+    tree?.price?.find( p => p.duration === selectedYears ),
+    [ tree?.price, selectedYears ]
+  );
+
+  const totalPrice = useMemo( () =>
+    priceOption ? priceOption.price * quantity : 0,
+    [ priceOption, quantity ]
   );
 
   const handleQuantityChange = ( value: number ) => {
-    if ( tree && value >= 1 && value <= tree.quantity ) setQuantity( value );
+    if ( tree && value >= 1 && value <= ( tree.quantity || 999 ) ) setQuantity( value );
   };
 
   const handleYearsChange = ( value: number ) => {
-    if ( tree && value >= 1 && value <= 50 ) setSelectedYears( value );
+    if ( value >= 1 && value <= maxAvailableDuration ) setSelectedYears( value );
   };
 
-  const getPriceForDuration = ( duration: number ) => {
-    const priceOption = tree?.price?.find( ( p ) => p.duration === duration );
-    return priceOption ? parseFloat( priceOption.price ) : 0;
-  };
-
-  const handleAddToCart = async () => {
+  const handleCartAction = async ( cartType: number, productType: number ) => {
+    const token = authStorage.getToken();
     if ( !token ) {
-      toast.error( "Please login to add to cart" );
+      toast.error( "Please login to continue" );
       return;
     }
 
-    if ( !tree || quantity === 0 || quantity > tree.quantity ) return;
-
-    const priceOption = tree.price.find( ( p ) => p.duration === selectedYears );
-    if ( !priceOption ) {
-      toast.error( "Invalid duration selected" );
+    if ( !tree || !priceOption ) {
+      toast.error( "Invalid configuration" );
       return;
     }
 
     const body = {
-      quantity: quantity,
+      quantity,
       type: 1,
-      product_type: 1,
-      cart_type: 1,
+      product_type: productType,
+      cart_type: cartType,
       duration: selectedYears,
       price_option_id: priceOption.id,
     };
 
     try {
-      const result = await addTrigger( { token, body } );
-
-      console.log( result );
-
-      if ( result.status ) {
-        toast.success(
-          `Added ${ quantity } tree${ quantity > 1 ? "s" : "" } to cart`,
-        );
-      } else {
-        throw new Error( result.message || "Failed to add to cart" );
-      }
-    } catch ( err ) {
-      toast.error(
-        `Failed to add to cart - ${ err instanceof Error ? err.message : "Unknown error" }`,
-      );
-    }
-  };
-
-  const handleSponsorPlant = async () => {
-    if ( !token ) {
-      toast.error( "Please login to sponsor trees" );
-      return;
-    }
-
-    if ( !tree || quantity === 0 || quantity > tree.quantity ) return;
-
-    const priceOption = tree.price.find( ( p ) => p.duration === selectedYears );
-    if ( !priceOption ) {
-      toast.error( "Invalid duration selected" );
-      return;
-    }
-
-    const body = {
-      quantity: quantity,
-      type: 1,
-      product_type: 2,
-      cart_type: 2,
-      duration: selectedYears,
-      price_option_id: priceOption.id,
-    };
-
-    try {
-      const result = await sponsorTrigger( { token, body } );
+      const result = cartType === 1
+        ? await addTrigger( body )
+        : await sponsorTrigger( body );
 
       if ( result.status ) {
-        toast.success(
-          `Sponsored ${ quantity } tree${ quantity > 1 ? "s" : "" } for ${ selectedYears } year${ selectedYears > 1 ? "s" : "" }`,
-        );
+        const action = cartType === 1 ? "added to cart" : "sponsored";
+        toast.success( `${ quantity } tree${ quantity > 1 ? "s" : "" } ${ action }` );
       } else {
-        throw new Error( result.message || "Failed to sponsor tree" );
+        throw new Error( result.message );
       }
-    } catch ( err ) {
-      toast.error(
-        `Failed to sponsor tree - ${ err instanceof Error ? err.message : "Unknown error" }`,
-      );
+    } catch ( error ) {
+      toast.error( `Failed to process request` );
     }
   };
 
-  const handleSubmitReview = async ( e: React.FormEvent ) => {
-    e.preventDefault();
-    if ( !token ) {
-      toast.error( "Please login to submit a review" );
-      return;
-    }
-    if ( rating === 0 || !reviewText.trim() ) {
-      toast.error( "Please provide both rating and review text" );
-      return;
-    }
-    toast.success( "Review submitted successfully!" );
-    setRating( 0 );
-    setReviewText( "" );
-  };
-
-  const breadcrumbItems = [
+  const breadcrumbItems = useMemo( () => [
     { title: "Home", href: "/" },
     { title: "Sponsor A Tree", href: "/sponsor-a-tree" },
     { title: tree?.name || "Tree Details", href: "" },
-  ];
-
-  const priceOption = tree?.price?.find( ( p ) => p.duration === selectedYears );
+  ], [ tree?.name ] );
 
   if ( error ) {
     return (
@@ -274,14 +189,11 @@ export default function Page( { params }: Props ) {
                 </Lens>
               </div>
 
-              { tree.images && tree.images.length > 0 && (
+              { allImages.length > 1 && (
                 <div className="flex gap-3 overflow-x-auto pb-2">
-                  { [
-                    tree.main_image_url,
-                    ...tree.images.map( ( img ) => img.image_url ),
-                  ].map( ( imageUrl, index ) => (
+                  { allImages.map( ( imageUrl, index ) => (
                     <Button
-                      key={ `images-${ Date.now() }-${ index }` }
+                      key={ index }
                       className={ `relative h-20 w-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${ selectedImage === index
                         ? "border-primary ring-2 ring-primary/20"
                         : "border-muted hover:border-muted-foreground/30"
@@ -329,7 +241,10 @@ export default function Page( { params }: Props ) {
                     { Array.from( { length: 5 }, ( _, i ) => (
                       <Star
                         key={ i }
-                        className={ `h-5 w-5 ${ i < Math.round( averageRating ) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30" }` }
+                        className={ `h-5 w-5 ${ i < Math.round( averageRating )
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-muted-foreground/30"
+                          }` }
                       />
                     ) ) }
                   </div>
@@ -356,7 +271,7 @@ export default function Page( { params }: Props ) {
                           Location
                         </p>
                         <p className="font-semibold">
-                          { tree.city?.name }, { tree.state?.name }
+                          { tree.city.name }, { tree.state.name }
                         </p>
                       </div>
                     </div>
@@ -391,7 +306,7 @@ export default function Page( { params }: Props ) {
                           <Input
                             type="number"
                             min="1"
-                            max={ tree.quantity }
+                            max={ tree.quantity || 999 }
                             value={ quantity }
                             onChange={ ( e ) =>
                               handleQuantityChange( Number( e.target.value ) )
@@ -403,7 +318,7 @@ export default function Page( { params }: Props ) {
                             size="icon"
                             className="h-10 w-10 rounded-l-none"
                             onClick={ () => handleQuantityChange( quantity + 1 ) }
-                            disabled={ quantity >= tree.quantity }
+                            disabled={ quantity >= ( tree.quantity || 999 ) }
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -428,7 +343,7 @@ export default function Page( { params }: Props ) {
                           <Input
                             type="number"
                             min="1"
-                            max="50"
+                            max={ maxAvailableDuration }
                             value={ selectedYears }
                             onChange={ ( e ) =>
                               handleYearsChange( Number( e.target.value ) )
@@ -440,7 +355,7 @@ export default function Page( { params }: Props ) {
                             size="icon"
                             className="h-10 w-10 rounded-l-none"
                             onClick={ () => handleYearsChange( selectedYears + 1 ) }
-                            disabled={ selectedYears >= 50 }
+                            disabled={ selectedYears >= maxAvailableDuration }
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -465,11 +380,7 @@ export default function Page( { params }: Props ) {
                             <div className="text-right">
                               <div className="flex items-center gap-1">
                                 <span className="text-3xl font-bold text-primary">
-                                  ₹
-                                  { (
-                                    getPriceForDuration( selectedYears ) *
-                                    quantity
-                                  ).toLocaleString( "en-IN" ) }
+                                  ₹{ totalPrice.toLocaleString( "en-IN" ) }
                                 </span>
                               </div>
                             </div>
@@ -480,7 +391,7 @@ export default function Page( { params }: Props ) {
                           <Button
                             variant="outline"
                             className="flex-1"
-                            onClick={ handleAddToCart }
+                            onClick={ () => handleCartAction( 1, 1 ) }
                             disabled={ isAdding || !priceOption }
                           >
                             { isAdding ? (
@@ -494,7 +405,7 @@ export default function Page( { params }: Props ) {
                           </Button>
                           <Button
                             className="flex-1 bg-green-600 hover:bg-green-700"
-                            onClick={ handleSponsorPlant }
+                            onClick={ () => handleCartAction( 2, 2 ) }
                             disabled={ isSponsoring || !priceOption }
                           >
                             { isSponsoring ? (

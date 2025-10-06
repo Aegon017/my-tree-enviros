@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import useSWRMutation from "swr/mutation";
-import { storage } from "@/lib/storage";
 import { Button } from "./ui/button";
+import { authStorage } from "@/lib/auth-storage";
 
 interface RazorpayOptions {
   key: string | undefined;
@@ -62,7 +62,7 @@ async function checkoutRequest(
   url: string,
   { arg }: { arg: any },
 ): Promise<OrderResponse> {
-  const token = storage.getToken();
+  const token = authStorage.getToken();
   if (!token) {
     throw new Error("No authentication token found");
   }

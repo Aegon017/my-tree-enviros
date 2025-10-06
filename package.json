@@ -48,6 +48,7 @@
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "interweave": "^13.1.1",
+    "js-cookie": "^3.0.5",
     "libphonenumber-js": "^1.12.21",
     "lucide-react": "^0.542.0",
     "motion": "^12.23.19",
@@ -73,6 +74,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
     "@tailwindcss/postcss": "^4.1.13",
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20.19.17",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
