@@ -6,7 +6,7 @@ import BasicTreeCard from "@/components/basic-tree-card";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import BasicTreeCardSkeleton from "@/components/skeletons/basic-tree-card-skeleton";
-import { storage } from "@/lib/storage";
+import { authStorage } from "@/lib/auth-storage";
 import type { Tree } from "@/types/tree";
 
 const fetcher = async (url: string) => {
@@ -14,7 +14,7 @@ const fetcher = async (url: string) => {
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      Authorization: `Bearer ${storage.getToken()}`,
+      Authorization: `Bearer ${authStorage.getToken()}`,
     },
   });
 

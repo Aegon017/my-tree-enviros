@@ -20,13 +20,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Tree } from "@/types/tree";
 import { use, useState } from "react";
 import { toast } from "sonner";
-import { storage } from "@/lib/storage";
 import Image from "next/image";
 import { Markup } from "interweave";
 import { Lens } from "@/components/ui/lens";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { Label } from "@/components/ui/label";
+import { authStorage } from "@/lib/auth-storage";
 
 const fetcher = (url: string, token: string | null) =>
   fetch(url, {
@@ -68,7 +68,7 @@ interface Props {
 
 export default function Page({ params }: Props) {
   const { id } = use(params);
-  const token = storage.getToken();
+  const token = authStorage.getToken();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedYears, setSelectedYears] = useState(1);
