@@ -1,6 +1,6 @@
 import axiosInstance from "./axios";
 
-export const fetcher = async ( url: string ) => {
-  const { data } = await axiosInstance.get( url );
+export const fetcher = async (url: string) => {
+  const { data } = await axiosInstance.get(url);
   return data;
 };

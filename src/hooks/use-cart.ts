@@ -1,4 +1,3 @@
-// hooks/useCart.ts
 "use client";
 
 import { useEffect } from "react";
@@ -24,26 +23,20 @@ export function useCart() {
     dispatch(fetchCart());
   }, [dispatch]);
 
-  const addItem = async (
-    productId: number,
-    payload: Parameters<typeof addItemToCart>[0]["payload"],
-  ) => {
-    await dispatch(addItemToCart({ productId, payload })).unwrap();
+  const addItem = async (productId: number, payload: any) => {
+    return await dispatch(addItemToCart({ productId, payload })).unwrap();
   };
 
-  const updateDetails = async (
-    cartId: number,
-    details: Parameters<typeof updateCartItemDetails>[0]["details"],
-  ) => {
-    await dispatch(updateCartItemDetails({ cartId, details })).unwrap();
+  const updateDetails = async (cartId: number, details: any) => {
+    return await dispatch(updateCartItemDetails({ cartId, details })).unwrap();
   };
 
   const removeItem = async (cartId: number) => {
-    await dispatch(removeItemFromCart(cartId)).unwrap();
+    return await dispatch(removeItemFromCart(cartId)).unwrap();
   };
 
   const clearCart = async () => {
-    await dispatch(clearCartItems()).unwrap();
+    return await dispatch(clearCartItems()).unwrap();
   };
 
   return {

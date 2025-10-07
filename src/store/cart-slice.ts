@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  createAsyncThunk,
-  createSlice,
-  type PayloadAction,
-} from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
   addCartDetails,
   addToCart,
@@ -28,50 +24,60 @@ const initialState: CartState = {
 
 export const fetchCart = createAsyncThunk("cart/fetchCart", async () => {
   const data = await getCart();
-  return data as CartItem[];
+  return data;
 });
 
 export const addItemToCart = createAsyncThunk(
   "cart/addItemToCart",
-  async ({
-    productId,
-    payload,
-  }: {
-    productId: number;
-    payload: Parameters<typeof addToCart>[1];
-  }) => {
-    await addToCart(productId, payload);
-    return await getCart();
+  async (
+    { productId, payload }: { productId: number; payload: any },
+    { rejectWithValue },
+  ) => {
+    try {
+      await addToCart(productId, payload);
+      return await getCart();
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data);
+    }
   },
 );
 
 export const updateCartItemDetails = createAsyncThunk(
   "cart/updateCartItemDetails",
-  async ({
-    cartId,
-    details,
-  }: {
-    cartId: number;
-    details: Parameters<typeof addCartDetails>[1];
-  }) => {
-    await addCartDetails(cartId, details);
-    return await getCart();
+  async (
+    { cartId, details }: { cartId: number; details: any },
+    { rejectWithValue },
+  ) => {
+    try {
+      await addCartDetails(cartId, details);
+      return await getCart();
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data);
+    }
   },
 );
 
 export const removeItemFromCart = createAsyncThunk(
   "cart/removeItemFromCart",
-  async (cartId: number) => {
-    await removeCartItem(cartId);
-    return await getCart();
+  async (cartId: number, { rejectWithValue }) => {
+    try {
+      await removeCartItem(cartId);
+      return await getCart();
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data);
+    }
   },
 );
 
 export const clearCartItems = createAsyncThunk(
   "cart/clearCartItems",
-  async () => {
-    await clearCart();
-    return [];
+  async (_, { rejectWithValue }) => {
+    try {
+      await clearCart();
+      return [];
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data);
+    }
   },
 );
 
@@ -79,7 +85,7 @@ const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    clearError(state) {
+    clearError: (state) => {
       state.error = null;
     },
   },
@@ -89,66 +95,62 @@ const cartSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(
-        fetchCart.fulfilled,
-        (state, action: PayloadAction<CartItem[]>) => {
-          state.loading = false;
-          state.items = action.payload;
-        },
-      )
+      .addCase(fetchCart.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
       .addCase(fetchCart.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to fetch cart";
+        state.error =
+          (action.payload as any)?.message ||
+          action.error.message ||
+          "Failed to fetch cart";
       })
-
       .addCase(addItemToCart.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(
-        addItemToCart.fulfilled,
-        (state, action: PayloadAction<CartItem[]>) => {
-          state.loading = false;
-          state.items = action.payload;
-        },
-      )
+      .addCase(addItemToCart.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
       .addCase(addItemToCart.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to add item";
+        state.error =
+          (action.payload as any)?.message ||
+          action.error.message ||
+          "Failed to add item";
       })
-
       .addCase(updateCartItemDetails.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(
-        updateCartItemDetails.fulfilled,
-        (state, action: PayloadAction<CartItem[]>) => {
-          state.loading = false;
-          state.items = action.payload;
-        },
-      )
+      .addCase(updateCartItemDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
       .addCase(updateCartItemDetails.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to update details";
+        state.error =
+          (action.payload as any)?.message ||
+          action.error.message ||
+          "Failed to update details";
       })
-
       .addCase(removeItemFromCart.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(
-        removeItemFromCart.fulfilled,
-        (state, action: PayloadAction<CartItem[]>) => {
-          state.loading = false;
-          state.items = action.payload;
-        },
-      )
+      .addCase(removeItemFromCart.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
       .addCase(removeItemFromCart.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to remove item";
+        state.error =
+          (action.payload as any)?.message ||
+          action.error.message ||
+          "Failed to remove item";
       })
-
       .addCase(clearCartItems.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -159,7 +161,10 @@ const cartSlice = createSlice({
       })
       .addCase(clearCartItems.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to clear cart";
+        state.error =
+          (action.payload as any)?.message ||
+          action.error.message ||
+          "Failed to clear cart";
       });
   },
 });

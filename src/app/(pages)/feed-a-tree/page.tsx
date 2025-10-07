@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { FeedTree } from "@/types/feed-tree";
-import { storage } from "@/lib/storage";
+import { authStorage } from "@/lib/auth-storage";
 
 const calculateProgress = (raised: string, goal: string) => {
   const raisedNum = parseFloat(raised);
@@ -58,7 +58,7 @@ const Page = () => {
           {
             headers: {
               accept: "application/json",
-              Authorization: `Bearer ${storage.getToken()}`,
+              Authorization: `Bearer ${authStorage.getToken()}`,
             },
             cache: "no-store",
           },

@@ -12,6 +12,14 @@ const nextConfig: NextConfig = {
         hostname: "192.168.1.2",
       },
       {
+        protocol: "http",
+        hostname: "192.168.1.42",
+      },
+      {
+        protocol: "http",
+        hostname: "192.168.0.116",
+      },
+      {
         protocol: "https",
         hostname: "arboraid.co",
       },

@@ -1,0 +1,193 @@
+"use client";
+
+import { ArrowRight, CheckCircle2, ShoppingCart } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useCart } from "@/hooks/use-cart";
+import { authStorage } from "@/lib/auth-storage";
+
+interface AddToCartButtonProps {
+  productId: number;
+  quantity: number;
+  selectedYears: number;
+  priceOptionId: number;
+  productType: number;
+  cartType: number;
+  disabled?: boolean;
+}
+
+export default function AddToCartButton({
+  productId,
+  quantity,
+  selectedYears,
+  priceOptionId,
+  productType,
+  cartType,
+  disabled = false,
+}: AddToCartButtonProps) {
+  const router = useRouter();
+  const [showClearCartDialog, setShowClearCartDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    cartType: number;
+    productType: number;
+  } | null>(null);
+
+  const { cartItems, loading: cartLoading, addItem, clearCart } = useCart();
+
+  const isProductInCart = Array.isArray(cartItems)
+    ? cartItems.some((item) => item.product_id === productId)
+    : false;
+
+  const handleCartAction = async () => {
+    if (isProductInCart) {
+      router.push("/cart");
+      return;
+    }
+
+    const token = authStorage.getToken();
+    if (!token) {
+      toast.error("Please login to continue");
+      return;
+    }
+
+    const payload = {
+      quantity,
+      type: 1,
+      product_type: productType,
+      cart_type: cartType,
+      duration: selectedYears,
+      price_option_id: priceOptionId,
+    };
+
+    try {
+      await addItem(productId, payload);
+      const actionText = cartType === 1 ? "added to cart" : "sponsored";
+      const treeText = quantity > 1 ? "trees" : "tree";
+      toast.success(`${quantity} ${treeText} ${actionText}`);
+    } catch (error: any) {
+      const errorMessage = error?.message || "Failed to process request";
+
+      if (errorMessage.includes("same type")) {
+        setPendingAction({ cartType, productType });
+        setShowClearCartDialog(true);
+      } else {
+        toast.error(errorMessage);
+      }
+    }
+  };
+
+  const handleClearCartAndAdd = async () => {
+    if (!pendingAction) return;
+
+    try {
+      await clearCart();
+
+      const payload = {
+        quantity,
+        type: 1,
+        product_type: pendingAction.productType,
+        cart_type: pendingAction.cartType,
+        duration: selectedYears,
+        price_option_id: priceOptionId,
+      };
+
+      await addItem(productId, payload);
+      const actionText =
+        pendingAction.cartType === 1 ? "added to cart" : "sponsored";
+      const treeText = quantity > 1 ? "trees" : "tree";
+      toast.success(`Cart cleared and ${quantity} ${treeText} ${actionText}`);
+    } catch (error: any) {
+      const errorMessage =
+        error?.message || "Failed to clear cart and add item";
+      toast.error(errorMessage);
+    } finally {
+      setShowClearCartDialog(false);
+      setPendingAction(null);
+    }
+  };
+
+  const buttonContent = () => {
+    if (cartLoading) {
+      return (
+        <>
+          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-accent-foreground" />
+          Adding...
+        </>
+      );
+    }
+
+    if (isProductInCart) {
+      return (
+        <>
+          <CheckCircle2 className="w-4 h-4" />
+          Go to Cart
+          <ArrowRight className="w-4 h-4" />
+        </>
+      );
+    }
+
+    return (
+      <>
+        <ShoppingCart className="w-4 h-4" />
+        Add To Cart
+      </>
+    );
+  };
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        className="flex-1"
+        onClick={handleCartAction}
+        disabled={disabled || cartLoading}
+      >
+        {buttonContent()}
+      </Button>
+
+      <Dialog open={showClearCartDialog} onOpenChange={setShowClearCartDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Clear Cart</DialogTitle>
+            <DialogDescription>
+              You can only add products of the same type. Please clear the cart
+              or add products of the same type.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:gap-4 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowClearCartDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleClearCartAndAdd}
+              disabled={cartLoading}
+            >
+              {cartLoading ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-accent-foreground" />
+                  Processing...
+                </>
+              ) : (
+                "Clear Cart & Add Item"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

@@ -62,7 +62,7 @@ interface UserData {
 }
 
 interface PaymentSuccessResponse {
-  mt_order_id: string;
+  razorpay_order_id: string;
   razorpay_payment_id: string;
   amount: number;
 }
@@ -173,7 +173,7 @@ export default function CheckoutPage() {
   const handlePaymentSuccess = useCallback(
     (response: PaymentSuccessResponse) => {
       router.push(
-        `/payment/success?order_id=${response.mt_order_id}&transaction_id=${response.razorpay_payment_id}&amount=${response.amount}`,
+        `/payment/success?order_id=${response.razorpay_order_id}&transaction_id=${response.razorpay_payment_id}&amount=${response.amount}`,
       );
     },
     [router],

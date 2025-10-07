@@ -14,7 +14,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Section from "@/components/section";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -39,8 +39,8 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { storage } from "@/lib/storage";
 import type { FeedTree } from "@/types/feed-tree";
+import { authStorage } from "@/lib/auth-storage";
 
 interface ApiResponse {
   status: boolean;
@@ -252,7 +252,7 @@ const PaymentDialog = ({
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
-              Authorization: `Bearer ${storage.getToken()}`,
+              Authorization: `Bearer ${authStorage.getToken()}`,
             },
             body: JSON.stringify({ amount }),
           },
@@ -282,7 +282,7 @@ const PaymentDialog = ({
                   headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
-                    Authorization: `Bearer ${storage.getToken()}`,
+                    Authorization: `Bearer ${authStorage.getToken()}`,
                   },
                   body: JSON.stringify({
                     donation_order_id: orderData.order_id,
@@ -511,7 +511,7 @@ const Page = () => {
           {
             headers: {
               accept: "application/json",
-              Authorization: `Bearer ${storage.getToken()}`,
+              Authorization: `Bearer ${authStorage.getToken()}`,
             },
             cache: "no-store",
           },

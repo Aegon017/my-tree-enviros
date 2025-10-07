@@ -62,42 +62,48 @@ const promoCards: PromoCard[] = [
 ];
 
 export default function Home() {
-  const plugin = useRef( Autoplay( { delay: 2000, stopOnInteraction: true } ) );
-  const blogPlugin = useRef( Autoplay( { delay: 4000, stopOnInteraction: true } ) );
-  const [ blogRetryCount, setBlogRetryCount ] = useState( 0 );
+  const plugin = useRef(Autoplay({ delay: 2000, stopOnInteraction: true }));
+  const blogPlugin = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }));
+  const [blogRetryCount, setBlogRetryCount] = useState(0);
 
-  const { data: productsData, error: productsError, isLoading: productsLoading } = useSWR(
-    "/api/products",
-    fetcher
-  );
+  const {
+    data: productsData,
+    error: productsError,
+    isLoading: productsLoading,
+  } = useSWR("/api/products", fetcher);
 
-  const { data: treesData, error: treesError, isLoading: treesLoading } = useSWR(
-    "/api/trees",
-    fetcher
-  );
+  const {
+    data: treesData,
+    error: treesError,
+    isLoading: treesLoading,
+  } = useSWR("/api/trees", fetcher);
 
-  const { data: blogsData, error: blogsError, isLoading: blogsLoading, mutate: mutateBlogs } = useSWR(
-    `/api/blogs?retry=${ blogRetryCount }`,
-    fetcher,
-    { revalidateOnFocus: false, shouldRetryOnError: false }
-  );
+  const {
+    data: blogsData,
+    error: blogsError,
+    isLoading: blogsLoading,
+    mutate: mutateBlogs,
+  } = useSWR(`/api/blogs?retry=${blogRetryCount}`, fetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+  });
 
   const { data: slidersData } = useSWR(
-    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/sliders`,
+    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/sliders`,
     fetcher,
   );
 
   const sliders = slidersData?.data ?? [];
-  const products = productsData?.data?.data.slice( 0, 6 ) ?? [];
-  const trees = treesData?.data?.slice( 0, 5 ) ?? [];
+  const products = productsData?.data?.data.slice(0, 6) ?? [];
+  const trees = treesData?.data?.slice(0, 5) ?? [];
   const blogs = blogsData?.data;
 
   const handleBlogRetry = () => {
-    setBlogRetryCount( ( prev ) => prev + 1 );
+    setBlogRetryCount((prev) => prev + 1);
     mutateBlogs();
   };
 
-  if ( productsError ) {
+  if (productsError) {
     return (
       <Section className="bg-background">
         <Alert variant="destructive">
@@ -106,7 +112,7 @@ export default function Home() {
           </AlertDescription>
         </Alert>
         <div className="text-center mt-4">
-          <Button onClick={ () => window.location.reload() }>Try Again</Button>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
         </div>
       </Section>
     );
@@ -115,20 +121,20 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <Carousel
-        opts={ { align: "start", loop: true } }
-        plugins={ [ plugin.current ] }
+        opts={{ align: "start", loop: true }}
+        plugins={[plugin.current]}
         className="w-full relative"
-        onMouseEnter={ plugin.current.stop }
-        onMouseLeave={ plugin.current.reset }
+        onMouseEnter={plugin.current.stop}
+        onMouseLeave={plugin.current.reset}
       >
         <CarouselContent>
-          { sliders.map( ( slider: Slider ) => (
-            <CarouselItem key={ slider.id }>
+          {sliders.map((slider: Slider) => (
+            <CarouselItem key={slider.id}>
               <Card className="overflow-hidden p-0 rounded-none">
                 <CardContent className="flex items-center justify-center p-0 h-80 md:h-96 relative">
                   <Image
-                    src={ slider.main_image_url }
-                    alt={ slider.title }
+                    src={slider.main_image_url}
+                    alt={slider.title}
                     fill
                     priority
                     className="object-cover object-center"
@@ -136,7 +142,7 @@ export default function Home() {
                 </CardContent>
               </Card>
             </CarouselItem>
-          ) ) }
+          ))}
         </CarouselContent>
         <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2" />
         <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2" />
@@ -149,14 +155,14 @@ export default function Home() {
           align="center"
         />
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 justify-center gap-6">
-          { treesLoading ? (
-            Array.from( { length: 5 } ).map( ( _, i ) => {
+          {treesLoading ? (
+            Array.from({ length: 5 }).map((_, i) => {
               return (
                 <BasicTreeCardSkeleton
-                  key={ `tree-skeleton-${ Date.now() }-${ i }` }
+                  key={`tree-skeleton-${Date.now()}-${i}`}
                 />
               );
-            } )
+            })
           ) : treesError ? (
             <div className="col-span-5 text-center">
               <Alert variant="destructive">
@@ -166,16 +172,16 @@ export default function Home() {
               </Alert>
             </div>
           ) : (
-            trees.map( ( tree ) => (
+            trees.map((tree) => (
               <Link
-                key={ tree.id }
-                href={ `/sponsor-a-tree/${ tree.id }` }
+                key={tree.id}
+                href={`/sponsor-a-tree/${tree.id}`}
                 className="transition-transform hover:scale-105"
               >
-                <BasicTreeCard name={ tree.name } image={ tree.main_image_url } />
+                <BasicTreeCard name={tree.name} image={tree.main_image_url} />
               </Link>
-            ) )
-          ) }
+            ))
+          )}
         </div>
         <div className="text-center mt-8">
           <Link href="/sponsor-a-tree">
@@ -186,16 +192,16 @@ export default function Home() {
 
       <Section className="bg-muted">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          { promoCards.map( ( promo ) => (
+          {promoCards.map((promo) => (
             <PromoTreeCard
-              key={ promo.id }
-              image={ promo.image }
-              title={ promo.title }
-              description={ promo.description }
-              linkText={ promo.linkText }
-              linkUrl={ promo.linkUrl }
+              key={promo.id}
+              image={promo.image}
+              title={promo.title}
+              description={promo.description}
+              linkText={promo.linkText}
+              linkUrl={promo.linkUrl}
             />
-          ) ) }
+          ))}
         </div>
       </Section>
 
@@ -206,15 +212,15 @@ export default function Home() {
           align="center"
         />
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-          { productsLoading
-            ? Array.from( { length: 6 } ).map( ( _, i ) => (
-              <EcommerceCardSkeleton
-                key={ `product-skeleton-${ Date.now() }-${ i }` }
-              />
-            ) )
-            : products?.map( ( product: Product ) => (
-              <EcommerceCard key={ product.id } product={ product } />
-            ) ) }
+          {productsLoading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <EcommerceCardSkeleton
+                  key={`product-skeleton-${Date.now()}-${i}`}
+                />
+              ))
+            : products?.map((product: Product) => (
+                <EcommerceCard key={product.id} product={product} />
+              ))}
         </div>
         <div className="text-center mt-8">
           <Link href="/shop">
@@ -230,7 +236,7 @@ export default function Home() {
           align="center"
         />
 
-        { blogsError ? (
+        {blogsError ? (
           <div className="max-w-4xl mx-auto mt-8">
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
@@ -241,7 +247,7 @@ export default function Home() {
             </Alert>
             <div className="flex justify-center">
               <Button
-                onClick={ handleBlogRetry }
+                onClick={handleBlogRetry}
                 className="flex items-center gap-2"
               >
                 <RefreshCw className="h-4 w-4" />
@@ -251,34 +257,34 @@ export default function Home() {
           </div>
         ) : (
           <Carousel
-            opts={ { align: "start", loop: true } }
-            plugins={ [ blogPlugin.current ] }
+            opts={{ align: "start", loop: true }}
+            plugins={[blogPlugin.current]}
             className="w-full max-w-6xl mx-auto mt-8"
-            onMouseEnter={ blogPlugin.current.stop }
-            onMouseLeave={ blogPlugin.current.reset }
+            onMouseEnter={blogPlugin.current.stop}
+            onMouseLeave={blogPlugin.current.reset}
           >
             <CarouselContent>
-              { blogsLoading
-                ? Array.from( { length: 3 } ).map( ( _, i ) => (
-                  <BlogCardSkeleton
-                    key={ `blog-skeleton-${ Date.now() }-${ i }` }
-                  />
-                ) )
-                : blogs?.map( ( blog: Blog ) => (
-                  <CarouselItem
-                    key={ blog.id }
-                    className="md:basis-1/2 lg:basis-1/3"
-                  >
-                    <BlogCard blog={ blog } />
-                  </CarouselItem>
-                ) ) }
+              {blogsLoading
+                ? Array.from({ length: 3 }).map((_, i) => (
+                    <BlogCardSkeleton
+                      key={`blog-skeleton-${Date.now()}-${i}`}
+                    />
+                  ))
+                : blogs?.map((blog: Blog) => (
+                    <CarouselItem
+                      key={blog.id}
+                      className="md:basis-1/2 lg:basis-1/3"
+                    >
+                      <BlogCard blog={blog} />
+                    </CarouselItem>
+                  ))}
             </CarouselContent>
             <div className="flex justify-center mt-8 gap-4">
               <CarouselPrevious className="static transform-none" />
               <CarouselNext className="static transform-none" />
             </div>
           </Carousel>
-        ) }
+        )}
       </Section>
     </div>
   );

@@ -2,7 +2,6 @@
 
 import {
   Calendar,
-  DollarSign,
   MapPin,
   ShieldCheck,
   Trees,
@@ -10,7 +9,6 @@ import {
   Minus,
   Plus,
   Star,
-  Check,
 } from "lucide-react";
 import BreadcrumbNav from "@/components/breadcrumb-nav";
 import { Badge } from "@/components/ui/badge";
@@ -74,8 +72,6 @@ export default function Page({ params }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedYears, setSelectedYears] = useState(1);
-  const [rating, setRating] = useState(0);
-  const [reviewText, setReviewText] = useState("");
 
   const {
     data: response,
@@ -151,8 +147,6 @@ export default function Page({ params }: Props) {
     try {
       const result = await addTrigger({ token, body });
 
-      console.log(result);
-
       if (result.status) {
         toast.success(
           `Added ${quantity} tree${quantity > 1 ? "s" : ""} to cart`,
@@ -205,21 +199,6 @@ export default function Page({ params }: Props) {
         `Failed to sponsor tree - ${err instanceof Error ? err.message : "Unknown error"}`,
       );
     }
-  };
-
-  const handleSubmitReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token) {
-      toast.error("Please login to submit a review");
-      return;
-    }
-    if (rating === 0 || !reviewText.trim()) {
-      toast.error("Please provide both rating and review text");
-      return;
-    }
-    toast.success("Review submitted successfully!");
-    setRating(0);
-    setReviewText("");
   };
 
   const breadcrumbItems = [
