@@ -1,4 +1,4 @@
-name: Deploy Next.js on push
+name: Deployment Workflow
 
 on:
   push:
@@ -13,26 +13,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Install dependencies
+        run: npm install
 
-      - name: Deploy files via rsync
-        run: |
-          rsync -avz --delete --exclude='.git*' -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/mytreeca/public_html/
+      - name: Build Next.js app
+        run: npm run build
 
-      - name: Build & restart Next.js
-        uses: appleboy/ssh-action@v1.2.2
+      - name: SSH Deploy
+
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
           script: |
             cd /home/mytreeca/public_html
+            git pull
             npm install
             npm run build
-            pm2 restart mytreeca || pm2 start npm --name "mytreeca" -- start
+            pm2 restart mytreeca
