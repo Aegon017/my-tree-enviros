@@ -33,7 +33,7 @@ interface CallbackResponse {
 }
 
 export function useRazorpay() {
-  const [loading, setLoading] = useState(false);
+  const [ loading, setLoading ] = useState( false );
 
   const initiatePayment = async (
     type: PaymentType,
@@ -43,12 +43,12 @@ export function useRazorpay() {
     productId?: number,
     amount?: number,
   ) => {
-    setLoading(true);
+    setLoading( true );
 
     try {
       const razorpayLoaded = await loadRazorpay();
-      if (!razorpayLoaded) {
-        toast.error("Payment service unavailable");
+      if ( !razorpayLoaded ) {
+        toast.error( "Payment service unavailable" );
         return;
       }
 
@@ -60,24 +60,24 @@ export function useRazorpay() {
         shipping_address_id: shippingAddressId || 0,
       };
 
-      if (cartType === 2) {
+      if ( cartType === 2 ) {
         payload.product_id = productId;
         payload.amount = amount;
       }
 
-      const res = await api.post<CheckoutResponse>("/api/checkout", payload);
-
+      const res = await api.post<CheckoutResponse>( "/api/checkout", payload );
       const response = res.data;
 
-      if (!response.data?.amount || !response.data?.razorpay_order_id) {
-        throw new Error("Invalid response from server");
+      if ( !response.amount || !response.order_id ) {
+        throw new Error( "Invalid response from server" );
       }
 
-      const {
-        razorpay_order_id: order_id,
-        amount: orderAmount,
-        currency,
-      } = response.data;
+      const { order_id, amount: orderAmount, currency } = response;
+
+
+      if ( !amount || !order_id ) {
+        throw new Error( "Invalid response from server" );
+      }
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
@@ -86,8 +86,8 @@ export function useRazorpay() {
         name: "Tree Sponsorship",
         description: "Payment for tree sponsorship",
         order_id,
-        handler: async (response: any) => {
-          await handlePaymentCallback(response, type);
+        handler: async ( response: any ) => {
+          await handlePaymentCallback( response, type );
         },
         prefill: {
           name: "Your Name",
@@ -97,21 +97,21 @@ export function useRazorpay() {
         theme: { color: "#0f766e" },
       };
 
-      const razorpay = new (window as any).Razorpay(options);
+      const razorpay = new ( window as any ).Razorpay( options );
       razorpay.open();
-    } catch (error: any) {
-      console.error("Payment initiation failed:", error);
+    } catch ( error: any ) {
+      console.error( "Payment initiation failed:", error );
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
         "Payment initiation failed";
-      toast.error(errorMessage);
+      toast.error( errorMessage );
     } finally {
-      setLoading(false);
+      setLoading( false );
     }
   };
 
-  const handlePaymentCallback = async (response: any, type: PaymentType) => {
+  const handlePaymentCallback = async ( response: any, type: PaymentType ) => {
     try {
       const callbackPayload: CallbackPayload = {
         razorpay_order_id: response.razorpay_order_id,
@@ -125,14 +125,14 @@ export function useRazorpay() {
         callbackPayload,
       );
 
-      if (data.success) {
-        toast.success("Payment successful!");
+      if ( data.success ) {
+        toast.success( "Payment successful!" );
       } else {
-        toast.error("Payment verification failed!");
+        toast.error( "Payment verification failed!" );
       }
-    } catch (error: any) {
-      console.error("Payment callback error:", error);
-      toast.error("Payment verification failed!");
+    } catch ( error: any ) {
+      console.error( "Payment callback error:", error );
+      toast.error( "Payment verification failed!" );
     }
   };
 

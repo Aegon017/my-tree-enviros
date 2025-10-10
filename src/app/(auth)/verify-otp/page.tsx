@@ -1,11 +1,12 @@
+"use client";
+
+import { Suspense } from "react";
 import { VerifyOtpForm } from "@/components/verify-otp-form";
 
-export default function SigninPage() {
+export default function VerifyOtpPage() {
   return (
-    <div className="bg-muted flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-3xl">
-        <VerifyOtpForm />
-      </div>
-    </div>
+    <Suspense fallback={<p>Loading...</p>}>
+      <VerifyOtpForm />
+    </Suspense>
   );
 }

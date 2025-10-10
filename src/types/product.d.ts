@@ -30,4 +30,6 @@ export interface Product {
   updated_at: string;
   created_by: number;
   updated_by: number;
+  rating: number;
+  review_count:number;
 }
