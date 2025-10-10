@@ -43,7 +43,7 @@ const fetcher = (url: string, token: string | null) =>
   });
 
 async function cartMutation(
-  url: string,
+  [url, action]: [string, string],
   { arg }: { arg: { token: string; body: any } },
 ) {
   const { token, body } = arg;
@@ -56,7 +56,11 @@ async function cartMutation(
     },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error("Failed to add to cart");
+
+  if (!res.ok)
+    throw new Error(
+      `Failed to ${action === "add" ? "add to cart" : "sponsor tree"}`,
+    );
   return res.json();
 }
 

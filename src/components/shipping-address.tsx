@@ -62,10 +62,10 @@ const formSchema = z.object({
   mobile_number: z
     .string()
     .regex(/^\d{10}$/, "Mobile number must be 10 digits."),
-  default: z.boolean().default(false),
+  default: z.boolean(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema> & { default: boolean };
 
 interface ShippingAddressesProps {
   onSelect?: (shipping_address_id: number | null) => void;

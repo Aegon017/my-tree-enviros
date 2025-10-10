@@ -437,9 +437,14 @@ function CartItemComponent({
     const imageUrl = product?.main_image_url || DEFAULT_IMAGE;
     const productName = product?.name || "Product";
     let itemPrice = 0;
-    if (item.product_type === 1 && item.product?.price) {
+    if (item.product_type === 1 && Array.isArray(item.product?.price)) {
       const opt = item.product.price.find((p) => p.duration === item.duration);
       itemPrice = opt ? parseFloat(opt.price) : 0;
+    } else if (
+      item.product_type === 1 &&
+      typeof item.product?.price === "number"
+    ) {
+      itemPrice = item.product.price;
     } else if (item.product_type === 2 && item.ecom_product?.price) {
       itemPrice = item.ecom_product.price;
     }
@@ -844,13 +849,16 @@ export default function CartPage() {
     () =>
       cartData.reduce((sum, item) => {
         let p = 0;
+
         if (item.product_type === 1 && item.product?.price) {
-          const opt = item.product.price.find(
-            (pp) => pp.duration === item.duration,
-          );
-          if (opt) p = parseFloat(opt.price);
-        } else if (item.product_type === 2 && item.ecom_product?.price) {
-          p = item.ecom_product.price;
+          if (Array.isArray(item.product.price)) {
+            const opt = item.product.price.find(
+              (pp) => pp.duration === item.duration,
+            );
+            if (opt) p = parseFloat(opt.price);
+          } else if (typeof item.product.price === "number") {
+            p = item.product.price;
+          }
         }
         return sum + p * item.quantity;
       }, 0),

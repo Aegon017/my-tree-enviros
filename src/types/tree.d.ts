@@ -1,3 +1,5 @@
+import { Review } from "./review.type";
+
 export interface Tree {
   id: number;
   state_id: number | null;
@@ -25,6 +27,7 @@ export interface Tree {
   city: City | null;
   state: State | null;
   price: TreePrice[];
+  reviews: Review[];
 }
 
 export interface City {

@@ -77,22 +77,21 @@ export default function ProductPage( { params }: Props ) {
     error,
     isLoading,
   } = useSWR<ApiResponse>(
-    [ productUrl, token ],
-    ( [ url, token ] ) => fetcher( url, token ),
-    { revalidateOnFocus: false, shouldRetryOnError: false }
+    [ productUrl, token ] as [ string, string | null ],
+    ( [ url, token ]: [ string, string | null ] ) => fetcher( url, token ),
+    { revalidateOnFocus: false, shouldRetryOnError: false },
   );
 
   const canReviewUrl = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/product/${ id }/can-review`;
-  const { data: canReviewData, mutate: mutateCanReview } =
-    useSWR<CanReviewResponse>(
-      token ? [ canReviewUrl, token ] : null,
-      ( [ url, token ] ) => fetcher( url, token )
-    );
+  const { data: canReviewData, mutate: mutateCanReview } = useSWR<CanReviewResponse>(
+    token ? ( [ canReviewUrl, token ] as [ string, string | null ] ) : null,
+    ( [ url, token ]: [ string, string | null ] ) => fetcher( url, token ),
+  );
 
   const reviewsUrl = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/product/${ id }/reviews?page=${ currentPage }`;
   const { data: reviewsData, mutate: mutateReviews } = useSWR<ReviewsResponse>(
-    [ reviewsUrl, token ],
-    ( [ url, token ] ) => fetcher( url, token )
+    [ reviewsUrl, token ] as [ string, string | null ],
+    ( [ url, token ]: [ string, string | null ] ) => fetcher( url, token ),
   );
 
   const product = response?.data;
@@ -126,7 +125,7 @@ export default function ProductPage( { params }: Props ) {
         setQuantity( product.quantity );
       }
     },
-    [ product ]
+    [ product ],
   );
 
   const handleToggleFavorite = async () => {
@@ -147,7 +146,7 @@ export default function ProductPage( { params }: Props ) {
             Accept: "application/json",
             Authorization: `Bearer ${ token }`,
           },
-        }
+        },
       );
 
       if ( !response.ok ) throw new Error( "Network error" );
@@ -156,11 +155,11 @@ export default function ProductPage( { params }: Props ) {
       toast.success(
         newStatus
           ? `Added ${ product?.name } to wishlist`
-          : `Removed ${ product?.name } from wishlist`
+          : `Removed ${ product?.name } from wishlist`,
       );
     } catch ( err ) {
       toast.error(
-        `Failed to update wishlist - ${ err instanceof Error ? err.message : "Unknown error" }`
+        `Failed to update wishlist - ${ err instanceof Error ? err.message : "Unknown error" }`,
       );
     } finally {
       setIsWishlistLoading( false );
@@ -170,7 +169,7 @@ export default function ProductPage( { params }: Props ) {
   const handleReviewSubmit = async (
     reviewId: number | null,
     rating: number,
-    reviewText: string
+    reviewText: string,
   ) => {
     if ( !token || !rating || !reviewText.trim() ) return;
 
@@ -199,7 +198,7 @@ export default function ProductPage( { params }: Props ) {
         toast.success(
           reviewId
             ? "Review updated successfully"
-            : "Review added successfully"
+            : "Review added successfully",
         );
         mutateCanReview();
         mutateReviews();
@@ -209,7 +208,7 @@ export default function ProductPage( { params }: Props ) {
       }
     } catch ( err ) {
       toast.error(
-        `Failed to submit review - ${ err instanceof Error ? err.message : "Unknown error" }`
+        `Failed to submit review - ${ err instanceof Error ? err.message : "Unknown error" }`,
       );
     } finally {
       setIsSubmittingReview( false );
@@ -553,7 +552,7 @@ export default function ProductPage( { params }: Props ) {
                                 </div>
                                 <span className="text-sm text-muted-foreground">
                                   { new Date(
-                                    review.created_at
+                                    review.created_at,
                                   ).toLocaleDateString() }
                                 </span>
                               </div>

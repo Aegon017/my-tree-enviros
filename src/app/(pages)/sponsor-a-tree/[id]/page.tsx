@@ -85,8 +85,8 @@ export default function Page( { params }: Props ) {
   );
 
   const totalPrice = useMemo(
-    () => ( priceOption ? priceOption.price * quantity : 0 ),
-    [ priceOption, quantity ],
+    () => ( priceOption ? Number( priceOption.price ) * quantity : 0 ),
+    [ priceOption, quantity ]
   );
 
   const handleQuantityChange = ( value: number ) => {
