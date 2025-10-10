@@ -1,4 +1,4 @@
-name: Deploy website on push
+name: Deploy Next.js on push
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  admin-app:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,17 +18,16 @@ jobs:
       with:
         node-version: 22
 
-    - name: Installing Node dependencies
-      run: |
-        npm i
-        npm run build
-
-    - name: Deploying project
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.2.2
       with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        exclude: |
-          **/.git*
-          **/.git*/**
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: 22
+        script: |
+          cd /home/mytreeca/public_html
+          git pull origin main
+          npm install
+          npm run build
+          pm2 restart mytreeca || pm2 start npm --name "mytreeca" -- start
