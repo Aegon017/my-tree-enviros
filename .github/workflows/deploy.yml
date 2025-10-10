@@ -1,48 +1,21 @@
-name: Deploy Next.js on push
+- name: Setup SSH known_hosts
+  run: |
+    mkdir -p ~/.ssh
+    ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-on:
-  push:
-    branches:
-      - main
+- name: Deploy files via rsync
+  run: |
+    rsync -avz --delete --exclude='.git*' ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/mytreeca/public_html/
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Use Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-
-      - name: Deploy via SSH + rsync
-        uses: appleboy/ssh-action@v0.1.9
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: 22
-          script: |
-            mkdir -p /home/mytreeca/public_html
-        env:
-          RSYNC_PASSWORD: ${{ secrets.SSH_PASSWORD }}
-
-      - name: Rsync files
-        run: |
-          rsync -avz --delete --exclude='.git*' ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/mytreeca/public_html/
-          
-      - name: Build & Restart on Server
-        uses: appleboy/ssh-action@v0.1.9
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: 22
-          script: |
-            cd /home/mytreeca/public_html
-            npm install
-            npm run build
-            pm2 restart mytreeca || pm2 start npm --name "mytreeca" -- start
+- name: Build & restart Next.js
+  uses: appleboy/ssh-action@v1.2.2
+  with:
+    host: ${{ secrets.SSH_HOST }}
+    username: ${{ secrets.SSH_USER }}
+    password: ${{ secrets.SSH_PASSWORD }}
+    port: 22
+    script: |
+      cd /home/mytreeca/public_html
+      npm install
+      npm run build
+      pm2 restart mytreeca || pm2 start npm --name "mytreeca" -- start
