@@ -38,7 +38,7 @@ import type { RootState } from "@/store";
 import AppLogo from "./ui/app-logo";
 
 const NOTICE_TEXT = "Get Up to 20% OFF On First Time Purchase";
-const PHONE_NUMBER = "+91 89777 30565";
+const PHONE_NUMBER = "+91 89777 30566";
 const LOCATIONS = [
   "Hyderabad",
   "Bangalore",
