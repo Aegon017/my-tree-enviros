@@ -18,9 +18,9 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy files via rsync
+      - name: Rsync files
         run: |
-          rsync -avz --delete --exclude='.git*' ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/mytreeca/public_html/
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --delete --exclude='.git*' ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/home/mytreeca/public_html/
 
       - name: Build & restart Next.js
         uses: appleboy/ssh-action@v1.2.2
