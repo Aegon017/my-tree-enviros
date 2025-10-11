@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import type { FeedTree } from "@/types/feed-tree";
 import { authStorage } from "@/lib/auth-storage";
 import { Markup } from "interweave";
+import FeedTreeCardSkeleton from "@/components/skeletons/feed-tree-card-skeleton";
 
 const calculateProgress = ( raised: string, goal: string ) => {
   const raisedNum = parseFloat( raised );
@@ -88,8 +89,10 @@ const Page = () => {
           align="center"
           subtitle="Support our campaign to nourish and sustain trees for a greener future."
         />
-        <div className="flex justify-center items-center py-12">
-          <p className="text-muted-foreground">Loading feed trees...</p>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-8">
+          { [ ...Array( 3 ) ].map( ( _, i ) => (
+            <FeedTreeCardSkeleton key={ i } />
+          ) ) }
         </div>
       </Section>
     );
@@ -213,15 +216,6 @@ const Page = () => {
           } )
         ) }
       </div>
-
-      { feedTrees.length > 0 && (
-        <div className="text-center mt-8 text-muted-foreground">
-          <p>
-            Showing { feedTrees.length } tree campaign
-            { feedTrees.length !== 1 ? "s" : "" }
-          </p>
-        </div>
-      ) }
     </Section>
   );
 };
