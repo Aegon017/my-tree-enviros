@@ -15,9 +15,11 @@ interface CheckoutPayload {
 }
 
 interface CheckoutResponse {
-  order_id: string;
-  amount: number;
-  currency: string;
+  data: {
+    razorpay_order_id: string;
+    amount: number;
+    currency: string;
+  }
 }
 
 interface CallbackPayload {
@@ -66,13 +68,13 @@ export function useRazorpay() {
       }
 
       const res = await api.post<CheckoutResponse>( "/api/checkout", payload );
-      const response = res.data;
+      const response = res.data.data;
 
-      if ( !response.amount || !response.order_id ) {
+      if ( !response.amount || !response.razorpay_order_id ) {
         throw new Error( "Invalid response from server" );
       }
 
-      const { order_id, amount: orderAmount, currency } = response;
+      const { razorpay_order_id: order_id, amount: orderAmount, currency } = response;
 
 
       if ( !amount || !order_id ) {
