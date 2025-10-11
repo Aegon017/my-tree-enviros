@@ -56,8 +56,8 @@ const TOP_BAR_LINKS = [
 const MAIN_NAV_ITEMS = [
   { href: "/", label: "Home" },
   { href: "/sponsor-a-tree", label: "Sponsor A Tree" },
-  { href: "/feed-a-tree", label: "Feed A Tree" },
   { href: "/adopt-a-tree", label: "Adopt A Tree" },
+  { href: "/feed-a-tree", label: "Feed A Tree" },
   { href: "/store", label: "Store" },
 ];
 const ICON_LINKS = [
