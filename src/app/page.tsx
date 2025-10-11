@@ -223,7 +223,7 @@ export default function Home() {
             ) ) }
         </div>
         <div className="text-center mt-8">
-          <Link href="/shop">
+          <Link href="/store">
             <Button>View All Products</Button>
           </Link>
         </div>
