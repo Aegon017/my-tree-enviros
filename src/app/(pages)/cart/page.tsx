@@ -715,7 +715,7 @@ function EmptyCart() {
         Add some plants to get started
       </p>
       <Button asChild>
-        <Link href="/products">Continue Shopping</Link>
+        <Link href="/store">Continue Shopping</Link>
       </Button>
     </div>
   );

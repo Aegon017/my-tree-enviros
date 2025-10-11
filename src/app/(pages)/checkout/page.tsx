@@ -260,7 +260,7 @@ export default function CheckoutPage() {
             Add some items to your cart before checkout.
           </p>
           <Button
-            onClick={ () => router.push( "/products" ) }
+            onClick={ () => router.push( "/store" ) }
             className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
           >
             Continue Shopping
