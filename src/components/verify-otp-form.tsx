@@ -245,7 +245,7 @@ export function VerifyOtpForm( {
                   ) }
                 />
 
-                <Button type="submit" loading={isVerifying} disabled={ isVerifying } className="w-full">
+                <Button type="submit" disabled={ isVerifying } className="w-full">
                   Verify Code
                 </Button>
 

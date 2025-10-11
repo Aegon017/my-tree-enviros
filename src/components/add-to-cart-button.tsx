@@ -133,7 +133,7 @@ export default function AddToCartButton( {
         className="flex-1 w-full"
         onClick={ handleCartAction }
         disabled={ disabled || isLoading }
-        loading={ isLoading }
+        // loading={ isLoading }
       >
         { isProductInCart ? (
           <>
@@ -169,7 +169,7 @@ export default function AddToCartButton( {
               variant="destructive"
               onClick={ handleClearCartAndAdd }
               disabled={ isLoading }
-              loading={ isLoading }
+              // loading={ isLoading }
             >
               Clear Cart & Add Item
             </Button>
