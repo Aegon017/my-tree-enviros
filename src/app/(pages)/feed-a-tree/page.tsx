@@ -1,11 +1,13 @@
 "use client";
 
+import { Markup } from "interweave";
 import { Calendar, Heart, MapPin, Target } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
+import FeedTreeCardSkeleton from "@/components/skeletons/feed-tree-card-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,10 +18,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import type { FeedTree } from "@/types/feed-tree";
 import { authStorage } from "@/lib/auth-storage";
-import { Markup } from "interweave";
-import FeedTreeCardSkeleton from "@/components/skeletons/feed-tree-card-skeleton";
+import type { FeedTree } from "@/types/feed-tree";
 
 const calculateProgress = ( raised: string, goal: string ) => {
   const raisedNum = parseFloat( raised );
