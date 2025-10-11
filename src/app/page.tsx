@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 import useSWR from "swr";
 import BasicTreeCard from "@/components/basic-tree-card";
 import BlogCard from "@/components/blog-card";
+import { EcommerceCard } from "@/components/ecommerce-card";
 import PromoTreeCard from "@/components/promo-tree-card";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
@@ -29,7 +30,6 @@ import type { Blog } from "@/types/blog";
 import type { Product } from "@/types/product";
 import type { Tree } from "@/types/tree";
 import neemTree from "../../public/neem-tree.webp";
-import { EcommerceCard } from "@/components/ecommerce-card";
 
 interface PromoCard {
   id: number;

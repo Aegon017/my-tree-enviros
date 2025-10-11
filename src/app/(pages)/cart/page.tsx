@@ -862,7 +862,7 @@ export default function CartPage() {
           }
         }
         else {
-          p = item.ecom_product.price;
+          p = item.ecom_product?.price ?? item.product?.price ?? 0;
         }
         return sum + p * item.quantity;
       }, 0 ),

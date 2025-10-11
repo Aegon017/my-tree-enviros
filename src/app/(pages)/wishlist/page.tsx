@@ -32,12 +32,12 @@ interface CartResponse {
 }
 
 const WishlistPage = () => {
-  const [removingIds, setRemovingIds] = useState<number[]>([]);
-  const [addingToCartIds, setAddingToCartIds] = useState<number[]>([]);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [ removingIds, setRemovingIds ] = useState<number[]>( [] );
+  const [ addingToCartIds, setAddingToCartIds ] = useState<number[]>( [] );
+  const [ cartItems, setCartItems ] = useState<CartItem[]>( [] );
 
   const { data, error, isLoading, mutate } = useSWR<WishlistResponse>(
-    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/wishlist`,
+    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/wishlist`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -47,7 +47,7 @@ const WishlistPage = () => {
 
   const { data: cartData, mutate: mutateCart } = useSWR<CartResponse>(
     authStorage.getToken()
-      ? `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/cart`
+      ? `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart`
       : null,
     fetcher,
     {
@@ -55,31 +55,31 @@ const WishlistPage = () => {
     },
   );
 
-  useEffect(() => {
-    if (cartData?.data?.items) {
-      setCartItems(cartData.data.items);
+  useEffect( () => {
+    if ( cartData?.data?.items ) {
+      setCartItems( cartData.data.items );
     }
-  }, [cartData]);
+  }, [ cartData ] );
 
-  const removeFromWishlist = async (productId: number) => {
-    setRemovingIds((prev) => [...prev, productId]);
+  const removeFromWishlist = async ( productId: number ) => {
+    setRemovingIds( ( prev ) => [ ...prev, productId ] );
 
     try {
       const response = await axiosInstance.delete<RemoveResponse>(
-        `/api/wishlist/remove/${productId}`,
+        `/api/wishlist/remove/${ productId }`,
       );
 
       mutate();
-      toast.success(response.data.message || "Item removed from wishlist");
-    } catch (error: any) {
+      toast.success( response.data.message || "Item removed from wishlist" );
+    } catch ( error: any ) {
       const errorMessage =
         error.response?.status === 401
           ? "Unauthorized - Please log in to manage your wishlist"
           : "Failed to remove item from wishlist";
 
-      toast.error(errorMessage);
+      toast.error( errorMessage );
     } finally {
-      setRemovingIds((prev) => prev.filter((id) => id !== productId));
+      setRemovingIds( ( prev ) => prev.filter( ( id ) => id !== productId ) );
     }
   };
 
@@ -89,37 +89,37 @@ const WishlistPage = () => {
     productName: string,
   ) => {
     const token = authStorage.getToken();
-    if (!token) {
-      toast.error("Please login to add items to cart");
+    if ( !token ) {
+      toast.error( "Please login to add items to cart" );
       return;
     }
 
-    setAddingToCartIds((prev) => [...prev, productId]);
+    setAddingToCartIds( ( prev ) => [ ...prev, productId ] );
 
     try {
-      const response = await axiosInstance.post(`/api/cart/add/${productId}`, {
+      const response = await axiosInstance.post( `/api/cart/add/${ productId }`, {
         quantity: 1,
         type: productType,
         product_type: 2,
         cart_type: 1,
-      });
+      } );
 
-      if (response.data.status) {
-        toast.success(`${productName} added to cart`);
+      if ( response.data.status ) {
+        toast.success( `${ productName } added to cart` );
         mutateCart();
       } else {
-        throw new Error(response.data.message || "Failed to add to cart");
+        throw new Error( response.data.message || "Failed to add to cart" );
       }
-    } catch (error: any) {
+    } catch ( error: any ) {
       toast.error(
-        `Failed to add to cart - ${error.response?.data?.message || error.message}`,
+        `Failed to add to cart - ${ error.response?.data?.message || error.message }`,
       );
     } finally {
-      setAddingToCartIds((prev) => prev.filter((id) => id !== productId));
+      setAddingToCartIds( ( prev ) => prev.filter( ( id ) => id !== productId ) );
     }
   };
 
-  if (isLoading) {
+  if ( isLoading ) {
     return (
       <Section>
         <SectionTitle
@@ -128,15 +128,15 @@ const WishlistPage = () => {
           subtitle="Your saved items and favorites are listed here."
         />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <WishlistItemCardSkeleton key={`wishlist-skeleton-${index}`} />
-          ))}
+          { Array.from( { length: 6 } ).map( ( _, index ) => (
+            <WishlistItemCardSkeleton key={ `wishlist-skeleton-${ index }` } />
+          ) ) }
         </div>
       </Section>
     );
   }
 
-  if (error) {
+  if ( error ) {
     return (
       <Section>
         <SectionTitle
@@ -149,8 +149,8 @@ const WishlistPage = () => {
           <h3 className="text-lg font-semibold mb-2">
             Unable to load wishlist
           </h3>
-          <p className="text-muted-foreground mb-4">{error.message}</p>
-          <Button onClick={() => mutate()}>Try Again</Button>
+          <p className="text-muted-foreground mb-4">{ error.message }</p>
+          <Button onClick={ () => mutate() }>Try Again</Button>
         </div>
       </Section>
     );
@@ -158,7 +158,7 @@ const WishlistPage = () => {
 
   const wishlistItems = data?.data || [];
 
-  if (wishlistItems.length === 0) {
+  if ( wishlistItems.length === 0 ) {
     return (
       <Section>
         <SectionTitle
@@ -182,21 +182,18 @@ const WishlistPage = () => {
       <SectionTitle
         align="center"
         title="Wishlist"
-        subtitle={`You have ${wishlistItems.length} item${wishlistItems.length !== 1 ? "s" : ""} in your wishlist`}
+        subtitle={ `You have ${ wishlistItems.length } item${ wishlistItems.length !== 1 ? "s" : "" } in your wishlist` }
       />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {wishlistItems.map((wishlistItem) => (
+        { wishlistItems.map( ( wishlistItem ) => (
           <WishlistItemCard
-            key={wishlistItem.id}
-            wishlistItem={wishlistItem}
-            removingIds={removingIds}
-            addingToCartIds={addingToCartIds}
-            cartItems={cartItems}
-            onRemove={removeFromWishlist}
-            onAddToCart={addToCart}
+            key={ wishlistItem.id }
+            wishlistItem={ wishlistItem }
+            removingIds={ removingIds }
+            onRemove={ removeFromWishlist }
           />
-        ))}
+        ) ) }
       </div>
     </Section>
   );
