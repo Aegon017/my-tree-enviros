@@ -1,6 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AxiosError } from "axios";
+import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,7 +11,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import useSWRMutation from "swr/mutation";
 import { z } from "zod";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -45,17 +46,17 @@ type OtpFormData = z.infer<typeof OtpSchema>;
 
 const verifyOtp = async (
   _url: string,
-  { arg }: { arg: { mobile: string; otp: string } },
+  { arg }: { arg: { country_code: string; phone: string; otp: string } },
 ) => {
-  const response = await api.post( "/api/verify-otp", arg );
+  const response = await api.post( "/verify-otp", arg );
   return response.data;
 };
 
 const resendOtp = async (
   _url: string,
-  { arg }: { arg: { mobile: string } },
+  { arg }: { arg: { country_code: string; phone: string } },
 ) => {
-  const response = await api.post( "/api/resend-otp", arg );
+  const response = await api.post( "/resend-otp", arg );
   return response.data;
 };
 
@@ -65,7 +66,8 @@ export function VerifyOtpForm( {
 }: React.ComponentProps<"div"> ) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const mobile = searchParams.get( "mobile" );
+  const country_code = searchParams.get( "country_code" );
+  const phone = searchParams.get( "phone" );
   const { login } = useAuth();
 
   const [ resendTimer, setResendTimer ] = useState( 0 );
@@ -76,11 +78,11 @@ export function VerifyOtpForm( {
   } );
 
   const { trigger: verifyTrigger, isMutating: isVerifying } = useSWRMutation(
-    "/api/verify-otp",
+    "/verify-otp",
     verifyOtp,
   );
   const { trigger: resendTrigger, isMutating: isResending } = useSWRMutation(
-    "/api/resend-otp",
+    "/resend-otp",
     resendOtp,
   );
 
@@ -100,13 +102,21 @@ export function VerifyOtpForm( {
 
   const onSubmit = useCallback(
     async ( data: OtpFormData ) => {
-      if ( !mobile ) {
-        toast.error( "Mobile number is missing" );
+      if ( !phone || !country_code ) {
+        toast.error( "Phone number or country code is missing" );
         return;
       }
 
+      const formattedCountryCode = country_code.startsWith( '+' )
+        ? country_code
+        : `+${ country_code }`;
+
       try {
-        const result = await verifyTrigger( { mobile, otp: data.otp } );
+        const result = await verifyTrigger( {
+          country_code: formattedCountryCode,
+          phone,
+          otp: data.otp
+        } );
 
         if ( result.status ) {
           login( result.data );
@@ -117,19 +127,49 @@ export function VerifyOtpForm( {
           toast.error( result.message || "OTP verification failed" );
         }
       } catch ( error ) {
-        toast.error(
-          error instanceof Error ? error.message : "Unexpected error",
-        );
+        if ( error instanceof AxiosError ) {
+          const serverError = error.response?.data;
+
+          if ( serverError?.errors ) {
+            form.clearErrors();
+
+            Object.keys( serverError.errors ).forEach( ( field ) => {
+              if ( field in form.getValues() ) {
+                form.setError( field as keyof OtpFormData, {
+                  type: "server",
+                  message: Array.isArray( serverError.errors[ field ] )
+                    ? serverError.errors[ field ].join( ", " )
+                    : serverError.errors[ field ],
+                } );
+              }
+            } );
+
+            if ( serverError.message && Object.keys( serverError.errors ).length === 0 ) {
+              toast.error( serverError.message );
+            }
+          } else {
+            toast.error( serverError?.message || "OTP verification failed" );
+          }
+        } else {
+          toast.error( "An unexpected error occurred" );
+        }
       }
     },
-    [ verifyTrigger, mobile, router, login ],
+    [ verifyTrigger, country_code, phone, router, login, form ],
   );
 
   const handleResendOtp = useCallback( async () => {
-    if ( !mobile || resendTimer > 0 ) return;
+    if ( !phone || !country_code || resendTimer > 0 ) return;
+
+    const formattedCountryCode = country_code.startsWith( '+' )
+      ? country_code
+      : `+${ country_code }`;
 
     try {
-      const result = await resendTrigger( { mobile } );
+      const result = await resendTrigger( {
+        country_code: formattedCountryCode,
+        phone
+      } );
 
       if ( result.status ) {
         const resetTime = Date.now() + 60000;
@@ -140,22 +180,20 @@ export function VerifyOtpForm( {
         toast.error( result.message || "Failed to resend OTP" );
       }
     } catch ( error ) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to resend OTP",
-      );
+      if ( error instanceof AxiosError ) {
+        const serverError = error.response?.data;
+        toast.error( serverError?.message || "Failed to resend OTP" );
+      } else {
+        toast.error( "Failed to resend OTP" );
+      }
     }
-  }, [ mobile, resendTimer, resendTrigger ] );
+  }, [ country_code, phone, resendTimer, resendTrigger ] );
 
-  // Auto-submit when OTP is complete
-  const handleComplete = useCallback( ( otp: string ) => {
-    form.setValue( 'otp', otp );
-    // Use setTimeout to ensure the form state is updated before submission
-    setTimeout( () => {
-      form.handleSubmit( onSubmit )();
-    }, 100 );
-  }, [ form, onSubmit ] );
+  const displayPhoneNumber = country_code && phone
+    ? `${ country_code.startsWith( '+' ) ? country_code : `+${ country_code }` } ${ phone }`
+    : "";
 
-  if ( !mobile ) {
+  if ( !phone || !country_code ) {
     return (
       <div className={ cn( "flex flex-col gap-6", className ) } { ...props }>
         <Card className="overflow-hidden p-0">
@@ -164,11 +202,16 @@ export function VerifyOtpForm( {
               <AppLogo />
               <h1 className="text-2xl font-bold">Verification Error</h1>
               <p className="text-muted-foreground text-balance">
-                Mobile number is missing. Please try again.
+                { !phone && !country_code
+                  ? "Phone number and country code are missing."
+                  : !phone
+                    ? "Phone number is missing."
+                    : "Country code is missing."
+                } Please try again.
               </p>
               <Button
                 onClick={ () => router.push( "/sign-in" ) }
-                className="w-full"
+                className="w-full max-w-xs"
               >
                 Back to Sign In
               </Button>
@@ -196,15 +239,16 @@ export function VerifyOtpForm( {
                   <AppLogo />
                   <h1 className="text-2xl font-bold">Verify OTP</h1>
                   <p className="text-muted-foreground text-balance">
-                    Enter the verification code sent to { mobile }
+                    Enter the verification code sent to { displayPhoneNumber }
                   </p>
                   <Button
                     variant="link"
                     size="sm"
                     onClick={ () => router.back() }
                     className="w-fit h-auto p-0 text-primary mt-2"
+                    type="button"
                   >
-                    Edit mobile number
+                    Edit phone number
                   </Button>
                 </div>
 
@@ -213,7 +257,7 @@ export function VerifyOtpForm( {
                   name="otp"
                   render={ ( { field } ) => (
                     <FormItem className="space-y-4">
-                      <FormLabel className="text-center w-full">
+                      <FormLabel className="text-center w-full block">
                         Verification Code
                       </FormLabel>
                       <FormControl>
@@ -221,7 +265,12 @@ export function VerifyOtpForm( {
                           <InputOTP
                             maxLength={ 6 }
                             { ...field }
-                            onComplete={ handleComplete }
+                            onChange={ ( value ) => {
+                              field.onChange( value );
+                              if ( value.length === 6 ) {
+                                form.handleSubmit( onSubmit )();
+                              }
+                            } }
                           >
                             <InputOTPGroup>
                               <InputOTPSlot index={ 0 } />
@@ -240,13 +289,21 @@ export function VerifyOtpForm( {
                       <FormDescription className="text-center">
                         Please enter the 6-digit code sent to your phone
                       </FormDescription>
-                      <FormMessage />
+                      <FormMessage className="text-center" />
                     </FormItem>
                   ) }
                 />
 
-                <Button type="submit" disabled={ isVerifying } className="w-full">
-                  Verify Code
+                <Button
+                  type="submit"
+                  disabled={ isVerifying }
+                  className="w-full"
+                  size="lg"
+                >
+                  { isVerifying && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) }
+                  { isVerifying ? "Verifying..." : "Verify Code" }
                 </Button>
 
                 <div className="text-center text-sm text-muted-foreground">
@@ -255,7 +312,7 @@ export function VerifyOtpForm( {
                     type="button"
                     onClick={ handleResendOtp }
                     disabled={ resendTimer > 0 || isResending }
-                    className="text-primary hover:underline font-medium disabled:opacity-50"
+                    className="text-primary hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
                   >
                     { isResending
                       ? "Resending..."
@@ -268,15 +325,20 @@ export function VerifyOtpForm( {
             </Form>
           </div>
           <div className="bg-muted relative hidden md:grid place-content-center">
-            <Image src={ image } alt="My tree enviros" priority />
+            <Image
+              src={ image }
+              alt="My tree enviros"
+              priority
+              className="object-cover w-full h-full"
+            />
           </div>
         </CardContent>
       </Card>
 
       <div className="text-muted-foreground text-center text-xs text-balance *:[a]:hover:text-primary *:[a]:underline *:[a]:underline-offset-4">
         By clicking continue, you agree to our{ " " }
-        <Link href="#">Terms of Service</Link> and{ " " }
-        <Link href="#">Privacy Policy</Link>.
+        <Link href="/terms">Terms of Service</Link> and{ " " }
+        <Link href="/privacy">Privacy Policy</Link>.
       </div>
     </div>
   );

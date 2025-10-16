@@ -53,7 +53,7 @@ export function ApplyCoupon({
   const [discountAmount, setDiscountAmount] = useState(0);
 
   const { trigger, isMutating } = useSWRMutation(
-    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/cart/apply-coupon-all`,
+    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/cart/apply-coupon-all`,
     applyCouponFetcher,
   );
 

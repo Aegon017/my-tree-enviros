@@ -122,7 +122,7 @@ export default function CheckoutPage() {
     isLoading,
     isValidating,
   } = useSWR<CartResponse>(
-    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/cart`,
+    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/cart`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -134,7 +134,7 @@ export default function CheckoutPage() {
 
   // Fetch user data
   const { data: userData } = useSWR<UserData>(
-    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/user`,
+    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/user`,
     fetcher,
     { revalidateOnFocus: false },
   );

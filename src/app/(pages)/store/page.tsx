@@ -22,7 +22,7 @@ const fetcher = async (url: string) => {
 
 const Page = () => {
   const { data, error, isLoading } = useSWR(
-    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/products`,
+    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/products`,
     fetcher,
   );
 

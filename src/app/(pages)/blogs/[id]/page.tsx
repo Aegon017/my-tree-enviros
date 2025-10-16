@@ -49,7 +49,7 @@ export default function Page() {
   const [showShareTooltip, setShowShareTooltip] = useState(false);
 
   const { data, error, isLoading, mutate } = useSWR<ApiResponse>(
-    id ? `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/blog/${id}` : null,
+    id ? `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/blog/${id}` : null,
     fetcher,
     { revalidateOnFocus: false, shouldRetryOnError: false },
   );

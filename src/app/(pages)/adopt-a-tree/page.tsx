@@ -35,7 +35,7 @@ const Page = () => {
     error,
     isLoading,
   } = useSWR(
-    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/adopt-trees`,
+    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/adopt-trees`,
     fetcher,
   );
 

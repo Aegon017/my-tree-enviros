@@ -46,7 +46,7 @@ export default function Page( { params }: Props ) {
     data: response,
     error,
     isLoading,
-  } = useSWR( id ? `/api/tree/${ id }` : null, fetcher, {
+  } = useSWR( id ? `/tree/${ id }` : null, fetcher, {
     revalidateOnFocus: false,
   } );
 

@@ -42,7 +42,7 @@ const fetcher = async (url: string) => {
 
 const Page = () => {
   const { data, error, isLoading } = useSWR<ApiResponse>(
-    "https://arboraid.co/beta/public/api/notifications",
+    "https://arboraid.co/beta/public/notifications",
     fetcher,
     {
       refreshInterval: 30000,

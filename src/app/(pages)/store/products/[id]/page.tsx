@@ -71,7 +71,7 @@ export default function ProductPage( { params }: Props ) {
   const [ currentPage, setCurrentPage ] = useState( 1 );
   const [ editingReviewId, setEditingReviewId ] = useState<number | null>( null );
 
-  const productUrl = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/product/${ id }`;
+  const productUrl = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/product/${ id }`;
   const {
     data: response,
     error,
@@ -82,13 +82,13 @@ export default function ProductPage( { params }: Props ) {
     { revalidateOnFocus: false, shouldRetryOnError: false },
   );
 
-  const canReviewUrl = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/product/${ id }/can-review`;
+  const canReviewUrl = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/product/${ id }/can-review`;
   const { data: canReviewData, mutate: mutateCanReview } = useSWR<CanReviewResponse>(
     token ? ( [ canReviewUrl, token ] as [ string, string | null ] ) : null,
     ( [ url, token ]: [ string, string | null ] ) => fetcher( url, token ),
   );
 
-  const reviewsUrl = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/product/${ id }/reviews?page=${ currentPage }`;
+  const reviewsUrl = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/product/${ id }/reviews?page=${ currentPage }`;
   const { data: reviewsData, mutate: mutateReviews } = useSWR<ReviewsResponse>(
     [ reviewsUrl, token ] as [ string, string | null ],
     ( [ url, token ]: [ string, string | null ] ) => fetcher( url, token ),
@@ -139,7 +139,7 @@ export default function ProductPage( { params }: Props ) {
 
     try {
       const response = await fetch(
-        `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/wishlist/${ newStatus ? "add" : "remove" }/${ id }`,
+        `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/wishlist/${ newStatus ? "add" : "remove" }/${ id }`,
         {
           method: newStatus ? "POST" : "DELETE",
           headers: {
@@ -176,7 +176,7 @@ export default function ProductPage( { params }: Props ) {
     setIsSubmittingReview( true );
 
     try {
-      const url = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/product/${ id }/reviews`;
+      const url = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/product/${ id }/reviews`;
       const method = reviewId ? "PUT" : "POST";
 
       const response = await fetch( url, {

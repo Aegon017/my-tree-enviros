@@ -246,7 +246,7 @@ const PaymentDialog = ({
     async (amount: number) => {
       try {
         const initiateResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/feed-tree/${campaignId}/donation/initiate`,
+          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/feed-tree/${campaignId}/donation/initiate`,
           {
             method: "POST",
             headers: {
@@ -276,7 +276,7 @@ const PaymentDialog = ({
           handler: async function (response: any) {
             try {
               const verifyResponse = await fetch(
-                `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/feed-tree/donation-payment/callback`,
+                `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/feed-tree/donation-payment/callback`,
                 {
                   method: "POST",
                   headers: {
@@ -507,7 +507,7 @@ const Page = () => {
     const fetchFeedTree = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/feed-tree/${id}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/feed-tree/${id}`,
           {
             headers: {
               accept: "application/json",

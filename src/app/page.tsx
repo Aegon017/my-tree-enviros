@@ -70,26 +70,26 @@ export default function Home() {
     data: productsData,
     error: productsError,
     isLoading: productsLoading,
-  } = useSWR( "/api/products", fetcher );
+  } = useSWR( "/products", fetcher );
 
   const {
     data: treesData,
     error: treesError,
     isLoading: treesLoading,
-  } = useSWR( "/api/trees", fetcher );
+  } = useSWR( "/trees", fetcher );
 
   const {
     data: blogsData,
     error: blogsError,
     isLoading: blogsLoading,
     mutate: mutateBlogs,
-  } = useSWR( `/api/blogs?retry=${ blogRetryCount }`, fetcher, {
+  } = useSWR( `/blogs?retry=${ blogRetryCount }`, fetcher, {
     revalidateOnFocus: false,
     shouldRetryOnError: false,
   } );
 
   const { data: slidersData } = useSWR(
-    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/api/sliders`,
+    `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/sliders`,
     fetcher,
   );
 

@@ -29,7 +29,7 @@ const fetcher = async (url: string) => {
 const Page = () => {
   const [retryCount, setRetryCount] = useState(0);
   const { data, error, isLoading, mutate } = useSWR<ApiResponse>(
-    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/blogs?retry=${retryCount}`,
+    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/blogs?retry=${retryCount}`,
     fetcher,
     {
       revalidateOnFocus: false,

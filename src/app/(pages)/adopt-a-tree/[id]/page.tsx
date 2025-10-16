@@ -83,7 +83,7 @@ export default function Page({ params }: Props) {
     isLoading,
   } = useSWR(
     id
-      ? [`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/tree/${id}`, token]
+      ? [`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/tree/${id}`, token]
       : null,
     ([url, token]) => fetcher(url, token),
     { revalidateOnFocus: false, shouldRetryOnError: false },
@@ -100,13 +100,13 @@ export default function Page({ params }: Props) {
     : 0;
 
   const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
-    [`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/cart/add/${id}`, "add"],
+    [`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/cart/add/${id}`, "add"],
     cartMutation,
   );
 
   const { trigger: sponsorTrigger, isMutating: isSponsoring } = useSWRMutation(
     [
-      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/cart/add/${id}`,
+      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/cart/add/${id}`,
       "sponsor",
     ],
     cartMutation,

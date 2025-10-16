@@ -41,7 +41,7 @@ const Page = () => {
     error: treesError,
     isLoading: treesLoading,
   } = useSWR<TreeApiResponse>(
-    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/trees`,
+    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/trees`,
     treesFetcher,
   );
 

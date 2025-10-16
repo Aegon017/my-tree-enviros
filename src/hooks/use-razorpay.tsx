@@ -123,7 +123,7 @@ export function useRazorpay() {
       };
 
       const { data } = await api.post<CallbackResponse>(
-        "/api/payment/callback",
+        "/payment/callback",
         callbackPayload,
       );
 

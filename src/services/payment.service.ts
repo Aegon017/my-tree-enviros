@@ -7,7 +7,7 @@ export async function createOrder(payload: {
   cart_type: "1" | "2";
   shipping_address_id?: number;
 }) {
-  const res = await fetch("/api/checkout", {
+  const res = await fetch("/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -22,7 +22,7 @@ export async function paymentCallback(payload: {
   razorpay_signature: string;
   type: "1" | "2" | "3" | "4";
 }) {
-  const res = await fetch("/api/payment/callback", {
+  const res = await fetch("/payment/callback", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
