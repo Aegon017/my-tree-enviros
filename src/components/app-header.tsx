@@ -32,6 +32,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "@/hooks/use-location";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import type { RootState } from "@/store";
@@ -39,14 +40,6 @@ import AppLogo from "./ui/app-logo";
 
 const NOTICE_TEXT = "Get Up to 20% OFF On First Time Purchase";
 const PHONE_NUMBER = "+91 89777 30566";
-const LOCATIONS = [
-  "Hyderabad",
-  "Bangalore",
-  "Mumbai",
-  "Delhi",
-  "Chennai",
-  "Kolkata",
-];
 const TOP_BAR_LINKS = [
   { name: "My Account", href: "/my-account" },
   { name: "Blogs", href: "/blogs" },
@@ -114,7 +107,20 @@ function TopNotice() {
 }
 
 function TopBar({ user, logout }: { user: boolean; logout: () => void }) {
-  const [selectedLocation, setSelectedLocation] = useState(LOCATIONS[0]);
+  const {
+    selectedLocation,
+    locations,
+    selectLocation,
+    fetchRootLocations,
+    syncFromStorage,
+  } = useLocation();
+
+  // Sync location from storage and fetch locations on mount
+  useEffect(() => {
+    syncFromStorage();
+    fetchRootLocations();
+  }, [syncFromStorage, fetchRootLocations]);
+
   return (
     <div className="bg-muted text-muted-foreground text-xs">
       <div className="container mx-auto max-w-6xl py-1.5 sm:py-2 flex justify-between items-center px-2">
@@ -126,7 +132,7 @@ function TopBar({ user, logout }: { user: boolean; logout: () => void }) {
             >
               <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
               <span className="truncate max-w-[80px] xs:max-w-[100px] sm:max-w-none">
-                {selectedLocation}
+                {selectedLocation?.name || "Select Location"}
               </span>
               <ChevronDown className="w-3 h-3 ml-1 flex-shrink-0" />
             </Button>
@@ -135,18 +141,24 @@ function TopBar({ user, logout }: { user: boolean; logout: () => void }) {
             align="start"
             className="w-40 max-h-60 overflow-y-auto"
           >
-            {LOCATIONS.map((location) => (
-              <DropdownMenuItem
-                key={location}
-                onClick={() => setSelectedLocation(location)}
-                className={cn(
-                  "cursor-pointer text-xs",
-                  selectedLocation === location && "bg-accent",
-                )}
-              >
-                {location}
+            {locations.length === 0 ? (
+              <DropdownMenuItem disabled className="text-xs">
+                Loading locations...
               </DropdownMenuItem>
-            ))}
+            ) : (
+              locations.map((location) => (
+                <DropdownMenuItem
+                  key={location.id}
+                  onClick={() => selectLocation(location)}
+                  className={cn(
+                    "cursor-pointer text-xs",
+                    selectedLocation?.id === location.id && "bg-accent",
+                  )}
+                >
+                  {location.name}
+                </DropdownMenuItem>
+              ))
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 

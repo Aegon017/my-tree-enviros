@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authStorage } from "@/lib/auth-storage";
+import api from "@/lib/axios";
 
 interface ApplyCouponProps {
   onCouponApplied: (discount: number, newTotal: number) => void;
@@ -25,22 +25,8 @@ async function applyCouponFetcher(
   url: string,
   { arg }: { arg: { coupon_code: string } },
 ) {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${authStorage.getToken()}`,
-    },
-    body: JSON.stringify(arg),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Failed to apply coupon");
-  }
-
-  return response.json();
+  const response = await api.post(url, arg);
+  return response.data;
 }
 
 export function ApplyCoupon({

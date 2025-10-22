@@ -4,26 +4,121 @@ import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import {
-  clearToken as clearTokenAction,
-  setToken as setTokenAction,
+  clearUser as clearUserAction,
+  setLoading as setLoadingAction,
+  setUser as setUserAction,
 } from "@/store/auth-slice";
+import {
+  setCartItems,
+  markAsSynced as markCartSynced,
+  markAsGuest as markCartGuest,
+} from "@/store/cart-slice";
+import {
+  setWishlistItems,
+  markAsSynced as markWishlistSynced,
+  markAsGuest as markWishlistGuest,
+} from "@/store/wishlist-slice";
+import type { User } from "@/types/auth.types";
+import { authService } from "@/services/auth.service";
+import { authStorage } from "@/lib/auth-storage";
+import { syncService } from "@/services/sync.service";
 
 export function useAuth() {
   const dispatch = useDispatch();
-  const { token, isAuthenticated } = useSelector(
+  const { user, isAuthenticated, loading } = useSelector(
     (state: RootState) => state.auth,
   );
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+  const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
 
+  /**
+   * Login user by setting user data
+   * For SPA auth, no token is stored - Laravel manages session via httpOnly cookies
+   */
   const login = useCallback(
-    (token: string) => {
-      dispatch(setTokenAction(token));
+    async (userData: User) => {
+      dispatch(setUserAction(userData));
+
+      // Sync guest cart and wishlist to backend
+      try {
+        const syncResult = await syncService.syncAllOnLogin(
+          cartItems,
+          wishlistItems,
+        );
+
+        if (syncResult.success) {
+          // Update cart and wishlist with merged data from backend
+          dispatch(setCartItems(syncResult.cart));
+          dispatch(setWishlistItems(syncResult.wishlist));
+
+          // Mark as synced (no longer guest mode)
+          dispatch(markCartSynced());
+          dispatch(markWishlistSynced());
+        }
+      } catch (error) {
+        console.error("Failed to sync cart/wishlist on login:", error);
+        // Continue with login even if sync fails
+      }
     },
-    [dispatch],
+    [dispatch, cartItems, wishlistItems],
   );
 
-  const logout = useCallback(() => {
-    dispatch(clearTokenAction());
+  /**
+   * Logout user by clearing session on backend and local user data
+   */
+  const logout = useCallback(async () => {
+    try {
+      dispatch(setLoadingAction(true));
+      await authService.logout();
+      dispatch(clearUserAction());
+      authStorage.clearAll();
+
+      // Convert cart and wishlist back to guest mode
+      dispatch(markCartGuest());
+      dispatch(markWishlistGuest());
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Clear local data even if API call fails
+      dispatch(clearUserAction());
+      authStorage.clearAll();
+
+      // Convert cart and wishlist back to guest mode
+      dispatch(markCartGuest());
+      dispatch(markWishlistGuest());
+    } finally {
+      dispatch(setLoadingAction(false));
+    }
   }, [dispatch]);
 
-  return { token, isAuthenticated, login, logout };
+  /**
+   * Check if user is authenticated by fetching current user from backend
+   */
+  const checkAuth = useCallback(async (): Promise<boolean> => {
+    try {
+      dispatch(setLoadingAction(true));
+      const response = await authService.me();
+
+      if (response.success && response.data?.user) {
+        dispatch(setUserAction(response.data.user));
+        return true;
+      }
+
+      dispatch(clearUserAction());
+      return false;
+    } catch (error) {
+      dispatch(clearUserAction());
+      return false;
+    } finally {
+      dispatch(setLoadingAction(false));
+    }
+  }, [dispatch]);
+
+  return {
+    user,
+    isAuthenticated,
+    loading,
+    login,
+    logout,
+    checkAuth,
+  };
 }

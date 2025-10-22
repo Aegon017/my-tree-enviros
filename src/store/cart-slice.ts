@@ -1,173 +1,192 @@
 "use client";
 
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import {
-  addCartDetails,
-  addToCart,
-  clearCart,
-  getCart,
-  removeCartItem,
-} from "@/services/cart.service";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { CartItem } from "@/types/cart.type";
 
 interface CartState {
   items: CartItem[];
   loading: boolean;
   error: string | null;
+  isGuest: boolean; // Track if cart is guest or synced with backend
 }
 
-const initialState: CartState = {
-  items: [],
-  loading: false,
-  error: null,
+const CART_STORAGE_KEY = "guest_cart";
+
+// Load cart from localStorage
+const loadGuestCart = (): CartItem[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem(CART_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
 };
 
-export const fetchCart = createAsyncThunk("cart/fetchCart", async () => {
-  const data = await getCart();
-  return data;
-});
+// Save cart to localStorage
+const saveGuestCart = (items: CartItem[]) => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  } catch (error) {
+    console.error("Failed to save cart:", error);
+  }
+};
 
-export const addItemToCart = createAsyncThunk(
-  "cart/addItemToCart",
-  async (
-    { productId, payload }: { productId: number; payload: any },
-    { rejectWithValue },
-  ) => {
-    try {
-      await addToCart(productId, payload);
-      return await getCart();
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data);
-    }
-  },
-);
+// Clear guest cart from localStorage
+const clearGuestCart = () => {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(CART_STORAGE_KEY);
+};
 
-export const updateCartItemDetails = createAsyncThunk(
-  "cart/updateCartItemDetails",
-  async (
-    { cartId, details }: { cartId: number; details: any },
-    { rejectWithValue },
-  ) => {
-    try {
-      await addCartDetails(cartId, details);
-      return await getCart();
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data);
-    }
-  },
-);
-
-export const removeItemFromCart = createAsyncThunk(
-  "cart/removeItemFromCart",
-  async (cartId: number, { rejectWithValue }) => {
-    try {
-      await removeCartItem(cartId);
-      return await getCart();
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data);
-    }
-  },
-);
-
-export const clearCartItems = createAsyncThunk(
-  "cart/clearCartItems",
-  async (_, { rejectWithValue }) => {
-    try {
-      await clearCart();
-      return [];
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data);
-    }
-  },
-);
+const initialState: CartState = {
+  items: loadGuestCart(),
+  loading: false,
+  error: null,
+  isGuest: true,
+};
 
 const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
+    // Add item to cart (guest or logged in)
+    addItem: (state, action: PayloadAction<CartItem>) => {
+      const existingItem = state.items.find(
+        (item) =>
+          item.id === action.payload.id &&
+          item.type === action.payload.type &&
+          JSON.stringify(item.variant) ===
+            JSON.stringify(action.payload.variant),
+      );
+
+      if (existingItem) {
+        existingItem.quantity += action.payload.quantity || 1;
+      } else {
+        state.items.push({
+          ...action.payload,
+          quantity: action.payload.quantity || 1,
+        });
+      }
+
+      if (state.isGuest) {
+        saveGuestCart(state.items);
+      }
+    },
+
+    // Update item quantity
+    updateQuantity: (
+      state,
+      action: PayloadAction<{ id: number; type: string; quantity: number }>,
+    ) => {
+      const item = state.items.find(
+        (item) =>
+          item.id === action.payload.id && item.type === action.payload.type,
+      );
+
+      if (item) {
+        item.quantity = action.payload.quantity;
+        if (item.quantity <= 0) {
+          state.items = state.items.filter(
+            (i) =>
+              !(i.id === action.payload.id && i.type === action.payload.type),
+          );
+        }
+      }
+
+      if (state.isGuest) {
+        saveGuestCart(state.items);
+      }
+    },
+
+    // Remove item from cart
+    removeItem: (
+      state,
+      action: PayloadAction<{ id: number; type: string }>,
+    ) => {
+      state.items = state.items.filter(
+        (item) =>
+          !(item.id === action.payload.id && item.type === action.payload.type),
+      );
+
+      if (state.isGuest) {
+        saveGuestCart(state.items);
+      }
+    },
+
+    // Clear all items
+    clearCart: (state) => {
+      state.items = [];
+      if (state.isGuest) {
+        clearGuestCart();
+      }
+    },
+
+    // Set cart items (used when loading from backend)
+    setCartItems: (state, action: PayloadAction<CartItem[]>) => {
+      state.items = action.payload;
+    },
+
+    // Set loading state
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
+    },
+
+    // Set error
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
+    },
+
+    // Mark cart as synced with backend
+    markAsSynced: (state) => {
+      state.isGuest = false;
+      clearGuestCart(); // Clear guest cart after sync
+    },
+
+    // Mark cart as guest (on logout)
+    markAsGuest: (state) => {
+      state.isGuest = true;
+      saveGuestCart(state.items);
+    },
+
+    // Sync from localStorage
+    syncFromStorage: (state) => {
+      if (state.isGuest) {
+        state.items = loadGuestCart();
+      }
+    },
+
+    // Clear error
     clearError: (state) => {
       state.error = null;
     },
   },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchCart.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchCart.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items = action.payload;
-      })
-      .addCase(fetchCart.rejected, (state, action) => {
-        state.loading = false;
-        state.error =
-          (action.payload as any)?.message ||
-          action.error.message ||
-          "Failed to fetch cart";
-      })
-      .addCase(addItemToCart.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(addItemToCart.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items = action.payload;
-      })
-      .addCase(addItemToCart.rejected, (state, action) => {
-        state.loading = false;
-        state.error =
-          (action.payload as any)?.message ||
-          action.error.message ||
-          "Failed to add item";
-      })
-      .addCase(updateCartItemDetails.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(updateCartItemDetails.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items = action.payload;
-      })
-      .addCase(updateCartItemDetails.rejected, (state, action) => {
-        state.loading = false;
-        state.error =
-          (action.payload as any)?.message ||
-          action.error.message ||
-          "Failed to update details";
-      })
-      .addCase(removeItemFromCart.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(removeItemFromCart.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items = action.payload;
-      })
-      .addCase(removeItemFromCart.rejected, (state, action) => {
-        state.loading = false;
-        state.error =
-          (action.payload as any)?.message ||
-          action.error.message ||
-          "Failed to remove item";
-      })
-      .addCase(clearCartItems.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(clearCartItems.fulfilled, (state) => {
-        state.loading = false;
-        state.items = [];
-      })
-      .addCase(clearCartItems.rejected, (state, action) => {
-        state.loading = false;
-        state.error =
-          (action.payload as any)?.message ||
-          action.error.message ||
-          "Failed to clear cart";
-      });
-  },
 });
 
-export const { clearError } = cartSlice.actions;
+export const {
+  addItem,
+  updateQuantity,
+  removeItem,
+  clearCart,
+  setCartItems,
+  setLoading,
+  setError,
+  markAsSynced,
+  markAsGuest,
+  syncFromStorage,
+  clearError,
+} = cartSlice.actions;
+
 export default cartSlice.reducer;
+
+// Selectors
+export const selectCartItems = (state: { cart: CartState }) => state.cart.items;
+export const selectCartItemCount = (state: { cart: CartState }) =>
+  state.cart.items.reduce((total, item) => total + item.quantity, 0);
+export const selectCartTotal = (state: { cart: CartState }) =>
+  state.cart.items.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0,
+  );
+export const selectIsGuestCart = (state: { cart: CartState }) =>
+  state.cart.isGuest;

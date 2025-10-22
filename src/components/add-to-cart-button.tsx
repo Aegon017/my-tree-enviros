@@ -14,10 +14,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useCart } from "@/hooks/use-cart";
-import { authStorage } from "@/lib/auth-storage";
 
 interface AddToCartButtonProps {
   productId: number;
+  productName: string;
+  productPrice: number;
+  productImage: string;
   quantity: number;
   selectedYears?: number;
   priceOptionId?: number;
@@ -36,8 +38,11 @@ interface ApiError {
   message?: string;
 }
 
-export default function AddToCartButton( {
+export default function AddToCartButton({
   productId,
+  productName,
+  productPrice,
+  productImage,
   quantity,
   selectedYears,
   priceOptionId,
@@ -45,97 +50,108 @@ export default function AddToCartButton( {
   cartType,
   variant = "default",
   disabled = false,
-}: AddToCartButtonProps ) {
+}: AddToCartButtonProps) {
   const router = useRouter();
-  const [ showClearCartDialog, setShowClearCartDialog ] = useState( false );
-  const [ pendingAction, setPendingAction ] = useState<PendingAction | null>( null );
-  const [ isLoading, setIsLoading ] = useState( false );
+  const [showClearCartDialog, setShowClearCartDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(
+    null,
+  );
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { cartItems, addItem, clearCart } = useCart();
+  const { items: cartItems, addToCart, clearAllItems } = useCart();
 
-  const isProductInCart = cartItems?.some( ( item ) => item.product_id === productId ) ?? false;
+  const isProductInCart =
+    cartItems?.some((item) => item.product_id === productId) ?? false;
 
   const handleCartAction = async () => {
-    if ( isProductInCart ) {
-      router.push( "/cart" );
+    if (isProductInCart) {
+      router.push("/cart");
       return;
     }
 
-    const token = authStorage.getToken();
-    if ( !token ) {
-      toast.error( "Please login to continue" );
-      return;
-    }
-
-    const payload = {
+    // Guest mode is allowed - no login required
+    const cartItem = {
+      id: productId,
+      product_id: productId,
+      name: productName,
+      type: productType === 1 ? "tree" : "product",
+      price: productPrice,
       quantity,
-      type: 1,
-      product_type: productType,
-      cart_type: cartType,
-      duration: selectedYears,
-      price_option_id: priceOptionId,
+      image: productImage,
+      metadata: {
+        duration: selectedYears,
+        plan_id: priceOptionId,
+      },
     };
 
-    setIsLoading( true );
+    setIsLoading(true);
     try {
-      await addItem( productId, payload );
+      addToCart(cartItem);
       const actionText = cartType === 1 ? "added to cart" : "sponsored";
       const treeText = quantity > 1 ? "trees" : "tree";
-      toast.success( `${ quantity } ${ treeText } ${ actionText }` );
-    } catch ( error ) {
-      const errorMessage = ( error as ApiError )?.message || "Failed to process request";
+      toast.success(`${quantity} ${treeText} ${actionText}`);
+    } catch (error) {
+      const errorMessage =
+        (error as ApiError)?.message || "Failed to process request";
 
-      if ( errorMessage.includes( "same type" ) ) {
-        setPendingAction( { cartType, productType } );
-        setShowClearCartDialog( true );
+      if (errorMessage.includes("same type")) {
+        setPendingAction({ cartType, productType });
+        setShowClearCartDialog(true);
       } else {
-        toast.error( errorMessage );
+        toast.error(errorMessage);
       }
     } finally {
-      setIsLoading( false );
+      setIsLoading(false);
     }
   };
 
-  const handleClearCartAndAdd = async () => {
-    if ( !pendingAction ) return;
+  const handleClearCartAndAdd = () => {
+    if (!pendingAction) return;
 
-    setIsLoading( true );
+    setIsLoading(true);
     try {
-      await clearCart();
+      clearAllItems();
 
-      const payload = {
+      const cartItem = {
+        id: productId,
+        product_id: productId,
+        name: productName,
+        type: pendingAction.productType === 1 ? "tree" : "product",
+        price: productPrice,
         quantity,
-        type: 1,
-        product_type: pendingAction.productType,
-        cart_type: pendingAction.cartType,
-        duration: selectedYears,
-        price_option_id: priceOptionId,
+        image: productImage,
+        metadata: {
+          duration: selectedYears,
+          plan_id: priceOptionId,
+        },
       };
 
-      await addItem( productId, payload );
-      const actionText = pendingAction.cartType === 1 ? "added to cart" : "sponsored";
+      addToCart(cartItem);
+      const actionText =
+        pendingAction.cartType === 1 ? "added to cart" : "sponsored";
       const treeText = quantity > 1 ? "trees" : "tree";
-      toast.success( `Cart cleared and ${ quantity } ${ treeText } ${ actionText }` );
-    } catch ( error ) {
-      const errorMessage = ( error as ApiError )?.message || "Failed to clear cart and add item";
-      toast.error( errorMessage );
+      toast.success(`Cart cleared and ${quantity} ${treeText} ${actionText}`);
+    } catch (error) {
+      const errorMessage =
+        (error as ApiError)?.message || "Failed to clear cart and add item";
+      toast.error(errorMessage);
     } finally {
-      setShowClearCartDialog( false );
-      setPendingAction( null );
-      setIsLoading( false );
+      setShowClearCartDialog(false);
+      setPendingAction(null);
+      setIsLoading(false);
     }
   };
 
   return (
     <>
       <Button
-        variant={ variant }
+        variant={variant}
         className="flex-1 w-full"
-        onClick={ handleCartAction }
-        disabled={ disabled || isLoading }
+        onClick={handleCartAction}
+        disabled={disabled || isLoading}
         // loading={ isLoading }
       >
-        { isProductInCart ? (
+        {isProductInCart ? (
           <>
             <CheckCircle2 className="w-4 h-4" />
             Go to Cart
@@ -146,10 +162,10 @@ export default function AddToCartButton( {
             <ShoppingCart className="w-4 h-4" />
             Add To Cart
           </>
-        ) }
+        )}
       </Button>
 
-      <Dialog open={ showClearCartDialog } onOpenChange={ setShowClearCartDialog }>
+      <Dialog open={showClearCartDialog} onOpenChange={setShowClearCartDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Clear Cart</DialogTitle>
@@ -161,14 +177,14 @@ export default function AddToCartButton( {
           <DialogFooter className="flex gap-2 sm:gap-4 mt-4">
             <Button
               variant="outline"
-              onClick={ () => setShowClearCartDialog( false ) }
+              onClick={() => setShowClearCartDialog(false)}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
-              onClick={ handleClearCartAndAdd }
-              disabled={ isLoading }
+              onClick={handleClearCartAndAdd}
+              disabled={isLoading}
               // loading={ isLoading }
             >
               Clear Cart & Add Item
