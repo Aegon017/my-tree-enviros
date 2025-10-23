@@ -81,7 +81,14 @@ export default function Page({ params }: Props) {
   const tree = response?.data?.tree;
 
   const allImages = useMemo(
-    () => (tree ? [...(tree.images?.map((img) => img.image_url) || [])] : []),
+    () =>
+      tree
+        ? [
+            ...(tree.images?.map(
+              (img: { image_url: string }) => img.image_url,
+            ) || []),
+          ]
+        : [],
     [tree],
   );
 
@@ -108,12 +115,14 @@ export default function Page({ params }: Props) {
           priceNumeric,
         };
       }) || [];
-    return list.filter((o) => o.duration > 0);
+    return list.filter((o: { duration: number }) => o.duration > 0);
   }, [tree?.plan_prices]);
 
   const maxAvailableDuration = useMemo(() => {
     if (planOptions.length === 0) return 1;
-    return Math.max(...planOptions.map((p) => p.duration));
+    return Math.max(
+      ...planOptions.map((p: { duration: number }) => p.duration),
+    );
   }, [planOptions]);
 
   const mainImage = allImages[selectedImage] || "/placeholder.jpg";
@@ -121,14 +130,19 @@ export default function Page({ params }: Props) {
   const averageRating = useMemo(
     () =>
       tree?.reviews?.length
-        ? tree.reviews.reduce((sum, r) => sum + r.rating, 0) /
-          tree.reviews.length
+        ? tree.reviews.reduce(
+            (sum: number, r: { rating: number }) => sum + r.rating,
+            0,
+          ) / tree.reviews.length
         : 0,
     [tree?.reviews],
   );
 
   const priceOption = useMemo(
-    () => planOptions.find((p) => p.duration === selectedYears),
+    () =>
+      planOptions.find(
+        (p: { duration: number }) => p.duration === selectedYears,
+      ),
     [planOptions, selectedYears],
   );
 
@@ -519,7 +533,8 @@ export default function Page({ params }: Props) {
                                     setLoginOpen(false);
                                     try {
                                       const planPriceId = planOptions.find(
-                                        (p) => p.duration === selectedYears,
+                                        (p: { duration: number }) =>
+                                          p.duration === selectedYears,
                                       )?.id;
                                       if (planPriceId) {
                                         await cartService.addTreeToCart({
@@ -578,29 +593,39 @@ export default function Page({ params }: Props) {
                     <h3 className="text-lg font-semibold mb-4">Plan Options</h3>
                     {planOptions.length > 0 ? (
                       <div className="space-y-3">
-                        {planOptions.map((p) => (
-                          <div
-                            key={p.id}
-                            className="rounded-lg border bg-background px-4 py-3"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="text-sm font-medium">
-                                {p.durationDisplay}
+                        {planOptions.map(
+                          (p: {
+                            id: number;
+                            duration: number;
+                            durationDisplay: string;
+                            features: string[];
+                            priceNumeric: number;
+                          }) => (
+                            <div
+                              key={p.id}
+                              className="rounded-lg border bg-background px-4 py-3"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-medium">
+                                  {p.durationDisplay}
+                                </div>
+                                <div className="text-right font-semibold">
+                                  ₹
+                                  {Number(p.priceNumeric).toLocaleString(
+                                    "en-IN",
+                                  )}
+                                </div>
                               </div>
-                              <div className="text-right font-semibold">
-                                ₹
-                                {Number(p.priceNumeric).toLocaleString("en-IN")}
-                              </div>
+                              {p.features && p.features.length > 0 && (
+                                <ul className="mt-2 list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                  {p.features.map((f: string, idx: number) => (
+                                    <li key={idx}>{f}</li>
+                                  ))}
+                                </ul>
+                              )}
                             </div>
-                            {p.features && p.features.length > 0 && (
-                              <ul className="mt-2 list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                {p.features.map((f: string, idx: number) => (
-                                  <li key={idx}>{f}</li>
-                                ))}
-                              </ul>
-                            )}
-                          </div>
-                        ))}
+                          ),
+                        )}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">

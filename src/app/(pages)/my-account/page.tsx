@@ -1,4 +1,5 @@
 "use client";
+import api from "@/lib/axios";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import {
@@ -644,7 +645,6 @@ const useApi = () => {
     const token = localStorage.getItem("authToken");
     return {
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     };
   }, []);
@@ -680,10 +680,8 @@ const AccountPage = () => {
   const fetchUserProfile = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/user`, {
-        headers: getAuthHeaders(),
-      });
-      const data = await res.json();
+      const res = await api.get(`/user`);
+      const data = res.data;
       if (data.status && data.data?.[0]) {
         const user = data.data[0];
         setUserProfile(user);
@@ -812,15 +810,12 @@ const AccountPage = () => {
     formData.append("name", editForm.name);
     formData.append("email", editForm.email);
     try {
-      const res = await fetch(`${API_BASE_URL}/user`, {
-        method: "PUT",
+      const res = await api.put(`/user`, formData, {
         headers: {
           Accept: "application/json",
-          Authorization: getAuthHeaders().Authorization,
         },
-        body: formData,
       });
-      const data = await res.json();
+      const data = res.data;
       if (data.status) {
         setUserProfile((prev) =>
           prev ? { ...prev, name: editForm.name, email: editForm.email } : null,

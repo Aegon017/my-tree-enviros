@@ -76,7 +76,6 @@ const fetcher = (url: string) =>
   fetch(url, {
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${authStorage.getToken()}`,
     },
   }).then((res) => res.json());
 
@@ -436,7 +435,7 @@ export default function ShippingAddresses({
           async (current: typeof data | undefined) => {
             if (!current) return current;
 
-            await api.delete(`/shipping-addresses/${deleteAddressId}`);
+            await api.delete(`/shipping-addresses/${id}`);
 
             return {
               ...current,
@@ -499,7 +498,6 @@ export default function ShippingAddresses({
               headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",
-                Authorization: `Bearer ${authStorage.getToken()}`,
               },
               body: JSON.stringify(payload),
             });
@@ -532,7 +530,6 @@ export default function ShippingAddresses({
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: `Bearer ${authStorage.getToken()}`,
           },
           body: JSON.stringify(payload),
         });

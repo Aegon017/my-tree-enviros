@@ -8,6 +8,11 @@ export interface CartItem {
   quantity: number;
   image: string;
   slug?: string;
+  product_type?: number;
+  duration?: number;
+  occasion?: string;
+  message?: string;
+  location_id?: number;
   variant?: {
     id?: number;
     name?: string;
@@ -29,6 +34,7 @@ export interface CartItem {
   updated_at?: string;
   // Full product/tree data (from backend)
   product?: Product;
+  ecom_product?: Product;
   tree?: any;
 }
 
@@ -70,6 +76,11 @@ export function transformBackendCart(item: BackendCartItem): CartItem {
     quantity: item.quantity,
     image: product?.main_image_url || "",
     slug: product?.slug,
+    product_type: item.product_type,
+    duration: item.duration,
+    occasion: item.occasion,
+    message: item.message,
+    location_id: item.location_id,
     metadata: {
       duration: item.duration,
       occasion: item.occasion,
@@ -81,5 +92,6 @@ export function transformBackendCart(item: BackendCartItem): CartItem {
     created_at: item.created_at,
     updated_at: item.updated_at,
     product: product,
+    ecom_product: item.ecom_product,
   };
 }

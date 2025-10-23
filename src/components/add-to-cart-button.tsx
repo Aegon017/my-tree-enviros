@@ -74,7 +74,7 @@ export default function AddToCartButton({
       id: productId,
       product_id: productId,
       name: productName,
-      type: productType === 1 ? "tree" : "product",
+      type: (productType === 1 ? "tree" : "product") as "tree" | "product",
       price: productPrice,
       quantity,
       image: productImage,
@@ -116,7 +116,9 @@ export default function AddToCartButton({
         id: productId,
         product_id: productId,
         name: productName,
-        type: pendingAction.productType === 1 ? "tree" : "product",
+        type: (pendingAction.productType === 1 ? "tree" : "product") as
+          | "tree"
+          | "product",
         price: productPrice,
         quantity,
         image: productImage,

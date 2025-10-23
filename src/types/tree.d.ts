@@ -23,6 +23,7 @@ export interface Tree {
   adopted_status: number;
   plantation_status: number;
   main_image_url: string;
+  thumbnail?: string;
   images: TreeImage[];
   city: City | null;
   state: State | null;

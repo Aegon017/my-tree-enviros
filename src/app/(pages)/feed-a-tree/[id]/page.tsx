@@ -252,7 +252,6 @@ const PaymentDialog = ({
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
-              Authorization: `Bearer ${authStorage.getToken()}`,
             },
             body: JSON.stringify({ amount }),
           },
@@ -282,7 +281,6 @@ const PaymentDialog = ({
                   headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
-                    Authorization: `Bearer ${authStorage.getToken()}`,
                   },
                   body: JSON.stringify({
                     donation_order_id: orderData.order_id,
@@ -511,7 +509,6 @@ const Page = () => {
           {
             headers: {
               accept: "application/json",
-              Authorization: `Bearer ${authStorage.getToken()}`,
             },
             cache: "no-store",
           },

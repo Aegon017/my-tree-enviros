@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import api from "@/lib/axios";
 import { useCart } from "@/hooks/use-cart";
 import type { CartItem } from "@/types/cart.type";
 
@@ -171,18 +172,8 @@ function AddDetailModal({
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/tree-locations/states`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          },
-        );
-        if (response.ok) {
-          const json = await response.json();
-          setStates(json.data || []);
-        }
+        const { data: json } = await api.get("/tree-locations/states");
+        setStates(json.data || []);
       } catch (err) {
         console.error("Failed to fetch states:", err);
       }
@@ -194,21 +185,15 @@ function AddDetailModal({
   const fetchAreas = useCallback(async (stateId: number) => {
     setIsAreaLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/tree-locations/states/${stateId}/areas`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
+      const { data: json } = await api.get(
+        `/tree-locations/states/${stateId}/areas`,
       );
-      if (response.ok) {
-        const json = await response.json();
-        const mapped: Area[] = (json.data || []).map((a: any) => ({
-          id: a.area_id,
-          name: a.area_name,
-          locationId: a.location_id,
-        }));
-        setAreas(mapped);
-      }
+      const mapped: Area[] = (json.data || []).map((a: any) => ({
+        id: a.area_id,
+        name: a.area_name,
+        locationId: a.location_id,
+      }));
+      setAreas(mapped);
     } catch (err) {
       console.error("Failed to fetch areas:", err);
     } finally {
@@ -551,8 +536,9 @@ function CartItemComponent({
                     onClick={() => handleQuantityChange(item.quantity + 1)}
                     disabled={
                       item.quantity >=
-                        (item.ecom_product?.quantity ||
-                          item.product?.quantity) || isUpdating
+                        (item.ecom_product?.quantity ??
+                          item.product?.quantity ??
+                          Number.MAX_SAFE_INTEGER) || isUpdating
                     }
                   >
                     <Plus className="h-3 w-3" />
@@ -571,8 +557,15 @@ function CartItemComponent({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 rounded-r-none hover:bg-accent transition-colors"
-                      onClick={() => handleDurationChange(item.duration - 1)}
-                      disabled={item.duration <= MIN_QUANTITY || isUpdating}
+                      onClick={() =>
+                        handleDurationChange(
+                          (item.duration ?? MIN_QUANTITY) - 1,
+                        )
+                      }
+                      disabled={
+                        (item.duration ?? MIN_QUANTITY) <= MIN_QUANTITY ||
+                        isUpdating
+                      }
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
@@ -580,7 +573,7 @@ function CartItemComponent({
                       type="number"
                       min={MIN_QUANTITY}
                       max={MAX_DURATION}
-                      value={item.duration}
+                      value={item.duration ?? MIN_QUANTITY}
                       onChange={(e) =>
                         handleInputChange("duration")(
                           parseInt(e.target.value) || MIN_QUANTITY,
@@ -593,8 +586,15 @@ function CartItemComponent({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 rounded-l-none hover:bg-accent transition-colors"
-                      onClick={() => handleDurationChange(item.duration + 1)}
-                      disabled={item.duration >= MAX_DURATION || isUpdating}
+                      onClick={() =>
+                        handleDurationChange(
+                          (item.duration ?? MIN_QUANTITY) + 1,
+                        )
+                      }
+                      disabled={
+                        (item.duration ?? MIN_QUANTITY) >= MAX_DURATION ||
+                        isUpdating
+                      }
                     >
                       <Plus className="h-3 w-3" />
                     </Button>
@@ -756,13 +756,6 @@ export default function CartPage() {
   // Prevent SSR/CSR mismatch and getServerSnapshot warnings by rendering client-only
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  if (!mounted) {
-    return (
-      <div className="container mx-auto py-16 px-4 max-w-6xl">
-        <LoadingState />
-      </div>
-    );
-  }
 
   const cartData = cartItems || [];
 
@@ -830,7 +823,9 @@ export default function CartPage() {
     (itemId: number) => {
       const item = cartData.find((i) => i.id === itemId);
       if (!item) return;
-      wrapAsyncAction(itemId, () => removeFromCart(itemId, item.type));
+      wrapAsyncAction(itemId, async () => {
+        removeFromCart(itemId, item.type);
+      });
     },
     [wrapAsyncAction, removeFromCart, cartData],
   );
@@ -849,13 +844,15 @@ export default function CartPage() {
         const existing = cartData.find((i) => i.id === cartId);
         if (!existing) return;
         await removeFromCart(cartId, existing.type);
-        addToCart({
-          ...existing,
-          metadata: {
-            ...(existing.metadata || {}),
-            ...details,
-          },
-        } as any);
+        return Promise.resolve(
+          addToCart({
+            ...existing,
+            metadata: {
+              ...(existing.metadata || {}),
+              ...details,
+            },
+          } as any),
+        );
       });
     },
     [wrapAsyncAction, removeFromCart, addToCart, cartData],
@@ -901,7 +898,9 @@ export default function CartPage() {
     <div className="container mx-auto py-16 px-4 max-w-6xl">
       <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
 
-      {cartData.length === 0 ? (
+      {!mounted ? (
+        <LoadingState />
+      ) : cartData.length === 0 ? (
         <EmptyCart />
       ) : (
         <div className="lg:grid gap-8 lg:grid-cols-12">
@@ -928,12 +927,14 @@ export default function CartPage() {
         </div>
       )}
 
-      <AddDetailModal
-        open={detailModalOpen}
-        onClose={handleCloseDetailModal}
-        item={selectedItem}
-        onUpdateDetails={handleUpdateDetails}
-      />
+      {mounted && (
+        <AddDetailModal
+          open={detailModalOpen}
+          onClose={handleCloseDetailModal}
+          item={selectedItem}
+          onUpdateDetails={handleUpdateDetails}
+        />
+      )}
     </div>
   );
 }

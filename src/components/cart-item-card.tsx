@@ -31,14 +31,13 @@ export default function CartItemCard({
     (quantity: number): CartItem => ({
       ...item,
       quantity,
-      type: item.type || 2,
-      product_type: item.product_type || 2,
-      duration: item.duration || 1,
-      name: item.name || "Customer",
-      occasion: item.occasion || "General",
-      message: item.message || "Thank you!",
-      location_id: item.location_id || 1,
-      cart_type: item.cart_type || 1,
+      type: item.type ?? "product",
+      product_type: item.product_type ?? 2,
+      duration: item.duration ?? 1,
+      name: item.name ?? "Customer",
+      occasion: item.occasion ?? "General",
+      message: item.message ?? "Thank you!",
+      location_id: item.location_id ?? 1,
     }),
     [item],
   );
@@ -47,9 +46,10 @@ export default function CartItemCard({
     (value: number) => {
       const newQuantity = Math.max(1, value);
       setInputQuantity(newQuantity);
-      onUpdate(item.ecom_product.id, getCartParams(newQuantity));
+      const productId = item.ecom_product?.id ?? item.product_id ?? item.id;
+      onUpdate(productId, getCartParams(newQuantity));
     },
-    [item.ecom_product.id, onUpdate, getCartParams],
+    [item.ecom_product?.id, item.product_id, item.id, onUpdate, getCartParams],
   );
 
   const handleInputChange = useCallback(
@@ -62,7 +62,9 @@ export default function CartItemCard({
     [handleQuantityChange],
   );
 
-  const totalPrice = (item.ecom_product.price * inputQuantity).toFixed(2);
+  const totalPrice = (
+    ((item.ecom_product?.price as number) ?? 0) * inputQuantity
+  ).toFixed(2);
 
   return (
     <Card className="mb-4 py-0">
@@ -70,7 +72,7 @@ export default function CartItemCard({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative h-24 w-24 mx-auto sm:mx-0 rounded-md overflow-hidden">
             <Image
-              src={item.ecom_product.main_image_url}
+              src={item.ecom_product?.main_image_url ?? "/placeholder.jpg"}
               alt={item.name}
               fill
               className="object-cover"
@@ -81,10 +83,10 @@ export default function CartItemCard({
           <div className="flex-1 flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:items-center">
             <div className="text-center sm:text-left">
               <h3 className="font-semibold text-base line-clamp-2">
-                {item.ecom_product.name}
+                {item.ecom_product?.name ?? item.name}
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                {item.ecom_product.botanical_name}
+                {item.ecom_product?.botanical_name ?? ""}
               </p>
             </div>
 

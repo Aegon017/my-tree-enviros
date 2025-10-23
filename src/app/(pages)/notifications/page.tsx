@@ -1,4 +1,5 @@
 "use client";
+import api from "@/lib/axios";
 
 import useSWR from "swr";
 import { Badge } from "@/components/ui/badge";
@@ -24,20 +25,8 @@ interface ApiResponse {
 }
 
 const fetcher = async (url: string) => {
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-      Authorization:
-        "Bearer 417|NlLSiAdaZXbjWHiUmNVQTTqxmMJEsuFt0SQD6Egefd590d08",
-      "X-CSRF-TOKEN": "",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch notifications");
-  }
-
-  return response.json();
+  const { data } = await api.get(url);
+  return data;
 };
 
 const Page = () => {

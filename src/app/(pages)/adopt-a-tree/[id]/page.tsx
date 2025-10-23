@@ -36,22 +36,11 @@ async function cartMutation(
   [url, action]: [string, string],
   { arg }: { arg: { token: string; body: any } },
 ) {
-  const { token, body } = arg;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
-  });
+  const { body } = arg;
+  const res = await api.post(url, body);
 
-  if (!res.ok)
-    throw new Error(
-      `Failed to ${action === "add" ? "add to cart" : "sponsor tree"}`,
-    );
-  return res.json();
+  // Axios throws on non-2xx; if we get here, it's OK
+  return res.data;
 }
 
 interface Props {

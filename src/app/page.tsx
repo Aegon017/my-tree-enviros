@@ -166,6 +166,8 @@ export default function Home() {
       created_by: 0,
       updated_at: b.updated_at ?? "",
       updated_by: 0,
+      status: 1,
+      trash: 0,
     })) ?? [];
 
   const handleBlogRetry = () => {

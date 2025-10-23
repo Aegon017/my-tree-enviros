@@ -233,6 +233,9 @@ export function EcommerceCard({ product }: Props) {
 
         <AddToCartButton
           productId={id}
+          productName={name}
+          productPrice={displayPrice}
+          productImage={main_image_url}
           quantity={1}
           productType={ProductType.ECOMMERCE}
           cartType={CheckoutType.CART}
