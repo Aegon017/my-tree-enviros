@@ -17,7 +17,7 @@ export const authService = {
    * Sends OTP to the provided phone number
    */
   signUp: async (data: SignUpData) => {
-    const response = await api.post("/v1/sign-up", data);
+    const response = await api.post("/sign-up", data);
     return response.data;
   },
 
@@ -26,7 +26,7 @@ export const authService = {
    * Sends OTP to the provided phone number
    */
   signIn: async (data: SignInData) => {
-    const response = await api.post("/v1/sign-in", data);
+    const response = await api.post("/sign-in", data);
     return response.data;
   },
 
@@ -36,7 +36,7 @@ export const authService = {
    * Returns user data (no token for web)
    */
   verifyOtp: async (data: VerifyOtpData) => {
-    const response = await api.post<AuthResponse>("/v1/verify-otp", data, {
+    const response = await api.post<AuthResponse>("/verify-otp", data, {
       headers: {
         "X-Platform": "web", // Important: tells backend to use session auth
       },
@@ -48,7 +48,7 @@ export const authService = {
    * Resend OTP to user's phone number
    */
   resendOtp: async (data: ResendOtpData) => {
-    const response = await api.post("/v1/resend-otp", data);
+    const response = await api.post("/resend-otp", data);
     return response.data;
   },
 
@@ -57,7 +57,7 @@ export const authService = {
    * For web: Invalidates session and clears cookies
    */
   logout: async () => {
-    const response = await api.post("/v1/logout");
+    const response = await api.post("/logout");
     return response.data;
   },
 
@@ -66,7 +66,7 @@ export const authService = {
    * Uses session authentication
    */
   me: async () => {
-    const response = await api.get<AuthResponse>("/v1/me");
+    const response = await api.get<AuthResponse>("/me");
     return response.data;
   },
 
@@ -76,7 +76,7 @@ export const authService = {
    */
   checkAuth: async (): Promise<boolean> => {
     try {
-      const response = await api.get<AuthResponse>("/v1/me");
+      const response = await api.get<AuthResponse>("/me");
       return response.data.success && !!response.data.data?.user;
     } catch {
       return false;

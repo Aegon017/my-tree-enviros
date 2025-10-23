@@ -66,7 +66,7 @@ export const wishlistService = {
    * Get all wishlist items for the authenticated user
    */
   getWishlist: async (): Promise<WishlistResponse> => {
-    const response = await api.get<WishlistResponse>("/v1/wishlist");
+    const response = await api.get<WishlistResponse>("/wishlist");
     return response.data;
   },
 
@@ -78,7 +78,7 @@ export const wishlistService = {
     payload: AddToWishlistPayload,
   ): Promise<WishlistResponse> => {
     const response = await api.post<WishlistResponse>(
-      "/v1/wishlist/items",
+      "/wishlist/items",
       payload,
     );
     return response.data;
@@ -90,7 +90,7 @@ export const wishlistService = {
    */
   removeFromWishlist: async (itemId: number): Promise<WishlistResponse> => {
     const response = await api.delete<WishlistResponse>(
-      `/v1/wishlist/items/${itemId}`,
+      `/wishlist/items/${itemId}`,
     );
     return response.data;
   },
@@ -99,7 +99,7 @@ export const wishlistService = {
    * Clear all items from wishlist
    */
   clearWishlist: async (): Promise<WishlistResponse> => {
-    const response = await api.delete<WishlistResponse>("/v1/wishlist");
+    const response = await api.delete<WishlistResponse>("/wishlist");
     return response.data;
   },
 
@@ -109,7 +109,7 @@ export const wishlistService = {
    */
   moveToCart: async (itemId: number): Promise<WishlistResponse> => {
     const response = await api.post<WishlistResponse>(
-      `/v1/wishlist/items/${itemId}/move-to-cart`,
+      `/wishlist/items/${itemId}/move-to-cart`,
     );
     return response.data;
   },
@@ -122,7 +122,7 @@ export const wishlistService = {
     productId: number,
   ): Promise<CheckWishlistResponse> => {
     const response = await api.get<CheckWishlistResponse>(
-      `/v1/wishlist/check/${productId}`,
+      `/wishlist/check/${productId}`,
     );
     return response.data;
   },
@@ -136,7 +136,7 @@ export const wishlistService = {
     payload: SyncWishlistPayload,
   ): Promise<WishlistResponse> => {
     const response = await api.post<WishlistResponse>(
-      "/v1/wishlist/sync",
+      "/wishlist/sync",
       payload,
     );
     return response.data;
@@ -154,7 +154,10 @@ export const wishlistService = {
     try {
       const checkResponse = await wishlistService.checkInWishlist(productId);
 
-      if (checkResponse.data.in_wishlist && checkResponse.data.wishlist_item_id) {
+      if (
+        checkResponse.data.in_wishlist &&
+        checkResponse.data.wishlist_item_id
+      ) {
         // Remove from wishlist
         return await wishlistService.removeFromWishlist(
           checkResponse.data.wishlist_item_id,
@@ -213,11 +216,13 @@ export const wishlistService = {
       return item.ecom_product.price;
     }
 
-    if (item.product_type === 1 && item.product && item.product.price.length > 0) {
+    if (
+      item.product_type === 1 &&
+      item.product &&
+      item.product.price.length > 0
+    ) {
       // Return the cheapest price option
-      return Math.min(
-        ...item.product.price.map((p) => parseFloat(p.price)),
-      );
+      return Math.min(...item.product.price.map((p) => parseFloat(p.price)));
     }
 
     return 0;

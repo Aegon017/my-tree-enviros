@@ -8,6 +8,12 @@ import type { User } from "@/types/auth.types";
  * We only store non-sensitive data like user info and OTP resend timer.
  */
 export const authStorage = {
+  // Check if user is authenticated
+  isAuthenticated: (): boolean => {
+    if (typeof window === "undefined") return false;
+    return !!localStorage.getItem("user");
+  },
+
   // User data storage (client-side, non-sensitive)
   getUser: (): User | null => {
     if (typeof window === "undefined") return null;

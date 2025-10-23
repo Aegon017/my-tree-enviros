@@ -49,6 +49,24 @@ export interface AddToCartPayload {
   location_id?: number;
 }
 
+export interface AddTreeToCartPayload {
+  // Provide either a specific instance OR a combination of tree_id + location_id
+  tree_instance_id?: number;
+  tree_id?: number;
+  location_id?: number;
+
+  // Required plan price
+  tree_plan_price_id: number;
+
+  // Defaults to 1 for trees
+  quantity?: number;
+
+  // Optional dedication details
+  name?: string;
+  occasion?: string;
+  message?: string;
+}
+
 export interface UpdateCartItemPayload {
   quantity?: number;
   duration?: number;
@@ -81,7 +99,7 @@ export const cartService = {
    * Get all cart items for the authenticated user
    */
   getCart: async (): Promise<CartResponse> => {
-    const response = await api.get<CartResponse>("/v1/cart");
+    const response = await api.get<CartResponse>("/cart");
     return response.data;
   },
 
@@ -94,8 +112,25 @@ export const cartService = {
     productId: number,
     payload: AddToCartPayload,
   ): Promise<CartResponse> => {
-    const response = await api.post<CartResponse>("/v1/cart/items", {
+    const response = await api.post<CartResponse>("/cart/items", {
       product_id: productId,
+      ...payload,
+    });
+    return response.data;
+  },
+
+  /**
+   * Add a tree to cart (Laravel v1 CartController)
+   * Supports either:
+   * - tree_instance_id + tree_plan_price_id
+   * - tree_id + location_id + tree_plan_price_id
+   * Optional: name, occasion, message, quantity
+   */
+  addTreeToCart: async (
+    payload: AddTreeToCartPayload,
+  ): Promise<CartResponse> => {
+    const response = await api.post<CartResponse>("/cart/items", {
+      item_type: "tree",
       ...payload,
     });
     return response.data;
@@ -122,7 +157,7 @@ export const cartService = {
    * @param itemId - Cart item ID
    */
   removeCartItem: async (itemId: number): Promise<CartResponse> => {
-    const response = await api.delete<CartResponse>(`/v1/cart/items/${itemId}`);
+    const response = await api.delete<CartResponse>(`/cart/items/${itemId}`);
     return response.data;
   },
 
@@ -130,7 +165,7 @@ export const cartService = {
    * Clear all items from cart
    */
   clearCart: async (): Promise<CartResponse> => {
-    const response = await api.delete<CartResponse>("/v1/cart");
+    const response = await api.delete<CartResponse>("/cart");
     return response.data;
   },
 
@@ -140,7 +175,7 @@ export const cartService = {
    * @param payload - Guest cart items to sync
    */
   syncCart: async (payload: SyncCartPayload): Promise<CartResponse> => {
-    const response = await api.post<CartResponse>("/v1/cart/sync", payload);
+    const response = await api.post<CartResponse>("/cart/sync", payload);
     return response.data;
   },
 };
@@ -148,6 +183,10 @@ export const cartService = {
 // Legacy function exports for backward compatibility
 export async function addToCart(productId: number, payload: AddToCartPayload) {
   return cartService.addToCart(productId, payload);
+}
+
+export async function addTreeToCart(payload: AddTreeToCartPayload) {
+  return cartService.addTreeToCart(payload);
 }
 
 export async function getCart() {

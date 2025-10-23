@@ -26,21 +26,11 @@ import { Lens } from "@/components/ui/lens";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { Label } from "@/components/ui/label";
+import api from "@/lib/axios";
 import { authStorage } from "@/lib/auth-storage";
 
-const fetcher = (url: string, token: string | null) =>
-  fetch(url, {
-    headers: {
-      Accept: "application/json",
-      Authorization: token
-        ? `Bearer ${token}`
-        : "Bearer 420|xoAHPcuvjeSjE7EVDfQMGsu1l9BkHYIhlz35nEv43a162de5",
-      "X-CSRF-TOKEN": "",
-    },
-  }).then((res) => {
-    if (!res.ok) throw new Error("Failed to fetch tree data");
-    return res.json();
-  });
+const fetcher = (url: string, _token: string | null) =>
+  api.get(url).then((res) => res.data);
 
 async function cartMutation(
   [url, action]: [string, string],
@@ -72,7 +62,7 @@ interface Props {
 
 export default function Page({ params }: Props) {
   const { id } = use(params);
-  const token = authStorage.getToken();
+  const token = "";
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedYears, setSelectedYears] = useState(1);
@@ -90,11 +80,8 @@ export default function Page({ params }: Props) {
   );
 
   const tree: Tree = response?.data;
-  const mainImage = tree
-    ? tree.images?.length > 0 && selectedImage > 0
-      ? tree.images[selectedImage - 1].image_url
-      : tree.main_image_url || "/placeholder.jpg"
-    : "/placeholder.jpg";
+  const mainImage =
+    tree?.images?.[selectedImage]?.image_url || "/placeholder.jpg";
   const averageRating = tree?.reviews?.length
     ? tree.reviews.reduce((sum, r) => sum + r.rating, 0) / tree.reviews.length
     : 0;
@@ -105,10 +92,7 @@ export default function Page({ params }: Props) {
   );
 
   const { trigger: sponsorTrigger, isMutating: isSponsoring } = useSWRMutation(
-    [
-      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/cart/add/${id}`,
-      "sponsor",
-    ],
+    [`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/cart/add/${id}`, "sponsor"],
     cartMutation,
   );
 
@@ -261,28 +245,27 @@ export default function Page({ params }: Props) {
 
               {tree.images && tree.images.length > 0 && (
                 <div className="flex gap-3 overflow-x-auto pb-2">
-                  {[
-                    tree.main_image_url,
-                    ...tree.images.map((img) => img.image_url),
-                  ].map((imageUrl, index) => (
-                    <Button
-                      key={index}
-                      className={`relative h-20 w-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                        selectedImage === index
-                          ? "border-primary ring-2 ring-primary/20"
-                          : "border-muted hover:border-muted-foreground/30"
-                      }`}
-                      onClick={() => setSelectedImage(index)}
-                    >
-                      <Image
-                        src={imageUrl}
-                        alt={`${tree.name} view ${index + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                      />
-                    </Button>
-                  ))}
+                  {(tree?.images || [])
+                    .map((img) => img.image_url)
+                    .map((imageUrl, index) => (
+                      <Button
+                        key={index}
+                        className={`relative h-20 w-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                          selectedImage === index
+                            ? "border-primary ring-2 ring-primary/20"
+                            : "border-muted hover:border-muted-foreground/30"
+                        }`}
+                        onClick={() => setSelectedImage(index)}
+                      >
+                        <Image
+                          src={imageUrl}
+                          alt={`${tree.name} view ${index + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="80px"
+                        />
+                      </Button>
+                    ))}
                 </div>
               )}
             </>

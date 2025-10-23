@@ -10,27 +10,32 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { Blog } from "@/types/blog";
 import type { BreadcrumbItemType } from "@/types/home";
+import {
+  listBlogs,
+  getBlogsSWRKey,
+  type BlogApiItem,
+} from "@/services/blog.service";
 
-interface ApiResponse {
-  data: Blog[];
-  meta?: {
-    current_page: number;
-    total_pages: number;
-    total_count: number;
-  };
-}
-
-const fetcher = async (url: string) => {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to fetch blogs");
-  return res.json();
-};
+// Integrated with blog.service for listing and details
 
 const Page = () => {
   const [retryCount, setRetryCount] = useState(0);
-  const { data, error, isLoading, mutate } = useSWR<ApiResponse>(
-    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/blogs?retry=${retryCount}`,
-    fetcher,
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const { data, error, isLoading, mutate } = useSWR(
+    getBlogsSWRKey({
+      page: currentPage,
+      per_page: 12,
+      sort_by: "created_at",
+      sort_order: "desc",
+    }),
+    () =>
+      listBlogs({
+        page: currentPage,
+        per_page: 12,
+        sort_by: "created_at",
+        sort_order: "desc",
+      }),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
@@ -85,20 +90,50 @@ const Page = () => {
             ? Array.from({ length: 6 }).map((_, i) => (
                 <BlogCardSkeleton key={`skeleton-${Date.now()}-${i}`} />
               ))
-            : data?.data?.map((blog: Blog) => (
-                <BlogCard key={blog.id} blog={blog} />
-              ))}
+            : (data?.items ?? []).map((b: BlogApiItem) => {
+                const blog: Blog = {
+                  id: b.id,
+                  title: b.title,
+                  content: b.short_description ?? "",
+                  main_image: "",
+                  main_image_url: b.thumbnail_url ?? "",
+                  slug: b.slug,
+                  created_at: b.created_at ?? "",
+                  created_by: 0,
+                  updated_at: b.updated_at ?? "",
+                  updated_by: 0,
+                };
+                return <BlogCard key={blog.id} blog={blog} />;
+              })}
         </div>
 
-        {data?.meta && data.meta.total_pages > 1 && (
+        {data?.meta && data.meta.last_page > 1 && (
           <div className="flex justify-center mt-12">
             <div className="flex gap-2">
-              <Button variant="outline" disabled={data.meta.current_page === 1}>
+              <Button
+                variant="outline"
+                disabled={data.meta.current_page === 1}
+                onClick={() => {
+                  if (data.meta && data.meta.current_page > 1) {
+                    setCurrentPage((p) => Math.max(1, p - 1));
+                    mutate();
+                  }
+                }}
+              >
                 Previous
               </Button>
               <Button
                 variant="outline"
-                disabled={data.meta.current_page === data.meta.total_pages}
+                disabled={data.meta.current_page === data.meta.last_page}
+                onClick={() => {
+                  if (
+                    data.meta &&
+                    data.meta.current_page < data.meta.last_page
+                  ) {
+                    setCurrentPage((p) => Math.min(data.meta.last_page, p + 1));
+                    mutate();
+                  }
+                }}
               >
                 Next
               </Button>

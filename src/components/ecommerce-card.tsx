@@ -50,7 +50,7 @@ export function EcommerceCard({ product }: Props) {
   const [isFavorite, setIsFavorite] = useState(wishlist_tag);
 
   const { trigger: wishlistTrigger } = useSWRMutation(
-    isFavorite ? "/v1/wishlist/remove" : "/v1/wishlist/add",
+    isFavorite ? "/wishlist/remove" : "/wishlist/add",
     wishlistMutation,
   );
 
@@ -80,20 +80,73 @@ export function EcommerceCard({ product }: Props) {
       e.preventDefault();
       e.stopPropagation();
 
-      const previousStatus = isFavorite;
-      setIsFavorite(!isFavorite);
+      const prev = isFavorite;
+      const next = !isFavorite;
+      setIsFavorite(next);
 
       try {
+        const isLoggedIn =
+          typeof window !== "undefined" && !!localStorage.getItem("user");
+
+        if (!isLoggedIn) {
+          // Guest wishlist stored in localStorage for non-authenticated users
+          const key = "guest_wishlist";
+          const raw =
+            typeof window !== "undefined" ? localStorage.getItem(key) : null;
+          let list: any[] = [];
+          try {
+            list = raw ? JSON.parse(raw) : [];
+          } catch {
+            list = [];
+          }
+
+          // Find existing by id/product_id for ecom products
+          const existingIndex = list.findIndex(
+            (it: any) =>
+              it &&
+              (it.id === id || it.product_id === id) &&
+              (it.type === "product" || it.product_type === 2),
+          );
+
+          if (existingIndex >= 0) {
+            // Remove from guest wishlist
+            list.splice(existingIndex, 1);
+            toast.success(`Removed ${name} from your wishlist`);
+          } else {
+            // Add to guest wishlist (shape compatible with wishlist page helpers)
+            list.push({
+              id, // local id for removal
+              product_id: id,
+              product_type: 2, // 2 = ecom product
+              ecom_product: {
+                id,
+                name,
+                price: displayPrice,
+                main_image_url,
+                status: 1,
+                stock: 1,
+              },
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+            toast.success(`Added ${name} to your wishlist`);
+          }
+
+          localStorage.setItem(key, JSON.stringify(list));
+          return;
+        }
+
+        // Authenticated users - fallback to backend API
         await wishlistTrigger({ productId: id });
         toast.success(
-          `${previousStatus ? "Removed" : "Added"} ${name} ${previousStatus ? "from" : "to"} your wishlist`,
+          `${prev ? "Removed" : "Added"} ${name} ${prev ? "from" : "to"} your wishlist`,
         );
       } catch {
-        setIsFavorite(previousStatus);
+        setIsFavorite(prev);
         toast.error("Failed to update wishlist");
       }
     },
-    [isFavorite, id, name, wishlistTrigger],
+    [id, isFavorite, name, wishlistTrigger, main_image_url, displayPrice],
   );
 
   return (

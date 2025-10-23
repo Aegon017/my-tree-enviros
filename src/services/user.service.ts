@@ -101,7 +101,7 @@ export const userService = {
    * Get current authenticated user
    */
   getCurrentUser: async (): Promise<UserResponse> => {
-    const response = await api.get<UserResponse>("/v1/me");
+    const response = await api.get<UserResponse>("/me");
     return response.data;
   },
 
@@ -114,7 +114,7 @@ export const userService = {
     per_page?: number;
     search?: string;
   }): Promise<UsersResponse> => {
-    const response = await api.get<UsersResponse>("/v1/users", { params });
+    const response = await api.get<UsersResponse>("/users", { params });
     return response.data;
   },
 
@@ -123,7 +123,7 @@ export const userService = {
    * @param userId - User ID
    */
   getUserById: async (userId: number): Promise<UserResponse> => {
-    const response = await api.get<UserResponse>(`/v1/users/${userId}`);
+    const response = await api.get<UserResponse>(`/users/${userId}`);
     return response.data;
   },
 
@@ -136,10 +136,7 @@ export const userService = {
     userId: number,
     payload: UpdateUserPayload,
   ): Promise<UserResponse> => {
-    const response = await api.put<UserResponse>(
-      `/v1/users/${userId}`,
-      payload,
-    );
+    const response = await api.put<UserResponse>(`/users/${userId}`, payload);
     return response.data;
   },
 
@@ -160,7 +157,7 @@ export const userService = {
    * @param userId - User ID
    */
   deleteUser: async (userId: number): Promise<{ success: boolean }> => {
-    const response = await api.delete(`/v1/users/${userId}`);
+    const response = await api.delete(`/users/${userId}`);
     return response.data;
   },
 
@@ -169,7 +166,7 @@ export const userService = {
    * @param payload - User data
    */
   createUser: async (payload: CreateUserPayload): Promise<UserResponse> => {
-    const response = await api.post<UserResponse>("/v1/users", payload);
+    const response = await api.post<UserResponse>("/users", payload);
     return response.data;
   },
 
@@ -178,7 +175,7 @@ export const userService = {
    */
   getShippingAddresses: async (): Promise<ShippingAddressesResponse> => {
     const response = await api.get<ShippingAddressesResponse>(
-      "/v1/shipping-addresses",
+      "/shipping-addresses",
     );
     return response.data;
   },
@@ -191,7 +188,7 @@ export const userService = {
     addressId: number,
   ): Promise<ShippingAddressResponse> => {
     const response = await api.get<ShippingAddressResponse>(
-      `/v1/shipping-addresses/${addressId}`,
+      `/shipping-addresses/${addressId}`,
     );
     return response.data;
   },
@@ -204,7 +201,7 @@ export const userService = {
     payload: CreateShippingAddressPayload,
   ): Promise<ShippingAddressResponse> => {
     const response = await api.post<ShippingAddressResponse>(
-      "/v1/shipping-addresses",
+      "/shipping-addresses",
       payload,
     );
     return response.data;
@@ -220,7 +217,7 @@ export const userService = {
     payload: Partial<CreateShippingAddressPayload>,
   ): Promise<ShippingAddressResponse> => {
     const response = await api.put<ShippingAddressResponse>(
-      `/v1/shipping-addresses/${addressId}`,
+      `/shipping-addresses/${addressId}`,
       payload,
     );
     return response.data;
@@ -233,7 +230,7 @@ export const userService = {
   deleteShippingAddress: async (
     addressId: number,
   ): Promise<{ success: boolean }> => {
-    const response = await api.delete(`/v1/shipping-addresses/${addressId}`);
+    const response = await api.delete(`/shipping-addresses/${addressId}`);
     return response.data;
   },
 
@@ -245,7 +242,7 @@ export const userService = {
     addressId: number,
   ): Promise<ShippingAddressResponse> => {
     const response = await api.post<ShippingAddressResponse>(
-      `/v1/shipping-addresses/${addressId}/set-default`,
+      `/shipping-addresses/${addressId}/set-default`,
     );
     return response.data;
   },

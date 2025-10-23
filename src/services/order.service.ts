@@ -139,7 +139,7 @@ export const orderService = {
    * @param params - Query parameters for filtering and pagination
    */
   getOrders: async (params?: OrderParams): Promise<OrdersResponse> => {
-    const response = await api.get<OrdersResponse>("/v1/orders", { params });
+    const response = await api.get<OrdersResponse>("/orders", { params });
     return response.data;
   },
 
@@ -148,7 +148,7 @@ export const orderService = {
    * @param orderId - Order ID
    */
   getOrderById: async (orderId: number): Promise<OrderResponse> => {
-    const response = await api.get<OrderResponse>(`/v1/orders/${orderId}`);
+    const response = await api.get<OrderResponse>(`/orders/${orderId}`);
     return response.data;
   },
 
@@ -157,7 +157,7 @@ export const orderService = {
    * @param payload - Order creation details
    */
   createOrder: async (payload: CreateOrderPayload): Promise<OrderResponse> => {
-    const response = await api.post<OrderResponse>("/v1/orders", payload);
+    const response = await api.post<OrderResponse>("/orders", payload);
     return response.data;
   },
 
@@ -168,10 +168,7 @@ export const orderService = {
   createDirectOrder: async (
     payload: CreateDirectOrderPayload,
   ): Promise<OrderResponse> => {
-    const response = await api.post<OrderResponse>(
-      "/v1/orders/direct",
-      payload,
-    );
+    const response = await api.post<OrderResponse>("/orders/direct", payload);
     return response.data;
   },
 
@@ -180,9 +177,7 @@ export const orderService = {
    * @param orderId - Order ID
    */
   cancelOrder: async (orderId: number): Promise<OrderResponse> => {
-    const response = await api.post<OrderResponse>(
-      `/v1/orders/${orderId}/cancel`,
-    );
+    const response = await api.post<OrderResponse>(`/orders/${orderId}/cancel`);
     return response.data;
   },
 
@@ -190,7 +185,7 @@ export const orderService = {
    * Get user's trees (sponsored and adopted)
    */
   getMyTrees: async (): Promise<MyTreesResponse> => {
-    const response = await api.get<MyTreesResponse>("/v1/my-trees");
+    const response = await api.get<MyTreesResponse>("/my-trees");
     return response.data;
   },
 
@@ -199,9 +194,7 @@ export const orderService = {
    * @param orderId - Order ID
    */
   initiatePayment: async (orderId: number) => {
-    const response = await api.post(
-      `/v1/orders/${orderId}/payment/initiate`,
-    );
+    const response = await api.post(`/orders/${orderId}/payment/initiate`);
     return response.data;
   },
 
@@ -219,7 +212,7 @@ export const orderService = {
     },
   ) => {
     const response = await api.post(
-      `/v1/orders/${orderId}/payment/verify`,
+      `/orders/${orderId}/payment/verify`,
       paymentData,
     );
     return response.data;
@@ -230,7 +223,7 @@ export const orderService = {
    * @param orderId - Order ID
    */
   getPaymentStatus: async (orderId: number) => {
-    const response = await api.get(`/v1/orders/${orderId}/payment/status`);
+    const response = await api.get(`/orders/${orderId}/payment/status`);
     return response.data;
   },
 

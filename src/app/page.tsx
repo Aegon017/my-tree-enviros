@@ -28,6 +28,16 @@ import {
 import { useLocation } from "@/hooks/use-location";
 import { treeService } from "@/services/tree.service";
 import { fetcher } from "@/lib/fetcher";
+import {
+  listBlogs,
+  getBlogsSWRKey,
+  type BlogApiItem,
+} from "@/services/blog.service";
+import {
+  listSliders,
+  getSlidersSWRKey,
+  type SliderApiItem,
+} from "@/services/slider.service";
 import type { Blog } from "@/types/blog";
 import type { Product } from "@/types/product";
 import type { Tree } from "@/types/tree";
@@ -82,18 +92,21 @@ export default function Home() {
   } = useSWR("/products", fetcher);
 
   const {
-    data: blogsData,
+    data: blogsList,
     error: blogsError,
     isLoading: blogsLoading,
     mutate: mutateBlogs,
-  } = useSWR(`/blogs?retry=${blogRetryCount}`, fetcher, {
-    revalidateOnFocus: false,
-    shouldRetryOnError: false,
-  });
+  } = useSWR(
+    getBlogsSWRKey({ per_page: 6, sort_by: "created_at", sort_order: "desc" }),
+    () => listBlogs({ per_page: 6, sort_by: "created_at", sort_order: "desc" }),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+    },
+  );
 
-  const { data: slidersData } = useSWR(
-    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/sliders`,
-    fetcher,
+  const { data: slidersList } = useSWR(getSlidersSWRKey({ active: true }), () =>
+    listSliders({ active: true }),
   );
 
   // Fetch location-based trees
@@ -139,9 +152,21 @@ export default function Home() {
     fetchLocationTrees();
   }, [selectedLocation]);
 
-  const sliders = slidersData?.data ?? [];
+  const sliders = slidersList ?? [];
   const products = productsData?.data?.data.slice(0, 6) ?? [];
-  const blogs = blogsData?.data;
+  const blogs =
+    blogsList?.items?.map((b: BlogApiItem) => ({
+      id: b.id,
+      title: b.title,
+      content: b.short_description ?? "",
+      main_image: "",
+      main_image_url: b.thumbnail_url ?? "",
+      slug: b.slug,
+      created_at: b.created_at ?? "",
+      created_by: 0,
+      updated_at: b.updated_at ?? "",
+      updated_by: 0,
+    })) ?? [];
 
   const handleBlogRetry = () => {
     setBlogRetryCount((prev) => prev + 1);
@@ -173,13 +198,13 @@ export default function Home() {
         onMouseLeave={plugin.current.reset}
       >
         <CarouselContent>
-          {sliders.map((slider: Slider) => (
+          {sliders.map((slider: SliderApiItem) => (
             <CarouselItem key={slider.id}>
               <Card className="overflow-hidden p-0 rounded-none">
                 <CardContent className="flex items-center justify-center p-0 h-80 md:h-96 relative">
                   <Image
-                    src={slider.main_image_url}
-                    alt={slider.title}
+                    src={slider.main_image_url || neemTree}
+                    alt={slider.title || "Slider image"}
                     fill
                     priority
                     className="object-cover object-center"
@@ -246,7 +271,10 @@ export default function Home() {
                 href={`/sponsor-a-tree/${tree.id}`}
                 className="transition-transform hover:scale-105"
               >
-                <BasicTreeCard name={tree.name} image={tree.main_image_url} />
+                <BasicTreeCard
+                  name={tree.name}
+                  image={tree.thumbnail || "/placeholder.svg"}
+                />
               </Link>
             ))
           )}
@@ -311,7 +339,7 @@ export default function Home() {
                 href={`/adopt-a-tree/${tree.id}`}
                 className="transition-transform hover:scale-105"
               >
-                <BasicTreeCard name={tree.name} image={tree.main_image_url} />
+                <BasicTreeCard name={tree.name} image={tree.thumbnail} />
               </Link>
             ))
           )}

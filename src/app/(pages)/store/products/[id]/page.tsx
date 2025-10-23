@@ -49,21 +49,22 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-const fetcher = async ( url: string, token: string | null ) => {
+const fetcher = async (url: string) => {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "Accept": "application/json",
   };
-  if ( token ) {
-    headers.Authorization = `Bearer ${ token }`;
-  }
-  const response = await fetch( url, { headers } );
-  if ( !response.ok ) throw new Error( "Failed to fetch" );
+  const response = await fetch(url, { 
+    headers,
+    credentials: 'include' // This is important for Sanctum cookie auth
+  });
+  if (!response.ok) throw new Error("Failed to fetch");
   return response.json();
 };
 
 export default function ProductPage( { params }: Props ) {
   const { id } = use( params );
-  const token = authStorage.getToken();
+  const isAuth = authStorage.isAuthenticated();
   const [ quantity, setQuantity ] = useState( 1 );
   const [ isWishlistLoading, setIsWishlistLoading ] = useState( false );
   const [ isFavorite, setIsFavorite ] = useState( false );
@@ -71,27 +72,27 @@ export default function ProductPage( { params }: Props ) {
   const [ currentPage, setCurrentPage ] = useState( 1 );
   const [ editingReviewId, setEditingReviewId ] = useState<number | null>( null );
 
-  const productUrl = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/product/${ id }`;
+  const productUrl = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/product/${id}`;
   const {
     data: response,
     error,
     isLoading,
   } = useSWR<ApiResponse>(
-    [ productUrl, token ] as [ string, string | null ],
-    ( [ url, token ]: [ string, string | null ] ) => fetcher( url, token ),
-    { revalidateOnFocus: false, shouldRetryOnError: false },
+    productUrl,
+    fetcher,
+    { revalidateOnFocus: false, shouldRetryOnError: false }
   );
 
-  const canReviewUrl = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/product/${ id }/can-review`;
+  const canReviewUrl = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/product/${id}/can-review`;
   const { data: canReviewData, mutate: mutateCanReview } = useSWR<CanReviewResponse>(
-    token ? ( [ canReviewUrl, token ] as [ string, string | null ] ) : null,
-    ( [ url, token ]: [ string, string | null ] ) => fetcher( url, token ),
+    isAuth ? canReviewUrl : null,
+    fetcher,
   );
 
-  const reviewsUrl = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/product/${ id }/reviews?page=${ currentPage }`;
+  const reviewsUrl = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/product/${id}/reviews?page=${currentPage}`;
   const { data: reviewsData, mutate: mutateReviews } = useSWR<ReviewsResponse>(
-    [ reviewsUrl, token ] as [ string, string | null ],
-    ( [ url, token ]: [ string, string | null ] ) => fetcher( url, token ),
+    reviewsUrl,
+    fetcher,
   );
 
   const product = response?.data;
@@ -129,23 +130,24 @@ export default function ProductPage( { params }: Props ) {
   );
 
   const handleToggleFavorite = async () => {
-    if ( !token ) {
-      toast.error( "Please login to manage your wishlist" );
+    if (!isAuth) {
+      toast.error("Please login to manage your wishlist");
       return;
     }
 
-    setIsWishlistLoading( true );
+    setIsWishlistLoading(true);
     const newStatus = !isFavorite;
 
     try {
       const response = await fetch(
-        `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/wishlist/${ newStatus ? "add" : "remove" }/${ id }`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/wishlist/${newStatus ? "add" : "remove"}/${id}`,
         {
           method: newStatus ? "POST" : "DELETE",
           headers: {
             Accept: "application/json",
-            Authorization: `Bearer ${ token }`,
+            "Content-Type": "application/json",
           },
+          credentials: 'include',
         },
       );
 
@@ -166,56 +168,49 @@ export default function ProductPage( { params }: Props ) {
     }
   };
 
-  const handleReviewSubmit = async (
-    reviewId: number | null,
-    rating: number,
-    reviewText: string,
-  ) => {
-    if ( !token || !rating || !reviewText.trim() ) return;
+  const handleReviewSubmit = async (reviewId: number | null, rating: number, text: string) => {
+    if (!isAuth || !rating || !text.trim()) return;
 
-    setIsSubmittingReview( true );
+    setIsSubmittingReview(true);
 
     try {
-      const url = `${ process.env.NEXT_PUBLIC_BACKEND_API_URL }/product/${ id }/reviews`;
-      const method = reviewId ? "PUT" : "POST";
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/product-reviews${reviewId ? `/${reviewId}` : ''}`,
+        {
+          method: reviewId ? "PUT" : "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            product_id: Number(id),
+            rating,
+            review: text,
+          }),
+        }
+      );
 
-      const response = await fetch( url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${ token }`,
-        },
-        body: JSON.stringify( {
-          rating: rating,
-          review: reviewText.trim(),
-        } ),
-      } );
+      if (!response.ok) throw new Error("Failed to submit review");
 
-      const result = await response.json();
-
-      if ( result.status ) {
-        toast.success(
-          reviewId
-            ? "Review updated successfully"
-            : "Review added successfully",
-        );
-        mutateCanReview();
-        mutateReviews();
-        setEditingReviewId( null );
-      } else {
-        throw new Error( result.message || "Failed to submit review" );
-      }
-    } catch ( err ) {
+      toast.success(reviewId ? "Review updated successfully" : "Review added successfully");
+      
+      // Reset form and refresh data
+      setEditingReviewId(null);
+      mutateCanReview();
+      mutateReviews();
+    } catch (error) {
       toast.error(
-        `Failed to submit review - ${ err instanceof Error ? err.message : "Unknown error" }`,
+        `Failed to ${reviewId ? "update" : "submit"} review - ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
       );
     } finally {
-      setIsSubmittingReview( false );
+      setIsSubmittingReview(false);
     }
   };
 
-  const ReviewForm = ( {
+  const ReviewForm = ({
     review,
     onCancel,
   }: {
@@ -448,11 +443,14 @@ export default function ProductPage( { params }: Props ) {
               ) }
               <div className="flex gap-3">
                 <AddToCartButton
-                  productId={ Number( id ) }
-                  quantity={ quantity }
-                  productType={ ProductType.ECOMMERCE }
-                  cartType={ CheckoutType.CART }
-                  disabled={ !product || product.quantity === 0 }
+                  productId={Number(id)}
+                  quantity={quantity}
+                  productType={ProductType.ECOMMERCE}
+                  cartType={CheckoutType.CART}
+                  disabled={!product || product.quantity === 0}
+                  productName={product.name}
+                  productPrice={product.discount_price || product.price}
+                  productImage={productImage}
                 />
                 <Button
                   variant="outline"

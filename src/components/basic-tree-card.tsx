@@ -5,10 +5,15 @@ import { Card } from "./ui/card";
 
 interface Props {
   name: string;
-  image: StaticImageData | string;
+  image?: StaticImageData | string;
 }
 
 const BasicTreeCard = ({ name, image }: Props) => {
+  const src: StaticImageData | string =
+    typeof image === "string"
+      ? image || "/placeholder.jpg"
+      : (image ?? "/placeholder.jpg");
+  const alt = name || "Tree image";
   return (
     <Card className="gap-0 elegant-hover group relative overflow-hidden bg-card border border-border/50 shadow-sm hover:shadow-lg hover:border-border transition-all duration-300 ease-out py-0">
       <div
@@ -16,8 +21,8 @@ const BasicTreeCard = ({ name, image }: Props) => {
         style={{ width: "100%", height: "100%" }}
       >
         <Image
-          src={image || "/placeholder.svg"}
-          alt={name}
+          src={src}
+          alt={alt}
           fill
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"

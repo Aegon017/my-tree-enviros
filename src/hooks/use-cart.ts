@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import {
@@ -9,18 +9,24 @@ import {
   removeItem,
   clearCart,
   syncFromStorage,
-  selectCartItems,
-  selectCartItemCount,
-  selectCartTotal,
-  selectIsGuestCart,
 } from "@/store/cart-slice";
+import {
+  selectCartItems,
+  selectIsGuestCart,
+} from "@/store/selectors/cart-selectors";
 import type { CartItem } from "@/types/cart.type";
 
 export function useCart() {
   const dispatch = useDispatch();
   const cartItems = useSelector(selectCartItems);
-  const itemCount = useSelector(selectCartItemCount);
-  const total = useSelector(selectCartTotal);
+  const itemCount = useMemo(
+    () => cartItems.reduce((total, item) => total + item.quantity, 0),
+    [cartItems],
+  );
+  const total = useMemo(
+    () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [cartItems],
+  );
   const isGuest = useSelector(selectIsGuestCart);
   const loading = useSelector((state: RootState) => state.cart.loading);
   const error = useSelector((state: RootState) => state.cart.error);

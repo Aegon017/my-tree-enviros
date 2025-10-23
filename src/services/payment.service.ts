@@ -52,7 +52,7 @@ export const paymentService = {
    */
   initiatePayment: async (orderId: number): Promise<RazorpayOrderResponse> => {
     const response = await api.post<RazorpayOrderResponse>(
-      `/v1/orders/${orderId}/payment/initiate`,
+      `/orders/${orderId}/payment/initiate`,
     );
     return response.data;
   },
@@ -67,7 +67,7 @@ export const paymentService = {
     payload: PaymentVerificationPayload,
   ): Promise<PaymentVerificationResponse> => {
     const response = await api.post<PaymentVerificationResponse>(
-      `/v1/orders/${orderId}/payment/verify`,
+      `/orders/${orderId}/payment/verify`,
       payload,
     );
     return response.data;
@@ -79,7 +79,7 @@ export const paymentService = {
    */
   getPaymentStatus: async (orderId: number): Promise<PaymentStatusResponse> => {
     const response = await api.get<PaymentStatusResponse>(
-      `/v1/orders/${orderId}/payment/status`,
+      `/orders/${orderId}/payment/status`,
     );
     return response.data;
   },
@@ -267,7 +267,7 @@ export async function createOrder(payload: {
   console.warn(
     "createOrder is deprecated. Use orderService.createOrder instead.",
   );
-  const response = await api.post("/v1/orders", payload);
+  const response = await api.post("/orders", payload);
   return response.data;
 }
 

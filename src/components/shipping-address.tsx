@@ -436,7 +436,7 @@ export default function ShippingAddresses({
           async (current: typeof data | undefined) => {
             if (!current) return current;
 
-            await api.delete(`/v1/shipping-addresses/${deleteAddressId}`);
+            await api.delete(`/shipping-addresses/${deleteAddressId}`);
 
             return {
               ...current,

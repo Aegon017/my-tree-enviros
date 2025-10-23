@@ -45,12 +45,19 @@ type OtpFormData = z.infer<typeof OtpSchema>;
 
 export function VerifyOtpForm({
   className,
+  country_code: propCountryCode,
+  phone: propPhone,
+  onSuccess,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & {
+  country_code?: string;
+  phone?: string;
+  onSuccess?: (user: any) => void;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const country_code = searchParams.get("country_code");
-  const phone = searchParams.get("phone");
+  const country_code = propCountryCode ?? searchParams.get("country_code");
+  const phone = propPhone ?? searchParams.get("phone");
   const { login } = useAuth();
 
   const [resendTimer, setResendTimer] = useState(0);
@@ -104,8 +111,12 @@ export function VerifyOtpForm({
 
           toast.success("OTP verified successfully");
 
-          // Redirect to home page
-          router.push("/");
+          // Inline success callback if provided, otherwise default navigation
+          if (onSuccess) {
+            onSuccess(result.data.user);
+          } else {
+            router.push("/");
+          }
         } else {
           toast.error(result.message || "OTP verification failed");
         }

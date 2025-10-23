@@ -22,8 +22,9 @@ export const locationService = {
     parent_id?: number | null;
     with_children?: boolean;
     with_parent?: boolean;
+    type?: "city" | "state" | "country" | "area";
   }) => {
-    const response = await api.get<LocationsResponse>("/v1/locations", {
+    const response = await api.get<LocationsResponse>("/locations", {
       params,
     });
     return response.data;
@@ -33,7 +34,7 @@ export const locationService = {
    * Get root locations (top-level locations without parent)
    */
   getRoot: async () => {
-    const response = await api.get<LocationsResponse>("/v1/locations/root");
+    const response = await api.get<LocationsResponse>("/locations/root");
     return response.data;
   },
 
@@ -51,7 +52,7 @@ export const locationService = {
       with_parent?: boolean;
     },
   ) => {
-    const response = await api.get<LocationResponse>(`/v1/locations/${id}`, {
+    const response = await api.get<LocationResponse>(`/locations/${id}`, {
       params,
     });
     return response.data;
@@ -63,7 +64,7 @@ export const locationService = {
    */
   getChildren: async (id: number) => {
     const response = await api.get<LocationsResponse>(
-      `/v1/locations/${id}/children`,
+      `/locations/${id}/children`,
     );
     return response.data;
   },
@@ -74,7 +75,7 @@ export const locationService = {
    */
   getTreeCount: async (id: number) => {
     const response = await api.get<TreeCountResponse>(
-      `/v1/locations/${id}/tree-count`,
+      `/locations/${id}/tree-count`,
     );
     return response.data;
   },
@@ -83,7 +84,7 @@ export const locationService = {
    * Get location hierarchy (root locations with their children)
    */
   getHierarchy: async () => {
-    const response = await api.get<LocationsResponse>("/v1/locations", {
+    const response = await api.get<LocationsResponse>("/locations", {
       params: {
         parent_id: null,
         with_children: true,

@@ -44,7 +44,8 @@ export function useLocation() {
     try {
       dispatch(setLoading(true));
       dispatch(setError(null));
-      const response = await locationService.getRoot();
+      // Get only cities that are active
+      const response = await locationService.getAll({ type: 'city' });
       if (response.success && response.data.locations) {
         dispatch(setLocations(response.data.locations));
       }

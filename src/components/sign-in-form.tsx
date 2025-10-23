@@ -45,8 +45,11 @@ type FormData = z.infer<typeof FormSchema>;
 
 export function SigninForm({
   className,
+  onOtpSent,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & {
+  onOtpSent?: (data: { country_code: string; phone: string }) => void;
+}) {
   const router = useRouter();
 
   const form = useForm<FormData>({
@@ -80,10 +83,17 @@ export function SigninForm({
             result.message || "Verification code sent successfully",
           );
 
-          // Navigate to verify OTP page
-          router.push(
-            `/verify-otp?country_code=${encodeURIComponent(phoneNumber.countryCallingCode)}&phone=${encodeURIComponent(phoneNumber.nationalNumber)}`,
-          );
+          // Inline OTP or navigate based on prop
+          if (onOtpSent) {
+            onOtpSent({
+              country_code: phoneNumber.countryCallingCode,
+              phone: phoneNumber.nationalNumber,
+            });
+          } else {
+            router.push(
+              `/verify-otp?country_code=${encodeURIComponent(phoneNumber.countryCallingCode)}&phone=${encodeURIComponent(phoneNumber.nationalNumber)}`,
+            );
+          }
         } else {
           toast.error(result.message || "Failed to send verification code");
         }
@@ -122,7 +132,7 @@ export function SigninForm({
         }
       }
     },
-    [router, form],
+    [router, form, onOtpSent],
   );
 
   return (

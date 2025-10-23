@@ -3,7 +3,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { CartItem } from "@/types/cart.type";
 
-interface CartState {
+export interface CartState {
   items: CartItem[];
   loading: boolean;
   error: string | null;

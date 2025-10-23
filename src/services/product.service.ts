@@ -95,7 +95,7 @@ export const productService = {
    * @param params - Query parameters for filtering and pagination
    */
   getAll: async (params?: ProductParams): Promise<ProductsResponse> => {
-    const response = await api.get<ProductsResponse>("/v1/products", {
+    const response = await api.get<ProductsResponse>("/products", {
       params,
     });
     return response.data;
@@ -106,7 +106,7 @@ export const productService = {
    * @param id - Product ID
    */
   getById: async (id: number): Promise<ProductResponse> => {
-    const response = await api.get<ProductResponse>(`/v1/products/${id}`);
+    const response = await api.get<ProductResponse>(`/products/${id}`);
     return response.data;
   },
 
@@ -115,7 +115,7 @@ export const productService = {
    * @param limit - Number of products to fetch
    */
   getFeatured: async (limit?: number): Promise<ProductsResponse> => {
-    const response = await api.get<ProductsResponse>("/v1/products/featured", {
+    const response = await api.get<ProductsResponse>("/products/featured", {
       params: { per_page: limit },
     });
     return response.data;
@@ -131,7 +131,7 @@ export const productService = {
     params?: ProductParams,
   ): Promise<ProductsResponse> => {
     const response = await api.get<ProductsResponse>(
-      `/v1/products/category/${categoryId}`,
+      `/products/category/${categoryId}`,
       { params },
     );
     return response.data;
@@ -142,7 +142,7 @@ export const productService = {
    * @param productId - Product ID
    */
   getVariants: async (productId: number) => {
-    const response = await api.get(`/v1/products/${productId}/variants`);
+    const response = await api.get(`/products/${productId}/variants`);
     return response.data;
   },
 
@@ -155,7 +155,7 @@ export const productService = {
     query: string,
     params?: ProductParams,
   ): Promise<ProductsResponse> => {
-    const response = await api.get<ProductsResponse>("/v1/products", {
+    const response = await api.get<ProductsResponse>("/products", {
       params: { search: query, ...params },
     });
     return response.data;
@@ -172,7 +172,7 @@ export const productService = {
     maxPrice: number,
     params?: ProductParams,
   ): Promise<ProductsResponse> => {
-    const response = await api.get<ProductsResponse>("/v1/products", {
+    const response = await api.get<ProductsResponse>("/products", {
       params: { min_price: minPrice, max_price: maxPrice, ...params },
     });
     return response.data;

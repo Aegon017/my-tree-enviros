@@ -131,7 +131,7 @@ const Page = () => {
                     >
                       <BasicTreeCard
                         name={tree.name}
-                        image={tree.main_image_url || "/placeholder.svg"}
+                        image={tree.thumbnail || "/placeholder.svg"}
                       />
                     </Link>
                   ))}
