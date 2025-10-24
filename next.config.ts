@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "arboraid.co",
+        hostname: "api.mytree.care",
       },
     ],
   },
