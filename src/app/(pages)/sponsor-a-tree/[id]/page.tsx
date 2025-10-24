@@ -358,6 +358,7 @@ export default function Page({ params }: Props) {
                 <div className="flex gap-3 overflow-x-auto pb-2">
                   {allImages.map((imageUrl, index) => (
                     <Button
+                      variant="outline"
                       key={index}
                       className={`relative h-20 w-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                         selectedImage === index
