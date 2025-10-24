@@ -254,9 +254,9 @@ const WishlistPage = () => {
           const isAddingToCart = addingToCartIds.includes(item.id);
 
           return (
-            <Card key={item.id} className="overflow-hidden">
+            <Card key={item.id} className="overflow-hidden p-0 gap-0">
               <CardHeader className="p-0">
-                <div className="relative aspect-square">
+                <div className="relative aspect-video">
                   {productImage ? (
                     <Image
                       src={productImage}

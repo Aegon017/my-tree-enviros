@@ -26,6 +26,23 @@ import { Lens } from "@/components/ui/lens";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { useForm } from "react-hook-form";
 import api from "@/lib/axios";
 import { authStorage } from "@/lib/auth-storage";
 
@@ -55,6 +72,26 @@ export default function Page({ params }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedYears, setSelectedYears] = useState(1);
+  const [areaId, setAreaId] = useState<number | undefined>(undefined);
+  const [personName, setPersonName] = useState("");
+  const [occasion, setOccasion] = useState("");
+  const [specialMessage, setSpecialMessage] = useState("");
+
+  type DetailsFormValues = {
+    area_id: string;
+    name: string;
+    occasion: string;
+    message: string;
+  };
+
+  const form = useForm<DetailsFormValues>({
+    defaultValues: {
+      area_id: "",
+      name: "",
+      occasion: "",
+      message: "",
+    },
+  });
 
   const {
     data: response,
@@ -119,6 +156,10 @@ export default function Page({ params }: Props) {
       cart_type: 1,
       duration: selectedYears,
       price_option_id: priceOption.id,
+      name: personName,
+      occasion: occasion,
+      message: specialMessage,
+      location_id: areaId,
     };
 
     try {
@@ -159,6 +200,10 @@ export default function Page({ params }: Props) {
       cart_type: 2,
       duration: selectedYears,
       price_option_id: priceOption.id,
+      name: personName,
+      occasion: occasion,
+      message: specialMessage,
+      location_id: areaId,
     };
 
     try {
@@ -477,6 +522,117 @@ export default function Page({ params }: Props) {
           ) : null}
         </div>
       </div>
+
+      <Card className="border-l-4 border-l-primary mt-8">
+        <CardContent className="p-6">
+          <h3 className="text-xl font-semibold mb-6">Add Your Details</h3>
+          <Form {...form}>
+            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="area_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Area</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value}
+                          onValueChange={(val) => {
+                            field.onChange(val);
+                            setAreaId(val ? Number(val) : undefined);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select area" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(tree as any)?.locations?.map((loc: any) => (
+                              <SelectItem key={loc.id} value={String(loc.id)}>
+                                {loc.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Name on certificate"
+                          value={field.value}
+                          onChange={(e) => {
+                            field.onChange(e.target.value);
+                            setPersonName(e.target.value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="occasion"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Occasion</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Birthday, Anniversary"
+                          value={field.value}
+                          onChange={(e) => {
+                            field.onChange(e.target.value);
+                            setOccasion(e.target.value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="message"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Special Message</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          rows={3}
+                          placeholder="Write a message to be associated with this adoption"
+                          value={field.value}
+                          onChange={(e) => {
+                            field.onChange(e.target.value);
+                            setSpecialMessage(e.target.value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                These details will be saved with your cart item and can be
+                edited in the cart before payment.
+              </p>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
 
       {!isLoading && tree && (
         <div className="mt-16">

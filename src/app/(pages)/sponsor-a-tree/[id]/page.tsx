@@ -45,6 +45,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
 import { VerifyOtpForm } from "@/components/verify-otp-form";
 import { cartService } from "@/services/cart.service";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 
 const fetcher = (url: string) => api.get(url).then((res) => res.data);
 
@@ -69,6 +78,22 @@ export default function Page({ params }: Props) {
   const [otpStep, setOtpStep] = useState<"signin" | "verify">("signin");
   const [otpCC, setOtpCC] = useState<string | undefined>(undefined);
   const [otpPhone, setOtpPhone] = useState<string | undefined>(undefined);
+
+  type DetailsFormValues = {
+    area_id: string;
+    name: string;
+    occasion: string;
+    message: string;
+  };
+
+  const form = useForm<DetailsFormValues>({
+    defaultValues: {
+      area_id: areaId ? String(areaId) : "",
+      name: personName,
+      occasion,
+      message: specialMessage,
+    },
+  });
 
   const {
     data: response,
@@ -432,7 +457,7 @@ export default function Page({ params }: Props) {
                               variant="outline"
                               className="flex-1 w-full"
                               disabled={!priceOption}
-                              onClick={() => {
+                              onClick={async () => {
                                 try {
                                   const details = {
                                     area_id: areaId,
@@ -447,24 +472,38 @@ export default function Page({ params }: Props) {
                                     `tree_details_${id}`,
                                     JSON.stringify(details),
                                   );
-
-                                  // Add to guest cart (will sync on login)
-                                  addToCart({
-                                    id: tree.id,
-                                    name: tree.name,
-                                    type: "tree",
-                                    price: Number(
-                                      priceOption?.priceNumeric ?? 0,
-                                    ),
-                                    quantity,
-                                    image: mainImage,
-                                    metadata: {
-                                      duration: selectedYears,
-                                      occasion,
-                                      message: specialMessage,
+                                  const planPriceId = planOptions.find(
+                                    (p: { duration: number }) =>
+                                      p.duration === selectedYears,
+                                  )?.id;
+                                  if (isAuthenticated && planPriceId) {
+                                    await cartService.addTreeToCart({
+                                      tree_id: tree.id,
                                       location_id: areaId,
-                                    },
-                                  } as any);
+                                      tree_plan_price_id: planPriceId,
+                                      name: personName || undefined,
+                                      occasion: occasion || undefined,
+                                      message: specialMessage || undefined,
+                                    });
+                                  } else {
+                                    // Add to guest cart (will sync on login)
+                                    addToCart({
+                                      id: tree.id,
+                                      name: tree.name,
+                                      type: "tree",
+                                      price: Number(
+                                        priceOption?.priceNumeric ?? 0,
+                                      ),
+                                      quantity,
+                                      image: mainImage,
+                                      metadata: {
+                                        duration: selectedYears,
+                                        occasion,
+                                        message: specialMessage,
+                                        location_id: areaId,
+                                      },
+                                    } as any);
+                                  }
                                 } catch {
                                   // no-op
                                 }
@@ -559,6 +598,129 @@ export default function Page({ params }: Props) {
                       </div>
                     )}
                   </div>
+                </CardContent>
+              </Card>
+              <Card className="border-l-4 border-l-primary mt-8">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold mb-6">
+                    Add Your Details
+                  </h3>
+                  <Form {...form}>
+                    <form
+                      className="space-y-6"
+                      onSubmit={(e) => e.preventDefault()}
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="area_id"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Area</FormLabel>
+                              <FormControl>
+                                <Select
+                                  value={field.value}
+                                  onValueChange={(val) => {
+                                    field.onChange(val);
+                                    setAreaId(val ? Number(val) : undefined);
+                                  }}
+                                >
+                                  <SelectTrigger className="h-11 w-full">
+                                    <SelectValue placeholder="Select area" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {(tree as any)?.locations?.map(
+                                      (loc: any) => (
+                                        <SelectItem
+                                          key={loc.id}
+                                          value={String(loc.id)}
+                                        >
+                                          {loc.name}
+                                        </SelectItem>
+                                      ),
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  className="h-11 w-full"
+                                  placeholder="Name on certificate"
+                                  value={field.value}
+                                  onChange={(e) => {
+                                    field.onChange(e.target.value);
+                                    setPersonName(e.target.value);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="occasion"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Occasion</FormLabel>
+                              <FormControl>
+                                <Input
+                                  className="h-11 w-full"
+                                  placeholder="e.g., Birthday, Anniversary"
+                                  value={field.value}
+                                  onChange={(e) => {
+                                    field.onChange(e.target.value);
+                                    setOccasion(e.target.value);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="message"
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Special Message</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  className="h-11 w-full resize-none"
+                                  rows={3}
+                                  placeholder="Write a message to be associated with this sponsorship"
+                                  value={field.value}
+                                  onChange={(e) => {
+                                    field.onChange(e.target.value);
+                                    setSpecialMessage(e.target.value);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <p className="text-sm text-muted-foreground">
+                        These details will be saved with your cart item and can
+                        be edited in the cart before payment.
+                      </p>
+                    </form>
+                  </Form>
                 </CardContent>
               </Card>
             </>

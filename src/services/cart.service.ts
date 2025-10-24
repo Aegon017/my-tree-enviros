@@ -146,7 +146,7 @@ export const cartService = {
     payload: UpdateCartItemPayload,
   ): Promise<CartResponse> => {
     const response = await api.put<CartResponse>(
-      `/v1/cart/items/${itemId}`,
+      `/cart/items/${itemId}`,
       payload,
     );
     return response.data;

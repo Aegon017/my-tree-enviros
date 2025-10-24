@@ -227,15 +227,15 @@ export default function Home() {
             subtitle="Sponsoring a tree is more than just planting—it's a commitment to a sustainable future. With every tree sponsored, you contribute to reducing carbon footprints, improving air quality, and preserving biodiversity."
             align="center"
           />
-          {selectedLocation && (
-            <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span>
-                Showing trees in <strong>{selectedLocation.name}</strong>
-              </span>
-            </div>
-          )}
         </div>
+        {selectedLocation && (
+          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground justify-center">
+            <MapPin className="h-4 w-4" />
+            <span>
+              Showing trees in <strong>{selectedLocation.name}</strong>
+            </span>
+          </div>
+        )}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 justify-center gap-6">
           {treesLoading ? (
             Array.from({ length: 5 }).map((_, i) => {
@@ -275,7 +275,9 @@ export default function Home() {
               >
                 <BasicTreeCard
                   name={tree.name}
-                  image={tree.thumbnail || "/placeholder.svg"}
+                  image={
+                    tree.thumbnail || tree.main_image_url || "/placeholder.svg"
+                  }
                 />
               </Link>
             ))
@@ -295,15 +297,15 @@ export default function Home() {
             subtitle="Adopt a tree and become a guardian of nature. Your adoption supports tree care, nurturing, and long-term sustainability, ensuring a greener tomorrow."
             align="center"
           />
-          {selectedLocation && (
-            <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span>
-                Showing trees in <strong>{selectedLocation.name}</strong>
-              </span>
-            </div>
-          )}
         </div>
+        {selectedLocation && (
+          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground justify-center">
+            <MapPin className="h-4 w-4" />
+            <span>
+              Showing trees in <strong>{selectedLocation.name}</strong>
+            </span>
+          </div>
+        )}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 justify-center gap-6">
           {treesLoading ? (
             Array.from({ length: 5 }).map((_, i) => {
@@ -341,7 +343,12 @@ export default function Home() {
                 href={`/adopt-a-tree/${tree.id}`}
                 className="transition-transform hover:scale-105"
               >
-                <BasicTreeCard name={tree.name} image={tree.thumbnail} />
+                <BasicTreeCard
+                  name={tree.name}
+                  image={
+                    tree.thumbnail || tree.main_image_url || "/placeholder.svg"
+                  }
+                />
               </Link>
             ))
           )}
