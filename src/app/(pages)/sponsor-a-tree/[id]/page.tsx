@@ -260,7 +260,7 @@ export default function Page({ params }: Props) {
             occasion,
             message: specialMessage,
             location_id: areaId,
-            tree_plan_price_id: priceOption.id,
+            plan_id: priceOption.id,
           },
         });
         toast.success("Tree added to cart!");
@@ -657,15 +657,13 @@ export default function Page({ params }: Props) {
                     label="Sponsor Now"
                     productId={tree.id}
                     amount={Number(totalPrice)}
-                    metadata={{
-                      duration: selectedYears,
-                      quantity: quantity,
-                      area_id: areaId,
-                      name: personName,
-                      occasion: occasion,
-                      message: specialMessage,
-                      tree_plan_price_id: priceOption.id,
-                    }}
+                    duration={selectedYears}
+                    quantity={quantity}
+                    area_id={areaId}
+                    name={personName}
+                    occasion={occasion}
+                    message={specialMessage}
+                    plan_id={priceOption.id}
                   />
                 ) : (
                   <Button

@@ -9,13 +9,20 @@ interface RazorpayButtonProps {
   type: PaymentType;
   productType: ProductType;
   cartType: CartType;
+  duration?: number;
+  quantity?: number;
+  area_id?: number;
+  name?: string;
+  occasion?: string;
+  message?: string;
+  plan_id?: number;
   shippingAddressId?: number;
   label: string;
   productId?: number;
   amount?: number;
 }
 
-export default function RazorpayButton({
+export default function RazorpayButton( {
   type,
   productType,
   cartType,
@@ -23,12 +30,12 @@ export default function RazorpayButton({
   label,
   productId,
   amount,
-}: RazorpayButtonProps) {
+}: RazorpayButtonProps ) {
   const { initiatePayment, loading } = useRazorpay();
 
   return (
     <Button
-      onClick={() =>
+      onClick={ () =>
         initiatePayment(
           type,
           productType,
@@ -38,11 +45,11 @@ export default function RazorpayButton({
           amount,
         )
       }
-      disabled={loading}
+      disabled={ loading }
       className="bg-green-600 hover:bg-green-700"
     >
       <Leaf />
-      {loading ? "Processing..." : label}
+      { loading ? "Processing..." : label }
     </Button>
   );
 }
