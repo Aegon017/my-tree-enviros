@@ -66,8 +66,12 @@ export const wishlistService = {
    * Get all wishlist items for the authenticated user
    */
   getWishlist: async (): Promise<WishlistResponse> => {
-    const response = await api.get<WishlistResponse>("/wishlist");
-    return response.data;
+    const response = await api.get<{success: boolean, message: string, data: {wishlist: any}}>("/wishlist");
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      data: response.data.data.wishlist.items || []
+    };
   },
 
   /**

@@ -12,7 +12,7 @@ import {
   Trees,
 } from "lucide-react";
 import Image from "next/image";
-import { use, useMemo, useState } from "react";
+import { use, useMemo, useState, useEffect } from "react";
 import useSWR from "swr";
 import BreadcrumbNav from "@/components/breadcrumb-nav";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +54,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 const fetcher = (url: string) => api.get(url).then((res) => res.data);
 
@@ -78,6 +79,8 @@ export default function Page({ params }: Props) {
   const [otpStep, setOtpStep] = useState<"signin" | "verify">("signin");
   const [otpCC, setOtpCC] = useState<string | undefined>(undefined);
   const [otpPhone, setOtpPhone] = useState<string | undefined>(undefined);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [showRazorpay, setShowRazorpay] = useState(false);
 
   type DetailsFormValues = {
     area_id: string;
@@ -121,17 +124,21 @@ export default function Page({ params }: Props) {
     const list =
       (tree?.plan_prices ?? []).map((pp: any) => {
         const duration = Number(pp?.plan?.duration ?? 0);
+
         const durationDisplay = String(
           pp?.plan?.duration_display ??
             (duration ? `${duration} Year${duration > 1 ? "s" : ""}` : ""),
         );
+
         const features = Array.isArray(pp?.plan?.features)
           ? pp.plan.features
           : [];
+
         const priceNumeric =
           typeof pp?.numeric_price === "number"
             ? pp.numeric_price
             : Number(String(pp?.price ?? "0").replace(/,/g, ""));
+
         return {
           id: Number(pp?.id ?? 0),
           duration,
@@ -140,8 +147,24 @@ export default function Page({ params }: Props) {
           priceNumeric,
         };
       }) || [];
+
     return list.filter((o: { duration: number }) => o.duration > 0);
   }, [tree?.plan_prices]);
+
+  // Ensure a valid default duration is selected when 1-year is unavailable
+  useEffect(() => {
+    if (planOptions.length > 0) {
+      const durations = planOptions.map(
+        (p: { duration: number }) => p.duration,
+      );
+      if (!durations.includes(selectedYears)) {
+        const defaultDuration = durations.includes(1)
+          ? 1
+          : Math.min(...durations);
+        setSelectedYears(defaultDuration);
+      }
+    }
+  }, [planOptions, selectedYears]);
 
   const maxAvailableDuration = useMemo(() => {
     if (planOptions.length === 0) return 1;
@@ -193,6 +216,97 @@ export default function Page({ params }: Props) {
     ],
     [tree?.name],
   );
+
+  const handleAddToCart = async () => {
+    if (!tree || !priceOption) return;
+
+    setIsAddingToCart(true);
+    try {
+      const details = {
+        area_id: areaId,
+        name: personName,
+        occasion,
+        message: specialMessage,
+        duration: selectedYears,
+        quantity,
+      };
+
+      // Persist details locally keyed to tree id
+      localStorage.setItem(`tree_details_${id}`, JSON.stringify(details));
+
+      if (isAuthenticated) {
+        // For authenticated users, add to cart via API
+        await cartService.addTreeToCart({
+          tree_id: tree.id,
+          location_id: areaId,
+          tree_plan_price_id: priceOption.id,
+          name: personName || undefined,
+          occasion: occasion || undefined,
+          message: specialMessage || undefined,
+          quantity: quantity,
+        });
+        toast.success("Tree added to cart successfully!");
+      } else {
+        // For unauthenticated users, add to local cart
+        addToCart({
+          id: tree.id,
+          name: tree.name,
+          type: "tree",
+          price: Number(priceOption.priceNumeric),
+          quantity,
+          image: mainImage,
+          metadata: {
+            duration: selectedYears,
+            occasion,
+            message: specialMessage,
+            location_id: areaId,
+            tree_plan_price_id: priceOption.id,
+          },
+        });
+        toast.success("Tree added to cart!");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error("Failed to add tree to cart. Please try again.");
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleSponsorNow = () => {
+    if (!tree || !priceOption) return;
+
+    const details = {
+      area_id: areaId,
+      name: personName,
+      occasion,
+      message: specialMessage,
+      duration: selectedYears,
+      quantity,
+    };
+
+    // Persist details locally
+    localStorage.setItem(`tree_details_${id}`, JSON.stringify(details));
+
+    if (isAuthenticated) {
+      // For authenticated users, show Razorpay button
+      setShowRazorpay(true);
+    } else {
+      // For unauthenticated users, open login dialog
+      setLoginOpen(true);
+    }
+  };
+
+  const handleLoginSuccess = async () => {
+    setLoginOpen(false);
+
+    // After successful login, show Razorpay button
+    if (tree && priceOption) {
+      setShowRazorpay(true);
+    }
+
+    setOtpStep("signin");
+  };
 
   if (error) {
     return (
@@ -373,7 +487,7 @@ export default function Page({ params }: Props) {
                       </div>
                     </div>
 
-                    {tree.price && tree.price.length > 0 && (
+                    {planOptions.length > 0 && (
                       <div className="space-y-4">
                         <div className="bg-primary/5 p-4 rounded-lg border">
                           <div className="flex justify-between items-center">
@@ -395,205 +509,6 @@ export default function Page({ params }: Props) {
                               </div>
                             </div>
                           </div>
-                        </div>
-
-                        <div className="space-y-6">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Area</Label>
-                              <Select
-                                value={areaId ? String(areaId) : ""}
-                                onValueChange={(val) => setAreaId(Number(val))}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select area" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {(tree as any)?.locations?.map((loc: any) => (
-                                    <SelectItem
-                                      key={loc.id}
-                                      value={String(loc.id)}
-                                    >
-                                      {loc.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Name (optional)</Label>
-                              <Input
-                                value={personName}
-                                onChange={(e) => setPersonName(e.target.value)}
-                                placeholder="Name on certificate"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Occasion (optional)</Label>
-                              <Input
-                                value={occasion}
-                                onChange={(e) => setOccasion(e.target.value)}
-                                placeholder="e.g., Birthday, Anniversary"
-                              />
-                            </div>
-
-                            <div className="space-y-2 md:col-span-2">
-                              <Label>Special Message (optional)</Label>
-                              <Textarea
-                                value={specialMessage}
-                                onChange={(e) =>
-                                  setSpecialMessage(e.target.value)
-                                }
-                                placeholder="Write a message to be associated with this sponsorship"
-                                rows={3}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex gap-3">
-                            <Button
-                              variant="outline"
-                              className="flex-1 w-full"
-                              disabled={!priceOption}
-                              onClick={async () => {
-                                try {
-                                  const details = {
-                                    area_id: areaId,
-                                    name: personName,
-                                    occasion,
-                                    message: specialMessage,
-                                    duration: selectedYears,
-                                    quantity,
-                                  };
-                                  // Persist details locally keyed to tree id
-                                  localStorage.setItem(
-                                    `tree_details_${id}`,
-                                    JSON.stringify(details),
-                                  );
-                                  const planPriceId = planOptions.find(
-                                    (p: { duration: number }) =>
-                                      p.duration === selectedYears,
-                                  )?.id;
-                                  if (isAuthenticated && planPriceId) {
-                                    await cartService.addTreeToCart({
-                                      tree_id: tree.id,
-                                      location_id: areaId,
-                                      tree_plan_price_id: planPriceId,
-                                      name: personName || undefined,
-                                      occasion: occasion || undefined,
-                                      message: specialMessage || undefined,
-                                    });
-                                  } else {
-                                    // Add to guest cart (will sync on login)
-                                    addToCart({
-                                      id: tree.id,
-                                      name: tree.name,
-                                      type: "tree",
-                                      price: Number(
-                                        priceOption?.priceNumeric ?? 0,
-                                      ),
-                                      quantity,
-                                      image: mainImage,
-                                      metadata: {
-                                        duration: selectedYears,
-                                        occasion,
-                                        message: specialMessage,
-                                        location_id: areaId,
-                                      },
-                                    } as any);
-                                  }
-                                } catch {
-                                  // no-op
-                                }
-                              }}
-                            >
-                              Add To Cart
-                            </Button>
-
-                            {isAuthenticated ? (
-                              <RazorpayButton
-                                type={1}
-                                productType={1}
-                                cartType={2}
-                                shippingAddressId={0}
-                                label="Sponsor Now"
-                                productId={tree.id}
-                                amount={Number(totalPrice)}
-                              />
-                            ) : (
-                              <Button
-                                className="flex-1 w-full"
-                                onClick={() => {
-                                  // Persist details locally and open login dialog
-                                  try {
-                                    const details = {
-                                      area_id: areaId,
-                                      name: personName,
-                                      occasion,
-                                      message: specialMessage,
-                                      duration: selectedYears,
-                                      quantity,
-                                    };
-                                    localStorage.setItem(
-                                      `tree_details_${id}`,
-                                      JSON.stringify(details),
-                                    );
-                                  } catch {
-                                    // no-op
-                                  }
-                                  setLoginOpen(true);
-                                }}
-                              >
-                                Sponsor Now
-                              </Button>
-                            )}
-                          </div>
-
-                          <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-                            <DialogContent className="sm:max-w-md">
-                              <DialogHeader>
-                                <DialogTitle>Login to continue</DialogTitle>
-                              </DialogHeader>
-                              {otpStep === "signin" ? (
-                                <SigninForm
-                                  onOtpSent={({ country_code, phone }) => {
-                                    setOtpCC(country_code);
-                                    setOtpPhone(phone);
-                                    setOtpStep("verify");
-                                  }}
-                                />
-                              ) : (
-                                <VerifyOtpForm
-                                  country_code={otpCC}
-                                  phone={otpPhone}
-                                  onSuccess={async () => {
-                                    setLoginOpen(false);
-                                    try {
-                                      const planPriceId = planOptions.find(
-                                        (p: { duration: number }) =>
-                                          p.duration === selectedYears,
-                                      )?.id;
-                                      if (planPriceId) {
-                                        await cartService.addTreeToCart({
-                                          tree_id: tree.id,
-                                          location_id: areaId,
-                                          tree_plan_price_id: planPriceId,
-                                          name: personName || undefined,
-                                          occasion: occasion || undefined,
-                                          message: specialMessage || undefined,
-                                        });
-                                      }
-                                    } catch (e) {
-                                      // ignore
-                                    }
-                                    setOtpStep("signin");
-                                  }}
-                                />
-                              )}
-                            </DialogContent>
-                          </Dialog>
                         </div>
                       </div>
                     )}
@@ -723,6 +638,68 @@ export default function Page({ params }: Props) {
                   </Form>
                 </CardContent>
               </Card>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 w-full"
+                  disabled={!priceOption || isAddingToCart}
+                  onClick={handleAddToCart}
+                >
+                  {isAddingToCart ? "Adding..." : "Add To Cart"}
+                </Button>
+
+                {showRazorpay && isAuthenticated ? (
+                  <RazorpayButton
+                    type={1}
+                    productType={1}
+                    cartType={2}
+                    shippingAddressId={0}
+                    label="Sponsor Now"
+                    productId={tree.id}
+                    amount={Number(totalPrice)}
+                    metadata={{
+                      duration: selectedYears,
+                      quantity: quantity,
+                      area_id: areaId,
+                      name: personName,
+                      occasion: occasion,
+                      message: specialMessage,
+                      tree_plan_price_id: priceOption.id,
+                    }}
+                  />
+                ) : (
+                  <Button
+                    className="flex-1 w-full"
+                    onClick={handleSponsorNow}
+                    disabled={!priceOption}
+                  >
+                    Sponsor Now
+                  </Button>
+                )}
+              </div>
+
+              <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
+                <DialogContent className="sm:max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Login to continue</DialogTitle>
+                  </DialogHeader>
+                  {otpStep === "signin" ? (
+                    <SigninForm
+                      onOtpSent={({ country_code, phone }) => {
+                        setOtpCC(country_code);
+                        setOtpPhone(phone);
+                        setOtpStep("verify");
+                      }}
+                    />
+                  ) : (
+                    <VerifyOtpForm
+                      country_code={otpCC}
+                      phone={otpPhone}
+                      onSuccess={handleLoginSuccess}
+                    />
+                  )}
+                </DialogContent>
+              </Dialog>
             </>
           ) : null}
         </div>

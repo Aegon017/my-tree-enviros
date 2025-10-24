@@ -40,6 +40,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import type { FeedTree } from "@/types/feed-tree";
+import type { CampaignDetailResponse } from "@/types/campaign";
 import { authStorage } from "@/lib/auth-storage";
 
 interface ApiResponse {
@@ -214,7 +215,7 @@ const loadRazorpayScript = (): Promise<boolean> => {
 interface PaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  campaignDetails: FeedTree;
+  campaignDetails: any;
   campaignId: string;
 }
 
@@ -242,101 +243,62 @@ const PaymentDialog = ({
     }
   }, []);
 
-  const initiateRazorpayPayment = useCallback(
+  const addCampaignToCart = useCallback(
     async (amount: number) => {
       try {
-        const initiateResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/feed-tree/${campaignId}/donation/initiate`,
+        // Require authentication for cart operations
+        if (!authStorage.isAuthenticated()) {
+          window.location.href = "/sign-in";
+          return;
+        }
+
+        // Initialize CSRF cookie for Sanctum
+        const backendUrl =
+          process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+        await fetch(`${backendUrl}/sanctum/csrf-cookie`, {
+          method: "GET",
+          credentials: "include",
+        });
+
+        // Add campaign to cart
+        const resp = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/cart/items`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
+              "X-Requested-With": "XMLHttpRequest",
             },
-            body: JSON.stringify({ amount }),
+            credentials: "include",
+            body: JSON.stringify({
+              item_type: "campaign",
+              campaign_id: Number(campaignId),
+              quantity: 1,
+              amount,
+            }),
           },
         );
 
-        if (!initiateResponse.ok) {
-          throw new Error("Failed to create payment order");
+        if (!resp.ok) {
+          const errText = await resp.text();
+          throw new Error(errText || "Failed to add campaign to cart");
         }
 
-        const orderData: RazorpayOrderResponse = await initiateResponse.json();
-
-        await loadRazorpayScript();
-
-        const options: RazorpayOptions = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY!,
-          amount: orderData.amount,
-          currency: orderData.currency,
-          name: "Tree Donation Platform",
-          description: `Donation for ${campaignDetails.name}`,
-          order_id: orderData.order_id,
-          handler: async function (response: any) {
-            try {
-              const verifyResponse = await fetch(
-                `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/feed-tree/donation-payment/callback`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                  },
-                  body: JSON.stringify({
-                    donation_order_id: orderData.order_id,
-                    razorpay_order_id: response.razorpay_order_id,
-                    razorpay_payment_id: response.razorpay_payment_id,
-                    razorpay_signature: response.razorpay_signature,
-                  }),
-                },
-              );
-
-              if (!verifyResponse.ok) {
-                throw new Error("Payment verification failed");
-              }
-
-              const verifyData = await verifyResponse.json();
-
-              if (verifyData.success) {
-                alert(
-                  `Payment of ${formatCurrency(amount)} successful! Thank you for your support.`,
-                );
-                onOpenChange(false);
-                setSelectedAmount("500");
-                setCustomAmount("");
-                window.location.reload();
-              } else {
-                throw new Error(
-                  verifyData.message || "Payment verification failed",
-                );
-              }
-            } catch (error) {
-              console.error("Payment verification error:", error);
-              alert("Payment verification failed. Please contact support.");
-            }
-          },
-          prefill: {
-            name: "Donor Name",
-            email: "donor@example.com",
-          },
-          theme: {
-            color: "#10b981",
-          },
-        };
-
-        const razorpay = new window.Razorpay(options);
-        razorpay.open();
-
-        razorpay.on("payment.failed", function (response: any) {
-          console.error("Payment failed:", response.error);
-          alert(`Payment failed: ${response.error.description}`);
-        });
+        alert(
+          `Added ${formatCurrency(amount)} support for ${campaignDetails.name} to your cart.`,
+        );
+        onOpenChange(false);
+        setSelectedAmount("500");
+        setCustomAmount("");
+        // Navigate to cart
+        window.location.href = "/cart";
       } catch (error) {
-        console.error("Payment initiation error:", error);
+        console.error("Add to cart error:", error);
         throw error;
       }
     },
-    [campaignId, campaignDetails.name, onOpenChange],
+    [campaignId, onOpenChange, campaignDetails?.name],
   );
 
   const handlePayment = useCallback(async () => {
@@ -347,14 +309,14 @@ const PaymentDialog = ({
 
     setIsProcessing(true);
     try {
-      await initiateRazorpayPayment(finalAmount);
+      await addCampaignToCart(finalAmount);
     } catch (error) {
-      console.error("Payment failed:", error);
-      alert("Payment initiation failed. Please try again.");
+      console.error("Add to cart failed:", error);
+      alert("Could not add to cart. Please try again.");
     } finally {
       setIsProcessing(false);
     }
-  }, [finalAmount, initiateRazorpayPayment]);
+  }, [finalAmount, addCampaignToCart]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -504,6 +466,88 @@ const Page = () => {
   useEffect(() => {
     const fetchFeedTree = async () => {
       try {
+        // Try the new Campaigns API first
+        const resNew = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/campaigns/${id}`,
+          {
+            headers: {
+              accept: "application/json",
+            },
+            cache: "no-store",
+          },
+        );
+
+        if (resNew.ok) {
+          const newJson: CampaignDetailResponse = await resNew.json();
+          const c = newJson?.data?.campaign;
+
+          if (c) {
+            // Adapt new Campaign shape into legacy `ApiResponse["data"]` structure
+            const mapped: ApiResponse["data"] = {
+              campaign_id: c.id,
+              title: c.name,
+              campaign_details: {
+                id: c.id,
+                state_id: 0,
+                city_id: 0,
+                area: c.location?.name || "",
+                type_id: null,
+                name: c.name,
+                slug: c.slug,
+                sku: "",
+                description: c.description || "",
+                goal_amount: String(c.amount ?? "0"),
+                raised_amount: "0",
+                main_image: "",
+                expiration_date: c.end_date || new Date().toISOString(),
+                created_at: c.created_at || new Date().toISOString(),
+                updated_at: c.updated_at || new Date().toISOString(),
+                created_by: 0,
+                updated_by: 0,
+                trash: 0,
+                status: c.is_active ? 1 : 0,
+                main_image_url: c.main_image_url || "",
+                city: {
+                  id: 0,
+                  name: c.location?.name || "",
+                  state_id: 0,
+                  slug: "",
+                  main_img: null,
+                  status: 1,
+                  trash: 0,
+                  created_by: 0,
+                  updated_by: 0,
+                  created_at: c.created_at || "",
+                  updated_at: c.updated_at || "",
+                  main_img_url: "",
+                },
+                state: {
+                  id: 0,
+                  name: c.location?.name || "",
+                  slug: "",
+                  main_img: null,
+                  status: 1,
+                  trash: 0,
+                  created_by: 0,
+                  updated_by: 0,
+                  created_at: c.created_at || "",
+                  updated_at: c.updated_at || "",
+                  main_img_url: "",
+                },
+                donations: [],
+              },
+              raised_amount: 0,
+              pending_amount: c.amount ? Number(c.amount) : 0,
+              target_amount: c.amount ? Number(c.amount) : null,
+              donors: [],
+            };
+
+            setCampaignData(mapped);
+            return;
+          }
+        }
+
+        // Fallback to legacy feed-tree endpoint
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/feed-tree/${id}`,
           {
@@ -515,7 +559,7 @@ const Page = () => {
         );
 
         if (!res.ok) {
-          throw new Error("Failed to fetch feed tree details");
+          throw new Error("Failed to fetch campaign details");
         }
 
         const data: ApiResponse = await res.json();

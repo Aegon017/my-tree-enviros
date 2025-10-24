@@ -451,70 +451,67 @@ export default function Page({ params }: Props) {
                       </div>
                     </div>
 
-                    {tree.price && tree.price.length > 0 && (
-                      <div className="space-y-4">
-                        <div className="bg-primary/5 p-4 rounded-lg border">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <span className="font-semibold">
-                                Total Contribution
+                    <div className="space-y-4">
+                      <div className="bg-primary/5 p-4 rounded-lg border">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <span className="font-semibold">
+                              Total Contribution
+                            </span>
+                            <p className="text-sm text-muted-foreground">
+                              {quantity} tree{quantity > 1 ? "s" : ""} ×{" "}
+                              {selectedYears} year
+                              {selectedYears > 1 ? "s" : ""}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <div className="flex items-center gap-1">
+                              <span className="text-3xl font-bold text-primary">
+                                ₹
+                                {(
+                                  getPriceForDuration(selectedYears) * quantity
+                                ).toLocaleString("en-IN")}
                               </span>
-                              <p className="text-sm text-muted-foreground">
-                                {quantity} tree{quantity > 1 ? "s" : ""} ×{" "}
-                                {selectedYears} year
-                                {selectedYears > 1 ? "s" : ""}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <div className="flex items-center gap-1">
-                                <span className="text-3xl font-bold text-primary">
-                                  ₹
-                                  {(
-                                    getPriceForDuration(selectedYears) *
-                                    quantity
-                                  ).toLocaleString("en-IN")}
-                                </span>
-                              </div>
                             </div>
                           </div>
                         </div>
-
-                        <div className="flex gap-3">
-                          <Button
-                            variant="outline"
-                            className="flex-1"
-                            onClick={handleAddToCart}
-                            disabled={isAdding || !priceOption}
-                          >
-                            {isAdding ? (
-                              <>
-                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-accent-foreground" />
-                                Adding...
-                              </>
-                            ) : (
-                              "Add To Cart"
-                            )}
-                          </Button>
-                          <Button
-                            className="flex-1 bg-green-600 hover:bg-green-700"
-                            onClick={handleSponsorPlant}
-                            disabled={isSponsoring || !priceOption}
-                          >
-                            {isSponsoring ? (
-                              <>
-                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-accent-foreground" />
-                                Processing...
-                              </>
-                            ) : (
-                              <>
-                                <Leaf className="mr-2 h-5 w-5" />
-                                Sponsor Now
-                              </>
-                            )}
-                          </Button>
-                        </div>
                       </div>
-                    )}
+
+                      <div className="flex gap-3">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={handleAddToCart}
+                          disabled={isAdding || !priceOption}
+                        >
+                          {isAdding ? (
+                            <>
+                              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-accent-foreground" />
+                              Adding...
+                            </>
+                          ) : (
+                            "Add To Cart"
+                          )}
+                        </Button>
+                        <Button
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                          onClick={handleSponsorPlant}
+                          disabled={isSponsoring || !priceOption}
+                        >
+                          {isSponsoring ? (
+                            <>
+                              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-accent-foreground" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Leaf className="mr-2 h-5 w-5" />
+                              Sponsor Now
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

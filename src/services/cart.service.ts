@@ -99,8 +99,12 @@ export const cartService = {
    * Get all cart items for the authenticated user
    */
   getCart: async (): Promise<CartResponse> => {
-    const response = await api.get<CartResponse>("/cart");
-    return response.data;
+    const response = await api.get<{success: boolean, message: string, data: {cart: any}}>("/cart");
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      data: response.data.data.cart.items || []
+    };
   },
 
   /**

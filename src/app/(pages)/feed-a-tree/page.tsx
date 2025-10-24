@@ -20,11 +20,12 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { authStorage } from "@/lib/auth-storage";
-import type { FeedTree } from "@/types/feed-tree";
+import type { Campaign } from "@/types/campaign";
 
 const calculateProgress = (raised: string, goal: string) => {
   const raisedNum = parseFloat(raised);
   const goalNum = parseFloat(goal);
+  if (!goalNum || isNaN(goalNum) || goalNum <= 0) return 0;
   return Math.round((raisedNum / goalNum) * 100);
 };
 
@@ -49,15 +50,15 @@ const isExpired = (expirationDate: string) => {
 };
 
 const Page = () => {
-  const [feedTrees, setFeedTrees] = useState<FeedTree[]>([]);
+  const [feedTrees, setFeedTrees] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchFeedTrees = async () => {
       try {
-        const { data: json } = await api.get("/feed-trees");
-        setFeedTrees(json.data || []);
+        const { data: json } = await api.get("/campaigns");
+        setFeedTrees(json.data?.campaigns || []);
       } catch (err) {
         console.error("Error fetching feed trees:", err);
         setError("Failed to load feed trees");
@@ -118,11 +119,10 @@ const Page = () => {
           </div>
         ) : (
           feedTrees.map((tree) => {
-            const progress = calculateProgress(
-              tree.raised_amount,
-              tree.goal_amount,
+            const progress = calculateProgress("0", String(tree.amount ?? "0"));
+            const expired = isExpired(
+              tree.end_date ?? new Date().toISOString(),
             );
-            const expired = isExpired(tree.expiration_date);
 
             console.log(tree);
 
@@ -133,7 +133,11 @@ const Page = () => {
               >
                 <div className="relative h-48">
                   <Image
-                    src={tree.main_image_url}
+                    src={
+                      tree.main_image_url ??
+                      tree.thumbnail_url ??
+                      "/placeholder.svg"
+                    }
                     alt={tree.name}
                     fill
                     className="object-cover"
@@ -164,13 +168,15 @@ const Page = () => {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
-                      <span>
-                        {tree.area}, {tree.city.name}
-                      </span>
+                      <span>{tree.location?.name ?? "—"}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>{formatDate(tree.expiration_date)}</span>
+                      <span>
+                        {tree.end_date
+                          ? formatDate(tree.end_date)
+                          : "No end date"}
+                      </span>
                     </div>
                   </div>
 
@@ -178,11 +184,11 @@ const Page = () => {
                     <div className="flex justify-between text-sm">
                       <span className="flex items-center gap-1">
                         <Target className="h-4 w-4" />
-                        Goal: {formatCurrency(tree.goal_amount)}
+                        Goal: {formatCurrency(String(tree.amount ?? "0"))}
                       </span>
                       <span className="flex items-center gap-1 text-green-600">
                         <Heart className="h-4 w-4" />
-                        Raised: {formatCurrency(tree.raised_amount)}
+                        Suggested: {formatCurrency(String(tree.amount ?? "0"))}
                       </span>
                     </div>
 
@@ -190,8 +196,8 @@ const Page = () => {
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>{progress}% funded</span>
                       <span>
-                        {formatCurrency(tree.raised_amount)} of{" "}
-                        {formatCurrency(tree.goal_amount)}
+                        {formatCurrency("0")} of{" "}
+                        {formatCurrency(String(tree.amount ?? "0"))}
                       </span>
                     </div>
                   </div>
