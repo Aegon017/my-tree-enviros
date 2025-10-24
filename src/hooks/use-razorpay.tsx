@@ -19,7 +19,7 @@ interface CheckoutResponse {
     razorpay_order_id: string;
     amount: number;
     currency: string;
-  }
+  };
 }
 
 interface CallbackPayload {
@@ -35,7 +35,7 @@ interface CallbackResponse {
 }
 
 export function useRazorpay() {
-  const [ loading, setLoading ] = useState( false );
+  const [loading, setLoading] = useState(false);
 
   const initiatePayment = async (
     type: PaymentType,
@@ -45,41 +45,40 @@ export function useRazorpay() {
     productId?: number,
     amount?: number,
   ) => {
-    setLoading( true );
+    setLoading(true);
 
     try {
       const razorpayLoaded = await loadRazorpay();
-      if ( !razorpayLoaded ) {
-        toast.error( "Payment service unavailable" );
+      if (!razorpayLoaded) {
+        toast.error("Payment service unavailable");
         return;
       }
 
-      const payload: CheckoutPayload = {
-        currency: "INR",
-        type,
-        product_type: productType,
-        cart_type: cartType,
-        shipping_address_id: shippingAddressId || 0,
-      };
+      // Create order from cart
+      const orderRes = await api.post("/orders", {
+        shipping_address_id: shippingAddressId || null,
+      });
+      const orderId = orderRes.data?.data?.order?.id;
 
-      if ( cartType === 2 ) {
-        payload.product_id = productId;
-        payload.amount = amount;
+      if (!orderId) {
+        throw new Error("Failed to create order");
       }
 
-      const res = await api.post<CheckoutResponse>( "/api/checkout", payload );
-      const response = res.data.data;
+      // Initiate Razorpay payment for the order
+      const initRes = await api.post(`/orders/${orderId}/payment/initiate`, {
+        payment_method: "razorpay",
+      });
+      const initData = initRes.data?.data;
 
-      if ( !response.amount || !response.razorpay_order_id ) {
-        throw new Error( "Invalid response from server" );
+      if (!initData?.amount || !initData?.razorpay_order_id) {
+        throw new Error("Invalid response from server");
       }
 
-      const { razorpay_order_id: order_id, amount: orderAmount, currency } = response;
-
-
-      if ( !amount || !order_id ) {
-        throw new Error( "Invalid response from server" );
-      }
+      const {
+        razorpay_order_id: order_id,
+        amount: orderAmount,
+        currency,
+      } = initData;
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
@@ -88,8 +87,8 @@ export function useRazorpay() {
         name: "Tree Sponsorship",
         description: "Payment for tree sponsorship",
         order_id,
-        handler: async ( response: any ) => {
-          await handlePaymentCallback( response, type );
+        handler: async (response: any) => {
+          await handlePaymentCallback(orderId, response);
         },
         prefill: {
           name: "Your Name",
@@ -99,42 +98,44 @@ export function useRazorpay() {
         theme: { color: "#0f766e" },
       };
 
-      const razorpay = new ( window as any ).Razorpay( options );
+      const razorpay = new (window as any).Razorpay(options);
       razorpay.open();
-    } catch ( error: any ) {
-      console.error( "Payment initiation failed:", error );
+    } catch (error: any) {
+      console.error("Payment initiation failed:", error);
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
         "Payment initiation failed";
-      toast.error( errorMessage );
+      toast.error(errorMessage);
     } finally {
-      setLoading( false );
+      setLoading(false);
     }
   };
 
-  const handlePaymentCallback = async ( response: any, type: PaymentType ) => {
+  const handlePaymentCallback = async (
+    orderId: number | string,
+    response: any,
+  ) => {
     try {
-      const callbackPayload: CallbackPayload = {
+      const callbackPayload = {
         razorpay_order_id: response.razorpay_order_id,
         razorpay_payment_id: response.razorpay_payment_id,
         razorpay_signature: response.razorpay_signature,
-        type,
       };
 
-      const { data } = await api.post<CallbackResponse>(
-        "/payment/callback",
+      const { data } = await api.post(
+        `/orders/${orderId}/payment/verify`,
         callbackPayload,
       );
 
-      if ( data.success ) {
-        toast.success( "Payment successful!" );
+      if (data.success) {
+        toast.success("Payment successful!");
       } else {
-        toast.error( "Payment verification failed!" );
+        toast.error("Payment verification failed!");
       }
-    } catch ( error: any ) {
-      console.error( "Payment callback error:", error );
-      toast.error( "Payment verification failed!" );
+    } catch (error: any) {
+      console.error("Payment callback error:", error);
+      toast.error("Payment verification failed!");
     }
   };
 

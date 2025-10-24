@@ -43,7 +43,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
-import api from "@/lib/axios";
+import api, { initializeCsrf } from "@/lib/axios";
 import { authStorage } from "@/lib/auth-storage";
 
 const fetcher = (url: string, _token: string | null) =>
@@ -54,9 +54,8 @@ async function cartMutation(
   { arg }: { arg: { token: string; body: any } },
 ) {
   const { body } = arg;
+  await initializeCsrf();
   const res = await api.post(url, body);
-
-  // Axios throws on non-2xx; if we get here, it's OK
   return res.data;
 }
 
@@ -98,9 +97,7 @@ export default function Page({ params }: Props) {
     error,
     isLoading,
   } = useSWR(
-    id
-      ? [`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/tree/${id}`, token]
-      : null,
+    id ? [`/trees/${id}`, token] : null,
     ([url, token]) => fetcher(url, token),
     { revalidateOnFocus: false, shouldRetryOnError: false },
   );
@@ -113,12 +110,12 @@ export default function Page({ params }: Props) {
     : 0;
 
   const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
-    [`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/cart/add/${id}`, "add"],
+    ["/cart/items", "add"],
     cartMutation,
   );
 
   const { trigger: sponsorTrigger, isMutating: isSponsoring } = useSWRMutation(
-    [`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/cart/add/${id}`, "sponsor"],
+    ["/cart/items", "sponsor"],
     cartMutation,
   );
 
@@ -150,16 +147,13 @@ export default function Page({ params }: Props) {
     }
 
     const body = {
-      quantity: quantity,
-      type: 1,
-      product_type: 1,
-      cart_type: 1,
-      duration: selectedYears,
-      price_option_id: priceOption.id,
+      item_type: "tree",
+      tree_id: Number(id),
+      location_id: areaId,
+      tree_plan_price_id: priceOption.id,
       name: personName,
       occasion: occasion,
       message: specialMessage,
-      location_id: areaId,
     };
 
     try {
@@ -194,16 +188,13 @@ export default function Page({ params }: Props) {
     }
 
     const body = {
-      quantity: quantity,
-      type: 1,
-      product_type: 2,
-      cart_type: 2,
-      duration: selectedYears,
-      price_option_id: priceOption.id,
+      item_type: "tree",
+      tree_id: Number(id),
+      location_id: areaId,
+      tree_plan_price_id: priceOption.id,
       name: personName,
       occasion: occasion,
       message: specialMessage,
-      location_id: areaId,
     };
 
     try {

@@ -719,9 +719,10 @@ export default function Page({ params }: Props) {
             <TabsContent value="description" className="space-y-6">
               <Card className="bg-card">
                 <CardContent className="p-8">
-                  <div className="prose max-w-none dark:prose-invert">
-                    <Markup content={tree.description} />
-                  </div>
+                  <Markup
+                    className="prose max-w-none dark:prose-invert"
+                    content={tree.description}
+                  />
                 </CardContent>
               </Card>
 
