@@ -1,14 +1,13 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL:
-    process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8000/api/v1",
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_API_URL,
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
-    "X-Requested-With": "XMLHttpRequest", // Required for Sanctum SPA
   },
-  withCredentials: true, // Essential for Sanctum SPA - sends cookies
+  withCredentials: true,
+  withXSRFToken: true, // Essential for Sanctum SPA - sends cookies
 });
 
 // CSRF token initialization flag
@@ -23,7 +22,7 @@ export async function initializeCsrf(): Promise<void> {
 
   try {
     await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"}/sanctum/csrf-cookie`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/sanctum/csrf-cookie`,
       {
         withCredentials: true,
       },

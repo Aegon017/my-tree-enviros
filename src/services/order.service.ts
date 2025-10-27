@@ -98,12 +98,21 @@ export interface CreateOrderPayload {
 }
 
 export interface CreateDirectOrderPayload {
-  product_id: number;
-  product_type: number; // 1 = tree, 2 = ecom product
-  type: number; // 1 = sponsor, 2 = adopt
-  quantity: number;
-  duration?: number;
+  // New v1 /orders/direct schema (preferred)
+  item_type?: "tree" | "product";
+  tree_instance_id?: number;
+  tree_plan_price_id?: number;
+  product_id?: number;
+  product_variant_id?: number;
+  campaign_id?: number;
+  quantity?: number;
+  coupon_id?: number;
   shipping_address_id?: number;
+
+  // Backward compatibility with legacy direct order payload
+  product_type?: number; // 1 = tree, 2 = ecom product
+  type?: number; // 1 = sponsor, 2 = adopt
+  duration?: number;
   coupon_code?: string;
   name?: string;
   occasion?: string;

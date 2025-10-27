@@ -9,9 +9,7 @@ import { NextResponse } from "next/server";
 export function middleware(req: NextRequest) {
   // For Sanctum SPA authentication, Laravel sets a session cookie
   const sessionCookie =
-    req.cookies.get("laravel_session") ||
-    req.cookies.get("mytree_session") ||
-    req.cookies.get("XSRF-TOKEN");
+    req.cookies.get("my-tree-enviros-session") || req.cookies.get("XSRF-TOKEN");
 
   // If no session cookie, redirect to sign-in
   if (!sessionCookie) {

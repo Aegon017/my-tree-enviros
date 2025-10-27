@@ -287,7 +287,6 @@ export default function Page({ params }: Props) {
 
     // Persist details locally
     localStorage.setItem(`tree_details_${id}`, JSON.stringify(details));
-
     if (isAuthenticated) {
       // For authenticated users, show Razorpay button
       setShowRazorpay(true);
@@ -572,7 +571,6 @@ export default function Page({ params }: Props) {
                               <FormControl>
                                 <Input
                                   className="h-11 w-full"
-                                  placeholder="Name on certificate"
                                   value={field.value}
                                   onChange={(e) => {
                                     field.onChange(e.target.value);
@@ -589,7 +587,7 @@ export default function Page({ params }: Props) {
                           control={form.control}
                           name="occasion"
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="col-span-2">
                               <FormLabel>Occasion</FormLabel>
                               <FormControl>
                                 <Input
@@ -617,7 +615,6 @@ export default function Page({ params }: Props) {
                                 <Textarea
                                   className="h-11 w-full resize-none"
                                   rows={3}
-                                  placeholder="Write a message to be associated with this sponsorship"
                                   value={field.value}
                                   onChange={(e) => {
                                     field.onChange(e.target.value);
@@ -630,11 +627,6 @@ export default function Page({ params }: Props) {
                           )}
                         />
                       </div>
-
-                      <p className="text-sm text-muted-foreground">
-                        These details will be saved with your cart item and can
-                        be edited in the cart before payment.
-                      </p>
                     </form>
                   </Form>
                 </CardContent>
@@ -664,6 +656,7 @@ export default function Page({ params }: Props) {
                     name={personName}
                     occasion={occasion}
                     message={specialMessage}
+                    tree_instance_id={tree.id}
                     plan_id={priceOption.id}
                   />
                 ) : (
