@@ -53,14 +53,6 @@ export default function RazorpayButton({
           shippingAddressId,
           productId,
           amount,
-          {
-            tree_instance_id,
-            tree_plan_price_id: plan_id,
-            product_variant_id,
-            campaign_id,
-            coupon_id,
-            quantity,
-          },
         )
       }
       disabled={loading}
