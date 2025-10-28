@@ -53,6 +53,7 @@ export const paymentService = {
   initiatePayment: async (orderId: number): Promise<RazorpayOrderResponse> => {
     const response = await api.post<RazorpayOrderResponse>(
       `/orders/${orderId}/payment/initiate`,
+      { payment_method: "razorpay" },
     );
     return response.data;
   },

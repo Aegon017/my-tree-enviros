@@ -646,7 +646,6 @@ export default function Page({ params }: Props) {
                     type={1}
                     productType={1}
                     cartType={2}
-                    shippingAddressId={0}
                     label="Sponsor Now"
                     productId={tree.id}
                     amount={Number(totalPrice)}

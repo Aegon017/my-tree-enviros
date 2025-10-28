@@ -14,7 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useSearchParams } from "next/navigation";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { orderService } from "@/services/order.service";
 
 export default function Page() {
   return (
@@ -29,6 +30,32 @@ function PaymentSuccessPage() {
   const orderId = searchParams.get( "order_id" ) || "N/A";
   const transactionId = searchParams.get( "transaction_id" ) || "N/A";
   const amount = parseFloat( searchParams.get( "amount" ) || "0" );
+  const internalOrderId = searchParams.get("internal_order_id");
+
+  const [displayAmount, setDisplayAmount] = useState<number | null>(amount);
+
+  useEffect(() => {
+    let mounted = true;
+    if (internalOrderId) {
+      const id = Number(internalOrderId);
+      if (!Number.isNaN(id) && id > 0) {
+        orderService
+          .getOrderById(id)
+          .then((res) => {
+            if (mounted && res?.data?.order?.total_amount) {
+              setDisplayAmount(res.data.order.total_amount);
+            }
+          })
+          .catch(() => {
+            // ignore errors, keep query param amount as fallback
+          });
+      }
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [internalOrderId]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
@@ -74,7 +101,7 @@ function PaymentSuccessPage() {
               <div className="space-y-1">
                 <p className="text-muted-foreground">Amount Paid</p>
                 <p className="font-medium text-foreground">
-                  ₹{ amount.toFixed( 2 ) }
+                  ₹{ (displayAmount ?? amount).toFixed(2) }
                 </p>
               </div>
               <div className="space-y-1">

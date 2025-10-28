@@ -40,6 +40,11 @@ export default function RazorpayButton({
   product_variant_id,
   campaign_id,
   coupon_id,
+  // legacy/additional fields
+  name,
+  occasion,
+  message,
+  area_id,
 }: RazorpayButtonProps) {
   const { initiatePayment, loading } = useRazorpay();
 
@@ -53,6 +58,20 @@ export default function RazorpayButton({
           shippingAddressId,
           productId,
           amount,
+          {
+            tree_instance_id,
+            tree_plan_price_id: plan_id,
+            product_variant_id,
+            campaign_id,
+            coupon_id,
+            quantity,
+            shipping_address_id: shippingAddressId,
+            // Legacy fields
+            name,
+            occasion,
+            message,
+            location_id: area_id,
+          }
         )
       }
       disabled={loading}
