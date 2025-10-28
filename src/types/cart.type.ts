@@ -1,9 +1,10 @@
 import type { Product } from "./product";
+import type { Campaign, CampaignType } from "./campaign";
 
 export interface CartItem {
   id: number;
   name: string;
-  type: "tree" | "product";
+  type: "tree" | "product" | "campaign";
   price: number;
   quantity: number;
   image: string;
@@ -13,6 +14,10 @@ export interface CartItem {
   occasion?: string;
   message?: string;
   location_id?: number;
+  // Campaign-specific (when type === "campaign")
+  campaign_type?: CampaignType;
+  location?: string;
+  description?: string;
   variant?: {
     id?: number;
     name?: string;
@@ -32,10 +37,11 @@ export interface CartItem {
   tree_id?: number;
   created_at?: string;
   updated_at?: string;
-  // Full product/tree data (from backend)
+  // Full product/tree/campaign data (from backend)
   product?: Product;
   ecom_product?: Product;
   tree?: any;
+  campaign?: Campaign;
 }
 
 // Backend cart response format

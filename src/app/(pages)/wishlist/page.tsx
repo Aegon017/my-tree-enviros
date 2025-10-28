@@ -22,6 +22,7 @@ import {
 import { cartService } from "@/services/cart.service";
 import Image from "next/image";
 import Link from "next/link";
+import { useCart } from "@/hooks/use-cart";
 
 const WishlistPage = () => {
   const { isAuthenticated } = useAuth();
@@ -30,6 +31,7 @@ const WishlistPage = () => {
   const [error, setError] = useState<Error | null>(null);
   const [removingIds, setRemovingIds] = useState<number[]>([]);
   const [addingToCartIds, setAddingToCartIds] = useState<number[]>([]);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -93,30 +95,38 @@ const WishlistPage = () => {
   };
 
   const handleAddToCart = async (item: WishlistItem) => {
+    // Guest: add to local cart using useCart
     if (!isAuthenticated) {
-      toast.error("Please login to add items to cart");
+      setAddingToCartIds((prev) => [...prev, item.id]);
+      try {
+        const name = wishlistService.getProductName(item);
+        const price = wishlistService.getProductPrice(item);
+        const image =
+          wishlistService.getProductImage(item) || "/placeholder.jpg";
+
+        addToCart({
+          id: item.product_id,
+          product_id: item.product_id,
+          name,
+          type: "product",
+          price,
+          quantity: 1,
+          image,
+          metadata: {},
+        } as any);
+
+        toast.success(`${name} added to cart`);
+      } catch (err) {
+        console.error("Failed to add to cart:", err);
+        toast.error("Failed to add item to cart");
+      } finally {
+        setAddingToCartIds((prev) => prev.filter((id) => id !== item.id));
+      }
       return;
     }
 
-    setAddingToCartIds((prev) => [...prev, item.id]);
-
-    try {
-      const productId = item.product_id;
-      const productType = item.product_type;
-
-      await cartService.addToCart(productId, {
-        type: productType === 1 ? 1 : 2, // 1 = sponsor/adopt, 2 = product
-        product_type: productType,
-        quantity: 1,
-      });
-
-      toast.success(`${wishlistService.getProductName(item)} added to cart`);
-    } catch (err) {
-      console.error("Failed to add to cart:", err);
-      toast.error("Failed to add item to cart");
-    } finally {
-      setAddingToCartIds((prev) => prev.filter((id) => id !== item.id));
-    }
+    // Authenticated users should use "Move to Cart" action
+    toast.error("Please use 'Move to Cart' while logged in");
   };
 
   const handleMoveToCart = async (itemId: number) => {
@@ -287,9 +297,7 @@ const WishlistPage = () => {
                   <span className="text-xl font-bold text-primary">
                     ₹{productPrice.toFixed(2)}
                   </span>
-                  <Badge variant="outline">
-                    {item.product_type === 1 ? "Tree" : "Product"}
-                  </Badge>
+                  <Badge variant="outline">Product</Badge>
                 </div>
               </CardContent>
               <CardFooter className="p-4 pt-0 flex gap-2">

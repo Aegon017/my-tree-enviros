@@ -19,7 +19,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { authStorage } from "@/lib/auth-storage";
+
 import type { Campaign } from "@/types/campaign";
 
 const calculateProgress = (raised: string, goal: string) => {
@@ -57,8 +57,10 @@ const Page = () => {
   useEffect(() => {
     const fetchFeedTrees = async () => {
       try {
-        const { data: json } = await api.get("/campaigns");
-        setFeedTrees(json.data?.campaigns || []);
+        const { data: json } = await api.get("/campaigns", {
+          params: { type: "feed", per_page: 50 },
+        });
+        setFeedTrees((json.data?.campaigns as Campaign[]) || []);
       } catch (err) {
         console.error("Error fetching feed trees:", err);
         setError("Failed to load feed trees");

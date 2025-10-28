@@ -2,34 +2,95 @@
 
 import api from "@/lib/axios";
 
+/**
+ * Backend-aligned Wishlist types (Api V1)
+ * Resource shapes are normalized for frontend consumption where needed.
+ */
+
+export interface WishlistStock {
+  is_instock: boolean;
+  quantity: number;
+}
+
 export interface WishlistItem {
   id: number;
-  user_id: number;
+  wishlist_id: number;
   product_id: number;
-  product_type: number; // 1 = tree, 2 = ecom product
-  created_at: string;
-  updated_at: string;
-  ecom_product?: {
-    id: number;
-    name: string;
-    price: number;
-    main_image_url?: string;
-    stock: number;
-    status: number;
-  };
+  product_variant_id?: number | null;
+  is_variant: boolean;
+  product_name: string;
+  product_image?: string | null;
+  // Expanded objects when present (controller loads relations before responding)
   product?: {
     id: number;
     name: string;
+    slug: string;
+    price: number;
+    discount_price?: number | null;
     main_image_url?: string;
-    quantity: number;
-    status: number;
-    price: Array<{
-      duration: number;
-      price: string;
-    }>;
+    quantity?: number; // from resource.inventory.stock_quantity
+    inventory?: {
+      id: number | null;
+      stock_quantity: number;
+      is_instock: boolean;
+      has_variants: boolean;
+    };
+    // variants may be sent, but we won't rely on it for the wishlist item
+  };
+  product_variant?: {
+    id: number;
+    sku?: string | null;
+    color?: string | null;
+    size?: string | null;
+    variant_name?: string;
+    stock_quantity?: number;
+    is_instock?: boolean;
+    price?: number | null;
+    product?: {
+      id: number | null;
+      name: string | null;
+      slug: string | null;
+    };
+  };
+  stock: WishlistStock;
+  created_at: string;
+  updated_at: string;
+
+  // For backward compatibility in UI badges where we previously had tree vs product
+  // In this backend, wishlist is for e-commerce products only, so set 2 (product)
+  product_type?: 2;
+}
+
+export interface WishlistResource {
+  id: number;
+  user_id: number;
+  items: WishlistItem[];
+  total_items: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WishlistApiEnvelope {
+  success: boolean;
+  message: string;
+  data: {
+    wishlist: WishlistResource;
   };
 }
 
+export interface WishlistMoveToCartEnvelope {
+  success: boolean;
+  message: string;
+  data: {
+    cart: unknown;
+    wishlist: WishlistResource;
+  };
+}
+
+/**
+ * Public response used by UI (kept compatible with existing calls)
+ * data carries a flat array of normalized WishlistItem entries
+ */
 export interface WishlistResponse {
   success: boolean;
   message: string;
@@ -38,13 +99,13 @@ export interface WishlistResponse {
 
 export interface AddToWishlistPayload {
   product_id: number;
-  product_type: number; // 1 = tree, 2 = ecom product
+  product_variant_id?: number | null;
 }
 
 export interface SyncWishlistPayload {
   items: Array<{
     product_id: number;
-    product_type: number;
+    product_variant_id?: number | null;
   }>;
 }
 
@@ -53,198 +114,288 @@ export interface CheckWishlistResponse {
   message: string;
   data: {
     in_wishlist: boolean;
-    wishlist_item_id?: number;
+    product_id: number;
+    variant_id: number | null;
   };
 }
 
 /**
- * Wishlist Service for managing user wishlist
- * All endpoints are protected and require authentication
+ * Internal: normalize items to add product_type = 2 for UI compatibility
+ */
+function normalizeItems(
+  items: WishlistItem[] | undefined | null,
+): WishlistItem[] {
+  if (!items || !Array.isArray(items)) return [];
+  return items.map((it) => ({
+    ...it,
+    product_type: 2 as const,
+  }));
+}
+
+/**
+ * Wishlist Service aligned with backend API (Api V1)
  */
 export const wishlistService = {
   /**
    * Get all wishlist items for the authenticated user
+   * GET /wishlist
    */
   getWishlist: async (): Promise<WishlistResponse> => {
-    const response = await api.get<{success: boolean, message: string, data: {wishlist: any}}>("/wishlist");
+    const response = await api.get<WishlistApiEnvelope>("/wishlist");
+    const items = normalizeItems(response.data.data.wishlist.items);
     return {
       success: response.data.success,
       message: response.data.message,
-      data: response.data.data.wishlist.items || []
+      data: items,
     };
   },
 
   /**
    * Add item to wishlist
-   * @param payload - Wishlist item details
+   * POST /wishlist/items
    */
   addToWishlist: async (
     payload: AddToWishlistPayload,
   ): Promise<WishlistResponse> => {
-    const response = await api.post<WishlistResponse>(
+    const response = await api.post<WishlistApiEnvelope>(
       "/wishlist/items",
       payload,
     );
-    return response.data;
+    const items = normalizeItems(response.data.data.wishlist.items);
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      data: items,
+    };
   },
 
   /**
-   * Remove item from wishlist
-   * @param itemId - Wishlist item ID
+   * Remove item from wishlist by wishlist item id
+   * DELETE /wishlist/items/{id}
    */
   removeFromWishlist: async (itemId: number): Promise<WishlistResponse> => {
-    const response = await api.delete<WishlistResponse>(
+    const response = await api.delete<WishlistApiEnvelope>(
       `/wishlist/items/${itemId}`,
     );
-    return response.data;
+    const items = normalizeItems(response.data.data.wishlist.items);
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      data: items,
+    };
+  },
+
+  /**
+   * Remove item from wishlist by product (+ optional variant)
+   * Convenience method for UIs that only know product/variant
+   */
+  removeByProduct: async (
+    productId: number,
+    productVariantId?: number | null,
+  ): Promise<WishlistResponse> => {
+    // Find matching item id first
+    const current = await wishlistService.getWishlist();
+    const match = current.data.find(
+      (it) =>
+        it.product_id === productId &&
+        (productVariantId
+          ? it.product_variant_id === productVariantId
+          : !it.product_variant_id),
+    );
+
+    if (!match) {
+      // Nothing to remove; return current state
+      return current;
+    }
+
+    return wishlistService.removeFromWishlist(match.id);
   },
 
   /**
    * Clear all items from wishlist
+   * DELETE /wishlist
    */
   clearWishlist: async (): Promise<WishlistResponse> => {
-    const response = await api.delete<WishlistResponse>("/wishlist");
-    return response.data;
+    const response = await api.delete<WishlistApiEnvelope>("/wishlist");
+    const items = normalizeItems(response.data.data.wishlist.items);
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      data: items,
+    };
   },
 
   /**
    * Move wishlist item to cart
-   * @param itemId - Wishlist item ID
+   * POST /wishlist/items/{id}/move-to-cart
    */
-  moveToCart: async (itemId: number): Promise<WishlistResponse> => {
-    const response = await api.post<WishlistResponse>(
+  moveToCart: async (
+    itemId: number,
+    quantity?: number,
+  ): Promise<WishlistResponse> => {
+    const response = await api.post<WishlistMoveToCartEnvelope>(
       `/wishlist/items/${itemId}/move-to-cart`,
+      quantity ? { quantity } : undefined,
     );
-    return response.data;
+    const items = normalizeItems(response.data.data.wishlist.items);
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      data: items,
+    };
   },
 
   /**
-   * Check if a product is in wishlist
-   * @param productId - Product ID
+   * Check if a product (and optional variant) is in wishlist
+   * GET /wishlist/check/{productId}?variant_id={id}
    */
   checkInWishlist: async (
     productId: number,
+    variantId?: number | null,
   ): Promise<CheckWishlistResponse> => {
     const response = await api.get<CheckWishlistResponse>(
       `/wishlist/check/${productId}`,
+      {
+        params: {
+          variant_id: variantId ?? undefined,
+        },
+      },
     );
     return response.data;
   },
 
   /**
-   * Sync guest wishlist items with authenticated user's wishlist
-   * This is called after login to merge guest wishlist with user's wishlist
-   * @param payload - Guest wishlist items to sync
+   * Sync guest wishlist items with authenticated user's wishlist.
+   * There is no bulk sync endpoint in backend. We perform client-side bulk add:
+   * - For each item, check if it's already in wishlist
+   * - If not, call add endpoint
+   * - Finally, return the latest wishlist items
    */
   syncWishlist: async (
     payload: SyncWishlistPayload,
   ): Promise<WishlistResponse> => {
-    const response = await api.post<WishlistResponse>(
-      "/wishlist/sync",
-      payload,
-    );
-    return response.data;
+    const items = payload?.items ?? [];
+    if (items.length === 0) {
+      return wishlistService.getWishlist();
+    }
+
+    // Best-effort: sequentially check and add to avoid duplicate constraint errors
+    for (const item of items) {
+      try {
+        const check = await wishlistService.checkInWishlist(
+          item.product_id,
+          item.product_variant_id ?? null,
+        );
+        if (!check.data.in_wishlist) {
+          await wishlistService.addToWishlist({
+            product_id: item.product_id,
+            product_variant_id: item.product_variant_id ?? null,
+          });
+        }
+      } catch (err) {
+        // Continue on error to attempt syncing remaining items
+        // eslint-disable-next-line no-console
+        console.error("Wishlist sync item failed:", err);
+      }
+    }
+
+    return wishlistService.getWishlist();
   },
 
   /**
    * Toggle wishlist status (add if not present, remove if present)
-   * @param productId - Product ID
-   * @param productType - Product type (1 = tree, 2 = ecom product)
    */
   toggleWishlist: async (
     productId: number,
-    productType: number,
+    productVariantId?: number | null,
   ): Promise<WishlistResponse> => {
-    try {
-      const checkResponse = await wishlistService.checkInWishlist(productId);
+    const check = await wishlistService.checkInWishlist(
+      productId,
+      productVariantId ?? null,
+    );
 
-      if (
-        checkResponse.data.in_wishlist &&
-        checkResponse.data.wishlist_item_id
-      ) {
-        // Remove from wishlist
-        return await wishlistService.removeFromWishlist(
-          checkResponse.data.wishlist_item_id,
-        );
-      } else {
-        // Add to wishlist
-        return await wishlistService.addToWishlist({
-          product_id: productId,
-          product_type: productType,
-        });
-      }
-    } catch (error) {
-      console.error("Toggle wishlist failed:", error);
-      throw error;
+    if (check.data.in_wishlist) {
+      return wishlistService.removeByProduct(
+        productId,
+        productVariantId ?? null,
+      );
     }
+
+    return wishlistService.addToWishlist({
+      product_id: productId,
+      product_variant_id: productVariantId ?? null,
+    });
   },
 
   /**
-   * Check if product is available
-   * @param item - Wishlist item
+   * Helper: Check availability
    */
   isAvailable: (item: WishlistItem): boolean => {
-    if (item.product_type === 2 && item.ecom_product) {
-      return item.ecom_product.status === 1 && item.ecom_product.stock > 0;
+    // Legacy guest shape fallback (old localStorage schema with ecom_product)
+    const legacy: any = item as any;
+    if (legacy?.ecom_product) {
+      return (
+        legacy.ecom_product.status === 1 && (legacy.ecom_product.stock ?? 0) > 0
+      );
     }
-
-    if (item.product_type === 1 && item.product) {
-      return item.product.status === 1 && item.product.quantity > 0;
-    }
-
-    return false;
+    return !!item?.stock?.is_instock && (item?.stock?.quantity ?? 0) > 0;
   },
 
   /**
-   * Get product name from wishlist item
-   * @param item - Wishlist item
+   * Helper: Get product name
    */
   getProductName: (item: WishlistItem): string => {
-    if (item.product_type === 2 && item.ecom_product) {
-      return item.ecom_product.name;
-    }
+    if (item?.product_name) return item.product_name;
 
-    if (item.product_type === 1 && item.product) {
-      return item.product.name;
-    }
+    // Legacy guest shape fallback
+    const legacy: any = item as any;
+    if (legacy?.ecom_product?.name) return legacy.ecom_product.name;
 
-    return "Unknown Product";
+    if (item?.is_variant) {
+      const base = item?.product_variant?.product?.name ?? "Product";
+      const variant = item?.product_variant?.variant_name ?? "";
+      return variant ? `${base} (${variant})` : base;
+    }
+    return item?.product?.name ?? "Product";
   },
 
   /**
-   * Get product price from wishlist item
-   * @param item - Wishlist item
+   * Helper: Get effective product price (variant price has priority if present)
    */
   getProductPrice: (item: WishlistItem): number => {
-    if (item.product_type === 2 && item.ecom_product) {
-      return item.ecom_product.price;
+    if (item?.product_variant?.price != null) {
+      return Number(item.product_variant.price) || 0;
     }
 
-    if (
-      item.product_type === 1 &&
-      item.product &&
-      item.product.price.length > 0
-    ) {
-      // Return the cheapest price option
-      return Math.min(...item.product.price.map((p) => parseFloat(p.price)));
+    // Legacy guest shape fallback
+    const legacy: any = item as any;
+    if (legacy?.ecom_product?.price != null) {
+      return Number(legacy.ecom_product.price) || 0;
     }
 
-    return 0;
+    const discount = item?.product?.discount_price;
+    if (discount != null) return Number(discount) || 0;
+    return Number(item?.product?.price ?? 0) || 0;
   },
 
   /**
-   * Get product image from wishlist item
-   * @param item - Wishlist item
+   * Helper: Get product image URL
    */
   getProductImage: (item: WishlistItem): string | undefined => {
-    if (item.product_type === 2 && item.ecom_product) {
-      return item.ecom_product.main_image_url;
+    if (item?.product_image) return item.product_image || undefined;
+
+    // Legacy guest shape fallback
+    const legacy: any = item as any;
+    if (legacy?.ecom_product?.main_image_url) {
+      return legacy.ecom_product.main_image_url;
     }
 
-    if (item.product_type === 1 && item.product) {
-      return item.product.main_image_url;
-    }
-
-    return undefined;
+    return item?.product?.main_image_url || undefined;
   },
 };
+
+// Legacy-style named exports for convenience (optional)
+export async function getWishlist() {
+  const response = await wishlistService.getWishlist();
+  return response.data;
+}

@@ -548,22 +548,7 @@ const Page = () => {
         }
 
         // Fallback to legacy feed-tree endpoint
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/feed-tree/${id}`,
-          {
-            headers: {
-              accept: "application/json",
-            },
-            cache: "no-store",
-          },
-        );
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch campaign details");
-        }
-
-        const data: ApiResponse = await res.json();
-        setCampaignData(data.data);
+        throw new Error("Campaign not found");
       } catch (err) {
         console.error("Error fetching feed tree:", err);
         setError("Failed to load campaign details");
@@ -635,7 +620,7 @@ const Page = () => {
             {error || "The campaign you're looking for doesn't exist."}
           </p>
           <Link
-            href="/feed-trees"
+            href="/feed-a-tree"
             className="mt-4 inline-flex items-center gap-2 text-primary"
           >
             <ArrowLeft className="h-4 w-4" />

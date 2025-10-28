@@ -23,7 +23,11 @@ import type { Product } from "@/types/product";
 import type { Review } from "@/types/review.type";
 
 interface ApiResponse {
-  data: Product;
+  success: boolean;
+  message: string;
+  data: {
+    product: Product;
+  };
 }
 
 interface CanReviewResponse {
@@ -66,7 +70,7 @@ export default function ProductPage({ params }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [editingReviewId, setEditingReviewId] = useState<number | null>(null);
 
-  const productUrl = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/product/${id}`;
+  const productUrl = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/products/${id}`;
   const {
     data: response,
     error,
@@ -86,7 +90,7 @@ export default function ProductPage({ params }: Props) {
     fetcher,
   );
 
-  const product = response?.data;
+  const product = response?.data?.product;
   const productImage = product?.main_image_url ?? "/placeholder.jpg";
   const reviews = reviewsData?.data?.data || [];
   const averageRating = reviews.length
@@ -130,14 +134,8 @@ export default function ProductPage({ params }: Props) {
     const newStatus = !isFavorite;
 
     try {
-      const url = `/wishlist/${newStatus ? "add" : "remove"}/${id}`;
-      await api.request({
-        url,
-        method: newStatus ? "POST" : "DELETE",
-      });
-
-      // axios throws on non-2xx responses
-
+      const { wishlistService } = await import("@/services/wishlist.service");
+      await wishlistService.toggleWishlist(Number(id));
       setIsFavorite(newStatus);
       toast.success(
         newStatus

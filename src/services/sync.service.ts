@@ -49,10 +49,10 @@ export const syncService = {
     }
 
     try {
-      // Transform guest wishlist items to match backend format
+      // Transform guest wishlist items to match backend format (product_id + optional product_variant_id)
       const items = guestWishlist.map((item) => ({
-        product_id: item.id || item.product_id,
-        product_type: item.type === "tree" ? 1 : 2,
+        product_id: item.product_id ?? item.id,
+        product_variant_id: item.product_variant_id ?? null,
       }));
 
       // Send guest wishlist items to backend

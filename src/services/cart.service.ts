@@ -67,6 +67,12 @@ export interface AddTreeToCartPayload {
   message?: string;
 }
 
+export interface AddCampaignToCartPayload {
+  campaign_id: number;
+  amount?: number;
+  quantity?: number;
+}
+
 export interface UpdateCartItemPayload {
   quantity?: number;
   duration?: number;
@@ -99,11 +105,15 @@ export const cartService = {
    * Get all cart items for the authenticated user
    */
   getCart: async (): Promise<CartResponse> => {
-    const response = await api.get<{success: boolean, message: string, data: {cart: any}}>("/cart");
+    const response = await api.get<{
+      success: boolean;
+      message: string;
+      data: { cart: any };
+    }>("/cart");
     return {
       success: response.data.success,
       message: response.data.message,
-      data: response.data.data.cart.items || []
+      data: response.data.data.cart.items || [],
     };
   },
 
@@ -135,6 +145,19 @@ export const cartService = {
   ): Promise<CartResponse> => {
     const response = await api.post<CartResponse>("/cart/items", {
       item_type: "tree",
+      ...payload,
+    });
+    return response.data;
+  },
+
+  /**
+   * Add a campaign to cart
+   */
+  addCampaignToCart: async (
+    payload: AddCampaignToCartPayload,
+  ): Promise<CartResponse> => {
+    const response = await api.post<CartResponse>("/cart/items", {
+      item_type: "campaign",
       ...payload,
     });
     return response.data;
@@ -191,6 +214,10 @@ export async function addToCart(productId: number, payload: AddToCartPayload) {
 
 export async function addTreeToCart(payload: AddTreeToCartPayload) {
   return cartService.addTreeToCart(payload);
+}
+
+export async function addCampaignToCart(payload: AddCampaignToCartPayload) {
+  return cartService.addCampaignToCart(payload);
 }
 
 export async function getCart() {

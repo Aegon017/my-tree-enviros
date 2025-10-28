@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import useSWRMutation from "swr/mutation";
+import { wishlistService } from "@/services/wishlist.service";
 import { CheckoutType } from "@/enums/checkout.enum";
 import { ProductType } from "@/enums/product.enum";
 import api from "@/lib/axios";
@@ -24,16 +24,6 @@ interface Props {
   product: Product;
 }
 
-const wishlistMutation = async (
-  url: string,
-  { arg }: { arg: { productId: number } },
-) => {
-  const fullUrl = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}${url}/${arg.productId}`;
-  const method = url.includes("add") ? "post" : "delete";
-  const response = await api[method](fullUrl);
-  return response.data;
-};
-
 export function EcommerceCard({ product }: Props) {
   const {
     id,
@@ -48,11 +38,6 @@ export function EcommerceCard({ product }: Props) {
   } = product;
 
   const [isFavorite, setIsFavorite] = useState(wishlist_tag);
-
-  const { trigger: wishlistTrigger } = useSWRMutation(
-    isFavorite ? "/wishlist/remove" : "/wishlist/add",
-    wishlistMutation,
-  );
 
   const discountPercentage = useMemo(
     () =>
@@ -113,19 +98,33 @@ export function EcommerceCard({ product }: Props) {
             list.splice(existingIndex, 1);
             toast.success(`Removed ${name} from your wishlist`);
           } else {
-            // Add to guest wishlist (shape compatible with wishlist page helpers)
+            // Add to guest wishlist (shape compatible with wishlist service helpers)
             list.push({
               id, // local id for removal
               product_id: id,
-              product_type: 2, // 2 = ecom product
-              ecom_product: {
+              product_variant_id: null,
+              is_variant: false,
+              // Helpers use these directly
+              product_name: name,
+              product_image: main_image_url,
+              // Provide product object so getProductPrice can resolve price/discount
+              product: {
                 id,
                 name,
                 price: displayPrice,
+                discount_price:
+                  discount_price && discount_price < price
+                    ? discount_price
+                    : null,
                 main_image_url,
-                status: 1,
-                stock: 1,
               },
+              // Stock info for isAvailable helper
+              stock: {
+                is_instock: true,
+                quantity: 1,
+              },
+              // For legacy UI badges expecting a type
+              product_type: 2, // 2 = ecom product
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             });
@@ -137,7 +136,7 @@ export function EcommerceCard({ product }: Props) {
         }
 
         // Authenticated users - fallback to backend API
-        await wishlistTrigger({ productId: id });
+        await wishlistService.toggleWishlist(id);
         toast.success(
           `${prev ? "Removed" : "Added"} ${name} ${prev ? "from" : "to"} your wishlist`,
         );
@@ -146,7 +145,7 @@ export function EcommerceCard({ product }: Props) {
         toast.error("Failed to update wishlist");
       }
     },
-    [id, isFavorite, name, wishlistTrigger, main_image_url, displayPrice],
+    [id, isFavorite, name, main_image_url, displayPrice],
   );
 
   return (
