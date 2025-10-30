@@ -122,8 +122,12 @@ function AddDetailModal({
         name: item.name || "",
         occasion: item.occasion || "",
         message: item.message || "",
-        state_id: item.metadata?.state_id || "",
-        area_id: item.metadata?.location_id || "",
+        state_id: (item.metadata as any)?.state_id
+          ? String((item.metadata as any).state_id)
+          : "",
+        area_id: item.metadata && (item.metadata as any).location_id
+          ? String((item.metadata as any).location_id)
+          : "",
       });
     }
   }, [open, item, form]);

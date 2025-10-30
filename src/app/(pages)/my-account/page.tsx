@@ -263,7 +263,7 @@ const AddressModal = ({
   initial?: ShippingAddress | null;
 }) => {
   const form = useForm<AddressFormValues>({
-    resolver: zodResolver(addressSchema),
+    resolver: zodResolver(addressSchema) as any,
     defaultValues: {
         name: "",
         phone: "",

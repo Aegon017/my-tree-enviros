@@ -92,7 +92,7 @@ export default function
   );
 
   const planOptions = useMemo(() => {
-    const list = (tree?.plan_prices ?? []).map((pp: any) => {
+    const list = ((tree as any)?.plan_prices ?? []).map((pp: any) => {
         const duration = Number(pp?.plan?.duration ?? 0);
         const durationDisplay = String(pp?.plan?.duration_display ?? (duration ? `${duration} Year${duration > 1 ? "s" : ""}` : ""));
         const features = Array.isArray(pp?.plan?.features) ? pp.plan.features : [];
@@ -100,7 +100,7 @@ export default function
         return { id: Number(pp?.id ?? 0), duration, durationDisplay, features, priceNumeric };
       }) || [];
     return list.filter((o: { duration: number }) => o.duration > 0);
-  }, [tree?.plan_prices]);
+  }, [(tree as any)?.plan_prices]);
 
   useEffect(() => {
     if (planOptions.length > 0) {
@@ -315,14 +315,14 @@ export default function
 
       {!isLoading && tree && (
         <div className="mt-16">
-            {tree.sponsors && tree.sponsors.length > 0 && (
+            {((tree as any)?.sponsors ?? []).length > 0 && (
                 <Card className="mb-8">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Recent Sponsors</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {tree.sponsors.map((sponsor: any, index: number) => (
+                            {((tree as any).sponsors ?? []).map((sponsor: any, index: number) => (
                                 <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
                                     <div className="flex items-center gap-3">
                                         <div className="bg-muted rounded-full p-2"><User className="h-5 w-5 text-muted-foreground" /></div>
