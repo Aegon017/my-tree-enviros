@@ -1,5 +1,8 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
 import {
   Loader2,
   MapPin,
@@ -8,6 +11,8 @@ import {
   Search,
   ShoppingBag,
   Trash2,
+  Check,
+  ChevronsUpDown,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,6 +23,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -25,6 +31,29 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import api from "@/lib/axios";
 import { useCart } from "@/hooks/use-cart";
 import type { CartItem } from "@/types/cart.type";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface State {
   id: number;
@@ -37,78 +66,19 @@ interface Area {
   locationId: number;
 }
 
+const detailsSchema = z.object({
+  state_id: z.string().min(1, "State is required."),
+  area_id: z.string().min(1, "Area is required."),
+  name: z.string().min(1, "Name is required."),
+  occasion: z.string().min(1, "Occasion is required."),
+  message: z.string().min(1, "Message is required."),
+});
+
+type DetailsFormValues = z.infer<typeof detailsSchema>;
+
 const DEFAULT_IMAGE = "/placeholder.jpg";
 const MAX_DURATION = 50;
 const MIN_QUANTITY = 1;
-
-function SearchModal({
-  open,
-  onClose,
-  searchText,
-  onSearchChange,
-  dropdownData,
-  onSelect,
-  placeholder,
-  isLoading = false,
-}: {
-  open: boolean;
-  onClose: () => void;
-  searchText: string;
-  onSearchChange: (text: string) => void;
-  dropdownData: (State | Area)[];
-  onSelect: (item: State | Area) => void;
-  placeholder: string;
-  isLoading?: boolean;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogTitle>Search</DialogTitle>
-        <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={placeholder}
-              value={searchText}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10"
-              autoFocus
-            />
-          </div>
-
-          <ScrollArea className="h-64">
-            {isLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : dropdownData.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No results found
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {dropdownData.map((item) => (
-                  <Card
-                    key={item.id}
-                    className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => onSelect(item)}
-                  >
-                    <CardContent className="p-0">
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{item.name}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function AddDetailModal({
   open,
@@ -129,45 +99,34 @@ function AddDetailModal({
     },
   ) => void;
 }) {
-  const [formData, setFormData] = useState({
-    name: "",
-    occasion: "",
-    message: "",
-  });
-  const [selectedState, setSelectedState] = useState<State | null>(null);
-  const [selectedArea, setSelectedArea] = useState<Area | null>(null);
   const [states, setStates] = useState<State[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
-  const [searchText, setSearchText] = useState("");
-  const [dropdownData, setDropdownData] = useState<(State | Area)[]>([]);
-  const [currentSearchLevel, setCurrentSearchLevel] = useState<
-    "state" | "area" | null
-  >(null);
-  const [searchPlaceholder, setSearchPlaceholder] = useState("Search State");
-  const [isDropdownVisible, setDropdownVisible] = useState(false);
   const [isAreaLoading, setIsAreaLoading] = useState(false);
 
-  const resetForm = useCallback(() => {
-    setFormData({ name: "", occasion: "", message: "" });
-    setSelectedState(null);
-    setSelectedArea(null);
-    setSearchText("");
-    setDropdownVisible(false);
-    setCurrentSearchLevel(null);
-    setDropdownData([]);
-  }, []);
+  const form = useForm<DetailsFormValues>({
+    resolver: zodResolver(detailsSchema),
+    defaultValues: {
+      state_id: "",
+      area_id: "",
+      name: "",
+      occasion: "",
+      message: "",
+    },
+  });
+
+  const watchedStateId = form.watch("state_id");
 
   useEffect(() => {
     if (open && item) {
-      setFormData({
+      form.reset({
         name: item.name || "",
         occasion: item.occasion || "",
         message: item.message || "",
+        state_id: item.metadata?.state_id || "",
+        area_id: item.metadata?.location_id || "",
       });
-    } else if (!open) {
-      resetForm();
     }
-  }, [open, item, resetForm]);
+  }, [open, item, form]);
 
   useEffect(() => {
     const fetchStates = async () => {
@@ -178,226 +137,246 @@ function AddDetailModal({
         console.error("Failed to fetch states:", err);
       }
     };
-
     if (open) fetchStates();
   }, [open]);
 
-  const fetchAreas = useCallback(async (stateId: number) => {
-    setIsAreaLoading(true);
-    try {
-      const { data: json } = await api.get(
-        `/tree-locations/states/${stateId}/areas`,
-      );
-      const mapped: Area[] = (json.data || []).map((a: any) => ({
-        id: a.area_id,
-        name: a.area_name,
-        locationId: a.location_id,
-      }));
-      setAreas(mapped);
-    } catch (err) {
-      console.error("Failed to fetch areas:", err);
-    } finally {
-      setIsAreaLoading(false);
-    }
-  }, []);
-
-  const handleSelect = useCallback(
-    (sel: State | Area) => {
-      if (currentSearchLevel === "state") {
-        const st = sel as State;
-        setSelectedState(st);
-        setSelectedArea(null);
-        setSearchPlaceholder("Search Area");
-        fetchAreas(st.id);
-      } else {
-        setSelectedArea(sel as Area);
-      }
-      setSearchText("");
-      setDropdownVisible(false);
-    },
-    [currentSearchLevel, fetchAreas],
-  );
-
-  const handleSearch = useCallback(
-    (text: string) => {
-      setSearchText(text);
-      const list = currentSearchLevel === "state" ? states : areas;
-      const filtered = list.filter((i) =>
-        i.name.toLowerCase().includes(text.toLowerCase()),
-      );
-      setDropdownData(filtered);
-    },
-    [currentSearchLevel, states, areas],
-  );
-
-  const openSearchModal = useCallback(
-    (level: "state" | "area") => {
-      setCurrentSearchLevel(level);
-      setDropdownData(level === "state" ? states : areas);
-      setSearchText("");
-      setDropdownVisible(true);
-    },
-    [states, areas],
-  );
-
-  const handleInputChange = useCallback(
-    (field: keyof typeof formData) => (value: string) => {
-      setFormData((prev) => ({ ...prev, [field]: value }));
-    },
-    [],
-  );
-
-  const handleSubmit = useCallback(() => {
-    if (
-      !formData.name ||
-      !formData.occasion ||
-      !selectedArea?.locationId ||
-      !item
-    ) {
-      alert("Please complete all required fields.");
+  useEffect(() => {
+    if (!watchedStateId) {
+      setAreas([]);
       return;
     }
+
+    const fetchAreas = async (stateId: string) => {
+      setIsAreaLoading(true);
+      try {
+        const { data: json } = await api.get(
+          `/tree-locations/states/${stateId}/areas`,
+        );
+        const mapped: Area[] = (json.data || []).map((a: any) => ({
+          id: a.area_id,
+          name: a.area_name,
+          locationId: a.location_id,
+        }));
+        setAreas(mapped);
+      } catch (err) {
+        console.error("Failed to fetch areas:", err);
+      } finally {
+        setIsAreaLoading(false);
+      }
+    };
+
+    fetchAreas(watchedStateId);
+  }, [watchedStateId]);
+
+  const onSubmit = (values: DetailsFormValues) => {
+    if (!item) return;
+    const selectedArea = areas.find(area => area.id.toString() === values.area_id);
+    if (!selectedArea) {
+        form.setError("area_id", { message: "Please select a valid area." });
+        return;
+    }
+
     onUpdateDetails(item.id, {
-      name: formData.name,
-      occasion: formData.occasion,
-      message: formData.message,
+      name: values.name,
+      occasion: values.occasion,
+      message: values.message,
       location_id: selectedArea.locationId,
     });
-    resetForm();
     onClose();
-  }, [formData, selectedArea, item, onUpdateDetails, resetForm, onClose]);
-
-  const handleClose = useCallback(() => {
-    resetForm();
-    onClose();
-  }, [resetForm, onClose]);
+  };
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden">
-          <div className="flex items-center justify-between">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
             <DialogTitle className="text-xl font-bold">Add Details</DialogTitle>
-          </div>
+            <DialogDescription>
+                Please provide the necessary details for your order.
+            </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 flex-grow overflow-hidden flex flex-col">
+            <ScrollArea className="flex-grow pr-4">
+                <div className="space-y-4">
+                    <FormField
+                        control={form.control}
+                        name="state_id"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                            <FormLabel>State*</FormLabel>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <FormControl>
+                                    <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className={cn(
+                                        "w-full justify-between",
+                                        !field.value && "text-muted-foreground"
+                                    )}
+                                    >
+                                    {field.value
+                                        ? states.find(
+                                            (state) => state.id.toString() === field.value
+                                        )?.name
+                                        : "Select State"}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[--radix-popover-content-available-height] p-0">
+                                <Command>
+                                    <CommandInput placeholder="Search state..." />
+                                    <CommandEmpty>No state found.</CommandEmpty>
+                                    <CommandGroup>
+                                        <ScrollArea className="h-48">
+                                            {states.map((state) => (
+                                            <CommandItem
+                                                value={state.name}
+                                                key={state.id}
+                                                onSelect={() => {
+                                                form.setValue("state_id", state.id.toString());
+                                                form.setValue("area_id", "");
+                                                }}
+                                            >
+                                                <Check
+                                                className={cn(
+                                                    "mr-2 h-4 w-4",
+                                                    state.id.toString() === field.value
+                                                    ? "opacity-100"
+                                                    : "opacity-0"
+                                                )}
+                                                />
+                                                {state.name}
+                                            </CommandItem>
+                                            ))}
+                                        </ScrollArea>
+                                    </CommandGroup>
+                                </Command>
+                                </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-          <DialogDescription>
-            Please provide the necessary details for your order.
-          </DialogDescription>
+                    <FormField
+                        control={form.control}
+                        name="area_id"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                            <FormLabel>Area*</FormLabel>
+                            <Popover>
+                                <PopoverTrigger asChild disabled={!watchedStateId || isAreaLoading}>
+                                <FormControl>
+                                    <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className={cn(
+                                        "w-full justify-between",
+                                        !field.value && "text-muted-foreground"
+                                    )}
+                                    >
+                                    {isAreaLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    {field.value
+                                        ? areas.find(
+                                            (area) => area.id.toString() === field.value
+                                        )?.name
+                                        : "Select Area"}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[--radix-popover-content-available-height] p-0">
+                                <Command>
+                                    <CommandInput placeholder="Search area..." />
+                                    <CommandEmpty>No area found.</CommandEmpty>
+                                    <CommandGroup>
+                                        <ScrollArea className="h-48">
+                                            {areas.map((area) => (
+                                            <CommandItem
+                                                value={area.name}
+                                                key={area.id}
+                                                onSelect={() => {
+                                                    form.setValue("area_id", area.id.toString());
+                                                }}
+                                            >
+                                                <Check
+                                                className={cn(
+                                                    "mr-2 h-4 w-4",
+                                                    area.id.toString() === field.value
+                                                    ? "opacity-100"
+                                                    : "opacity-0"
+                                                )}
+                                                />
+                                                {area.name}
+                                            </CommandItem>
+                                            ))}
+                                        </ScrollArea>
+                                    </CommandGroup>
+                                </Command>
+                                </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-          <ScrollArea className="h-[400px] pr-4">
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="state" className="text-sm font-medium">
-                  State*
-                </label>
-                <Button
-                  variant="outline"
-                  className="w-full justify-between mt-1 h-11"
-                  onClick={() => openSearchModal("state")}
-                >
-                  <span
-                    className={
-                      selectedState
-                        ? "text-foreground"
-                        : "text-muted-foreground"
-                    }
-                  >
-                    {selectedState ? selectedState.name : "Select State"}
-                  </span>
-                  <Search className="h-4 w-4" />
-                </Button>
-              </div>
+                    <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Name*</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Enter name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-              {selectedState && (
-                <div>
-                  <label htmlFor="area" className="text-sm font-medium">
-                    Area*
-                  </label>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-between mt-1 h-11"
-                    onClick={() => openSearchModal("area")}
-                  >
-                    <span
-                      className={
-                        selectedArea
-                          ? "text-foreground"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      {selectedArea ? selectedArea.name : "Select Area"}
-                    </span>
-                    <Search className="h-4 w-4" />
-                  </Button>
+                    <FormField
+                        control={form.control}
+                        name="occasion"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Occasion*</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Enter occasion" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="message"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Special Message*</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="Enter special message" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                 </div>
-              )}
-
-              <div>
-                <label htmlFor="name" className="text-sm font-medium">
-                  Name*
-                </label>
-                <Input
-                  name="name"
-                  placeholder="Enter name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name")(e.target.value)}
-                  className="mt-1 h-11"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="occasion" className="text-sm font-medium">
-                  Occasion*
-                </label>
-                <Input
-                  name="occasion"
-                  placeholder="Enter occasion"
-                  value={formData.occasion}
-                  onChange={(e) =>
-                    handleInputChange("occasion")(e.target.value)
-                  }
-                  className="mt-1 h-11"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="message" className="text-sm font-medium">
-                  Special Message
-                </label>
-                <textarea
-                  name="message"
-                  placeholder="Enter special message"
-                  value={formData.message}
-                  onChange={(e) => handleInputChange("message")(e.target.value)}
-                  className="w-full mt-1 p-3 border rounded-md min-h-[100px] resize-y text-sm"
-                  rows={3}
-                />
-              </div>
+            </ScrollArea>
+            <div className="flex space-x-3 pt-4 border-t">
+                <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+                Cancel
+                </Button>
+                <Button type="submit" className="flex-1" disabled={form.formState.isSubmitting}>
+                Save Details
+                </Button>
             </div>
-          </ScrollArea>
-
-          <div className="flex space-x-3 pt-4">
-            <Button variant="outline" onClick={handleClose} className="flex-1">
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} className="flex-1">
-              Save Details
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <SearchModal
-        open={isDropdownVisible}
-        onClose={() => setDropdownVisible(false)}
-        searchText={searchText}
-        onSearchChange={handleSearch}
-        dropdownData={dropdownData}
-        onSelect={handleSelect}
-        placeholder={searchPlaceholder}
-        isLoading={isAreaLoading && currentSearchLevel === "area"}
-      />
-    </>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -1,5 +1,8 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/store";
@@ -39,6 +42,36 @@ import {
   type User as UserProfile,
 } from "@/services/user.service";
 import { orderService } from "@/services/order.service";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
+
+
+const profileSchema = z.object({
+    name: z.string().min(1, "Name is required."),
+    email: z.string().email("Invalid email address."),
+});
+type ProfileFormValues = z.infer<typeof profileSchema>;
+
+const addressSchema = z.object({
+    name: z.string().min(1, "Full name is required."),
+    phone: z.string().min(1, "Phone number is required."),
+    address_line1: z.string().min(1, "Address line 1 is required."),
+    address_line2: z.string().optional(),
+    city: z.string().min(1, "City is required."),
+    state: z.string().min(1, "State is required."),
+    pincode: z.string().min(1, "PIN code is required."),
+    country: z.string().min(1, "Country is required."),
+    is_default: z.boolean().default(false),
+});
+type AddressFormValues = z.infer<typeof addressSchema>;
+
 
 /**
  * Order shapes returned by the new backend resources.
@@ -229,22 +262,24 @@ const AddressModal = ({
   onSave: (payload: CreateShippingAddressPayload, id?: number) => Promise<void>;
   initial?: ShippingAddress | null;
 }) => {
-  const [form, setForm] = useState<CreateShippingAddressPayload>({
-    name: "",
-    phone: "",
-    address_line1: "",
-    address_line2: "",
-    city: "",
-    state: "",
-    pincode: "",
-    country: "India",
-    is_default: false,
+  const form = useForm<AddressFormValues>({
+    resolver: zodResolver(addressSchema),
+    defaultValues: {
+        name: "",
+        phone: "",
+        address_line1: "",
+        address_line2: "",
+        city: "",
+        state: "",
+        pincode: "",
+        country: "India",
+        is_default: false,
+    }
   });
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (initial) {
-      setForm({
+      form.reset({
         name: initial.name,
         phone: initial.phone,
         address_line1: initial.address_line1,
@@ -256,7 +291,7 @@ const AddressModal = ({
         is_default: initial.is_default,
       });
     } else {
-      setForm({
+      form.reset({
         name: "",
         phone: "",
         address_line1: "",
@@ -268,25 +303,11 @@ const AddressModal = ({
         is_default: false,
       });
     }
-  }, [initial]);
+  }, [initial, form]);
 
-  const handleChange =
-    (key: keyof CreateShippingAddressPayload) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value =
-        key === "is_default" ? (e.target as any).checked : e.target.value;
-      setForm((prev) => ({ ...prev, [key]: value as any }));
-    };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      await onSave(form, initial?.id);
-      onClose();
-    } finally {
-      setSaving(false);
-    }
+  const handleSubmit = async (values: AddressFormValues) => {
+    await onSave(values, initial?.id);
+    onClose();
   };
 
   if (!open) return null;
@@ -313,107 +334,131 @@ const AddressModal = ({
             </div>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={form.name}
-                    onChange={handleChange("name")}
-                    required
-                  />
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Full Name</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Phone</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="address_line1"
+                        render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                                <FormLabel>Address Line 1</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="address_line2"
+                        render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                                <FormLabel>Address Line 2 (optional)</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>City</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>State</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="pincode"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>PIN Code</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="country"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Country</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                 </div>
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={form.phone}
-                    onChange={handleChange("phone")}
-                    required
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="address_line1">Address Line 1</Label>
-                  <Input
-                    id="address_line1"
-                    value={form.address_line1}
-                    onChange={handleChange("address_line1")}
-                    required
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="address_line2">
-                    Address Line 2 (optional)
-                  </Label>
-                  <Input
-                    id="address_line2"
-                    value={form.address_line2 ?? ""}
-                    onChange={handleChange("address_line2")}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={form.city}
-                    onChange={handleChange("city")}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="state">State</Label>
-                  <Input
-                    id="state"
-                    value={form.state}
-                    onChange={handleChange("state")}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="pincode">PIN Code</Label>
-                  <Input
-                    id="pincode"
-                    value={form.pincode}
-                    onChange={handleChange("pincode")}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="country">Country</Label>
-                  <Input
-                    id="country"
-                    value={form.country}
-                    onChange={handleChange("country")}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  id="is_default"
-                  type="checkbox"
-                  className="rounded"
-                  checked={!!form.is_default}
-                  onChange={handleChange("is_default")}
+                <FormField
+                    control={form.control}
+                    name="is_default"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                            <FormControl>
+                                <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                                <FormLabel>
+                                Set as default address
+                                </FormLabel>
+                            </div>
+                        </FormItem>
+                    )}
                 />
-                <Label htmlFor="is_default" className="text-sm">
-                  Set as default address
-                </Label>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={saving}>
-                  {saving
-                    ? "Saving..."
-                    : initial
-                      ? "Update Address"
-                      : "Save Address"}
-                </Button>
-              </div>
-            </form>
+                <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={onClose}>
+                    Cancel
+                    </Button>
+                    <Button type="submit" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting
+                        ? "Saving..."
+                        : initial
+                        ? "Update Address"
+                        : "Save Address"}
+                    </Button>
+                </div>
+                </form>
+            </Form>
           </CardContent>
         </Card>
       </div>
@@ -549,7 +594,11 @@ export default function AccountPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [isEditing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ name: "", email: "" });
+
+  const profileForm = useForm<ProfileFormValues>({
+      resolver: zodResolver(profileSchema),
+      defaultValues: { name: "", email: "" },
+  });
 
   // Orders state
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -580,9 +629,9 @@ export default function AccountPage() {
       const res = await userService.getCurrentUser();
       if (res.success && res.data?.user) {
         setProfile(res.data.user);
-        setEditForm({
-          name: res.data.user.name || "",
-          email: res.data.user.email || "",
+        profileForm.reset({
+            name: res.data.user.name || "",
+            email: res.data.user.email || "",
         });
         // Keep Redux auth user roughly up-to-date (best effort mapping)
         dispatch(
@@ -596,7 +645,7 @@ export default function AccountPage() {
     } finally {
       setProfileLoading(false);
     }
-  }, [dispatch, authUser?.phone]);
+  }, [dispatch, authUser?.phone, profileForm]);
 
   const loadOrders = useCallback(async () => {
     setOrdersLoading(true);
@@ -688,19 +737,16 @@ export default function AccountPage() {
 
   const toggleEdit = useCallback(() => {
     if (!isEditing && profile) {
-      setEditForm({ name: profile.name || "", email: profile.email || "" });
+        profileForm.reset({ name: profile.name || "", email: profile.email || "" });
     }
     setEditing((prev) => !prev);
-  }, [isEditing, profile]);
+  }, [isEditing, profile, profileForm]);
 
-  const saveProfile = useCallback(async () => {
-    await userService.updateCurrentUser({
-      name: editForm.name,
-      email: editForm.email,
-    });
+  const onSaveProfile = useCallback(async (values: ProfileFormValues) => {
+    await userService.updateCurrentUser(values);
     await loadProfile();
     setEditing(false);
-  }, [editForm, loadProfile]);
+  }, [loadProfile]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -790,85 +836,86 @@ export default function AccountPage() {
             <Tabs value={tab} className="w-full">
               <TabsContent value="profile" className="space-y-6">
                 <Card>
-                  <CardHeader>
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div>
-                        <CardTitle>Personal Information</CardTitle>
-                        <CardDescription>
-                          Update your personal details
-                        </CardDescription>
-                      </div>
-                      <Button
-                        variant={isEditing ? "outline" : "default"}
-                        onClick={toggleEdit}
-                      >
-                        {isEditing ? "Cancel" : "Edit Profile"}
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <Avatar className="h-20 w-20">
-                        <AvatarImage
-                          src={(profile as any)?.avatar_url || ""}
-                          alt={profile?.name}
-                        />
-                        <AvatarFallback>{initials}</AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-1 flex-1 text-center sm:text-left">
-                        <h3 className="text-lg font-medium">
-                          {profile?.name || authUser?.name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {profile?.email ?? authUser?.email ?? "No email"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {(profile as any)?.mobile || authUser?.phone || ""}
-                        </p>
-                      </div>
-                      <Button variant="outline" disabled>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Change Avatar
-                      </Button>
-                    </div>
-                    <Separator />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input
-                          id="name"
-                          value={editForm.name}
-                          onChange={(e) =>
-                            setEditForm((p) => ({ ...p, name: e.target.value }))
-                          }
-                          disabled={!isEditing}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={editForm.email}
-                          onChange={(e) =>
-                            setEditForm((p) => ({
-                              ...p,
-                              email: e.target.value,
-                            }))
-                          }
-                          disabled={!isEditing}
-                        />
-                      </div>
-                    </div>
-                    {isEditing && (
-                      <div className="flex justify-end gap-2 pt-4">
-                        <Button variant="outline" onClick={toggleEdit}>
-                          Cancel
-                        </Button>
-                        <Button onClick={saveProfile}>Save Changes</Button>
-                      </div>
-                    )}
-                  </CardContent>
+                    <Form {...profileForm}>
+                        <form onSubmit={profileForm.handleSubmit(onSaveProfile)}>
+                            <CardHeader>
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div>
+                                    <CardTitle>Personal Information</CardTitle>
+                                    <CardDescription>
+                                    Update your personal details
+                                    </CardDescription>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant={isEditing ? "outline" : "default"}
+                                    onClick={toggleEdit}
+                                >
+                                    {isEditing ? "Cancel" : "Edit Profile"}
+                                </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="flex flex-col sm:flex-row items-center gap-4">
+                                <Avatar className="h-20 w-20">
+                                    <AvatarImage
+                                    src={(profile as any)?.avatar_url || ""}
+                                    alt={profile?.name}
+                                    />
+                                    <AvatarFallback>{initials}</AvatarFallback>
+                                </Avatar>
+                                <div className="space-y-1 flex-1 text-center sm:text-left">
+                                    <h3 className="text-lg font-medium">
+                                    {profile?.name || authUser?.name}
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                    {profile?.email ?? authUser?.email ?? "No email"}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                    {(profile as any)?.mobile || authUser?.phone || ""}
+                                    </p>
+                                </div>
+                                <Button variant="outline" disabled>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Change Avatar
+                                </Button>
+                                </div>
+                                <Separator />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormField
+                                        control={profileForm.control}
+                                        name="name"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Full Name</FormLabel>
+                                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={profileForm.control}
+                                        name="email"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Email</FormLabel>
+                                                <FormControl><Input type="email" {...field} disabled={!isEditing} /></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                                {isEditing && (
+                                <div className="flex justify-end gap-2 pt-4">
+                                    <Button type="button" variant="outline" onClick={toggleEdit}>
+                                    Cancel
+                                    </Button>
+                                    <Button type="submit" disabled={profileForm.formState.isSubmitting}>Save Changes</Button>
+                                </div>
+                                )}
+                            </CardContent>
+                        </form>
+                    </Form>
                 </Card>
               </TabsContent>
 
