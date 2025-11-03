@@ -4,12 +4,45 @@ import api from "@/lib/axios";
 
 export interface ProductVariant {
   id: number;
-  product_id: number;
-  size?: string;
-  color?: string;
+  sku: string;
+  inventory_id: number;
+  variant_id: number;
+  variant: {
+    id: number;
+    color?: {
+      id: number;
+      name: string;
+      code: string;
+    };
+    size?: {
+      id: number;
+      name: string;
+    };
+    planter?: {
+      id: number;
+      name: string;
+    };
+  };
+  variant_name: string;
+  product: {
+    id: number;
+    name: string;
+    slug: string;
+  };
+  base_price: number;
+  discount_price: number | null;
   price: number;
-  stock: number;
-  sku?: string;
+  formatted_price: string;
+  stock_quantity: number;
+  is_instock: boolean;
+  images: Array<{
+    id: number;
+    url: string;
+    thumb: string;
+  }>;
+  in_wishlist: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 // Import Product type from types folder
@@ -33,11 +66,14 @@ export interface ProductFromAPI {
     status: number;
   };
   description: string;
+  short_description: string;
   price: number;
-  discount_price: number;
+  discount_price: number | null;
   quantity: number;
   main_image: string;
   main_image_url: string;
+  thumbnail_url: string;
+  image_urls: string[];
   reviews: any[];
   wishlist_tag: boolean;
   created_at: string;
@@ -46,7 +82,21 @@ export interface ProductFromAPI {
   updated_by: number;
   rating: number;
   review_count: number;
-  variants?: ProductVariant[];
+  is_active: boolean;
+  inventory: {
+    id: number;
+    stock_quantity: number;
+    is_instock: boolean;
+    has_variants: boolean;
+  } | null;
+  variants: ProductVariant[];
+  formatted_price: string | null;
+  has_variants?: boolean;
+  variant_options?: {
+    colors: Array<{ id: number; name: string; code: string; }>;
+    sizes: Array<{ id: number; name: string; }>;
+    planters: Array<{ id: number; name: string; }>;
+  } | null;
 }
 
 export type Product = ProductFromAPI;

@@ -5,10 +5,8 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import {
   Loader2,
-  MapPin,
   Minus,
   Plus,
-  Search,
   ShoppingBag,
   Trash2,
   Check,
@@ -28,13 +26,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import api from "@/lib/axios";
 import { useCart } from "@/hooks/use-cart";
-import type { CartItem } from "@/types/cart.type";
+import { useAuth } from "@/hooks/use-auth";
+import type { CartItem, BackendCartItem } from "@/types/cart.type";
+import { cartService } from "@/services/cart.service";
+import { transformBackendCart } from "@/types/cart.type";
+import { useDispatch } from "react-redux";
+import { setCartItems } from "@/store/cart-slice";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -122,12 +123,8 @@ function AddDetailModal({
         name: item.name || "",
         occasion: item.occasion || "",
         message: item.message || "",
-        state_id: (item.metadata as any)?.state_id
-          ? String((item.metadata as any).state_id)
-          : "",
-        area_id: item.metadata && (item.metadata as any).location_id
-          ? String((item.metadata as any).location_id)
-          : "",
+        state_id: (item.metadata as any)?.state_id ? String((item.metadata as any).state_id) : "",
+        area_id: item.metadata && (item.metadata as any).location_id ? String((item.metadata as any).location_id) : "",
       });
     }
   }, [open, item, form]);
@@ -135,7 +132,8 @@ function AddDetailModal({
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const { data: json } = await api.get("/tree-locations/states");
+        const response = await fetch("/tree-locations/states");
+        const json = await response.json();
         setStates(json.data || []);
       } catch (err) {
         console.error("Failed to fetch states:", err);
@@ -153,9 +151,8 @@ function AddDetailModal({
     const fetchAreas = async (stateId: string) => {
       setIsAreaLoading(true);
       try {
-        const { data: json } = await api.get(
-          `/tree-locations/states/${stateId}/areas`,
-        );
+        const response = await fetch(`/tree-locations/states/${stateId}/areas`);
+        const json = await response.json();
         const mapped: Area[] = (json.data || []).map((a: any) => ({
           id: a.area_id,
           name: a.area_name,
@@ -199,8 +196,8 @@ function AddDetailModal({
             </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 flex-grow overflow-hidden flex flex-col">
-            <ScrollArea className="flex-grow pr-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 grow overflow-hidden flex flex-col">
+            <ScrollArea className="grow pr-4">
                 <div className="space-y-4">
                     <FormField
                         control={form.control}
@@ -400,27 +397,34 @@ function CartItemComponent({
   onRemoveItem: (itemId: number) => void;
   onOpenDetailModal: (item: CartItem) => void;
 }) {
-  const { imageUrl, productName, itemPrice, isTreeProduct } = useMemo(() => {
-    const product = item.product_type === 1 ? item.product : item.ecom_product;
-    const imageUrl = product?.main_image_url || DEFAULT_IMAGE;
-    const productName = product?.name || "Product";
-    let itemPrice = 0;
-    if (item.product_type === 1 && Array.isArray(item.product?.price)) {
-      const opt = item.product.price.find((p) => p.duration === item.duration);
-      itemPrice = opt ? parseFloat(opt.price) : 0;
-    } else if (
-      item.product_type === 1 &&
-      typeof item.product?.price === "number"
-    ) {
-      itemPrice = item.product.price;
-    } else if (item.product_type === 2 && item.ecom_product?.price) {
-      itemPrice = item.ecom_product.price;
-    }
+  const { imageUrl, productName, itemPrice, isTreeProduct, variantInfo, stockInfo } = useMemo(() => {
+    const isProductItem = item.item_type === 'product';
+    const productData = isProductItem ? (item.item as any)?.product : null;
+
+    const productName = productData?.name || item.item?.name || "Product";
+    const imageUrl = item.item?.image || productData?.thumbnail_url || DEFAULT_IMAGE;
+    const itemPrice = typeof item.price === "number" ? item.price : parseFloat(item.price as string) || 0;
+
+    const variantInfo = isProductItem ? {
+      sku: item.item?.variant?.sku || item.item?.sku,
+      color: item.item?.variant?.color || item.item?.color,
+      size: item.item?.variant?.size || item.item?.size,
+      planter: item.item?.variant?.planter,
+      name: item.item?.variant?.name
+    } : null;
+
+    const stockInfo = productData ? {
+      quantity: productData.inventory?.stock_quantity || 0,
+      isInStock: productData.inventory?.is_instock || false
+    } : null;
+
     return {
       imageUrl,
       productName,
       itemPrice,
-      isTreeProduct: item.product_type === 1,
+      isTreeProduct: item.item_type === 'tree',
+      variantInfo,
+      stockInfo
     };
   }, [item]);
 
@@ -459,8 +463,7 @@ function CartItemComponent({
     <Card className="mb-4 border border-border rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
       <CardContent className="p-4 md:p-6">
         <div className="flex items-start gap-4 md:gap-6">
-          {/* Image */}
-          <div className="relative h-20 w-20 md:h-24 md:w-24 rounded-lg overflow-hidden flex-shrink-0">
+          <div className="relative h-20 w-20 md:h-24 md:w-24 rounded-lg overflow-hidden shrink-0">
             <Image
               src={imageUrl}
               alt={productName}
@@ -471,21 +474,31 @@ function CartItemComponent({
             />
           </div>
 
-          {/* Main Content */}
           <div className="flex-1 min-w-0 space-y-3 md:space-y-4">
             <div>
               <h3 className="font-semibold text-base md:text-lg truncate">
                 {productName}
               </h3>
               {!isTreeProduct && (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground truncate">
+                    {stockInfo ? `Stock: ${stockInfo.quantity} available` : ''}
+                  </p>
+                  {variantInfo && (
+                    <p className="text-xs text-primary font-medium">
+                      {variantInfo.name || `${variantInfo.color || ''} ${variantInfo.size || ''} ${variantInfo.planter || ''}`.trim()}
+                    </p>
+                  )}
+                </div>
+              )}
+              {isTreeProduct && (
                 <p className="text-sm text-muted-foreground truncate">
-                  {item.ecom_product?.botanical_name}
+                  Tree {item.type === "tree" ? "(Sponsorship/Adoption)" : ""}
                 </p>
               )}
             </div>
 
             <div className="flex flex-wrap items-center gap-4 md:gap-6">
-              {/* Quantity Controls */}
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-foreground">
                   Quantity
@@ -518,10 +531,7 @@ function CartItemComponent({
                     className="h-8 w-8 rounded-l-none hover:bg-accent transition-colors"
                     onClick={() => handleQuantityChange(item.quantity + 1)}
                     disabled={
-                      item.quantity >=
-                        (item.ecom_product?.quantity ??
-                          item.product?.quantity ??
-                          Number.MAX_SAFE_INTEGER) || isUpdating
+                      item.quantity >= (stockInfo?.quantity || Number.MAX_SAFE_INTEGER) || isUpdating
                     }
                   >
                     <Plus className="h-3 w-3" />
@@ -529,7 +539,6 @@ function CartItemComponent({
                 </div>
               </div>
 
-              {/* Duration Controls for Tree Products */}
               {isTreeProduct && (
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium text-foreground">
@@ -586,7 +595,6 @@ function CartItemComponent({
               )}
             </div>
 
-            {/* Tree Product Details */}
             {isTreeProduct && (
               <div className="space-y-3 md:space-y-4">
                 <Button
@@ -620,7 +628,6 @@ function CartItemComponent({
             )}
           </div>
 
-          {/* Price and Remove */}
           <div className="flex flex-col items-end gap-3 md:gap-4">
             <p className="text-lg md:text-xl font-bold text-foreground">
               ₹{(itemPrice * item.quantity).toFixed(2)}
@@ -695,7 +702,7 @@ function EmptyCart() {
       <ShoppingBag className="mx-auto h-24 w-24 text-muted-foreground mb-4" />
       <h2 className="text-2xl font-semibold mb-2">Your cart is empty</h2>
       <p className="text-muted-foreground mb-6">
-        Add some plants to get started
+        Add some products and trees to get started
       </p>
       <Button asChild>
         <Link href="/store">Continue Shopping</Link>
@@ -733,14 +740,34 @@ export default function CartPage() {
     clearAllItems,
     addToCart,
     isGuest,
-    syncCart,
   } = useCart();
+  const { isAuthenticated } = useAuth();
+  const dispatch = useDispatch();
 
-  // Prevent SSR/CSR mismatch and getServerSnapshot warnings by rendering client-only
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   const cartData = cartItems || [];
+
+  useEffect(() => {
+    if (mounted && isAuthenticated) {
+      const fetchCartFromBackend = async () => {
+        try {
+          const response = await cartService.getCart();
+          if (response.success) {
+            const transformedItems = response.data.map((item: any) => {
+              const backendItem: BackendCartItem = item;
+              return transformBackendCart(backendItem);
+            });
+            dispatch(setCartItems(transformedItems));
+          }
+        } catch (err) {
+          console.error("Failed to fetch cart from backend:", err);
+        }
+      };
+      fetchCartFromBackend();
+    }
+  }, [mounted, isAuthenticated, dispatch]);
 
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<CartItem | null>(null);
@@ -784,6 +811,13 @@ export default function CartPage() {
       if (!item) return;
 
       wrapAsyncAction(cartId, async () => {
+        if (isAuthenticated && !isGuest) {
+          await cartService.updateCartItem(item.cart_id || cartId, {
+            quantity: params.quantity,
+            duration: params.duration,
+          });
+        }
+
         const productType = item.product_type;
         const productId =
           productType === 1 ? item.product?.id : item.ecom_product?.id;
@@ -796,10 +830,10 @@ export default function CartPage() {
           quantity: params.quantity ?? item.quantity,
         };
 
-        await updateItemQuantity(cartId, item.type, payload.quantity);
+        await updateItemQuantity(cartId, item.type || 'product', payload.quantity);
       });
     },
-    [wrapAsyncAction, updateItemQuantity, cartData],
+    [wrapAsyncAction, updateItemQuantity, cartData, isAuthenticated, isGuest],
   );
 
   const handleRemoveItem = useCallback(
@@ -807,10 +841,13 @@ export default function CartPage() {
       const item = cartData.find((i) => i.id === itemId);
       if (!item) return;
       wrapAsyncAction(itemId, async () => {
-        removeFromCart(itemId, item.type);
+        if (isAuthenticated && !isGuest) {
+          await cartService.removeCartItem(item.cart_id || itemId);
+        }
+        removeFromCart(itemId, item.type || 'product');
       });
     },
-    [wrapAsyncAction, removeFromCart, cartData],
+    [wrapAsyncAction, removeFromCart, cartData, isAuthenticated, isGuest],
   );
 
   const handleUpdateDetails = useCallback(
@@ -826,7 +863,7 @@ export default function CartPage() {
       wrapAsyncAction(cartId, async () => {
         const existing = cartData.find((i) => i.id === cartId);
         if (!existing) return;
-        await removeFromCart(cartId, existing.type);
+        await removeFromCart(cartId, existing.type || 'product');
         return Promise.resolve(
           addToCart({
             ...existing,
@@ -844,31 +881,21 @@ export default function CartPage() {
   const handleClearCart = useCallback(async () => {
     setIsClearing(true);
     try {
+      if (isAuthenticated && !isGuest) {
+        await cartService.clearCart();
+      }
       await clearAllItems();
     } catch (err) {
       console.error("Failed to clear cart:", err);
     } finally {
       setIsClearing(false);
     }
-  }, [clearAllItems]);
+  }, [clearAllItems, isAuthenticated, isGuest]);
 
   const subtotal = useMemo(
     () =>
       cartData.reduce((sum, item) => {
-        let p = 0;
-
-        if (item.product_type === 1 && item.product?.price) {
-          if (Array.isArray(item.product.price)) {
-            const opt = item.product.price.find(
-              (pp) => pp.duration === item.duration,
-            );
-            if (opt) p = parseFloat(opt.price);
-          } else if (typeof item.product.price === "number") {
-            p = item.product.price;
-          }
-        } else {
-          p = item.ecom_product?.price ?? item.product?.price ?? 0;
-        }
+        const p = typeof item.price === "number" ? item.price : parseFloat(item.price) || 0;
         return sum + p * item.quantity;
       }, 0),
     [cartData],

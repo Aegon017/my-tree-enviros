@@ -47,6 +47,8 @@ export interface AddToCartPayload {
   occasion?: string;
   message?: string;
   location_id?: number;
+  product_variant_id?: number;
+  item_type?: string; // "product", "tree", "campaign"
 }
 
 export interface AddTreeToCartPayload {

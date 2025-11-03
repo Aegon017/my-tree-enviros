@@ -22,6 +22,7 @@ import type { User } from "@/types/auth.types";
 import { authService } from "@/services/auth.service";
 import { authStorage } from "@/lib/auth-storage";
 import { syncService } from "@/services/sync.service";
+import { store } from "@/store";
 
 export function useAuth() {
   const dispatch = useDispatch();
@@ -30,6 +31,8 @@ export function useAuth() {
   );
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
+  const isGuestCart = useSelector((state: RootState) => state.cart.isGuest);
+  const isGuestWishlist = useSelector((state: RootState) => state.wishlist.isGuest);
 
   /**
    * Login user by setting user data
@@ -39,28 +42,32 @@ export function useAuth() {
     async (userData: User) => {
       dispatch(setUserAction(userData));
 
-      // Sync guest cart and wishlist to backend
-      try {
-        const syncResult = await syncService.syncAllOnLogin(
-          cartItems,
-          wishlistItems,
-        );
+      // Sync guest cart and wishlist to backend if they are in guest mode
+      if (isGuestCart || isGuestWishlist) {
+        try {
+          const syncResult = await syncService.syncAllOnLogin(
+            isGuestCart ? cartItems : [],
+            isGuestWishlist ? wishlistItems : [],
+          );
 
-        if (syncResult.success) {
-          // Update cart and wishlist with merged data from backend
-          dispatch(setCartItems(syncResult.cart));
-          dispatch(setWishlistItems(syncResult.wishlist));
-
-          // Mark as synced (no longer guest mode)
-          dispatch(markCartSynced());
-          dispatch(markWishlistSynced());
+          if (syncResult.success) {
+            // Update cart and wishlist with merged data from backend
+            if (isGuestCart) {
+              dispatch(setCartItems(syncResult.cart));
+              dispatch(markCartSynced());
+            }
+            if (isGuestWishlist) {
+              dispatch(setWishlistItems(syncResult.wishlist));
+              dispatch(markWishlistSynced());
+            }
+          }
+        } catch (error) {
+          console.error("Failed to sync cart/wishlist on login:", error);
+          // Continue with login even if sync fails
         }
-      } catch (error) {
-        console.error("Failed to sync cart/wishlist on login:", error);
-        // Continue with login even if sync fails
       }
     },
-    [dispatch, cartItems, wishlistItems],
+    [dispatch, cartItems, wishlistItems, isGuestCart, isGuestWishlist],
   );
 
   /**

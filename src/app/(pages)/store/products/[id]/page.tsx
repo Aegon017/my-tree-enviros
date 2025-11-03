@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import useSWR from "swr";
 import RatingStars from "@/components/rating-stars";
 import AddToCartButton from "@/components/add-to-cart-button";
+import { VariantSelector } from "@/components/variant-selector";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +25,7 @@ import { ProductType } from "@/enums/product.enum";
 import { CheckoutType } from "@/enums/checkout.enum";
 import type { Product } from "@/types/product";
 import type { Review } from "@/types/review.type";
+import type { Color, Size, Planter, ProductVariant } from "@/types/product";
 import {
   Form,
   FormControl,
@@ -77,14 +79,36 @@ interface Props {
 }
 
 export default function ProductPage({ params }: Props) {
-  const { id } = use(params);
-  const isAuth = authStorage.isAuthenticated();
-  const [quantity, setQuantity] = useState(1);
-  const [isWishlistLoading, setIsWishlistLoading] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [editingReviewId, setEditingReviewId] = useState<number | null>(null);
+   const { id } = use(params);
+   const isAuth = authStorage.isAuthenticated();
+   const [quantity, setQuantity] = useState(1);
+   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+   const [isFavorite, setIsFavorite] = useState(false);
+
+   // Check guest wishlist status
+   useEffect(() => {
+     if (!isAuth && typeof window !== "undefined") {
+       try {
+         const guestWishlist = localStorage.getItem("guest_wishlist");
+         if (guestWishlist) {
+           const items = JSON.parse(guestWishlist);
+           const isInWishlist = items.some((item: any) => item.id === Number(id) && item.type === "product");
+           setIsFavorite(isInWishlist);
+         }
+       } catch (err) {
+         console.error("Failed to check guest wishlist:", err);
+       }
+     }
+   }, [id, isAuth]);
+   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+   const [currentPage, setCurrentPage] = useState(1);
+   const [editingReviewId, setEditingReviewId] = useState<number | null>(null);
+   const [selectedColor, setSelectedColor] = useState<Color | undefined>();
+   const [selectedSize, setSelectedSize] = useState<Size | undefined>();
+   const [selectedPlanter, setSelectedPlanter] = useState<Planter | undefined>();
+   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | undefined>();
+   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+   const [selectedImages, setSelectedImages] = useState<Array<{id: number, url: string}>>([]);
 
   const productUrl = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/products/${id}`;
   const { data: response, error, isLoading } = useSWR<ApiResponse>(productUrl, fetcher, {
@@ -99,7 +123,25 @@ export default function ProductPage({ params }: Props) {
   const { data: reviewsData, mutate: mutateReviews } = useSWR<ReviewsResponse>(reviewsUrl, fetcher);
 
   const product = response?.data?.product;
-  const productImage = product?.main_image_url ?? "/placeholder.jpg";
+
+  // Determine which images to show in gallery
+  useEffect(() => {
+    if (selectedVariant?.images && selectedVariant.images.length > 0) {
+      setSelectedImages(selectedVariant.images);
+      setCurrentImageIndex(0);
+    } else if (product?.default_variant?.images && product.default_variant.images.length > 0) {
+      setSelectedImages(product.default_variant.images);
+      setCurrentImageIndex(0);
+    } else if (product?.image_urls && product.image_urls.length > 0) {
+      setSelectedImages(product.image_urls.map((url, index) => ({ id: index, url })));
+      setCurrentImageIndex(0);
+    } else {
+      setSelectedImages([]);
+      setCurrentImageIndex(0);
+    }
+  }, [selectedVariant, product]);
+
+  const productImage = selectedImages[currentImageIndex]?.url ?? product?.thumbnail_url ?? "/placeholder.jpg";
   const reviews = reviewsData?.data?.data || [];
   const averageRating = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0;
   const reviewCount = reviews.length || 0;
@@ -109,28 +151,146 @@ export default function ProductPage({ params }: Props) {
   const hasReviewed = canReviewData?.data?.reviewed;
 
   useEffect(() => {
-    if (product) setIsFavorite(product.wishlist_tag ?? false);
-  }, [product]);
+    if (product && isAuth) {
+      setIsFavorite(product.wishlist_tag ?? false);
+    } else if (product && !isAuth) {
+      // Guest wishlist check will be handled by the separate useEffect
+    } else {
+      setIsFavorite(false); // Reset when no product
+    }
+  }, [product, isAuth]);
+
+  // Auto-select first variant on initial load
+  useEffect(() => {
+    if (product?.default_variant && !selectedVariant) {
+      setSelectedVariant(product.default_variant);
+
+      // Set the corresponding selections based on the default variant
+      if (product.default_variant.variant.color) {
+        setSelectedColor(product.default_variant.variant.color);
+      }
+      if (product.default_variant.variant.size) {
+        setSelectedSize(product.default_variant.variant.size);
+      }
+      if (product.default_variant.variant.planter) {
+        setSelectedPlanter(product.default_variant.variant.planter);
+      }
+    }
+  }, [product?.default_variant, selectedVariant]);
+
+  // Helper functions to get available options based on current selections
+  const getAvailableColors = () => {
+    if (!product?.variant_options?.colors) return [];
+    return product.variant_options.colors.filter(color => {
+      return product.variants.some(variant =>
+        variant.variant.color?.id === color.id &&
+        (!selectedSize || variant.variant.size?.id === selectedSize.id) &&
+        (!selectedPlanter || variant.variant.planter?.id === selectedPlanter.id)
+      );
+    });
+  };
+
+  const getAvailableSizes = () => {
+    if (!product?.variant_options?.sizes) return [];
+    return product.variant_options.sizes.filter(size => {
+      return product.variants.some(variant =>
+        variant.variant.size?.id === size.id &&
+        (!selectedColor || variant.variant.color?.id === selectedColor.id) &&
+        (!selectedPlanter || variant.variant.planter?.id === selectedPlanter.id)
+      );
+    });
+  };
+
+  const getAvailablePlanters = () => {
+    if (!product?.variant_options?.planters) return [];
+    return product.variant_options.planters.filter(planter => {
+      return product.variants.some(variant =>
+        variant.variant.planter?.id === planter.id &&
+        (!selectedColor || variant.variant.color?.id === selectedColor.id) &&
+        (!selectedSize || variant.variant.size?.id === selectedSize.id)
+      );
+    });
+  };
+
+  // Find selected variant based on user's selections
+  useEffect(() => {
+    if (product?.variants && selectedColor && selectedSize && selectedPlanter) {
+      const variant = product.variants.find(v =>
+        v.variant.color?.id === selectedColor.id &&
+        v.variant.size?.id === selectedSize.id &&
+        v.variant.planter?.id === selectedPlanter.id
+      );
+      setSelectedVariant(variant);
+    } else if (product?.variants && selectedColor && selectedSize) {
+      const variant = product.variants.find(v =>
+        v.variant.color?.id === selectedColor.id &&
+        v.variant.size?.id === selectedSize.id &&
+        !v.variant.planter
+      );
+      setSelectedVariant(variant);
+    } else if (product?.variants && selectedColor) {
+      const variant = product.variants.find(v =>
+        v.variant.color?.id === selectedColor.id &&
+        !v.variant.size &&
+        !v.variant.planter
+      );
+      setSelectedVariant(variant);
+    } else {
+      setSelectedVariant(undefined);
+    }
+  }, [product, selectedColor, selectedSize, selectedPlanter]);
 
   const handleQuantityChange = useCallback(
     (value: number | string) => {
       const numValue = typeof value === "string" ? parseInt(value, 10) : value;
-      if (product && !isNaN(numValue) && numValue >= 1 && numValue <= product.quantity) {
+      const maxStock = selectedVariant ? selectedVariant.stock_quantity : product?.default_variant?.stock_quantity || product?.inventory?.stock_quantity || 0;
+
+      if (product && !isNaN(numValue) && numValue >= 1 && numValue <= maxStock) {
         setQuantity(numValue);
-      } else if (product && numValue > product.quantity) {
-        setQuantity(product.quantity);
+      } else if (product && numValue > maxStock) {
+        setQuantity(maxStock);
       }
     },
-    [product],
+    [product, selectedVariant],
   );
 
   const handleToggleFavorite = async () => {
-    if (!isAuth) {
-      toast.error("Please login to manage your wishlist");
-      return;
-    }
     setIsWishlistLoading(true);
     const newStatus = !isFavorite;
+
+    if (!isAuth) {
+      // Handle guest wishlist using Redux store
+      const { store } = await import("@/store");
+      try {
+        if (newStatus) {
+          store.dispatch({
+            type: "wishlist/addToWishlist",
+            payload: {
+              id: Number(id),
+              name: product?.name || "Product",
+              type: "product",
+              price: selectedVariant?.price || product?.default_variant?.price || 0,
+              image: productImage,
+              slug: product?.slug,
+            },
+          });
+          toast.success(`Added ${product?.name} to wishlist`);
+        } else {
+          store.dispatch({
+            type: "wishlist/removeFromWishlist",
+            payload: { id: Number(id), type: "product" },
+          });
+          toast.success(`Removed ${product?.name} from wishlist`);
+        }
+        setIsFavorite(newStatus);
+      } catch (err) {
+        toast.error("Failed to update wishlist");
+      } finally {
+        setIsWishlistLoading(false);
+        return;
+      }
+    }
+
     try {
       const { wishlistService } = await import("@/services/wishlist.service");
       await wishlistService.toggleWishlist(Number(id));
@@ -275,18 +435,28 @@ export default function ProductPage({ params }: Props) {
                   />
                 </Lens>
               </div>
-              <div className="flex justify-center">
-                <div className="relative h-20 w-20 border rounded-md overflow-hidden">
-                  <Image
-                    src={productImage}
-                    alt={`${product?.name ?? "Product"} thumbnail`}
-                    fill
-                    className="object-cover"
-                    sizes="80px"
-                    priority
-                  />
+              {/* Product Gallery */}
+              {selectedImages.length > 1 && (
+                <div className="flex justify-center gap-2 overflow-x-auto pb-2">
+                  {selectedImages.map((image, index) => (
+                    <button
+                      key={image.id}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`relative h-16 w-16 border-2 rounded-md overflow-hidden shrink-0 transition-all ${
+                        currentImageIndex === index ? 'border-primary ring-2 ring-primary/20' : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <Image
+                        src={image.url}
+                        alt={`${product?.name ?? "Product"} image ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    </button>
+                  ))}
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>
@@ -310,40 +480,118 @@ export default function ProductPage({ params }: Props) {
               </div>
 
               <RatingStars rating={averageRating} size="md" showCount reviewCount={reviewCount} />
-              <div className="flex items-center gap-2">
-                {product.quantity > 0 ? (
-                  <><div className="h-2 w-2 bg-green-500 rounded-full" /> <span className="text-green-500">In Stock</span></>
-                ) : (
-                  <span className="text-destructive">Out of Stock</span>
-                )}
-              </div>
-              {product.quantity > 0 && (
+
+              {/* Variant Selector */}
+              {product.has_variants && product.variant_options && (
+                <div className="space-y-6 border-b pb-8">
+                  <VariantSelector
+                    colors={getAvailableColors()}
+                    sizes={getAvailableSizes()}
+                    planters={getAvailablePlanters()}
+                    selectedColor={selectedColor}
+                    selectedSize={selectedSize}
+                    selectedPlanter={selectedPlanter}
+                    onColorSelect={setSelectedColor}
+                    onSizeSelect={setSelectedSize}
+                    onPlanterSelect={setSelectedPlanter}
+                  />
+
+                  {selectedVariant && (
+                    <div className="bg-muted p-4 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-medium">Selected:</span>
+                        <span className="text-sm bg-background px-2 py-1 rounded">
+                          {selectedVariant.variant_name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {selectedVariant.is_instock ? (
+                          <><div className="h-2 w-2 bg-green-500 rounded-full" /> <span className="text-green-500 text-sm">In Stock ({selectedVariant.stock_quantity} available)</span></>
+                        ) : (
+                          <span className="text-destructive text-sm">Out of Stock</span>
+                        )}
+                      </div>
+                      {!selectedVariant.is_instock && (
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Please select a different combination or check back later.
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Error Message for Invalid Selection */}
+                  {product.has_variants && selectedColor && selectedSize && selectedPlanter && !selectedVariant && (
+                    <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+                      <span className="text-destructive text-sm">
+                        The selected combination is not available. Please choose different options.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Stock Status */}
+              {(!product.has_variants || !selectedVariant) && (
+                <div className="flex items-center gap-2">
+                  {product.inventory?.is_instock ? (
+                    <><div className="h-2 w-2 bg-green-500 rounded-full" /> <span className="text-green-500">In Stock</span></>
+                  ) : (
+                    <span className="text-destructive">Out of Stock</span>
+                  )}
+                </div>
+              )}
+              {/* Price and Quantity Section */}
+              {((!product.has_variants && product.inventory?.is_instock) ||
+                (product.has_variants && selectedVariant && selectedVariant.is_instock)) && (
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border rounded-md">
-                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => handleQuantityChange(quantity - 1)} disabled={quantity <= 1}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10"
+                      onClick={() => handleQuantityChange(quantity - 1)}
+                      disabled={quantity <= 1}
+                    >
                       <Minus className="h-4 w-4" />
                     </Button>
                     <Input
                       type="number"
                       min="1"
-                      max={product.quantity}
+                      max={selectedVariant ? selectedVariant.stock_quantity : product.default_variant?.stock_quantity || product.inventory?.stock_quantity || 0}
                       value={quantity}
                       onChange={(e) => handleQuantityChange(e.target.value)}
                       className="w-16 text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => handleQuantityChange(quantity + 1)} disabled={quantity >= product.quantity}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10"
+                      onClick={() => handleQuantityChange(quantity + 1)}
+                      disabled={quantity >= (selectedVariant ? selectedVariant.stock_quantity : product?.default_variant?.stock_quantity || product?.inventory?.stock_quantity || 0)}
+                    >
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                  <span className="text-sm text-muted-foreground">{product.quantity} available</span>
+                  <span className="text-sm text-muted-foreground">
+                    {selectedVariant ? selectedVariant.stock_quantity : product.default_variant?.stock_quantity || product.inventory?.stock_quantity || 0} available
+                  </span>
                   <div className="flex items-baseline gap-2">
-                    {product?.discount_price && product.discount_price < product.price ? (
+                    {selectedVariant ? (
                       <>
-                        <span className="text-3xl font-bold text-foreground">₹{product.discount_price}</span>
-                        <span className="text-lg text-muted-foreground line-through ml-2">₹{product.price}</span>
+                        <span className="text-3xl font-bold text-foreground">₹{selectedVariant.price}</span>
+                        {selectedVariant.discount_price && selectedVariant.discount_price < selectedVariant.base_price && (
+                          <span className="text-lg text-muted-foreground line-through ml-2">₹{selectedVariant.base_price}</span>
+                        )}
+                      </>
+                    ) : product?.default_variant ? (
+                      <>
+                        <span className="text-3xl font-bold text-foreground">₹{product.default_variant.price}</span>
+                        {product.default_variant.discount_price && product.default_variant.discount_price < product.default_variant.base_price && (
+                          <span className="text-lg text-muted-foreground line-through ml-2">₹{product.default_variant.base_price}</span>
+                        )}
                       </>
                     ) : (
-                      <span className="text-3xl font-bold text-foreground">₹{product?.price}</span>
+                      <span className="text-3xl font-bold text-foreground">Price not available</span>
                     )}
                   </div>
                 </div>
@@ -354,21 +602,25 @@ export default function ProductPage({ params }: Props) {
                   quantity={quantity}
                   productType={ProductType.ECOMMERCE}
                   cartType={CheckoutType.CART}
-                  disabled={!product || product.quantity === 0}
+                  disabled={
+                    !product ||
+                    (product.has_variants && !selectedVariant) ||
+                    (product.has_variants && selectedVariant && !selectedVariant.is_instock) ||
+                    (!product.has_variants && !product.default_variant?.is_instock && !product.inventory?.is_instock)
+                  }
                   productName={product.name}
-                  productPrice={product.discount_price || product.price}
+                  productPrice={
+                    selectedVariant ?
+                      selectedVariant.price :
+                      (product.default_variant?.price || 0)
+                  }
                   productImage={productImage}
+                  selectedVariantId={selectedVariant?.id}
                 />
                 <Button variant="outline" size="lg" onClick={handleToggleFavorite} disabled={isWishlistLoading}>
                   <Heart className={`mr-2 h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
                   {isFavorite ? "In Wishlist" : "Wishlist"}
                 </Button>
-              </div>
-              <div className="pt-4 border-t">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><span className="font-semibold">Category:</span> {product.category.name}</div>
-                  <div><span className="font-semibold">Type:</span> {product.type === 1 ? "Physical" : "Digital"}</div>
-                </div>
               </div>
             </>
           ) : null}
@@ -377,33 +629,12 @@ export default function ProductPage({ params }: Props) {
       {!isLoading && product && (
         <div className="mt-12">
           <Tabs defaultValue="description" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="description">Description</TabsTrigger>
-              <TabsTrigger value="additional">Additional Info</TabsTrigger>
               <TabsTrigger value="reviews">Reviews ({reviewCount})</TabsTrigger>
             </TabsList>
             <TabsContent value="description" className="pt-4">
               <Card><CardContent><Markup content={product.description} /></CardContent></Card>
-            </TabsContent>
-            <TabsContent value="additional" className="pt-4">
-              <Card>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-semibold">Botanical Name</h4>
-                      <p className="text-muted-foreground">{product.botanical_name}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Category</h4>
-                      <p className="text-muted-foreground">{product.category.name}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Type</h4>
-                      <p className="text-muted-foreground">{product.type === 1 ? "Physical" : "Digital"}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </TabsContent>
             <TabsContent value="reviews" className="pt-4">
               <Card>

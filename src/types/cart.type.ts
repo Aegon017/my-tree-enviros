@@ -1,13 +1,33 @@
-import type { Product } from "./product";
+import type { Product, ProductVariant } from "./product";
 import type { Campaign, CampaignType } from "./campaign";
 
 export interface CartItem {
   id: number;
-  name: string;
-  type: "tree" | "product" | "campaign";
-  price: number;
+  cart_id?: number;
+  item_type?: string;
   quantity: number;
-  image: string;
+  price: number;
+  formatted_price?: string;
+  subtotal?: number;
+  formatted_subtotal?: string;
+  item?: {
+    type?: string;
+    name?: string;
+    sku?: string;
+    image?: string;
+    variant?: any;
+    color?: any;
+    size?: any;
+    product?: any; // Full ProductResource data
+  };
+  options?: any;
+  created_at?: string;
+  updated_at?: string;
+
+  // Legacy fields for backward compatibility
+  name?: string;
+  type?: "tree" | "product" | "campaign";
+  image?: string;
   slug?: string;
   product_type?: number;
   duration?: number;
@@ -22,21 +42,27 @@ export interface CartItem {
     id?: number;
     name?: string;
     value?: string;
+    sku?: string;
+    color?: string;
+    size?: string;
+    planter?: string;
+    color_id?: number;
+    size_id?: number;
+    planter_id?: number;
   };
+  product_variant_id?: number;
   metadata?: {
     duration?: number;
     occasion?: string;
     message?: string;
     location_id?: number;
     plan_id?: number;
+    product_variant_id?: number;
   };
   // Backend-specific fields (when synced)
-  cart_id?: number;
   user_id?: number;
   product_id?: number;
   tree_id?: number;
-  created_at?: string;
-  updated_at?: string;
   // Full product/tree/campaign data (from backend)
   product?: Product;
   ecom_product?: Product;
@@ -52,6 +78,7 @@ export interface BackendCartItem {
   product_type: number;
   location_id: number;
   product_id: number;
+  product_variant_id?: number;
   cart_type: number;
   coupon_code: string | null;
   quantity: number;
@@ -65,33 +92,61 @@ export interface BackendCartItem {
   updated_by: number;
   ecom_product?: Product;
   product?: Product;
+  product_variant?: ProductVariant;
 }
 
 // Helper to transform backend cart to unified format
 export function transformBackendCart(item: BackendCartItem): CartItem {
   const product = item.product || item.ecom_product;
+  const variant = item.product_variant;
+  let itemPrice = 0;
+  let itemName = item.name || product?.name || "";
+  let itemImage = product?.thumbnail_url || "";
+
+  if (variant) {
+    // If we have a variant, use variant price and details
+    itemPrice = variant.price;
+    itemImage = variant.images?.[0]?.url || itemImage;
+    // Keep the product name but could modify if needed
+  } else {
+    // Fallback to product price
+    itemPrice = typeof product?.price === "string"
+      ? parseFloat(product.price)
+      : product?.price || 0;
+  }
+
   return {
     id: item.product_id,
     cart_id: item.id,
-    name: item.name || product?.name || "",
+    name: itemName,
     type: item.product_type === 1 ? "product" : "tree",
-    price:
-      typeof product?.price === "string"
-        ? parseFloat(product.price)
-        : product?.price || 0,
+    price: itemPrice,
     quantity: item.quantity,
-    image: product?.main_image_url || "",
+    image: itemImage,
     slug: product?.slug,
     product_type: item.product_type,
     duration: item.duration,
     occasion: item.occasion,
     message: item.message,
     location_id: item.location_id,
+    product_variant_id: item.product_variant_id,
+    variant: variant ? {
+      id: variant.id,
+      name: variant.variant_name,
+      sku: variant.sku,
+      color: variant.variant.color?.name,
+      size: variant.variant.size?.name,
+      planter: variant.variant.planter?.name,
+      color_id: variant.variant.color?.id,
+      size_id: variant.variant.size?.id,
+      planter_id: variant.variant.planter?.id,
+    } : undefined,
     metadata: {
       duration: item.duration,
       occasion: item.occasion,
       message: item.message,
       location_id: item.location_id,
+      product_variant_id: item.product_variant_id,
     },
     user_id: item.user_id,
     product_id: item.product_id,

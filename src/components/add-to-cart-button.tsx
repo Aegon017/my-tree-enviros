@@ -14,6 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useCart } from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/use-auth";
+import { cartService } from "@/services/cart.service";
 
 interface AddToCartButtonProps {
   productId: number;
@@ -27,6 +29,7 @@ interface AddToCartButtonProps {
   cartType: number;
   disabled?: boolean;
   variant?: "default" | "outline" | "ghost" | "destructive" | "secondary";
+  selectedVariantId?: number;
 }
 
 interface PendingAction {
@@ -50,6 +53,7 @@ export default function AddToCartButton({
   cartType,
   variant = "default",
   disabled = false,
+  selectedVariantId,
 }: AddToCartButtonProps) {
   const router = useRouter();
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
@@ -58,7 +62,8 @@ export default function AddToCartButton({
   );
   const [isLoading, setIsLoading] = useState(false);
 
-  const { items: cartItems, addToCart, clearAllItems } = useCart();
+  const { items: cartItems, addToCart, clearAllItems, isGuest } = useCart();
+  const { isAuthenticated } = useAuth();
 
   const isProductInCart =
     cartItems?.some((item) => item.product_id === productId) ?? false;
@@ -78,14 +83,40 @@ export default function AddToCartButton({
       price: productPrice,
       quantity,
       image: productImage,
+      product_type: productType,
+      product_variant_id: selectedVariantId,
       metadata: {
         duration: selectedYears,
         plan_id: priceOptionId,
+        product_variant_id: selectedVariantId,
       },
     };
 
     setIsLoading(true);
     try {
+      // If authenticated user, add to backend
+      if (isAuthenticated && !isGuest) {
+        const cartPayload: any = {
+          type: cartType,
+          product_type: productType,
+          quantity,
+          duration: selectedYears,
+          name: productName,
+          occasion: undefined, // Tree products would have this
+          message: undefined,  // Tree products would have this
+          location_id: undefined, // Tree products would have this
+          item_type: "product", // Required field for backend
+        };
+
+        // Only add product_variant_id if a variant is actually selected
+        if (selectedVariantId) {
+          cartPayload.product_variant_id = selectedVariantId;
+        }
+
+        await cartService.addToCart(productId, cartPayload);
+      }
+
+      // Add to local cart (for both guest and authenticated users)
       addToCart(cartItem);
       const actionText = cartType === 1 ? "added to cart" : "sponsored";
       const treeText = quantity > 1 ? "trees" : "tree";
@@ -105,12 +136,39 @@ export default function AddToCartButton({
     }
   };
 
-  const handleClearCartAndAdd = () => {
+  const handleClearCartAndAdd = async () => {
     if (!pendingAction) return;
 
     setIsLoading(true);
     try {
+      // If authenticated user, clear backend cart
+      if (isAuthenticated && !isGuest) {
+        await cartService.clearCart();
+      }
+
       clearAllItems();
+
+      // If authenticated user, add to backend
+      if (isAuthenticated && !isGuest) {
+        const cartPayload: any = {
+          type: pendingAction.cartType,
+          product_type: pendingAction.productType,
+          quantity,
+          duration: selectedYears,
+          name: productName,
+          occasion: undefined,
+          message: undefined,
+          location_id: undefined,
+          item_type: "product",
+        };
+
+        // Only add product_variant_id if a variant is actually selected
+        if (selectedVariantId) {
+          cartPayload.product_variant_id = selectedVariantId;
+        }
+
+        await cartService.addToCart(productId, cartPayload);
+      }
 
       const cartItem = {
         id: productId,
@@ -122,9 +180,12 @@ export default function AddToCartButton({
         price: productPrice,
         quantity,
         image: productImage,
+        product_type: pendingAction.productType,
+        product_variant_id: selectedVariantId,
         metadata: {
           duration: selectedYears,
           plan_id: priceOptionId,
+          product_variant_id: selectedVariantId,
         },
       };
 
