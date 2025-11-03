@@ -58,6 +58,8 @@ export interface CartItem {
     location_id?: number;
     plan_id?: number;
     product_variant_id?: number;
+    selected_variant?: any;
+    product_data?: any;
   };
   // Backend-specific fields (when synced)
   user_id?: number;
@@ -95,7 +97,83 @@ export interface BackendCartItem {
   product_variant?: ProductVariant;
 }
 
-// Helper to transform backend cart to unified format
+// Backend cart response format (actual API response)
+export interface BackendCartResponse {
+  id: number;
+  cart_id: number;
+  item_type?: string;
+  quantity: number;
+  price: number;
+  formatted_price?: string;
+  subtotal?: number;
+  formatted_subtotal?: string;
+  item?: {
+    type?: string;
+    name?: string;
+    sku?: string;
+    image?: string;
+    variant?: {
+      sku?: string;
+      size?: string;
+      color?: string;
+    };
+    color?: any;
+    size?: any;
+    product?: Product; // Full ProductResource data
+  };
+  options?: any;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Helper to transform backend cart response to unified format
+export function transformBackendCartItem(item: BackendCartResponse): CartItem {
+  // Extract product data from the nested structure
+  const productData = item.item;
+  const product = productData?.product;
+  
+  // Get variant information from the product's variants array
+  let variantInfo = null;
+  if (product?.variants && product.variants.length > 0) {
+    variantInfo = product.variants[0]; // Use first variant as default
+  }
+  
+  return {
+    id: item.cart_id,
+    cart_id: item.cart_id,
+    name: productData?.name || product?.name || "",
+    type: "product" as const,
+    price: item.price,
+    quantity: item.quantity,
+    image: productData?.image || product?.thumbnail_url || "",
+    slug: product?.slug,
+    product_type: 2, // Default to ecom product
+    formatted_price: item.formatted_price,
+    subtotal: item.subtotal,
+    formatted_subtotal: item.formatted_subtotal,
+    variant: variantInfo
+      ? {
+          id: variantInfo.id,
+          name: variantInfo.variant_name,
+          sku: variantInfo.sku,
+          color: variantInfo.variant?.color?.name,
+          size: variantInfo.variant?.size?.name,
+          planter: variantInfo.variant?.planter?.name,
+          color_id: variantInfo.variant?.color?.id,
+          size_id: variantInfo.variant?.size?.id,
+          planter_id: variantInfo.variant?.planter?.id,
+        }
+      : undefined,
+    item: productData, // Keep the original item structure for backward compatibility
+    options: item.options,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+    product: product,
+    ecom_product: product,
+  };
+}
+
+// Legacy function for backward compatibility
 export function transformBackendCart(item: BackendCartItem): CartItem {
   const product = item.product || item.ecom_product;
   const variant = item.product_variant;

@@ -28,9 +28,9 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
-import type { CartItem, BackendCartItem } from "@/types/cart.type";
+import type { CartItem, BackendCartItem, BackendCartResponse } from "@/types/cart.type";
 import { cartService } from "@/services/cart.service";
-import { transformBackendCart } from "@/types/cart.type";
+import { transformBackendCart, transformBackendCartItem } from "@/types/cart.type";
 import { useDispatch } from "react-redux";
 import { setCartItems } from "@/store/cart-slice";
 import {
@@ -443,9 +443,25 @@ function CartItemComponent({
     const isProductItem = item.item_type === "product";
     const productData = isProductItem ? (item.item as any)?.product : null;
 
-    const productName = productData?.name || item.item?.name || "Product";
+    // Enhanced product name extraction for both guest and backend cart data
+    const productName =
+      // Backend cart format: item.item.product?.name
+      productData?.name ||
+      // Guest cart format: item.item?.name (our new structure)
+      item.item?.name ||
+      // Legacy formats: item.ecom_product?.name, item.name
+      item.ecom_product?.name ||
+      item.name ||
+      "Product";
+    
     const imageUrl =
-      item.item?.image || productData?.thumbnail_url || DEFAULT_IMAGE;
+      // Backend cart format: item.item?.image or productData?.thumbnail_url
+      item.item?.image ||
+      productData?.thumbnail_url ||
+      // Guest cart format: item.image, item.ecom_product?.thumbnail_url
+      item.image ||
+      item.ecom_product?.thumbnail_url ||
+      DEFAULT_IMAGE;
     const itemPrice =
       typeof item.price === "number"
         ? item.price
@@ -807,10 +823,11 @@ export default function CartPage() {
       const fetchCartFromBackend = async () => {
         try {
           const response = await cartService.getCart();
-          if (response.success) {
+          if (response.success && response.data) {
+            // response.data is already the flat array of cart items
             const transformedItems = response.data.map((item: any) => {
-              const backendItem: BackendCartItem = item;
-              return transformBackendCart(backendItem);
+              // Use the new transformation function for the actual API response format
+              return transformBackendCartItem(item);
             });
             dispatch(setCartItems(transformedItems));
           }

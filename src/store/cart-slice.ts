@@ -53,15 +53,28 @@ const cartSlice = createSlice({
     // Add item to cart (guest or logged in)
     addItem: (state, action: PayloadAction<CartItem>) => {
       const existingItem = state.items.find(
-        (item) =>
-          item.id === action.payload.id &&
-          item.type === action.payload.type &&
-          JSON.stringify(item.variant) ===
-            JSON.stringify(action.payload.variant),
+        (item) => {
+          // Enhanced matching logic for both guest and backend cart formats
+          const itemProductId = item.cart_id || item.id;
+          const actionProductId = action.payload.cart_id || action.payload.id;
+          
+          return (
+            itemProductId === actionProductId &&
+            item.type === action.payload.type &&
+            JSON.stringify(item.variant) === JSON.stringify(action.payload.variant)
+          );
+        }
       );
 
       if (existingItem) {
         existingItem.quantity += action.payload.quantity || 1;
+        // Update other properties to match the newest item data
+        if (action.payload.formatted_price && !existingItem.formatted_price) {
+          existingItem.formatted_price = action.payload.formatted_price;
+        }
+        if (action.payload.subtotal && !existingItem.subtotal) {
+          existingItem.subtotal = action.payload.subtotal;
+        }
       } else {
         state.items.push({
           ...action.payload,

@@ -30,6 +30,8 @@ interface AddToCartButtonProps {
   disabled?: boolean;
   variant?: "default" | "outline" | "ghost" | "destructive" | "secondary";
   selectedVariantId?: number;
+  selectedVariant?: any;
+  product?: any;
 }
 
 interface PendingAction {
@@ -54,6 +56,8 @@ export default function AddToCartButton({
   variant = "default",
   disabled = false,
   selectedVariantId,
+  selectedVariant,
+  product,
 }: AddToCartButtonProps) {
   const router = useRouter();
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
@@ -74,21 +78,78 @@ export default function AddToCartButton({
       return;
     }
 
-    // Guest mode is allowed - no login required
+    // Create rich cart item structure matching backend API format
     const cartItem = {
+      // Basic cart properties
       id: productId,
-      product_id: productId,
+      cart_id: productId,
       name: productName,
-      type: (productType === 1 ? "tree" : "product") as "tree" | "product",
+      type: "product" as const,
       price: productPrice,
       quantity,
       image: productImage,
       product_type: productType,
-      product_variant_id: selectedVariantId,
+      formatted_price: `₹${productPrice}`,
+      subtotal: productPrice * quantity,
+      formatted_subtotal: `₹${productPrice * quantity}`,
+      
+      // Backend-style structure for consistency
+      item: {
+        type: "product",
+        name: productName,
+        sku: selectedVariant?.sku || product?.default_variant?.sku,
+        image: productImage,
+        variant: selectedVariant ? {
+          sku: selectedVariant.sku,
+          size: selectedVariant.variant?.size?.name,
+          color: selectedVariant.variant?.color?.name,
+        } : undefined,
+        product: product ? {
+          ...product,
+          // Ensure we have all the necessary product data
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          botanical_name: product.botanical_name,
+          description: product.description,
+          category: product.category,
+          thumbnail_url: product.thumbnail_url,
+          price: productPrice,
+          default_variant: product.default_variant,
+          variants: product.variants,
+          inventory: product.inventory,
+        } : undefined,
+      },
+      
+      // Legacy compatibility
+      slug: product?.slug,
+      description: product?.description,
+      category: product?.category,
+      botanical_name: product?.botanical_name,
+      sku: selectedVariant?.sku || product?.default_variant?.sku,
+      stock_quantity: selectedVariant?.stock_quantity || product?.default_variant?.stock_quantity || product?.inventory?.stock_quantity,
+      is_instock: selectedVariant?.is_instock ?? product?.default_variant?.is_instock ?? product?.inventory?.is_instock,
+      variant: selectedVariant ? {
+        id: selectedVariant.id,
+        name: selectedVariant.variant_name,
+        sku: selectedVariant.sku,
+        price: selectedVariant.price,
+        stock_quantity: selectedVariant.stock_quantity,
+        is_instock: selectedVariant.is_instock,
+        images: selectedVariant.images,
+        color: selectedVariant.variant?.color,
+        size: selectedVariant.variant?.size,
+        planter: selectedVariant.variant?.planter,
+      } : undefined,
+      product: product,
+      ecom_product: product,
+      
       metadata: {
         duration: selectedYears,
         plan_id: priceOptionId,
         product_variant_id: selectedVariantId,
+        selected_variant: selectedVariant,
+        product_data: product,
       },
     };
 
@@ -106,11 +167,35 @@ export default function AddToCartButton({
           message: undefined, // Tree products would have this
           location_id: undefined, // Tree products would have this
           item_type: "product", // Required field for backend
+          // Include complete product data for backend processing
+          product_data: {
+            id: product?.id,
+            name: product?.name,
+            slug: product?.slug,
+            botanical_name: product?.botanical_name,
+            description: product?.description,
+            category: product?.category,
+            price: productPrice,
+            default_variant: product?.default_variant,
+            images: product?.image_urls,
+          },
         };
 
         // Only add product_variant_id if a variant is actually selected
         if (selectedVariantId) {
           cartPayload.product_variant_id = selectedVariantId;
+          cartPayload.variant_data = {
+            id: selectedVariant?.id,
+            variant_name: selectedVariant?.variant_name,
+            sku: selectedVariant?.sku,
+            price: selectedVariant?.price,
+            stock_quantity: selectedVariant?.stock_quantity,
+            is_instock: selectedVariant?.is_instock,
+            images: selectedVariant?.images,
+            color: selectedVariant?.variant?.color,
+            size: selectedVariant?.variant?.size,
+            planter: selectedVariant?.variant?.planter,
+          };
         }
 
         await cartService.addToCart(productId, cartPayload);
@@ -160,32 +245,111 @@ export default function AddToCartButton({
           message: undefined,
           location_id: undefined,
           item_type: "product",
+          // Include complete product data for backend processing
+          product_data: {
+            id: product?.id,
+            name: product?.name,
+            slug: product?.slug,
+            botanical_name: product?.botanical_name,
+            description: product?.description,
+            category: product?.category,
+            price: productPrice,
+            default_variant: product?.default_variant,
+            images: product?.image_urls,
+          },
         };
 
         // Only add product_variant_id if a variant is actually selected
         if (selectedVariantId) {
           cartPayload.product_variant_id = selectedVariantId;
+          cartPayload.variant_data = {
+            id: selectedVariant?.id,
+            variant_name: selectedVariant?.variant_name,
+            sku: selectedVariant?.sku,
+            price: selectedVariant?.price,
+            stock_quantity: selectedVariant?.stock_quantity,
+            is_instock: selectedVariant?.is_instock,
+            images: selectedVariant?.images,
+            color: selectedVariant?.variant?.color,
+            size: selectedVariant?.variant?.size,
+            planter: selectedVariant?.variant?.planter,
+          };
         }
 
         await cartService.addToCart(productId, cartPayload);
       }
 
       const cartItem = {
+        // Basic cart properties
         id: productId,
-        product_id: productId,
+        cart_id: productId,
         name: productName,
-        type: (pendingAction.productType === 1 ? "tree" : "product") as
-          | "tree"
-          | "product",
+        type: "product" as const,
         price: productPrice,
         quantity,
         image: productImage,
         product_type: pendingAction.productType,
-        product_variant_id: selectedVariantId,
+        formatted_price: `₹${productPrice}`,
+        subtotal: productPrice * quantity,
+        formatted_subtotal: `₹${productPrice * quantity}`,
+        
+        // Backend-style structure for consistency
+        item: {
+          type: "product",
+          name: productName,
+          sku: selectedVariant?.sku || product?.default_variant?.sku,
+          image: productImage,
+          variant: selectedVariant ? {
+            sku: selectedVariant.sku,
+            size: selectedVariant.variant?.size?.name,
+            color: selectedVariant.variant?.color?.name,
+          } : undefined,
+          product: product ? {
+            ...product,
+            // Ensure we have all the necessary product data
+            id: product.id,
+            name: product.name,
+            slug: product.slug,
+            botanical_name: product.botanical_name,
+            description: product.description,
+            category: product.category,
+            thumbnail_url: product.thumbnail_url,
+            price: productPrice,
+            default_variant: product.default_variant,
+            variants: product.variants,
+            inventory: product.inventory,
+          } : undefined,
+        },
+        
+        // Legacy compatibility
+        slug: product?.slug,
+        description: product?.description,
+        category: product?.category,
+        botanical_name: product?.botanical_name,
+        sku: selectedVariant?.sku || product?.default_variant?.sku,
+        stock_quantity: selectedVariant?.stock_quantity || product?.default_variant?.stock_quantity || product?.inventory?.stock_quantity,
+        is_instock: selectedVariant?.is_instock ?? product?.default_variant?.is_instock ?? product?.inventory?.is_instock,
+        variant: selectedVariant ? {
+          id: selectedVariant.id,
+          name: selectedVariant.variant_name,
+          sku: selectedVariant.sku,
+          price: selectedVariant.price,
+          stock_quantity: selectedVariant.stock_quantity,
+          is_instock: selectedVariant.is_instock,
+          images: selectedVariant.images,
+          color: selectedVariant.variant?.color,
+          size: selectedVariant.variant?.size,
+          planter: selectedVariant.variant?.planter,
+        } : undefined,
+        product: product,
+        ecom_product: product,
+        
         metadata: {
           duration: selectedYears,
           plan_id: priceOptionId,
           product_variant_id: selectedVariantId,
+          selected_variant: selectedVariant,
+          product_data: product,
         },
       };
 

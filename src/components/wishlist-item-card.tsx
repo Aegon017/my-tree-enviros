@@ -3,7 +3,6 @@ import { Leaf, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { CheckoutType } from "@/enums/checkout.enum";
 import { ProductType } from "@/enums/product.enum";
-import type { CartItem } from "@/types/cart.type";
 import type { WishlistItem } from "@/types/wishlist";
 import AddToCartButton from "./add-to-cart-button";
 import RatingStars from "./rating-stars";
@@ -33,7 +32,7 @@ const WishlistItemCard = ({
 
   return (
     <Card className="flex flex-col">
-      <CardHeader className="flex-grow">
+      <CardHeader className="grow">
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
@@ -68,7 +67,7 @@ const WishlistItemCard = ({
         </div>
       </CardHeader>
 
-      <CardContent className="flex-grow">
+      <CardContent className="grow">
         {product.rating > 0 && (
           <div className="mb-3">
             <RatingStars
@@ -120,6 +119,8 @@ const WishlistItemCard = ({
           quantity={1}
           productType={ProductType.ECOMMERCE}
           cartType={CheckoutType.CART}
+          selectedVariant={product.default_variant}
+          product={product}
         />
         <Button
           variant="outline"
