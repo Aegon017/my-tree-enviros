@@ -103,7 +103,7 @@ export default function AddToCartButton({
           duration: selectedYears,
           name: productName,
           occasion: undefined, // Tree products would have this
-          message: undefined,  // Tree products would have this
+          message: undefined, // Tree products would have this
           location_id: undefined, // Tree products would have this
           item_type: "product", // Required field for backend
         };

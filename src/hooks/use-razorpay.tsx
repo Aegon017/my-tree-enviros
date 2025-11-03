@@ -66,11 +66,11 @@ export function useRazorpay() {
     ) => {
       const amount = paymentService.paiseToRupees(amountPaise);
       const params = new URLSearchParams();
-      params.set('order_id', razorpayOrderId);
-      params.set('transaction_id', razorpayPaymentId);
-      params.set('amount', amount.toFixed(2));
-      if (typeof internalOrderId === 'number') {
-        params.set('internal_order_id', String(internalOrderId));
+      params.set("order_id", razorpayOrderId);
+      params.set("transaction_id", razorpayPaymentId);
+      params.set("amount", amount.toFixed(2));
+      if (typeof internalOrderId === "number") {
+        params.set("internal_order_id", String(internalOrderId));
       }
 
       router.push(`/payment/success?${params.toString()}`);
@@ -107,9 +107,9 @@ export function useRazorpay() {
         cartType,
         shippingAddressId,
         productId,
+        ,
         // amountInRupees is currently unused for order creation;
         // backend calculates and returns the payable amount during initiation.
-        ,
         extras,
       ] = args;
 
@@ -140,8 +140,10 @@ export function useRazorpay() {
           const directPayload = {
             item_type: productType === 1 ? "tree" : "product",
             tree_instance_id:
-              extra.tree_instance_id ?? (productType === 1 ? productId : undefined),
-            tree_plan_price_id: extra.tree_plan_price_id ?? (extra as any).plan_id,
+              extra.tree_instance_id ??
+              (productType === 1 ? productId : undefined),
+            tree_plan_price_id:
+              extra.tree_plan_price_id ?? (extra as any).plan_id,
             product_id: productType === 2 ? productId : undefined,
             product_variant_id: extra.product_variant_id,
             campaign_id: extra.campaign_id,

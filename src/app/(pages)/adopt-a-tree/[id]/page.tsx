@@ -17,9 +17,13 @@ interface Props {
 export default function Page({ params }: Props) {
   const { id } = use(params);
 
-  const { data: response, error, isLoading } = useSWR(id ? `/trees/${id}` : null, fetcher, {
+  const {
+    data: response,
+    error,
+    isLoading,
+  } = useSWR(id ? `/trees/${id}` : null, fetcher, {
     revalidateOnFocus: false,
-  } );
+  });
 
   if (error) {
     return (
@@ -29,14 +33,26 @@ export default function Page({ params }: Props) {
             <div className="w-12 h-12 mx-auto bg-destructive/10 rounded-full flex items-center justify-center">
               <Trees className="h-6 w-6 text-destructive" />
             </div>
-            <h2 className="text-xl font-bold text-destructive">Error Loading Tree</h2>
-            <p className="text-muted-foreground">Sorry, we couldn't load the tree details. Please try again later.</p>
-            <Button onClick={() => window.location.reload()} variant="outline">Retry</Button>
+            <h2 className="text-xl font-bold text-destructive">
+              Error Loading Tree
+            </h2>
+            <p className="text-muted-foreground">
+              Sorry, we couldn't load the tree details. Please try again later.
+            </p>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Retry
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  return <TreeDetailsLayout tree={response?.data?.tree} isLoading={isLoading} pageType="adopt" />;
+  return (
+    <TreeDetailsLayout
+      tree={response?.data?.tree}
+      isLoading={isLoading}
+      pageType="adopt"
+    />
+  );
 }

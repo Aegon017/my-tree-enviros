@@ -71,7 +71,7 @@ export default function RazorpayButton({
             occasion,
             message,
             location_id: area_id,
-          }
+          },
         )
       }
       disabled={loading}

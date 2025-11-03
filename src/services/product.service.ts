@@ -21,6 +21,7 @@ export interface ProductVariant {
     planter?: {
       id: number;
       name: string;
+      image_url?: string;
     };
   };
   variant_name: string;
@@ -70,8 +71,6 @@ export interface ProductFromAPI {
   price: number;
   discount_price: number | null;
   quantity: number;
-  main_image: string;
-  main_image_url: string;
   thumbnail_url: string;
   image_urls: string[];
   reviews: any[];
@@ -93,10 +92,14 @@ export interface ProductFromAPI {
   formatted_price: string | null;
   has_variants?: boolean;
   variant_options?: {
-    colors: Array<{ id: number; name: string; code: string; }>;
-    sizes: Array<{ id: number; name: string; }>;
-    planters: Array<{ id: number; name: string; }>;
+    colors: Array<{ id: number; name: string; code: string }>;
+    sizes: Array<{ id: number; name: string }>;
+    planters: Array<{ id: number; name: string; image_url?: string }>;
   } | null;
+  default_variant?: ProductVariant | null;
+  default_variant_id?: number | null;
+  // Computed field for backward compatibility
+  main_image_url?: string;
 }
 
 export type Product = ProductFromAPI;

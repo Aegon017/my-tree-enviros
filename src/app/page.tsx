@@ -39,7 +39,7 @@ import {
   type SliderApiItem,
 } from "@/services/slider.service";
 import type { Blog } from "@/types/blog";
-import type { Product } from "@/types/product";
+import type { Product } from "@/services/product.service";
 import type { Tree } from "@/types/tree";
 import neemTree from "../../public/neem-tree.webp";
 
@@ -203,7 +203,7 @@ export default function Home() {
           {sliders.map((slider: SliderApiItem) => (
             <CarouselItem key={slider.id}>
               <Card className="overflow-hidden p-0 rounded-none">
-                <CardContent className="flex items-center justify-center p-0 h-80 md:h-96 relative">
+                <CardContent className="flex items-center justify-center p-0 h-dvh relative">
                   <Image
                     src={slider.main_image_url || neemTree}
                     alt={slider.title || "Slider image"}

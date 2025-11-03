@@ -44,7 +44,12 @@ export function LocationSelectionModal() {
         fetchRootLocations();
       }
     }
-  }, [hasCheckedStorage, selectedLocation, locations.length, fetchRootLocations]);
+  }, [
+    hasCheckedStorage,
+    selectedLocation,
+    locations.length,
+    fetchRootLocations,
+  ]);
 
   const handleLocationSelect = (location: Location) => {
     selectLocation(location);
@@ -84,11 +89,7 @@ export function LocationSelectionModal() {
                 <br />
                 Please try again later.
               </p>
-              <Button
-                onClick={fetchRootLocations}
-                variant="outline"
-                size="sm"
-              >
+              <Button onClick={fetchRootLocations} variant="outline" size="sm">
                 Retry
               </Button>
             </div>
@@ -103,7 +104,7 @@ export function LocationSelectionModal() {
                       "w-full text-left px-4 py-3 rounded-lg border-2 transition-all",
                       "hover:border-primary hover:bg-primary/5",
                       "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
-                      "group"
+                      "group",
                     )}
                   >
                     <div className="flex items-center justify-between">

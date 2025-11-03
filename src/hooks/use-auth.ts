@@ -32,7 +32,9 @@ export function useAuth() {
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
   const isGuestCart = useSelector((state: RootState) => state.cart.isGuest);
-  const isGuestWishlist = useSelector((state: RootState) => state.wishlist.isGuest);
+  const isGuestWishlist = useSelector(
+    (state: RootState) => state.wishlist.isGuest,
+  );
 
   /**
    * Login user by setting user data

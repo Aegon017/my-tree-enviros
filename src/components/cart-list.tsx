@@ -29,7 +29,7 @@ export const CartList = () => {
               <p>Price: ₹{item.ecom_product?.price ?? 0}</p>
             </div>
             <Button
-              onClick={() => removeFromCart(item.id, item.type)}
+              onClick={() => removeFromCart(item.id, item.type || "product")}
               className="text-red-600 hover:underline"
             >
               Remove

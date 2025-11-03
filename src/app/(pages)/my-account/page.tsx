@@ -52,26 +52,24 @@ import {
 } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 
-
 const profileSchema = z.object({
-    name: z.string().min(1, "Name is required."),
-    email: z.string().email("Invalid email address."),
+  name: z.string().min(1, "Name is required."),
+  email: z.string().email("Invalid email address."),
 });
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const addressSchema = z.object({
-    name: z.string().min(1, "Full name is required."),
-    phone: z.string().min(1, "Phone number is required."),
-    address_line1: z.string().min(1, "Address line 1 is required."),
-    address_line2: z.string().optional(),
-    city: z.string().min(1, "City is required."),
-    state: z.string().min(1, "State is required."),
-    pincode: z.string().min(1, "PIN code is required."),
-    country: z.string().min(1, "Country is required."),
-    is_default: z.boolean().default(false),
+  name: z.string().min(1, "Full name is required."),
+  phone: z.string().min(1, "Phone number is required."),
+  address_line1: z.string().min(1, "Address line 1 is required."),
+  address_line2: z.string().optional(),
+  city: z.string().min(1, "City is required."),
+  state: z.string().min(1, "State is required."),
+  pincode: z.string().min(1, "PIN code is required."),
+  country: z.string().min(1, "Country is required."),
+  is_default: z.boolean().default(false),
 });
 type AddressFormValues = z.infer<typeof addressSchema>;
-
 
 /**
  * Order shapes returned by the new backend resources.
@@ -265,16 +263,16 @@ const AddressModal = ({
   const form = useForm<AddressFormValues>({
     resolver: zodResolver(addressSchema) as any,
     defaultValues: {
-        name: "",
-        phone: "",
-        address_line1: "",
-        address_line2: "",
-        city: "",
-        state: "",
-        pincode: "",
-        country: "India",
-        is_default: false,
-    }
+      name: "",
+      phone: "",
+      address_line1: "",
+      address_line2: "",
+      city: "",
+      state: "",
+      pincode: "",
+      country: "India",
+      is_default: false,
+    },
   });
 
   useEffect(() => {
@@ -335,129 +333,146 @@ const AddressModal = ({
           </CardHeader>
           <CardContent>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit(handleSubmit)}
+                className="space-y-4"
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Full Name</FormLabel>
-                                <FormControl><Input {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Phone</FormLabel>
-                                <FormControl><Input {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="address_line1"
-                        render={({ field }) => (
-                            <FormItem className="md:col-span-2">
-                                <FormLabel>Address Line 1</FormLabel>
-                                <FormControl><Input {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="address_line2"
-                        render={({ field }) => (
-                            <FormItem className="md:col-span-2">
-                                <FormLabel>Address Line 2 (optional)</FormLabel>
-                                <FormControl><Input {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="city"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>City</FormLabel>
-                                <FormControl><Input {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="state"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>State</FormLabel>
-                                <FormControl><Input {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="pincode"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>PIN Code</FormLabel>
-                                <FormControl><Input {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="country"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Country</FormLabel>
-                                <FormControl><Input {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address_line1"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Address Line 1</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address_line2"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Address Line 2 (optional)</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="pincode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>PIN Code</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
                 <FormField
-                    control={form.control}
-                    name="is_default"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                            <FormControl>
-                                <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                                />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                                <FormLabel>
-                                Set as default address
-                                </FormLabel>
-                            </div>
-                        </FormItem>
-                    )}
+                  control={form.control}
+                  name="is_default"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Set as default address</FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
                 />
                 <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={onClose}>
+                  <Button type="button" variant="outline" onClick={onClose}>
                     Cancel
-                    </Button>
-                    <Button type="submit" disabled={form.formState.isSubmitting}>
+                  </Button>
+                  <Button type="submit" disabled={form.formState.isSubmitting}>
                     {form.formState.isSubmitting
-                        ? "Saving..."
-                        : initial
+                      ? "Saving..."
+                      : initial
                         ? "Update Address"
                         : "Save Address"}
-                    </Button>
+                  </Button>
                 </div>
-                </form>
+              </form>
             </Form>
           </CardContent>
         </Card>
@@ -596,8 +611,8 @@ export default function AccountPage() {
   const [isEditing, setEditing] = useState(false);
 
   const profileForm = useForm<ProfileFormValues>({
-      resolver: zodResolver(profileSchema),
-      defaultValues: { name: "", email: "" },
+    resolver: zodResolver(profileSchema),
+    defaultValues: { name: "", email: "" },
   });
 
   // Orders state
@@ -630,8 +645,8 @@ export default function AccountPage() {
       if (res.success && res.data?.user) {
         setProfile(res.data.user);
         profileForm.reset({
-            name: res.data.user.name || "",
-            email: res.data.user.email || "",
+          name: res.data.user.name || "",
+          email: res.data.user.email || "",
         });
         // Keep Redux auth user roughly up-to-date (best effort mapping)
         dispatch(
@@ -737,16 +752,22 @@ export default function AccountPage() {
 
   const toggleEdit = useCallback(() => {
     if (!isEditing && profile) {
-        profileForm.reset({ name: profile.name || "", email: profile.email || "" });
+      profileForm.reset({
+        name: profile.name || "",
+        email: profile.email || "",
+      });
     }
     setEditing((prev) => !prev);
   }, [isEditing, profile, profileForm]);
 
-  const onSaveProfile = useCallback(async (values: ProfileFormValues) => {
-    await userService.updateCurrentUser(values);
-    await loadProfile();
-    setEditing(false);
-  }, [loadProfile]);
+  const onSaveProfile = useCallback(
+    async (values: ProfileFormValues) => {
+      await userService.updateCurrentUser(values);
+      await loadProfile();
+      setEditing(false);
+    },
+    [loadProfile],
+  );
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -836,86 +857,105 @@ export default function AccountPage() {
             <Tabs value={tab} className="w-full">
               <TabsContent value="profile" className="space-y-6">
                 <Card>
-                    <Form {...profileForm}>
-                        <form onSubmit={profileForm.handleSubmit(onSaveProfile)}>
-                            <CardHeader>
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                <div>
-                                    <CardTitle>Personal Information</CardTitle>
-                                    <CardDescription>
-                                    Update your personal details
-                                    </CardDescription>
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant={isEditing ? "outline" : "default"}
-                                    onClick={toggleEdit}
-                                >
-                                    {isEditing ? "Cancel" : "Edit Profile"}
-                                </Button>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="flex flex-col sm:flex-row items-center gap-4">
-                                <Avatar className="h-20 w-20">
-                                    <AvatarImage
-                                    src={(profile as any)?.avatar_url || ""}
-                                    alt={profile?.name}
-                                    />
-                                    <AvatarFallback>{initials}</AvatarFallback>
-                                </Avatar>
-                                <div className="space-y-1 flex-1 text-center sm:text-left">
-                                    <h3 className="text-lg font-medium">
-                                    {profile?.name || authUser?.name}
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground">
-                                    {profile?.email ?? authUser?.email ?? "No email"}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">
-                                    {(profile as any)?.mobile || authUser?.phone || ""}
-                                    </p>
-                                </div>
-                                <Button variant="outline" disabled>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Change Avatar
-                                </Button>
-                                </div>
-                                <Separator />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <FormField
-                                        control={profileForm.control}
-                                        name="name"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Full Name</FormLabel>
-                                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={profileForm.control}
-                                        name="email"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Email</FormLabel>
-                                                <FormControl><Input type="email" {...field} disabled={!isEditing} /></FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                                {isEditing && (
-                                <div className="flex justify-end gap-2 pt-4">
-                                    <Button type="button" variant="outline" onClick={toggleEdit}>
-                                    Cancel
-                                    </Button>
-                                    <Button type="submit" disabled={profileForm.formState.isSubmitting}>Save Changes</Button>
-                                </div>
-                                )}
-                            </CardContent>
-                        </form>
-                    </Form>
+                  <Form {...profileForm}>
+                    <form onSubmit={profileForm.handleSubmit(onSaveProfile)}>
+                      <CardHeader>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                          <div>
+                            <CardTitle>Personal Information</CardTitle>
+                            <CardDescription>
+                              Update your personal details
+                            </CardDescription>
+                          </div>
+                          <Button
+                            type="button"
+                            variant={isEditing ? "outline" : "default"}
+                            onClick={toggleEdit}
+                          >
+                            {isEditing ? "Cancel" : "Edit Profile"}
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                          <Avatar className="h-20 w-20">
+                            <AvatarImage
+                              src={(profile as any)?.avatar_url || ""}
+                              alt={profile?.name}
+                            />
+                            <AvatarFallback>{initials}</AvatarFallback>
+                          </Avatar>
+                          <div className="space-y-1 flex-1 text-center sm:text-left">
+                            <h3 className="text-lg font-medium">
+                              {profile?.name || authUser?.name}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {profile?.email ?? authUser?.email ?? "No email"}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {(profile as any)?.mobile ||
+                                authUser?.phone ||
+                                ""}
+                            </p>
+                          </div>
+                          <Button variant="outline" disabled>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Change Avatar
+                          </Button>
+                        </div>
+                        <Separator />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField
+                            control={profileForm.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Full Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} disabled={!isEditing} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={profileForm.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="email"
+                                    {...field}
+                                    disabled={!isEditing}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        {isEditing && (
+                          <div className="flex justify-end gap-2 pt-4">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={toggleEdit}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="submit"
+                              disabled={profileForm.formState.isSubmitting}
+                            >
+                              Save Changes
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </form>
+                  </Form>
                 </Card>
               </TabsContent>
 

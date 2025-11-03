@@ -110,9 +110,10 @@ export function transformBackendCart(item: BackendCartItem): CartItem {
     // Keep the product name but could modify if needed
   } else {
     // Fallback to product price
-    itemPrice = typeof product?.price === "string"
-      ? parseFloat(product.price)
-      : product?.price || 0;
+    itemPrice =
+      typeof product?.price === "string"
+        ? parseFloat(product.price)
+        : product?.price || 0;
   }
 
   return {
@@ -130,17 +131,19 @@ export function transformBackendCart(item: BackendCartItem): CartItem {
     message: item.message,
     location_id: item.location_id,
     product_variant_id: item.product_variant_id,
-    variant: variant ? {
-      id: variant.id,
-      name: variant.variant_name,
-      sku: variant.sku,
-      color: variant.variant.color?.name,
-      size: variant.variant.size?.name,
-      planter: variant.variant.planter?.name,
-      color_id: variant.variant.color?.id,
-      size_id: variant.variant.size?.id,
-      planter_id: variant.variant.planter?.id,
-    } : undefined,
+    variant: variant
+      ? {
+          id: variant.id,
+          name: variant.variant_name,
+          sku: variant.sku,
+          color: variant.variant.color?.name,
+          size: variant.variant.size?.name,
+          planter: variant.variant.planter?.name,
+          color_id: variant.variant.color?.id,
+          size_id: variant.variant.size?.id,
+          planter_id: variant.variant.planter?.id,
+        }
+      : undefined,
     metadata: {
       duration: item.duration,
       occasion: item.occasion,

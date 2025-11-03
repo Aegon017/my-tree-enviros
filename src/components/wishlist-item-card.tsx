@@ -86,10 +86,10 @@ const WishlistItemCard = ({
             content={product.description}
           />
         )}
-        {product.main_image_url && (
+        {product.thumbnail_url && (
           <div className="relative mt-4 aspect-video bg-muted rounded-lg flex items-center justify-center">
             <Image
-              src={product.main_image_url}
+              src={product.thumbnail_url}
               alt={product.name}
               fill
               className="rounded-lg object-cover"
@@ -116,7 +116,7 @@ const WishlistItemCard = ({
               ? product.discount_price
               : product.price
           }
-          productImage={product.main_image_url || "/placeholder.jpg"}
+          productImage={product.thumbnail_url || "/placeholder.jpg"}
           quantity={1}
           productType={ProductType.ECOMMERCE}
           cartType={CheckoutType.CART}

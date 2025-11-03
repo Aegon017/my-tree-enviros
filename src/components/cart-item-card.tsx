@@ -72,8 +72,8 @@ export default function CartItemCard({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative h-24 w-24 mx-auto sm:mx-0 rounded-md overflow-hidden">
             <Image
-              src={item.ecom_product?.main_image_url ?? "/placeholder.jpg"}
-              alt={item.name}
+              src={item.ecom_product?.thumbnail_url ?? "/placeholder.jpg"}
+              alt={item.name ?? "Product"}
               fill
               className="object-cover"
               sizes="96px"

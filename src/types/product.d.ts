@@ -20,7 +20,7 @@ export interface Size {
 export interface Planter {
   id: number;
   name: string;
-  image_url: string;
+  image_url?: string;
 }
 
 export interface VariantOption {

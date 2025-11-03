@@ -123,8 +123,13 @@ function AddDetailModal({
         name: item.name || "",
         occasion: item.occasion || "",
         message: item.message || "",
-        state_id: (item.metadata as any)?.state_id ? String((item.metadata as any).state_id) : "",
-        area_id: item.metadata && (item.metadata as any).location_id ? String((item.metadata as any).location_id) : "",
+        state_id: (item.metadata as any)?.state_id
+          ? String((item.metadata as any).state_id)
+          : "",
+        area_id:
+          item.metadata && (item.metadata as any).location_id
+            ? String((item.metadata as any).location_id)
+            : "",
       });
     }
   }, [open, item, form]);
@@ -171,10 +176,12 @@ function AddDetailModal({
 
   const onSubmit = (values: DetailsFormValues) => {
     if (!item) return;
-    const selectedArea = areas.find(area => area.id.toString() === values.area_id);
+    const selectedArea = areas.find(
+      (area) => area.id.toString() === values.area_id,
+    );
     if (!selectedArea) {
-        form.setError("area_id", { message: "Please select a valid area." });
-        return;
+      form.setError("area_id", { message: "Please select a valid area." });
+      return;
     }
 
     onUpdateDetails(item.id, {
@@ -190,189 +197,217 @@ function AddDetailModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Add Details</DialogTitle>
-            <DialogDescription>
-                Please provide the necessary details for your order.
-            </DialogDescription>
+          <DialogTitle className="text-xl font-bold">Add Details</DialogTitle>
+          <DialogDescription>
+            Please provide the necessary details for your order.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 grow overflow-hidden flex flex-col">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4 grow overflow-hidden flex flex-col"
+          >
             <ScrollArea className="grow pr-4">
-                <div className="space-y-4">
-                    <FormField
-                        control={form.control}
-                        name="state_id"
-                        render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                            <FormLabel>State*</FormLabel>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Button
-                                    variant="outline"
-                                    role="combobox"
-                                    className={cn(
-                                        "w-full justify-between",
-                                        !field.value && "text-muted-foreground"
-                                    )}
-                                    >
-                                    {field.value
-                                        ? states.find(
-                                            (state) => state.id.toString() === field.value
-                                        )?.name
-                                        : "Select State"}
-                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[--radix-popover-content-available-height] p-0">
-                                <Command>
-                                    <CommandInput placeholder="Search state..." />
-                                    <CommandEmpty>No state found.</CommandEmpty>
-                                    <CommandGroup>
-                                        <ScrollArea className="h-48">
-                                            {states.map((state) => (
-                                            <CommandItem
-                                                value={state.name}
-                                                key={state.id}
-                                                onSelect={() => {
-                                                form.setValue("state_id", state.id.toString());
-                                                form.setValue("area_id", "");
-                                                }}
-                                            >
-                                                <Check
-                                                className={cn(
-                                                    "mr-2 h-4 w-4",
-                                                    state.id.toString() === field.value
-                                                    ? "opacity-100"
-                                                    : "opacity-0"
-                                                )}
-                                                />
-                                                {state.name}
-                                            </CommandItem>
-                                            ))}
-                                        </ScrollArea>
-                                    </CommandGroup>
-                                </Command>
-                                </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="state_id"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>State*</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between",
+                                !field.value && "text-muted-foreground",
+                              )}
+                            >
+                              {field.value
+                                ? states.find(
+                                    (state) =>
+                                      state.id.toString() === field.value,
+                                  )?.name
+                                : "Select State"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[--radix-popover-content-available-height] p-0">
+                          <Command>
+                            <CommandInput placeholder="Search state..." />
+                            <CommandEmpty>No state found.</CommandEmpty>
+                            <CommandGroup>
+                              <ScrollArea className="h-48">
+                                {states.map((state) => (
+                                  <CommandItem
+                                    value={state.name}
+                                    key={state.id}
+                                    onSelect={() => {
+                                      form.setValue(
+                                        "state_id",
+                                        state.id.toString(),
+                                      );
+                                      form.setValue("area_id", "");
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        state.id.toString() === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                    {state.name}
+                                  </CommandItem>
+                                ))}
+                              </ScrollArea>
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                    <FormField
-                        control={form.control}
-                        name="area_id"
-                        render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                            <FormLabel>Area*</FormLabel>
-                            <Popover>
-                                <PopoverTrigger asChild disabled={!watchedStateId || isAreaLoading}>
-                                <FormControl>
-                                    <Button
-                                    variant="outline"
-                                    role="combobox"
-                                    className={cn(
-                                        "w-full justify-between",
-                                        !field.value && "text-muted-foreground"
-                                    )}
-                                    >
-                                    {isAreaLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                    {field.value
-                                        ? areas.find(
-                                            (area) => area.id.toString() === field.value
-                                        )?.name
-                                        : "Select Area"}
-                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[--radix-popover-content-available-height] p-0">
-                                <Command>
-                                    <CommandInput placeholder="Search area..." />
-                                    <CommandEmpty>No area found.</CommandEmpty>
-                                    <CommandGroup>
-                                        <ScrollArea className="h-48">
-                                            {areas.map((area) => (
-                                            <CommandItem
-                                                value={area.name}
-                                                key={area.id}
-                                                onSelect={() => {
-                                                    form.setValue("area_id", area.id.toString());
-                                                }}
-                                            >
-                                                <Check
-                                                className={cn(
-                                                    "mr-2 h-4 w-4",
-                                                    area.id.toString() === field.value
-                                                    ? "opacity-100"
-                                                    : "opacity-0"
-                                                )}
-                                                />
-                                                {area.name}
-                                            </CommandItem>
-                                            ))}
-                                        </ScrollArea>
-                                    </CommandGroup>
-                                </Command>
-                                </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                <FormField
+                  control={form.control}
+                  name="area_id"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Area*</FormLabel>
+                      <Popover>
+                        <PopoverTrigger
+                          asChild
+                          disabled={!watchedStateId || isAreaLoading}
+                        >
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between",
+                                !field.value && "text-muted-foreground",
+                              )}
+                            >
+                              {isAreaLoading ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : null}
+                              {field.value
+                                ? areas.find(
+                                    (area) =>
+                                      area.id.toString() === field.value,
+                                  )?.name
+                                : "Select Area"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[--radix-popover-content-available-height] p-0">
+                          <Command>
+                            <CommandInput placeholder="Search area..." />
+                            <CommandEmpty>No area found.</CommandEmpty>
+                            <CommandGroup>
+                              <ScrollArea className="h-48">
+                                {areas.map((area) => (
+                                  <CommandItem
+                                    value={area.name}
+                                    key={area.id}
+                                    onSelect={() => {
+                                      form.setValue(
+                                        "area_id",
+                                        area.id.toString(),
+                                      );
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        area.id.toString() === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                    {area.name}
+                                  </CommandItem>
+                                ))}
+                              </ScrollArea>
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                    <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Name*</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Enter name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name*</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                    <FormField
-                        control={form.control}
-                        name="occasion"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Occasion*</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Enter occasion" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                <FormField
+                  control={form.control}
+                  name="occasion"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Occasion*</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter occasion" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                    <FormField
-                        control={form.control}
-                        name="message"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Special Message*</FormLabel>
-                            <FormControl>
-                                <Textarea placeholder="Enter special message" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="message"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Special Message*</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter special message"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </ScrollArea>
             <div className="flex space-x-3 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="flex-1"
+              >
                 Cancel
-                </Button>
-                <Button type="submit" className="flex-1" disabled={form.formState.isSubmitting}>
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={form.formState.isSubmitting}
+              >
                 Save Details
-                </Button>
+              </Button>
             </div>
           </form>
         </Form>
@@ -397,34 +432,49 @@ function CartItemComponent({
   onRemoveItem: (itemId: number) => void;
   onOpenDetailModal: (item: CartItem) => void;
 }) {
-  const { imageUrl, productName, itemPrice, isTreeProduct, variantInfo, stockInfo } = useMemo(() => {
-    const isProductItem = item.item_type === 'product';
+  const {
+    imageUrl,
+    productName,
+    itemPrice,
+    isTreeProduct,
+    variantInfo,
+    stockInfo,
+  } = useMemo(() => {
+    const isProductItem = item.item_type === "product";
     const productData = isProductItem ? (item.item as any)?.product : null;
 
     const productName = productData?.name || item.item?.name || "Product";
-    const imageUrl = item.item?.image || productData?.thumbnail_url || DEFAULT_IMAGE;
-    const itemPrice = typeof item.price === "number" ? item.price : parseFloat(item.price as string) || 0;
+    const imageUrl =
+      item.item?.image || productData?.thumbnail_url || DEFAULT_IMAGE;
+    const itemPrice =
+      typeof item.price === "number"
+        ? item.price
+        : parseFloat(item.price as string) || 0;
 
-    const variantInfo = isProductItem ? {
-      sku: item.item?.variant?.sku || item.item?.sku,
-      color: item.item?.variant?.color || item.item?.color,
-      size: item.item?.variant?.size || item.item?.size,
-      planter: item.item?.variant?.planter,
-      name: item.item?.variant?.name
-    } : null;
+    const variantInfo = isProductItem
+      ? {
+          sku: item.item?.variant?.sku || item.item?.sku,
+          color: item.item?.variant?.color || item.item?.color,
+          size: item.item?.variant?.size || item.item?.size,
+          planter: item.item?.variant?.planter,
+          name: item.item?.variant?.name,
+        }
+      : null;
 
-    const stockInfo = productData ? {
-      quantity: productData.inventory?.stock_quantity || 0,
-      isInStock: productData.inventory?.is_instock || false
-    } : null;
+    const stockInfo = productData
+      ? {
+          quantity: productData.inventory?.stock_quantity || 0,
+          isInStock: productData.inventory?.is_instock || false,
+        }
+      : null;
 
     return {
       imageUrl,
       productName,
       itemPrice,
-      isTreeProduct: item.item_type === 'tree',
+      isTreeProduct: item.item_type === "tree",
       variantInfo,
-      stockInfo
+      stockInfo,
     };
   }, [item]);
 
@@ -482,11 +532,12 @@ function CartItemComponent({
               {!isTreeProduct && (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground truncate">
-                    {stockInfo ? `Stock: ${stockInfo.quantity} available` : ''}
+                    {stockInfo ? `Stock: ${stockInfo.quantity} available` : ""}
                   </p>
                   {variantInfo && (
                     <p className="text-xs text-primary font-medium">
-                      {variantInfo.name || `${variantInfo.color || ''} ${variantInfo.size || ''} ${variantInfo.planter || ''}`.trim()}
+                      {variantInfo.name ||
+                        `${variantInfo.color || ""} ${variantInfo.size || ""} ${variantInfo.planter || ""}`.trim()}
                     </p>
                   )}
                 </div>
@@ -531,7 +582,9 @@ function CartItemComponent({
                     className="h-8 w-8 rounded-l-none hover:bg-accent transition-colors"
                     onClick={() => handleQuantityChange(item.quantity + 1)}
                     disabled={
-                      item.quantity >= (stockInfo?.quantity || Number.MAX_SAFE_INTEGER) || isUpdating
+                      item.quantity >=
+                        (stockInfo?.quantity || Number.MAX_SAFE_INTEGER) ||
+                      isUpdating
                     }
                   >
                     <Plus className="h-3 w-3" />
@@ -830,7 +883,11 @@ export default function CartPage() {
           quantity: params.quantity ?? item.quantity,
         };
 
-        await updateItemQuantity(cartId, item.type || 'product', payload.quantity);
+        await updateItemQuantity(
+          cartId,
+          item.type || "product",
+          payload.quantity,
+        );
       });
     },
     [wrapAsyncAction, updateItemQuantity, cartData, isAuthenticated, isGuest],
@@ -844,7 +901,7 @@ export default function CartPage() {
         if (isAuthenticated && !isGuest) {
           await cartService.removeCartItem(item.cart_id || itemId);
         }
-        removeFromCart(itemId, item.type || 'product');
+        removeFromCart(itemId, item.type || "product");
       });
     },
     [wrapAsyncAction, removeFromCart, cartData, isAuthenticated, isGuest],
@@ -863,7 +920,7 @@ export default function CartPage() {
       wrapAsyncAction(cartId, async () => {
         const existing = cartData.find((i) => i.id === cartId);
         if (!existing) return;
-        await removeFromCart(cartId, existing.type || 'product');
+        await removeFromCart(cartId, existing.type || "product");
         return Promise.resolve(
           addToCart({
             ...existing,
@@ -895,7 +952,10 @@ export default function CartPage() {
   const subtotal = useMemo(
     () =>
       cartData.reduce((sum, item) => {
-        const p = typeof item.price === "number" ? item.price : parseFloat(item.price) || 0;
+        const p =
+          typeof item.price === "number"
+            ? item.price
+            : parseFloat(item.price) || 0;
         return sum + p * item.quantity;
       }, 0),
     [cartData],

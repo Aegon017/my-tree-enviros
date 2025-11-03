@@ -19,7 +19,7 @@ import { orderService } from "@/services/order.service";
 
 export default function Page() {
   return (
-    <Suspense fallback={ <div>Loading...</div> }>
+    <Suspense fallback={<div>Loading...</div>}>
       <PaymentSuccessPage />
     </Suspense>
   );
@@ -27,9 +27,9 @@ export default function Page() {
 
 function PaymentSuccessPage() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get( "order_id" ) || "N/A";
-  const transactionId = searchParams.get( "transaction_id" ) || "N/A";
-  const amount = parseFloat( searchParams.get( "amount" ) || "0" );
+  const orderId = searchParams.get("order_id") || "N/A";
+  const transactionId = searchParams.get("transaction_id") || "N/A";
+  const amount = parseFloat(searchParams.get("amount") || "0");
   const internalOrderId = searchParams.get("internal_order_id");
 
   const [displayAmount, setDisplayAmount] = useState<number | null>(amount);
@@ -60,14 +60,14 @@ function PaymentSuccessPage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
       <div className="max-w-md w-full space-y-8">
-        {/* Success Icon */ }
+        {/* Success Icon */}
         <div className="text-center">
           <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 dark:bg-green-900/20">
             <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
           </div>
         </div>
 
-        {/* Success Message */ }
+        {/* Success Message */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-foreground">
             Payment Successful!
@@ -78,7 +78,7 @@ function PaymentSuccessPage() {
           </p>
         </div>
 
-        {/* Order Details Card */ }
+        {/* Order Details Card */}
         <Card className="border-border">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg text-foreground">
@@ -96,18 +96,18 @@ function PaymentSuccessPage() {
                                 </div> */}
               <div className="space-y-1">
                 <p className="text-muted-foreground">Transaction ID</p>
-                <p className="font-medium text-foreground">{ transactionId }</p>
+                <p className="font-medium text-foreground">{transactionId}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-muted-foreground">Amount Paid</p>
                 <p className="font-medium text-foreground">
-                  ₹{ (displayAmount ?? amount).toFixed(2) }
+                  ₹{(displayAmount ?? amount).toFixed(2)}
                 </p>
               </div>
               <div className="space-y-1">
                 <p className="text-muted-foreground">Date</p>
                 <p className="font-medium text-foreground">
-                  { new Date().toLocaleDateString() }
+                  {new Date().toLocaleDateString()}
                 </p>
               </div>
             </div>
@@ -123,7 +123,7 @@ function PaymentSuccessPage() {
           </CardContent>
         </Card>
 
-        {/* Action Buttons */ }
+        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
           <Button asChild variant="outline" className="flex-1">
             <Link href="/">
