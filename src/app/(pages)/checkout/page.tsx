@@ -227,7 +227,7 @@ export default function CheckoutPage() {
                 selectedAddressId={selectedAddressId}
               />
               {!selectedAddressId && (
-                <p className="text-red-500 text-sm mt-2">
+                <p className="text-red-500 text-sm mt-4 text-center">
                   Please select a shipping address to proceed.
                 </p>
               )}
@@ -277,7 +277,7 @@ export default function CheckoutPage() {
                   />
 
                   {isPaymentDisabled && (
-                    <p className="text-red-500 text-sm mt-2">
+                    <p className="text-red-500 text-sm mt-4 text-center">
                       {!selectedAddressId
                         ? "Please select a shipping address to proceed with payment."
                         : "Please ensure your cart has valid items to proceed with payment."}

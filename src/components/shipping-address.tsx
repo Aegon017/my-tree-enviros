@@ -52,6 +52,7 @@ import {
 import { Input } from "@/components/ui/input";
 import api from "@/lib/axios";
 import type { ShippingAddress } from "@/types/shipping-address";
+import { fetcher } from "@/lib/fetcher";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -72,13 +73,6 @@ interface ShippingAddressesProps {
   selectedAddressId?: number | null;
 }
 
-const fetcher = (url: string) =>
-  fetch(url, {
-    headers: {
-      Accept: "application/json",
-    },
-  }).then((res) => res.json());
-
 interface AddressCardProps {
   address: ShippingAddress;
   isSelected: boolean;
@@ -90,7 +84,7 @@ interface AddressCardProps {
 const AddressCard = memo(
   ({ address, isSelected, onSelect, onEdit, onDelete }: AddressCardProps) => (
     <Card
-      className={`cursor-pointer transition-all ${isSelected ? "border-primary border-2" : "hover:border-primary/50"}`}
+      className={`cursor-pointer transition-all gap-0 ${isSelected ? "border-primary border-2" : "hover:border-primary/50"}`}
       onClick={() => onSelect(address.id)}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4 sm:px-6">
@@ -110,10 +104,10 @@ const AddressCard = memo(
       </CardHeader>
       <CardContent className="px-4 pb-4 sm:px-6">
         <div className="flex items-start space-x-2 text-sm mb-3 sm:mb-4">
-          <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+          <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
           <div className="min-w-0">
-            <p className="break-words">{address.address}</p>
-            <p className="break-words">
+            <p className="wrap-break-words">{address.address}</p>
+            <p className="wrap-break-words">
               {address.city}, {address.area} {address.pincode}
             </p>
             <p>{address.mobile_number}</p>
@@ -380,14 +374,14 @@ export default function ShippingAddresses({
   const selectedAddressId =
     externalSelectedId !== undefined ? externalSelectedId : internalSelectedId;
 
-  const key = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/shipping-addresses`;
+  const key = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/shipping-addresses`;
   const { data, error, isLoading } = useSWR<{
     status: boolean;
     message: string;
     data: ShippingAddress[];
-  }>(key, fetcher);
+  }>( key, fetcher );
 
-  const addresses = useMemo(() => data?.data || [], [data?.data]);
+  const addresses = useMemo(() => data?.data?.addresses || [], [data?.data]);
 
   useEffect(() => {
     if (addresses.length === 1 && selectedAddressId === null) {
@@ -625,13 +619,6 @@ export default function ShippingAddresses({
             </CardDescription>
           </CardHeader>
         </Card>
-      )}
-      {selectedAddressId === null && addresses.length >= 2 && (
-        <div className="mt-4 text-center">
-          <p className="text-muted-foreground">
-            Please select a shipping address.
-          </p>
-        </div>
       )}
 
       <AddressForm

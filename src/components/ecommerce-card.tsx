@@ -2,10 +2,10 @@ import { Markup } from "interweave";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
-import type { Product } from "@/services/product.service";
 import RatingStars from "./rating-stars";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import { Product } from "@/types/product";
 
 interface Props {
   product: Product;

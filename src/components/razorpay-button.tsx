@@ -26,7 +26,7 @@ interface RazorpayButtonProps {
   amount?: number;
 }
 
-export default function RazorpayButton({
+export default function RazorpayButton( {
   type,
   productType,
   cartType,
@@ -45,12 +45,12 @@ export default function RazorpayButton({
   occasion,
   message,
   area_id,
-}: RazorpayButtonProps) {
+}: RazorpayButtonProps ) {
   const { initiatePayment, loading } = useRazorpay();
 
   return (
     <Button
-      onClick={() =>
+      onClick={ () =>
         initiatePayment(
           type,
           productType,
@@ -74,11 +74,11 @@ export default function RazorpayButton({
           },
         )
       }
-      disabled={loading}
-      className="bg-green-600 hover:bg-green-700"
+      disabled={ loading }
+      className="w-full"
     >
       <Leaf />
-      {loading ? "Processing..." : label}
+      { loading ? "Processing..." : label }
     </Button>
   );
 }
