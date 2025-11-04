@@ -42,6 +42,7 @@ import { Separator } from "@/components/ui/separator";
 import type { FeedTree } from "@/types/feed-tree";
 import type { CampaignDetailResponse } from "@/types/campaign";
 import { authStorage } from "@/lib/auth-storage";
+import { campaignService, type DirectOrderRequest } from "@/services/campaign.service";
 
 interface ApiResponse {
   status: boolean;
@@ -243,58 +244,78 @@ const PaymentDialog = ({
     }
   }, []);
 
-  const addCampaignToCart = useCallback(
+  const processDirectPayment = useCallback(
     async (amount: number) => {
       try {
-        // Require authentication for cart operations
+        // Require authentication for direct payment
         if (!authStorage.isAuthenticated()) {
           window.location.href = "/sign-in";
           return;
         }
 
-        // Initialize CSRF cookie for Sanctum
-        const backendUrl =
-          process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
-        await fetch(`${backendUrl}/sanctum/csrf-cookie`, {
-          method: "GET",
-          credentials: "include",
-        });
+        // Load Razorpay script if not already loaded
+        await loadRazorpayScript();
 
-        // Add campaign to cart
-        const resp = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/cart/items`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-              "X-Requested-With": "XMLHttpRequest",
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              item_type: "campaign",
-              campaign_id: Number(campaignId),
-              quantity: 1,
-              amount,
-            }),
+        // Create direct order
+        const orderRequest: DirectOrderRequest = {
+          item_type: 'campaign',
+          campaign_id: Number(campaignId),
+          amount,
+          quantity: 1,
+        };
+
+        const { order } = await campaignService.createDirectOrder(orderRequest);
+
+        // Initiate payment
+        const paymentResponse = await campaignService.initiatePayment(
+          order.id.toString(),
+          { payment_method: 'razorpay' }
+        );
+
+        // Open Razorpay payment
+        const options = {
+          key: paymentResponse.key,
+          amount: paymentResponse.amount,
+          currency: paymentResponse.currency,
+          name: "MyTree Enviros",
+          description: `Support: ${campaignDetails.name}`,
+          order_id: paymentResponse.razorpay_order_id,
+          handler: async (response: any) => {
+            try {
+              // Verify payment
+              await campaignService.verifyPayment(order.id.toString(), {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              });
+
+              alert(`Thank you for your support! Payment of ${formatCurrency(amount)} has been processed successfully.`);
+              onOpenChange(false);
+              setSelectedAmount("500");
+              setCustomAmount("");
+              
+              // Redirect to success page
+              window.location.href = `/payment/success?order_id=${order.id}`;
+            } catch (error) {
+              console.error("Payment verification failed:", error);
+              alert("Payment verification failed. Please contact support.");
+              window.location.href = `/payment/failure?order_id=${order.id}`;
+            }
           },
-        );
+          prefill: {
+            name: authStorage.getUser()?.name || "",
+            email: authStorage.getUser()?.email || "",
+          },
+          theme: {
+            color: "#16a34a",
+          },
+        };
 
-        if (!resp.ok) {
-          const errText = await resp.text();
-          throw new Error(errText || "Failed to add campaign to cart");
-        }
+        const rzp = new window.Razorpay(options);
+        rzp.open();
 
-        alert(
-          `Added ${formatCurrency(amount)} support for ${campaignDetails.name} to your cart.`,
-        );
-        onOpenChange(false);
-        setSelectedAmount("500");
-        setCustomAmount("");
-        // Navigate to cart
-        window.location.href = "/cart";
       } catch (error) {
-        console.error("Add to cart error:", error);
+        console.error("Direct payment error:", error);
         throw error;
       }
     },
@@ -309,14 +330,14 @@ const PaymentDialog = ({
 
     setIsProcessing(true);
     try {
-      await addCampaignToCart(finalAmount);
+      await processDirectPayment(finalAmount);
     } catch (error) {
-      console.error("Add to cart failed:", error);
-      alert("Could not add to cart. Please try again.");
+      console.error("Direct payment failed:", error);
+      alert("Could not process payment. Please try again.");
     } finally {
       setIsProcessing(false);
     }
-  }, [finalAmount, addCampaignToCart]);
+  }, [finalAmount, processDirectPayment]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
