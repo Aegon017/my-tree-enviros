@@ -36,7 +36,7 @@ const WishlistPage = () => {
   useEffect(() => {
     const fetchWishlist = async () => {
       if (!isAuthenticated) {
-        // Handle guest wishlist from localStorage
+        
         try {
           const guestWishlist = localStorage.getItem("guest_wishlist");
           if (guestWishlist) {
@@ -78,7 +78,7 @@ const WishlistPage = () => {
           toast.success("Item removed from wishlist");
         }
       } else {
-        // Remove from guest wishlist
+        
         const updatedWishlist = wishlistItems.filter(
           (item) => item.id !== itemId,
         );
@@ -95,7 +95,7 @@ const WishlistPage = () => {
   };
 
   const handleAddToCart = async (item: WishlistItem) => {
-    // Guest: add to local cart using useCart
+    
     if (!isAuthenticated) {
       setAddingToCartIds((prev) => [...prev, item.id]);
       try {
@@ -125,7 +125,7 @@ const WishlistPage = () => {
       return;
     }
 
-    // Authenticated users should use "Move to Cart" action
+    
     toast.error("Please use 'Move to Cart' while logged in");
   };
 

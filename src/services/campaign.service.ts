@@ -1,59 +1,20 @@
-// Campaign service for direct payment operations
 import api from '@/lib/axios';
 import { authStorage } from '@/lib/auth-storage';
-
-export interface DirectOrderRequest {
-  item_type: 'campaign';
-  campaign_id: number;
-  amount: number;
-  quantity?: number;
-  name?: string;
-  occasion?: string;
-  message?: string;
-  location_id?: number;
-  coupon_id?: number;
-  shipping_address_id?: number;
-}
-
-export interface PaymentInitiateRequest {
-  payment_method: 'razorpay';
-}
-
-export interface PaymentVerifyRequest {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-}
-
-export interface OrderResponse {
-  id: number;
-  order_number: string;
-  total_amount: number;
-  status: string;
-  type: string;
-  items: any[];
-}
-
-export interface PaymentInitiateResponse {
-  razorpay_order_id: string;
-  amount: number;
-  amount_rupees: number;
-  currency: string;
-  order_number: string;
-  key: string;
-}
-
-export interface PaymentVerifyResponse {
-  order: OrderResponse;
-  payment_id: string;
-}
+import type {
+  Campaign,
+  CampaignsResponse,
+  CampaignResponse,
+  DirectOrderRequest,
+  PaymentInitiateRequest,
+  PaymentVerifyRequest,
+  OrderResponse,
+  PaymentInitiateResponse,
+  PaymentVerifyResponse,
+  CampaignStats
+} from '@/types/campaign.types';
 
 class CampaignService {
-  /**
-   * Create a direct order for campaign contribution
-   */
   async createDirectOrder(request: DirectOrderRequest): Promise<{ order: OrderResponse }> {
-    // Require authentication for all direct payment operations
     if (!authStorage.isAuthenticated()) {
       window.location.href = '/sign-in';
       throw new Error('Authentication required');
@@ -68,11 +29,7 @@ class CampaignService {
     return { order: response.data.data.order };
   }
 
-  /**
-   * Initiate payment for an order
-   */
   async initiatePayment(orderId: string, request: PaymentInitiateRequest): Promise<PaymentInitiateResponse> {
-    // Require authentication for payment operations
     if (!authStorage.isAuthenticated()) {
       window.location.href = '/sign-in';
       throw new Error('Authentication required');
@@ -87,11 +44,7 @@ class CampaignService {
     return response.data.data;
   }
 
-  /**
-   * Verify payment and complete order
-   */
   async verifyPayment(orderId: string, request: PaymentVerifyRequest): Promise<PaymentVerifyResponse> {
-    // Require authentication for payment operations
     if (!authStorage.isAuthenticated()) {
       window.location.href = '/sign-in';
       throw new Error('Authentication required');
@@ -106,9 +59,6 @@ class CampaignService {
     return response.data.data;
   }
 
-  /**
-   * Get payment status for an order
-   */
   async getPaymentStatus(orderId: string): Promise<{
     order_id: number;
     order_number: string;
@@ -123,7 +73,6 @@ class CampaignService {
       paid_at: string;
     };
   }> {
-    // Require authentication for payment status
     if (!authStorage.isAuthenticated()) {
       window.location.href = '/sign-in';
       throw new Error('Authentication required');
@@ -136,6 +85,76 @@ class CampaignService {
     }>(`/orders/${orderId}/payment/status`);
 
     return response.data.data;
+  }
+
+  async getAll(params?: {
+    type?: string;
+    status?: number;
+    per_page?: number;
+    page?: number;
+  }): Promise<CampaignsResponse> {
+    const response = await api.get<CampaignsResponse>("/campaigns", { params });
+    return response.data;
+  }
+
+  async getByType(
+    type: string,
+    params?: {
+      per_page?: number;
+      page?: number;
+    },
+  ): Promise<CampaignsResponse> {
+    const response = await api.get<CampaignsResponse>("/campaigns", {
+      params: { type, ...params },
+    });
+    return response.data;
+  }
+
+  async getById(id: number): Promise<CampaignResponse> {
+    const response = await api.get<CampaignResponse>(`/campaigns/${id}`);
+    return response.data;
+  }
+
+  async getFeatured(limit: number = 10): Promise<CampaignsResponse> {
+    const response = await api.get<CampaignsResponse>("/campaigns/featured", {
+      params: { per_page: limit },
+    });
+    return response.data;
+  }
+
+  async search(
+    query: string,
+    params?: {
+      type?: string;
+      per_page?: number;
+      page?: number;
+    },
+  ): Promise<CampaignsResponse> {
+    const response = await api.get<CampaignsResponse>("/campaigns/search", {
+      params: { q: query, ...params },
+    });
+    return response.data;
+  }
+
+  async getStats(id: number): Promise<{
+    success: boolean;
+    data: {
+      total_donations: number;
+      donor_count: number;
+      progress_percentage: number;
+      days_remaining?: number;
+    };
+  }> {
+    const response = await api.get<{
+      success: boolean;
+      data: {
+        total_donations: number;
+        donor_count: number;
+        progress_percentage: number;
+        days_remaining?: number;
+      };
+    }>(`/campaigns/${id}/stats`);
+    return response.data;
   }
 }
 

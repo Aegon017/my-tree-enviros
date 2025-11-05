@@ -6,8 +6,8 @@ export interface OrderItem {
   id: number;
   order_id: number;
   product_id: number;
-  product_type: number; // 1 = tree, 2 = ecom product
-  type: number; // 1 = sponsor, 2 = adopt
+  product_type: number; 
+  type: number; 
   quantity: number;
   duration?: number;
   price: number;
@@ -53,8 +53,8 @@ export interface Order {
   total_amount: number;
   discount_amount: number;
   final_amount: number;
-  payment_status: string; // pending, completed, failed, refunded
-  order_status: string; // pending, processing, completed, cancelled
+  payment_status: string; 
+  order_status: string; 
   payment_method?: string;
   transaction_id?: string;
   shipping_address_id?: number;
@@ -94,11 +94,11 @@ export interface CreateOrderPayload {
   shipping_address_id?: number;
   coupon_code?: string;
   notes?: string;
-  cart_type?: number; // 1 = cart, 2 = direct
+  cart_type?: number; 
 }
 
 export interface CreateDirectOrderPayload {
-  // New v1 /orders/direct schema (preferred)
+  
   item_type?: "tree" | "product";
   tree_instance_id?: number;
   tree_plan_price_id?: number;
@@ -109,9 +109,9 @@ export interface CreateDirectOrderPayload {
   coupon_id?: number;
   shipping_address_id?: number;
 
-  // Backward compatibility with legacy direct order payload
-  product_type?: number; // 1 = tree, 2 = ecom product
-  type?: number; // 1 = sponsor, 2 = adopt
+  
+  product_type?: number; 
+  type?: number; 
   duration?: number;
   coupon_code?: string;
   name?: string;
@@ -138,42 +138,27 @@ export interface OrderParams {
   page?: number;
 }
 
-/**
- * Order Service for managing orders and payments
- * All endpoints are protected and require authentication
- */
+
 export const orderService = {
-  /**
-   * Get all orders for the authenticated user
-   * @param params - Query parameters for filtering and pagination
-   */
+  
   getOrders: async (params?: OrderParams): Promise<OrdersResponse> => {
     const response = await api.get<OrdersResponse>("/orders", { params });
     return response.data;
   },
 
-  /**
-   * Get a specific order by ID
-   * @param orderId - Order ID
-   */
+  
   getOrderById: async (orderId: number): Promise<OrderResponse> => {
     const response = await api.get<OrderResponse>(`/orders/${orderId}`);
     return response.data;
   },
 
-  /**
-   * Create order from cart
-   * @param payload - Order creation details
-   */
+  
   createOrder: async (payload: CreateOrderPayload): Promise<OrderResponse> => {
     const response = await api.post<OrderResponse>("/orders", payload);
     return response.data;
   },
 
-  /**
-   * Create direct order (buy now without cart)
-   * @param payload - Direct order details
-   */
+  
   createDirectOrder: async (
     payload: CreateDirectOrderPayload,
   ): Promise<OrderResponse> => {
@@ -181,27 +166,19 @@ export const orderService = {
     return response.data;
   },
 
-  /**
-   * Cancel an order
-   * @param orderId - Order ID
-   */
+  
   cancelOrder: async (orderId: number): Promise<OrderResponse> => {
     const response = await api.post<OrderResponse>(`/orders/${orderId}/cancel`);
     return response.data;
   },
 
-  /**
-   * Get user's trees (sponsored and adopted)
-   */
+  
   getMyTrees: async (): Promise<MyTreesResponse> => {
     const response = await api.get<MyTreesResponse>("/my-trees");
     return response.data;
   },
 
-  /**
-   * Initiate Razorpay payment for an order
-   * @param orderId - Order ID
-   */
+  
   initiatePayment: async (orderId: number) => {
     const response = await api.post(`/orders/${orderId}/payment/initiate`, {
       payment_method: "razorpay",
@@ -209,11 +186,7 @@ export const orderService = {
     return response.data;
   },
 
-  /**
-   * Verify Razorpay payment
-   * @param orderId - Order ID
-   * @param paymentData - Payment verification data from Razorpay
-   */
+  
   verifyPayment: async (
     orderId: number,
     paymentData: {
@@ -229,29 +202,20 @@ export const orderService = {
     return response.data;
   },
 
-  /**
-   * Get payment status for an order
-   * @param orderId - Order ID
-   */
+  
   getPaymentStatus: async (orderId: number) => {
     const response = await api.get(`/orders/${orderId}/payment/status`);
     return response.data;
   },
 
-  /**
-   * Calculate order total
-   * @param items - Order items
-   */
+  
   calculateTotal: (items: OrderItem[]): number => {
     return items.reduce((sum, item) => {
       return sum + item.price * item.quantity;
     }, 0);
   },
 
-  /**
-   * Get order status display text
-   * @param status - Order status
-   */
+  
   getOrderStatusText: (status: string): string => {
     const statusMap: Record<string, string> = {
       pending: "Pending",
@@ -265,10 +229,7 @@ export const orderService = {
     return statusMap[status.toLowerCase()] || status;
   },
 
-  /**
-   * Get payment status display text
-   * @param status - Payment status
-   */
+  
   getPaymentStatusText: (status: string): string => {
     const statusMap: Record<string, string> = {
       pending: "Pending",
@@ -280,10 +241,7 @@ export const orderService = {
     return statusMap[status.toLowerCase()] || status;
   },
 
-  /**
-   * Get order status color
-   * @param status - Order status
-   */
+  
   getOrderStatusColor: (status: string): string => {
     const colorMap: Record<string, string> = {
       pending: "orange",
@@ -297,19 +255,13 @@ export const orderService = {
     return colorMap[status.toLowerCase()] || "gray";
   },
 
-  /**
-   * Check if order can be cancelled
-   * @param order - Order object
-   */
+  
   canBeCancelled: (order: Order): boolean => {
     const cancellableStatuses = ["pending", "processing"];
     return cancellableStatuses.includes(order.order_status.toLowerCase());
   },
 
-  /**
-   * Format order date
-   * @param dateString - Date string
-   */
+  
   formatDate: (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-IN", {
@@ -319,10 +271,7 @@ export const orderService = {
     });
   },
 
-  /**
-   * Format order time
-   * @param dateString - Date string
-   */
+  
   formatTime: (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleTimeString("en-IN", {

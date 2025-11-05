@@ -36,7 +36,7 @@ const AppleAppStoreIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Footer data configuration
+
 const footerData = {
   contactInfo: {
     address:
@@ -88,13 +88,13 @@ const footerData = {
   appStores: [
     {
       name: "Google Play",
-      href: "https://play.google.com/store",
+      href: "https://play.google.com/store/apps/details?id=mytree.app",
       description: "GET IT ON",
       icon: GooglePlayIcon,
     },
     {
       name: "App Store",
-      href: "https://www.apple.com/app-store",
+      href: "https://apps.apple.com/app/mytree/id123456789",
       description: "Download on the",
       icon: AppleAppStoreIcon,
     },
@@ -107,7 +107,7 @@ const Footer = () => {
     <footer className="bg-background border-t">
       <div className="container max-w-6xl mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Contact Info */}
+          {}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Contact Info</h3>
             <div className="space-y-3">
@@ -136,7 +136,7 @@ const Footer = () => {
                 </span>
               </div>
 
-              {/* Social Media Links */}
+              {}
               <div className="pt-2">
                 <div className="flex items-center gap-2">
                   {footerData.contactInfo.socialLinks.map((social) => (
@@ -156,7 +156,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Quick Links</h3>
             <ul className="space-y-2">
@@ -173,7 +173,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Policy Links */}
+          {}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Policy Links</h3>
             <ul className="space-y-2">
@@ -190,7 +190,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Download App - Redesigned */}
+          {}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Download Our App</h3>
             <p className="text-sm text-muted-foreground">

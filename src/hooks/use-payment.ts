@@ -1,11 +1,11 @@
-// hooks/usePayment.ts
+
 "use client";
 
 import { useState } from "react";
 import { createOrder, paymentCallback } from "@/services/payment.service";
 import { useRouter } from "next/navigation";
 
-declare const Razorpay: any; // Razorpay script included in _document or via CDN
+declare const Razorpay: any; 
 
 export function usePayment() {
   const [loading, setLoading] = useState(false);

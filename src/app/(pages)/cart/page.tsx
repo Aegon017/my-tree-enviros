@@ -31,6 +31,7 @@ import { useAuth } from "@/hooks/use-auth";
 import type { CartItem, BackendCartItem, BackendCartResponse } from "@/types/cart.type";
 import { cartService } from "@/services/cart.service";
 import { transformBackendCart, transformBackendCartItem } from "@/types/cart.type";
+import { locationService } from "@/services/location.service";
 import { useDispatch } from "react-redux";
 import { setCartItems } from "@/store/cart-slice";
 import {
@@ -137,9 +138,8 @@ function AddDetailModal({
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const response = await fetch("/tree-locations/states");
-        const json = await response.json();
-        setStates(json.data || []);
+        const response = await locationService.getTreeLocationStates();
+        setStates(response.data || []);
       } catch (err) {
         console.error("Failed to fetch states:", err);
       }
@@ -156,9 +156,8 @@ function AddDetailModal({
     const fetchAreas = async (stateId: string) => {
       setIsAreaLoading(true);
       try {
-        const response = await fetch(`/tree-locations/states/${stateId}/areas`);
-        const json = await response.json();
-        const mapped: Area[] = (json.data || []).map((a: any) => ({
+        const response = await locationService.getTreeLocationAreas(Number(stateId));
+        const mapped: Area[] = (response.data || []).map((a: any) => ({
           id: a.area_id,
           name: a.area_name,
           locationId: a.location_id,
@@ -443,22 +442,22 @@ function CartItemComponent({
     const isProductItem = item.item_type === "product";
     const productData = isProductItem ? (item.item as any)?.product : null;
 
-    // Enhanced product name extraction for both guest and backend cart data
+    
     const productName =
-      // Backend cart format: item.item.product?.name
+      
       productData?.name ||
-      // Guest cart format: item.item?.name (our new structure)
+      
       item.item?.name ||
-      // Legacy formats: item.ecom_product?.name, item.name
+      
       item.ecom_product?.name ||
       item.name ||
       "Product";
     
     const imageUrl =
-      // Backend cart format: item.item?.image or productData?.thumbnail_url
+      
       item.item?.image ||
       productData?.thumbnail_url ||
-      // Guest cart format: item.image, item.ecom_product?.thumbnail_url
+      
       item.image ||
       item.ecom_product?.thumbnail_url ||
       DEFAULT_IMAGE;
@@ -824,9 +823,9 @@ export default function CartPage() {
         try {
           const response = await cartService.getCart();
           if (response.success && response.data) {
-            // response.data is already the flat array of cart items
+            
             const transformedItems = response.data.map((item: any) => {
-              // Use the new transformation function for the actual API response format
+              
               return transformBackendCartItem(item);
             });
             dispatch(setCartItems(transformedItems));

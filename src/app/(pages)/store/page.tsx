@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { productService } from "@/services/product.service";
 import type { BreadcrumbItemType } from "@/types/home";
-import type { Product } from "@/services/product.service";
+import type { Product } from "@/types/product";
 
 const breadcrumbItems: BreadcrumbItemType[] = [
   { title: "Home", href: "/" },

@@ -115,7 +115,7 @@ function TopBar({ user, logout }: { user: boolean; logout: () => void }) {
     syncFromStorage,
   } = useLocation();
 
-  // Sync location from storage and fetch locations on mount
+  
   useEffect(() => {
     syncFromStorage();
     fetchRootLocations();
@@ -233,7 +233,7 @@ function HeaderMiddle({ user }: { user: boolean }) {
   const isMobile = useIsMobile();
   const cartItems = useSelector((state: RootState) => state.cart.items);
 
-  // Safe cart items calculation
+  
   const totalItems = Array.isArray(cartItems)
     ? cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0)
     : 0;

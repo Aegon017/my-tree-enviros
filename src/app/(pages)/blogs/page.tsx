@@ -16,7 +16,7 @@ import {
   type BlogApiItem,
 } from "@/services/blog.service";
 
-// Integrated with blog.service for listing and details
+
 
 const Page = () => {
   const [retryCount, setRetryCount] = useState(0);

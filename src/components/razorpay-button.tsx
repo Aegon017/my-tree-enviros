@@ -40,7 +40,7 @@ export default function RazorpayButton( {
   product_variant_id,
   campaign_id,
   coupon_id,
-  // legacy/additional fields
+  
   name,
   occasion,
   message,
@@ -66,7 +66,7 @@ export default function RazorpayButton( {
             coupon_id,
             quantity,
             shipping_address_id: shippingAddressId,
-            // Legacy fields
+            
             name,
             occasion,
             message,

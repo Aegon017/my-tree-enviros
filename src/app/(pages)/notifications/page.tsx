@@ -1,5 +1,4 @@
 "use client";
-import api from "@/lib/axios";
 
 import useSWR from "swr";
 import { Badge } from "@/components/ui/badge";
@@ -7,31 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
-
-interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  send_to: string;
-  user_ids: number[] | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface ApiResponse {
-  status: boolean;
-  message: string;
-  data: Notification[];
-}
+import { notificationService } from "@/services/notification.service";
+import type { Notification, ApiResponse } from "@/types/notification.types";
 
 const fetcher = async (url: string) => {
-  const { data } = await api.get(url);
-  return data;
+  const response = await notificationService.getAll();
+  return {
+    status: response.status,
+    message: response.message,
+    data: response.data,
+  };
 };
 
 const Page = () => {
   const { data, error, isLoading } = useSWR<ApiResponse>(
-    "https://arboraid.co/beta/public/notifications",
+    "notifications",
     fetcher,
     {
       refreshInterval: 30000,
@@ -83,7 +72,7 @@ const Page = () => {
                 </CardContent>
               </Card>
             ))
-          : notifications.map((notification) => (
+          : notifications.map((notification: Notification) => (
               <Card
                 key={notification.id}
                 className="border-border hover:border-primary/50 transition-colors"

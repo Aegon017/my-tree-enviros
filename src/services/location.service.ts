@@ -6,18 +6,9 @@ import type {
   TreeCountResponse,
 } from "@/types/location.types";
 
-/**
- * Location Service for managing location data
- * Handles API calls for locations, hierarchies, and tree counts
- */
+
 export const locationService = {
-  /**
-   * Get all active locations
-   * @param params - Optional query parameters
-   * @param params.parent_id - Filter by parent location ID
-   * @param params.with_children - Include children locations
-   * @param params.with_parent - Include parent location
-   */
+  
   getAll: async (params?: {
     parent_id?: number | null;
     with_children?: boolean;
@@ -30,21 +21,13 @@ export const locationService = {
     return response.data;
   },
 
-  /**
-   * Get root locations (top-level locations without parent)
-   */
+  
   getRoot: async () => {
     const response = await api.get<LocationsResponse>("/locations/root");
     return response.data;
   },
 
-  /**
-   * Get a specific location by ID
-   * @param id - Location ID
-   * @param params - Optional query parameters
-   * @param params.with_children - Include children locations
-   * @param params.with_parent - Include parent location
-   */
+  
   getById: async (
     id: number,
     params?: {
@@ -58,10 +41,7 @@ export const locationService = {
     return response.data;
   },
 
-  /**
-   * Get children of a specific location
-   * @param id - Parent location ID
-   */
+  
   getChildren: async (id: number) => {
     const response = await api.get<LocationsResponse>(
       `/locations/${id}/children`,
@@ -69,10 +49,7 @@ export const locationService = {
     return response.data;
   },
 
-  /**
-   * Get tree count for a specific location
-   * @param id - Location ID
-   */
+  
   getTreeCount: async (id: number) => {
     const response = await api.get<TreeCountResponse>(
       `/locations/${id}/tree-count`,
@@ -80,9 +57,7 @@ export const locationService = {
     return response.data;
   },
 
-  /**
-   * Get location hierarchy (root locations with their children)
-   */
+  
   getHierarchy: async () => {
     const response = await api.get<LocationsResponse>("/locations", {
       params: {
@@ -93,21 +68,14 @@ export const locationService = {
     return response.data;
   },
 
-  /**
-   * Find location by name (case-insensitive)
-   * @param name - Location name to search for
-   * @param locations - Array of locations to search in
-   */
+  
   findByName: (name: string, locations: Location[]): Location | undefined => {
     return locations.find(
       (loc) => loc.name.toLowerCase() === name.toLowerCase(),
     );
   },
 
-  /**
-   * Build location breadcrumb path
-   * @param location - Location with loaded parent relationships
-   */
+  
   getBreadcrumb: (location: Location): string[] => {
     const breadcrumb: string[] = [location.name];
     let current = location.parent;
@@ -120,10 +88,7 @@ export const locationService = {
     return breadcrumb;
   },
 
-  /**
-   * Flatten location hierarchy into a flat array
-   * @param locations - Array of locations with children
-   */
+  
   flatten: (locations: Location[]): Location[] => {
     const result: Location[] = [];
 
@@ -138,5 +103,49 @@ export const locationService = {
 
     traverse(locations);
     return result;
+  },
+
+  
+  getTreeLocationStates: async () => {
+    const response = await api.get<{
+      success: boolean;
+      message: string;
+      data: any[];
+    }>("/tree-locations/states");
+    return response.data;
+  },
+
+  
+  getTreeLocationAreas: async (stateId: number) => {
+    const response = await api.get<{
+      success: boolean;
+      message: string;
+      data: any[];
+    }>(`/tree-locations/states/${stateId}/areas`);
+    return response.data;
+  },
+
+  
+  getTreeLocationCities: async (areaId: number) => {
+    const response = await api.get<{
+      success: boolean;
+      message: string;
+      data: any[];
+    }>(`/tree-locations/areas/${areaId}/cities`);
+    return response.data;
+  },
+
+  
+  getTreeLocationHierarchy: async () => {
+    const response = await api.get<{
+      success: boolean;
+      message: string;
+      data: {
+        states: any[];
+        areas: any[];
+        cities: any[];
+      };
+    }>("/tree-locations/hierarchy");
+    return response.data;
   },
 };

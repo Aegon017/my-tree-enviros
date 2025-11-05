@@ -36,15 +36,12 @@ export function useAuth() {
     (state: RootState) => state.wishlist.isGuest,
   );
 
-  /**
-   * Login user by setting user data
-   * For SPA auth, no token is stored - Laravel manages session via httpOnly cookies
-   */
+  
   const login = useCallback(
     async (userData: User) => {
       dispatch(setUserAction(userData));
 
-      // Sync guest cart and wishlist to backend if they are in guest mode
+      
       if (isGuestCart || isGuestWishlist) {
         try {
           const syncResult = await syncService.syncAllOnLogin(
@@ -53,7 +50,7 @@ export function useAuth() {
           );
 
           if (syncResult.success) {
-            // Update cart and wishlist with merged data from backend
+            
             if (isGuestCart) {
               dispatch(setCartItems(syncResult.cart));
               dispatch(markCartSynced());
@@ -65,16 +62,14 @@ export function useAuth() {
           }
         } catch (error) {
           console.error("Failed to sync cart/wishlist on login:", error);
-          // Continue with login even if sync fails
+          
         }
       }
     },
     [dispatch, cartItems, wishlistItems, isGuestCart, isGuestWishlist],
   );
 
-  /**
-   * Logout user by clearing session on backend and local user data
-   */
+  
   const logout = useCallback(async () => {
     try {
       dispatch(setLoadingAction(true));
@@ -82,16 +77,16 @@ export function useAuth() {
       dispatch(clearUserAction());
       authStorage.clearAll();
 
-      // Convert cart and wishlist back to guest mode
+      
       dispatch(markCartGuest());
       dispatch(markWishlistGuest());
     } catch (error) {
       console.error("Logout error:", error);
-      // Clear local data even if API call fails
+      
       dispatch(clearUserAction());
       authStorage.clearAll();
 
-      // Convert cart and wishlist back to guest mode
+      
       dispatch(markCartGuest());
       dispatch(markWishlistGuest());
     } finally {
@@ -99,9 +94,7 @@ export function useAuth() {
     }
   }, [dispatch]);
 
-  /**
-   * Check if user is authenticated by fetching current user from backend
-   */
+  
   const checkAuth = useCallback(async (): Promise<boolean> => {
     try {
       dispatch(setLoadingAction(true));

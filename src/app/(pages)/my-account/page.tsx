@@ -71,10 +71,7 @@ const addressSchema = z.object({
 });
 type AddressFormValues = z.infer<typeof addressSchema>;
 
-/**
- * Order shapes returned by the new backend resources.
- * We keep these permissive (partial) to tolerate shape evolution.
- */
+
 type OrderLite = {
   id: number;
   order_number?: string;
@@ -560,7 +557,7 @@ const OrderDetailsModal = ({
                   >
                     <div className="w-16 h-16 rounded bg-muted flex items-center justify-center overflow-hidden">
                       {it.item?.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                        
                         <img
                           src={it.item?.image}
                           alt={it.item?.name || "Item"}
@@ -602,10 +599,10 @@ export default function AccountPage() {
   const authUser = useSelector((s: RootState) => s.auth.user);
   const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
 
-  // Tabs
+  
   const [tab, setTab] = useState<"profile" | "orders" | "addresses">("profile");
 
-  // Profile state
+  
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [isEditing, setEditing] = useState(false);
@@ -615,13 +612,13 @@ export default function AccountPage() {
     defaultValues: { name: "", email: "" },
   });
 
-  // Orders state
+  
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [orders, setOrders] = useState<OrderLite[]>([]);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
 
-  // Address state
+  
   const [addrLoading, setAddrLoading] = useState(false);
   const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
   const [addrModalOpen, setAddrModalOpen] = useState(false);
@@ -648,7 +645,7 @@ export default function AccountPage() {
           name: res.data.user.name || "",
           email: res.data.user.email || "",
         });
-        // Keep Redux auth user roughly up-to-date (best effort mapping)
+        
         dispatch(
           updateAuthUser({
             name: res.data.user.name,
@@ -703,7 +700,7 @@ export default function AccountPage() {
       });
       setDetailsOpen(true);
     } catch {
-      // noop: errors are handled by interceptor/toasts elsewhere
+      
     }
   }, []);
 

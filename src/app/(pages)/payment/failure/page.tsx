@@ -33,14 +33,14 @@ function PaymentFailurePage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
       <div className="max-w-md w-full space-y-8">
-        {/* Failure Icon */}
+        {}
         <div className="text-center">
           <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-red-100 dark:bg-red-900/20">
             <XCircle className="h-12 w-12 text-red-600 dark:text-red-400" />
           </div>
         </div>
 
-        {/* Failure Message */}
+        {}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-foreground">Payment Failed</h1>
           <p className="text-muted-foreground">
@@ -48,7 +48,7 @@ function PaymentFailurePage() {
           </p>
         </div>
 
-        {/* Error Alert */}
+        {}
         <Alert
           variant="destructive"
           className="bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
@@ -58,7 +58,7 @@ function PaymentFailurePage() {
           </AlertDescription>
         </Alert>
 
-        {/* Order Details Card */}
+        {}
         <Card className="border-border">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg text-foreground">
@@ -99,7 +99,7 @@ function PaymentFailurePage() {
           </CardContent>
         </Card>
 
-        {/* Action Buttons */}
+        {}
         <div className="flex flex-col sm:flex-row gap-3">
           <Button asChild variant="outline" className="flex-1">
             <Link href="/">

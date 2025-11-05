@@ -7,16 +7,13 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true,
-  withXSRFToken: true, // Essential for Sanctum SPA - sends cookies
+  withXSRFToken: true, 
 });
 
-// CSRF token initialization flag
+
 let csrfInitialized = false;
 
-/**
- * Initialize CSRF token from Laravel Sanctum
- * This must be called before any state-changing requests (POST, PUT, DELETE)
- */
+
 export async function initializeCsrf(): Promise<void> {
   if (csrfInitialized) return;
 
@@ -34,10 +31,10 @@ export async function initializeCsrf(): Promise<void> {
   }
 }
 
-// Request interceptor - ensures CSRF token is initialized
+
 api.interceptors.request.use(
   async (config) => {
-    // For state-changing requests, ensure CSRF token is initialized
+    
     const methodsRequiringCsrf = ["post", "put", "patch", "delete"];
     if (
       config.method &&
@@ -46,7 +43,7 @@ api.interceptors.request.use(
       await initializeCsrf();
     }
 
-    // Add X-Platform header for web (helps backend distinguish web from mobile)
+    
     if (!config.headers["X-Platform"]) {
       config.headers["X-Platform"] = "web";
     }
@@ -58,16 +55,16 @@ api.interceptors.request.use(
   },
 );
 
-// Response interceptor - handle authentication errors
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Session expired or unauthenticated
-      // Reset CSRF initialization flag
+      
+      
       csrfInitialized = false;
 
-      // Only redirect if not already on auth pages
+      
       if (
         typeof window !== "undefined" &&
         !window.location.pathname.startsWith("/sign-in") &&
@@ -79,7 +76,7 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 419) {
-      // CSRF token mismatch - reinitialize and retry
+      
       csrfInitialized = false;
     }
 

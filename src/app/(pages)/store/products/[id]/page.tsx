@@ -23,9 +23,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { authStorage } from "@/lib/auth-storage";
 import { ProductType } from "@/enums/product.enum";
 import { CheckoutType } from "@/enums/checkout.enum";
-import type { Product } from "@/services/product.service";
-import type { Review } from "@/types/review.type";
-import type { Color, Size, Planter, ProductVariant } from "@/types/product";
+import { productService } from "@/services/product.service";
+import type { Product, Color, Size, Planter, ProductVariant } from "@/types/product";
+import type { ProductReview } from "@/types/product-review.types";
 import {
   Form,
   FormControl,
@@ -35,10 +35,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import api from "@/lib/axios";
+import { Review } from "@/types/review.type";
 
 const fetcher = async ( url: string ) => {
-  const { data } = await api.get( url );
-  return data;
+  const response = await api.request({ url });
+  return response.data;
+};
+
+const productFetcher = async ( url: string ) => {
+  const response = await productService.getById(Number(url.split('/').pop()));
+  return {
+    success: response.success,
+    message: response.message,
+    data: { product: response.data.product }
+  };
 };
 
 const reviewSchema = z.object( {
@@ -350,7 +360,7 @@ export default function ProductPage( { params }: Props ) {
 
   const getAvailableColors = useCallback( () => {
     return product?.variant_options?.colors?.filter( ( color ) =>
-      product.variants.some(
+      product.variants?.some(
         ( variant ) =>
           variant.variant.color?.id === color.id &&
           variant.variant.planter?.id === selectedPlanter?.id
@@ -360,7 +370,7 @@ export default function ProductPage( { params }: Props ) {
 
   const getAvailableSizes = useCallback( () => {
     return product?.variant_options?.sizes?.filter( ( size ) =>
-      product.variants.some(
+      product.variants?.some(
         ( variant ) =>
           variant.variant.size?.id === size.id &&
           variant.variant.planter?.id === selectedPlanter?.id &&
@@ -371,7 +381,7 @@ export default function ProductPage( { params }: Props ) {
 
   const getAvailablePlanters = useCallback( () => {
     return product?.variant_options?.planters?.filter( ( planter ) =>
-      product.variants.some(
+      product.variants?.some(
         ( variant ) =>
           variant.variant.planter?.id === planter.id &&
           ( !selectedColor || variant.variant.color?.id === selectedColor.id ) &&
@@ -448,7 +458,7 @@ export default function ProductPage( { params }: Props ) {
       case 'color':
         setSelectedColor( value );
         if ( selectedPlanter ) {
-          const hasValidSize = product?.variants.some(
+          const hasValidSize = product?.variants?.some(
             ( variant ) =>
               variant.variant.color?.id === value.id &&
               variant.variant.size?.id === selectedSize?.id &&
@@ -462,7 +472,7 @@ export default function ProductPage( { params }: Props ) {
       case 'size':
         setSelectedSize( value );
         if ( selectedPlanter ) {
-          const hasValidColor = product?.variants.some(
+          const hasValidColor = product?.variants?.some(
             ( variant ) =>
               variant.variant.size?.id === value.id &&
               variant.variant.color?.id === selectedColor?.id &&

@@ -1,19 +1,8 @@
 import api from "@/lib/axios";
 
-/**
- * Blog API Service
- * Uses backend endpoints:
- * - GET /blogs
- * - GET /blogs/{id}
- *
- * For listings, use: thumbnail_url, short_description, created_at
- * For details, use all fields.
- */
 
-/**
- * DTO for a single blog item from the backend.
- * Mirrors App\Http\Resources\Api\V1\BlogResource
- */
+
+
 export type BlogApiItem = {
   id: number;
   blog_category_id: number | null;
@@ -31,9 +20,7 @@ export type BlogApiItem = {
   updated_at: string | null;
 };
 
-/**
- * Query parameters for listing blogs
- */
+
 export type BlogListParams = {
   search?: string;
   category_id?: number;
@@ -43,9 +30,7 @@ export type BlogListParams = {
   page?: number;
 };
 
-/**
- * Meta information for paginated responses
- */
+
 export type PaginationMeta = {
   current_page: number;
   last_page: number;
@@ -55,9 +40,7 @@ export type PaginationMeta = {
   to: number | null;
 };
 
-/**
- * API response shapes
- */
+
 export type BlogListApiResponse = {
   success: boolean;
   message: string;
@@ -75,10 +58,7 @@ export type BlogShowApiResponse = {
   };
 };
 
-/**
- * List blogs with pagination and optional filters.
- * Returns items and meta separately for convenience.
- */
+
 export async function listBlogs(
   params?: BlogListParams,
 ): Promise<{ items: BlogApiItem[]; meta: PaginationMeta }> {
@@ -89,17 +69,13 @@ export async function listBlogs(
   };
 }
 
-/**
- * Get full details for a single blog by ID.
- */
+
 export async function getBlog(id: number): Promise<BlogApiItem> {
   const { data } = await api.get<BlogShowApiResponse>(`/blogs/${id}`);
   return data.data.blog;
 }
 
-/**
- * SWR helper keys (optional)
- */
+
 export function getBlogsSWRKey(params?: BlogListParams) {
   return ["/blogs", params ?? {}] as const;
 }

@@ -18,13 +18,13 @@ export interface CartItem {
     variant?: any;
     color?: any;
     size?: any;
-    product?: any; // Full ProductResource data
+    product?: any; 
   };
   options?: any;
   created_at?: string;
   updated_at?: string;
 
-  // Legacy fields for backward compatibility
+  
   name?: string;
   type?: "tree" | "product" | "campaign";
   image?: string;
@@ -34,7 +34,7 @@ export interface CartItem {
   occasion?: string;
   message?: string;
   location_id?: number;
-  // Campaign-specific (when type === "campaign")
+  
   campaign_type?: CampaignType;
   location?: string;
   description?: string;
@@ -61,18 +61,18 @@ export interface CartItem {
     selected_variant?: any;
     product_data?: any;
   };
-  // Backend-specific fields (when synced)
+  
   user_id?: number;
   product_id?: number;
   tree_id?: number;
-  // Full product/tree/campaign data (from backend)
+  
   product?: Product;
   ecom_product?: Product;
   tree?: any;
   campaign?: Campaign;
 }
 
-// Backend cart response format
+
 export interface BackendCartItem {
   id: number;
   user_id: number;
@@ -97,7 +97,7 @@ export interface BackendCartItem {
   product_variant?: ProductVariant;
 }
 
-// Backend cart response format (actual API response)
+
 export interface BackendCartResponse {
   id: number;
   cart_id: number;
@@ -119,23 +119,23 @@ export interface BackendCartResponse {
     };
     color?: any;
     size?: any;
-    product?: Product; // Full ProductResource data
+    product?: Product; 
   };
   options?: any;
   created_at?: string;
   updated_at?: string;
 }
 
-// Helper to transform backend cart response to unified format
+
 export function transformBackendCartItem(item: BackendCartResponse): CartItem {
-  // Extract product data from the nested structure
+  
   const productData = item.item;
   const product = productData?.product;
   
-  // Get variant information from the product's variants array
+  
   let variantInfo = null;
   if (product?.variants && product.variants.length > 0) {
-    variantInfo = product.variants[0]; // Use first variant as default
+    variantInfo = product.variants[0]; 
   }
   
   return {
@@ -147,7 +147,7 @@ export function transformBackendCartItem(item: BackendCartResponse): CartItem {
     quantity: item.quantity,
     image: productData?.image || product?.thumbnail_url || "",
     slug: product?.slug,
-    product_type: 2, // Default to ecom product
+    product_type: 2, 
     formatted_price: item.formatted_price,
     subtotal: item.subtotal,
     formatted_subtotal: item.formatted_subtotal,
@@ -164,7 +164,7 @@ export function transformBackendCartItem(item: BackendCartResponse): CartItem {
           planter_id: variantInfo.variant?.planter?.id,
         }
       : undefined,
-    item: productData, // Keep the original item structure for backward compatibility
+    item: productData, 
     options: item.options,
     created_at: item.created_at,
     updated_at: item.updated_at,
@@ -173,7 +173,7 @@ export function transformBackendCartItem(item: BackendCartResponse): CartItem {
   };
 }
 
-// Legacy function for backward compatibility
+
 export function transformBackendCart(item: BackendCartItem): CartItem {
   const product = item.product || item.ecom_product;
   const variant = item.product_variant;
@@ -182,12 +182,12 @@ export function transformBackendCart(item: BackendCartItem): CartItem {
   let itemImage = product?.thumbnail_url || "";
 
   if (variant) {
-    // If we have a variant, use variant price and details
+    
     itemPrice = variant.price;
     itemImage = variant.images?.[0]?.url || itemImage;
-    // Keep the product name but could modify if needed
+    
   } else {
-    // Fallback to product price
+    
     itemPrice =
       typeof product?.price === "string"
         ? parseFloat(product.price)

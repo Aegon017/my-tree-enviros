@@ -2,17 +2,13 @@
 
 import { Markup } from "interweave";
 import {
-  BookOpen,
   Calendar,
   Check,
   Facebook,
-  Heart,
   Link2,
   Linkedin,
   Share2,
-  Tags,
   Twitter,
-  User,
 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -27,12 +23,6 @@ import {
   type BlogApiItem,
 } from "@/services/blog.service";
 import type { BreadcrumbItemType } from "@/types/home";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-
-// Using blog.service for data fetching
-
-// Fetcher not needed; using blog.service
 
 const breadcrumbItems: BreadcrumbItemType[] = [
   { title: "Home", href: "/" },
@@ -78,19 +68,19 @@ export default function Page() {
     {
       name: "Facebook",
       icon: Facebook,
-      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      url: `https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
       color: "hover:bg-blue-500 hover:text-white",
     },
     {
       name: "Twitter",
       icon: Twitter,
-      url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(blog?.title || "")}`,
+      url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(blog?.title || '')}`,
       color: "hover:bg-blue-400 hover:text-white",
     },
     {
       name: "LinkedIn",
       icon: Linkedin,
-      url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+      url: `https://linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
       color: "hover:bg-blue-600 hover:text-white",
     },
   ];

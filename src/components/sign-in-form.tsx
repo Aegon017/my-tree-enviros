@@ -75,7 +75,7 @@ export function SigninForm({
         });
 
         if (result.success) {
-          // Store OTP resend timer
+          
           const resetTime = Date.now() + 60000;
           authStorage.setResendTime(resetTime);
 
@@ -83,7 +83,7 @@ export function SigninForm({
             result.message || "Verification code sent successfully",
           );
 
-          // Inline OTP or navigate based on prop
+          
           if (onOtpSent) {
             onOtpSent({
               country_code: phoneNumber.countryCallingCode,
@@ -101,12 +101,12 @@ export function SigninForm({
         if (error instanceof AxiosError) {
           const serverError = error.response?.data;
 
-          // Handle server-side validation errors
+          
           if (serverError?.errors) {
-            // Clear all existing errors first
+            
             form.clearErrors();
 
-            // Set server-side validation errors for specific fields
+            
             Object.keys(serverError.errors).forEach((field) => {
               if (field in form.getValues()) {
                 form.setError(field as keyof FormData, {
@@ -118,7 +118,7 @@ export function SigninForm({
               }
             });
 
-            // If there are general errors not associated with specific fields, show as toast
+            
             if (serverError.message && !serverError.errors) {
               toast.error(serverError.message);
             }

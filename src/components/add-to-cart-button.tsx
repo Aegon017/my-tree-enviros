@@ -78,9 +78,9 @@ export default function AddToCartButton({
       return;
     }
 
-    // Create rich cart item structure matching backend API format
+    
     const cartItem = {
-      // Basic cart properties
+      
       id: productId,
       cart_id: productId,
       name: productName,
@@ -93,7 +93,7 @@ export default function AddToCartButton({
       subtotal: productPrice * quantity,
       formatted_subtotal: `₹${productPrice * quantity}`,
       
-      // Backend-style structure for consistency
+      
       item: {
         type: "product",
         name: productName,
@@ -106,7 +106,7 @@ export default function AddToCartButton({
         } : undefined,
         product: product ? {
           ...product,
-          // Ensure we have all the necessary product data
+          
           id: product.id,
           name: product.name,
           slug: product.slug,
@@ -121,7 +121,7 @@ export default function AddToCartButton({
         } : undefined,
       },
       
-      // Legacy compatibility
+      
       slug: product?.slug,
       description: product?.description,
       category: product?.category,
@@ -155,7 +155,7 @@ export default function AddToCartButton({
 
     setIsLoading(true);
     try {
-      // If authenticated user, add to backend
+      
       if (isAuthenticated && !isGuest) {
         const cartPayload: any = {
           type: cartType,
@@ -163,11 +163,11 @@ export default function AddToCartButton({
           quantity,
           duration: selectedYears,
           name: productName,
-          occasion: undefined, // Tree products would have this
-          message: undefined, // Tree products would have this
-          location_id: undefined, // Tree products would have this
-          item_type: "product", // Required field for backend
-          // Include complete product data for backend processing
+          occasion: undefined, 
+          message: undefined, 
+          location_id: undefined, 
+          item_type: "product", 
+          
           product_data: {
             id: product?.id,
             name: product?.name,
@@ -181,7 +181,7 @@ export default function AddToCartButton({
           },
         };
 
-        // Only add product_variant_id if a variant is actually selected
+        
         if (selectedVariantId) {
           cartPayload.product_variant_id = selectedVariantId;
           cartPayload.variant_data = {
@@ -201,7 +201,7 @@ export default function AddToCartButton({
         await cartService.addToCart(productId, cartPayload);
       }
 
-      // Add to local cart (for both guest and authenticated users)
+      
       addToCart(cartItem);
       const actionText = cartType === 1 ? "added to cart" : "sponsored";
       const treeText = quantity > 1 ? "trees" : "tree";
@@ -226,14 +226,14 @@ export default function AddToCartButton({
 
     setIsLoading(true);
     try {
-      // If authenticated user, clear backend cart
+      
       if (isAuthenticated && !isGuest) {
         await cartService.clearCart();
       }
 
       clearAllItems();
 
-      // If authenticated user, add to backend
+      
       if (isAuthenticated && !isGuest) {
         const cartPayload: any = {
           type: pendingAction.cartType,
@@ -245,7 +245,7 @@ export default function AddToCartButton({
           message: undefined,
           location_id: undefined,
           item_type: "product",
-          // Include complete product data for backend processing
+          
           product_data: {
             id: product?.id,
             name: product?.name,
@@ -259,7 +259,7 @@ export default function AddToCartButton({
           },
         };
 
-        // Only add product_variant_id if a variant is actually selected
+        
         if (selectedVariantId) {
           cartPayload.product_variant_id = selectedVariantId;
           cartPayload.variant_data = {
@@ -280,7 +280,7 @@ export default function AddToCartButton({
       }
 
       const cartItem = {
-        // Basic cart properties
+        
         id: productId,
         cart_id: productId,
         name: productName,
@@ -293,7 +293,7 @@ export default function AddToCartButton({
         subtotal: productPrice * quantity,
         formatted_subtotal: `₹${productPrice * quantity}`,
         
-        // Backend-style structure for consistency
+        
         item: {
           type: "product",
           name: productName,
@@ -306,7 +306,7 @@ export default function AddToCartButton({
           } : undefined,
           product: product ? {
             ...product,
-            // Ensure we have all the necessary product data
+            
             id: product.id,
             name: product.name,
             slug: product.slug,
@@ -321,7 +321,7 @@ export default function AddToCartButton({
           } : undefined,
         },
         
-        // Legacy compatibility
+        
         slug: product?.slug,
         description: product?.description,
         category: product?.category,
@@ -376,7 +376,7 @@ export default function AddToCartButton({
         className="flex-1 w-full"
         onClick={handleCartAction}
         disabled={disabled || isLoading}
-        // loading={ isLoading }
+        
       >
         {isProductInCart ? (
           <>
@@ -412,7 +412,7 @@ export default function AddToCartButton({
               variant="destructive"
               onClick={handleClearCartAndAdd}
               disabled={isLoading}
-              // loading={ isLoading }
+              
             >
               Clear Cart & Add Item
             </Button>

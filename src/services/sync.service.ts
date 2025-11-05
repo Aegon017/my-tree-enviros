@@ -3,21 +3,16 @@
 import { cartService } from "./cart.service";
 import { wishlistService } from "./wishlist.service";
 
-/**
- * Service to sync guest cart and wishlist with backend on login
- */
+
 export const syncService = {
-  /**
-   * Sync guest cart to backend after login
-   * @param guestCart - Array of cart items from localStorage
-   */
+  
   syncCart: async (guestCart: any[]): Promise<boolean> => {
     if (!guestCart || guestCart.length === 0) {
-      return true; // Nothing to sync
+      return true; 
     }
 
     try {
-      // Transform guest cart items to match backend format
+      
       const items = guestCart.map((item) => ({
         product_id: item.product_id,
         type: item.type,
@@ -30,7 +25,7 @@ export const syncService = {
         location_id: item.location_id,
       }));
 
-      // Send guest cart items to backend
+      
       const response = await cartService.syncCart({ items });
       return response.success;
     } catch (error) {
@@ -39,23 +34,20 @@ export const syncService = {
     }
   },
 
-  /**
-   * Sync guest wishlist to backend after login
-   * @param guestWishlist - Array of wishlist items from localStorage
-   */
+  
   syncWishlist: async (guestWishlist: any[]): Promise<boolean> => {
     if (!guestWishlist || guestWishlist.length === 0) {
-      return true; // Nothing to sync
+      return true; 
     }
 
     try {
-      // Transform guest wishlist items to match backend format (product_id + optional product_variant_id)
+      
       const items = guestWishlist.map((item) => ({
         product_id: item.product_id ?? item.id,
         product_variant_id: item.product_variant_id ?? null,
       }));
 
-      // Send guest wishlist items to backend
+      
       const response = await wishlistService.syncWishlist({ items });
       return response.success;
     } catch (error) {
@@ -64,9 +56,7 @@ export const syncService = {
     }
   },
 
-  /**
-   * Fetch cart from backend after login
-   */
+  
   fetchCartFromBackend: async () => {
     try {
       const response = await cartService.getCart();
@@ -77,9 +67,7 @@ export const syncService = {
     }
   },
 
-  /**
-   * Fetch wishlist from backend after login
-   */
+  
   fetchWishlistFromBackend: async () => {
     try {
       const response = await wishlistService.getWishlist();
@@ -90,10 +78,7 @@ export const syncService = {
     }
   },
 
-  /**
-   * Complete sync process: merge guest data with backend data
-   * Called after successful login
-   */
+  
   syncAllOnLogin: async (
     guestCart: any[],
     guestWishlist: any[],
@@ -103,13 +88,13 @@ export const syncService = {
     success: boolean;
   }> => {
     try {
-      // Sync guest cart to backend
+      
       await syncService.syncCart(guestCart);
 
-      // Sync guest wishlist to backend
+      
       await syncService.syncWishlist(guestWishlist);
 
-      // Fetch merged data from backend
+      
       const [cart, wishlist] = await Promise.all([
         syncService.fetchCartFromBackend(),
         syncService.fetchWishlistFromBackend(),
@@ -130,18 +115,15 @@ export const syncService = {
     }
   },
 
-  /**
-   * Clear synced data on logout
-   * Optionally keep data in guest mode
-   */
+  
   handleLogout: (keepData: boolean = true) => {
     if (!keepData) {
-      // Clear localStorage
+      
       if (typeof window !== "undefined") {
         localStorage.removeItem("guest_cart");
         localStorage.removeItem("guest_wishlist");
       }
     }
-    // If keepData is true, cart and wishlist stay in guest mode
+    
   },
 };

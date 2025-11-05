@@ -28,7 +28,7 @@ export function LocationSelectionModal() {
   const [open, setOpen] = useState(false);
   const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
 
-  // Check if user has previously selected a location
+  
   useEffect(() => {
     if (!hasCheckedStorage) {
       syncFromStorage();
@@ -36,7 +36,7 @@ export function LocationSelectionModal() {
     }
   }, [hasCheckedStorage, syncFromStorage]);
 
-  // Show modal if no location is selected after checking storage
+  
   useEffect(() => {
     if (hasCheckedStorage && !selectedLocation) {
       setOpen(true);

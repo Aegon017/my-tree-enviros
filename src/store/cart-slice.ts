@@ -7,12 +7,12 @@ export interface CartState {
   items: CartItem[];
   loading: boolean;
   error: string | null;
-  isGuest: boolean; // Track if cart is guest or synced with backend
+  isGuest: boolean; 
 }
 
 const CART_STORAGE_KEY = "guest_cart";
 
-// Load cart from localStorage
+
 const loadGuestCart = (): CartItem[] => {
   if (typeof window === "undefined") return [];
   try {
@@ -23,7 +23,7 @@ const loadGuestCart = (): CartItem[] => {
   }
 };
 
-// Save cart to localStorage
+
 const saveGuestCart = (items: CartItem[]) => {
   if (typeof window === "undefined") return;
   try {
@@ -33,7 +33,7 @@ const saveGuestCart = (items: CartItem[]) => {
   }
 };
 
-// Clear guest cart from localStorage
+
 const clearGuestCart = () => {
   if (typeof window === "undefined") return;
   localStorage.removeItem(CART_STORAGE_KEY);
@@ -50,11 +50,11 @@ const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    // Add item to cart (guest or logged in)
+    
     addItem: (state, action: PayloadAction<CartItem>) => {
       const existingItem = state.items.find(
         (item) => {
-          // Enhanced matching logic for both guest and backend cart formats
+          
           const itemProductId = item.cart_id || item.id;
           const actionProductId = action.payload.cart_id || action.payload.id;
           
@@ -68,7 +68,7 @@ const cartSlice = createSlice({
 
       if (existingItem) {
         existingItem.quantity += action.payload.quantity || 1;
-        // Update other properties to match the newest item data
+        
         if (action.payload.formatted_price && !existingItem.formatted_price) {
           existingItem.formatted_price = action.payload.formatted_price;
         }
@@ -87,7 +87,7 @@ const cartSlice = createSlice({
       }
     },
 
-    // Update item quantity
+    
     updateQuantity: (
       state,
       action: PayloadAction<{ id: number; type: string; quantity: number }>,
@@ -112,7 +112,7 @@ const cartSlice = createSlice({
       }
     },
 
-    // Remove item from cart
+    
     removeItem: (
       state,
       action: PayloadAction<{ id: number; type: string }>,
@@ -127,7 +127,7 @@ const cartSlice = createSlice({
       }
     },
 
-    // Clear all items
+    
     clearCart: (state) => {
       state.items = [];
       if (state.isGuest) {
@@ -135,41 +135,41 @@ const cartSlice = createSlice({
       }
     },
 
-    // Set cart items (used when loading from backend)
+    
     setCartItems: (state, action: PayloadAction<CartItem[]>) => {
       state.items = action.payload;
     },
 
-    // Set loading state
+    
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
 
-    // Set error
+    
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
 
-    // Mark cart as synced with backend
+    
     markAsSynced: (state) => {
       state.isGuest = false;
-      clearGuestCart(); // Clear guest cart after sync
+      clearGuestCart(); 
     },
 
-    // Mark cart as guest (on logout)
+    
     markAsGuest: (state) => {
       state.isGuest = true;
       saveGuestCart(state.items);
     },
 
-    // Sync from localStorage
+    
     syncFromStorage: (state) => {
       if (state.isGuest) {
         state.items = loadGuestCart();
       }
     },
 
-    // Clear error
+    
     clearError: (state) => {
       state.error = null;
     },
@@ -192,7 +192,7 @@ export const {
 
 export default cartSlice.reducer;
 
-// Selectors
+
 export const selectCartItems = (state: { cart: CartState }) => state.cart.items;
 export const selectCartItemCount = (state: { cart: CartState }) =>
   state.cart.items.reduce((total, item) => total + item.quantity, 0);

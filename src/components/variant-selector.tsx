@@ -27,9 +27,9 @@ export function VariantSelector({
 }: VariantSelectorProps) {
   return (
     <div className="space-y-6">
-      {/* Color Selector - Visual circles like Ugaoo */}
+      {}
 
-      {/* Size Selector - Buttons like Ugaoo */}
+      {}
       {sizes.length > 0 && (
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-gray-900">Size</h4>
@@ -52,7 +52,7 @@ export function VariantSelector({
         </div>
       )}
 
-      {/* Planter Selector - Image buttons like Ugaoo */}
+      {}
       {planters.length > 0 && (
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-gray-900">Planter</h4>

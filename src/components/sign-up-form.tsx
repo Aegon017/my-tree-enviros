@@ -68,14 +68,14 @@ export function SignupForm({
       const payload = {
         country_code: `+${phoneNumber.countryCallingCode}`,
         phone: phoneNumber.nationalNumber,
-        type: "individual" as const, // Default user type
+        type: "individual" as const, 
       };
 
       try {
         const result = await authService.signUp(payload);
 
         if (result.success) {
-          // Store OTP resend timer
+          
           const resetTime = Date.now() + 60000;
           authStorage.setResendTime(resetTime);
 
@@ -83,7 +83,7 @@ export function SignupForm({
             result.message || "Verification code sent successfully",
           );
 
-          // Navigate to verify OTP page
+          
           router.push(
             `/verify-otp?country_code=${encodeURIComponent(phoneNumber.countryCallingCode)}&phone=${encodeURIComponent(phoneNumber.nationalNumber)}`,
           );

@@ -2,10 +2,7 @@
 
 import api from "@/lib/axios";
 
-/**
- * Backend-aligned Wishlist types (Api V1)
- * Resource shapes are normalized for frontend consumption where needed.
- */
+
 
 export interface WishlistStock {
   is_instock: boolean;
@@ -20,7 +17,7 @@ export interface WishlistItem {
   is_variant: boolean;
   product_name: string;
   product_image?: string | null;
-  // Expanded objects when present (controller loads relations before responding)
+  
   product?: {
     id: number;
     name: string;
@@ -28,14 +25,14 @@ export interface WishlistItem {
     price: number;
     discount_price?: number | null;
     main_image_url?: string;
-    quantity?: number; // from resource.inventory.stock_quantity
+    quantity?: number; 
     inventory?: {
       id: number | null;
       stock_quantity: number;
       is_instock: boolean;
       has_variants: boolean;
     };
-    // variants may be sent, but we won't rely on it for the wishlist item
+    
   };
   product_variant?: {
     id: number;
@@ -56,8 +53,8 @@ export interface WishlistItem {
   created_at: string;
   updated_at: string;
 
-  // For backward compatibility in UI badges where we previously had tree vs product
-  // In this backend, wishlist is for e-commerce products only, so set 2 (product)
+  
+  
   product_type?: 2;
 }
 
@@ -87,10 +84,7 @@ export interface WishlistMoveToCartEnvelope {
   };
 }
 
-/**
- * Public response used by UI (kept compatible with existing calls)
- * data carries a flat array of normalized WishlistItem entries
- */
+
 export interface WishlistResponse {
   success: boolean;
   message: string;
@@ -119,9 +113,7 @@ export interface CheckWishlistResponse {
   };
 }
 
-/**
- * Internal: normalize items to add product_type = 2 for UI compatibility
- */
+
 function normalizeItems(
   items: WishlistItem[] | undefined | null,
 ): WishlistItem[] {
@@ -132,14 +124,9 @@ function normalizeItems(
   }));
 }
 
-/**
- * Wishlist Service aligned with backend API (Api V1)
- */
+
 export const wishlistService = {
-  /**
-   * Get all wishlist items for the authenticated user
-   * GET /wishlist
-   */
+  
   getWishlist: async (): Promise<WishlistResponse> => {
     const response = await api.get<WishlistApiEnvelope>("/wishlist");
     const items = normalizeItems(response.data.data.wishlist.items);
@@ -150,10 +137,7 @@ export const wishlistService = {
     };
   },
 
-  /**
-   * Add item to wishlist
-   * POST /wishlist/items
-   */
+  
   addToWishlist: async (
     payload: AddToWishlistPayload,
   ): Promise<WishlistResponse> => {
@@ -169,10 +153,7 @@ export const wishlistService = {
     };
   },
 
-  /**
-   * Remove item from wishlist by wishlist item id
-   * DELETE /wishlist/items/{id}
-   */
+  
   removeFromWishlist: async (itemId: number): Promise<WishlistResponse> => {
     const response = await api.delete<WishlistApiEnvelope>(
       `/wishlist/items/${itemId}`,
@@ -185,15 +166,12 @@ export const wishlistService = {
     };
   },
 
-  /**
-   * Remove item from wishlist by product (+ optional variant)
-   * Convenience method for UIs that only know product/variant
-   */
+  
   removeByProduct: async (
     productId: number,
     productVariantId?: number | null,
   ): Promise<WishlistResponse> => {
-    // Find matching item id first
+    
     const current = await wishlistService.getWishlist();
     const match = current.data.find(
       (it) =>
@@ -204,17 +182,14 @@ export const wishlistService = {
     );
 
     if (!match) {
-      // Nothing to remove; return current state
+      
       return current;
     }
 
     return wishlistService.removeFromWishlist(match.id);
   },
 
-  /**
-   * Clear all items from wishlist
-   * DELETE /wishlist
-   */
+  
   clearWishlist: async (): Promise<WishlistResponse> => {
     const response = await api.delete<WishlistApiEnvelope>("/wishlist");
     const items = normalizeItems(response.data.data.wishlist.items);
@@ -225,10 +200,7 @@ export const wishlistService = {
     };
   },
 
-  /**
-   * Move wishlist item to cart
-   * POST /wishlist/items/{id}/move-to-cart
-   */
+  
   moveToCart: async (
     itemId: number,
     quantity?: number,
@@ -245,10 +217,7 @@ export const wishlistService = {
     };
   },
 
-  /**
-   * Check if a product (and optional variant) is in wishlist
-   * GET /wishlist/check/{productId}?variant_id={id}
-   */
+  
   checkInWishlist: async (
     productId: number,
     variantId?: number | null,
@@ -264,13 +233,7 @@ export const wishlistService = {
     return response.data;
   },
 
-  /**
-   * Sync guest wishlist items with authenticated user's wishlist.
-   * There is no bulk sync endpoint in backend. We perform client-side bulk add:
-   * - For each item, check if it's already in wishlist
-   * - If not, call add endpoint
-   * - Finally, return the latest wishlist items
-   */
+  
   syncWishlist: async (
     payload: SyncWishlistPayload,
   ): Promise<WishlistResponse> => {
@@ -279,7 +242,7 @@ export const wishlistService = {
       return wishlistService.getWishlist();
     }
 
-    // Best-effort: sequentially check and add to avoid duplicate constraint errors
+    
     for (const item of items) {
       try {
         const check = await wishlistService.checkInWishlist(
@@ -293,8 +256,8 @@ export const wishlistService = {
           });
         }
       } catch (err) {
-        // Continue on error to attempt syncing remaining items
-        // eslint-disable-next-line no-console
+        
+        
         console.error("Wishlist sync item failed:", err);
       }
     }
@@ -302,9 +265,7 @@ export const wishlistService = {
     return wishlistService.getWishlist();
   },
 
-  /**
-   * Toggle wishlist status (add if not present, remove if present)
-   */
+  
   toggleWishlist: async (
     productId: number,
     productVariantId?: number | null,
@@ -327,11 +288,9 @@ export const wishlistService = {
     });
   },
 
-  /**
-   * Helper: Check availability
-   */
+  
   isAvailable: (item: WishlistItem): boolean => {
-    // Legacy guest shape fallback (old localStorage schema with ecom_product)
+    
     const legacy: any = item as any;
     if (legacy?.ecom_product) {
       return (
@@ -341,13 +300,11 @@ export const wishlistService = {
     return !!item?.stock?.is_instock && (item?.stock?.quantity ?? 0) > 0;
   },
 
-  /**
-   * Helper: Get product name
-   */
+  
   getProductName: (item: WishlistItem): string => {
     if (item?.product_name) return item.product_name;
 
-    // Legacy guest shape fallback
+    
     const legacy: any = item as any;
     if (legacy?.ecom_product?.name) return legacy.ecom_product.name;
 
@@ -359,15 +316,13 @@ export const wishlistService = {
     return item?.product?.name ?? "Product";
   },
 
-  /**
-   * Helper: Get effective product price (variant price has priority if present)
-   */
+  
   getProductPrice: (item: WishlistItem): number => {
     if (item?.product_variant?.price != null) {
       return Number(item.product_variant.price) || 0;
     }
 
-    // Legacy guest shape fallback
+    
     const legacy: any = item as any;
     if (legacy?.ecom_product?.price != null) {
       return Number(legacy.ecom_product.price) || 0;
@@ -378,13 +333,11 @@ export const wishlistService = {
     return Number(item?.product?.price ?? 0) || 0;
   },
 
-  /**
-   * Helper: Get product image URL
-   */
+  
   getProductImage: (item: WishlistItem): string | undefined => {
     if (item?.product_image) return item.product_image || undefined;
 
-    // Legacy guest shape fallback
+    
     const legacy: any = item as any;
     if (legacy?.ecom_product?.main_image_url) {
       return legacy.ecom_product.main_image_url;
@@ -394,7 +347,7 @@ export const wishlistService = {
   },
 };
 
-// Legacy-style named exports for convenience (optional)
+
 export async function getWishlist() {
   const response = await wishlistService.getWishlist();
   return response.data;

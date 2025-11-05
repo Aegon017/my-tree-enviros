@@ -1,11 +1,5 @@
 "use client";
 
-import Autoplay from "embla-carousel-autoplay";
-import { AlertCircle, RefreshCw, MapPin } from "lucide-react";
-import Image, { type StaticImageData } from "next/image";
-import Link from "next/link";
-import { useRef, useState, useEffect } from "react";
-import useSWR from "swr";
 import BasicTreeCard from "@/components/basic-tree-card";
 import BlogCard from "@/components/blog-card";
 import { EcommerceCard } from "@/components/ecommerce-card";
@@ -26,21 +20,27 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useLocation } from "@/hooks/use-location";
-import { treeService } from "@/services/tree.service";
 import { fetcher } from "@/lib/fetcher";
 import {
-  listBlogs,
   getBlogsSWRKey,
+  listBlogs,
   type BlogApiItem,
 } from "@/services/blog.service";
 import {
-  listSliders,
   getSlidersSWRKey,
+  listSliders,
   type SliderApiItem,
 } from "@/services/slider.service";
+import { treeService } from "@/services/tree.service";
 import type { Blog } from "@/types/blog";
-import type { Product } from "@/services/product.service";
+import type { Product } from "@/types/product.d";
 import type { Tree } from "@/types/tree";
+import Autoplay from "embla-carousel-autoplay";
+import { AlertCircle, MapPin, RefreshCw } from "lucide-react";
+import Image, { type StaticImageData } from "next/image";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import useSWR from "swr";
 import neemTree from "../../public/neem-tree.webp";
 
 interface PromoCard {
@@ -79,7 +79,7 @@ export default function Home() {
   const [blogRetryCount, setBlogRetryCount] = useState(0);
   const { selectedLocation } = useLocation();
 
-  // Location-based trees state
+  
   const [sponsorTrees, setSponsorTrees] = useState<Tree[]>([]);
   const [adoptTrees, setAdoptTrees] = useState<Tree[]>([]);
   const [treesLoading, setTreesLoading] = useState(false);
@@ -109,7 +109,7 @@ export default function Home() {
     listSliders({ active: true }),
   );
 
-  // Fetch location-based trees
+  
   useEffect(() => {
     const fetchLocationTrees = async () => {
       if (!selectedLocation) {
@@ -122,13 +122,11 @@ export default function Home() {
       setTreesError(null);
 
       try {
-        // Fetch sponsor trees
         const sponsorResponse = await treeService.getSponsorship({
           location_id: selectedLocation.id,
           per_page: 5,
         });
-
-        // Fetch adopt trees
+        
         const adoptResponse = await treeService.getAdoption({
           location_id: selectedLocation.id,
           per_page: 5,

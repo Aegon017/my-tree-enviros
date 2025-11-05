@@ -23,7 +23,7 @@ const locationSlice = createSlice({
   reducers: {
     setSelectedLocation: (state, action: PayloadAction<Location | null>) => {
       state.selectedLocation = action.payload;
-      // Store in localStorage for persistence
+      
       if (typeof window !== "undefined") {
         if (action.payload) {
           localStorage.setItem(

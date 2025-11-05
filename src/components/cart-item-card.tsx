@@ -46,11 +46,11 @@ export default function CartItemCard({
     (value: number) => {
       const newQuantity = Math.max(1, value);
       setInputQuantity(newQuantity);
-      // Handle both guest and backend cart data for product ID
+      
       const productId =
-        // Backend format: item.item.product?.id
+        
         item.item?.product?.id ??
-        // Guest format: item.ecom_product?.id, item.product_id, or item.id
+        
         item.ecom_product?.id ??
         item.product_id ??
         item.id;
@@ -69,15 +69,15 @@ export default function CartItemCard({
     [handleQuantityChange],
   );
 
-  // Handle both guest cart (localStorage) and backend cart data
+  
   const getProductData = () => {
-    // Backend cart format: item.item contains product data
+    
     if (item.item) {
       const product = item.item.product;
-      // Get the full variant data from the product's default variant if available
+      
       let fullVariant = null;
       if (product?.variants && product.variants.length > 0) {
-        fullVariant = product.variants[0]; // Use first variant as default
+        fullVariant = product.variants[0]; 
       }
 
       return {
@@ -99,7 +99,7 @@ export default function CartItemCard({
         product: product,
       };
     }
-    // Guest cart format: direct properties
+    
     return {
       name: item.ecom_product?.name ?? item.name,
       botanical_name: item.ecom_product?.botanical_name ?? "",
@@ -138,7 +138,7 @@ export default function CartItemCard({
                   {productData.botanical_name}
                 </p>
               )}
-              {/* Variant information */}
+              {}
               {productData.variant && (
                 <div className="text-xs text-muted-foreground mt-1">
                   <span className="font-medium">Variant:</span>{" "}

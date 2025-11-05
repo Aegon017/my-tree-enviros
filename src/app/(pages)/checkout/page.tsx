@@ -19,19 +19,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { cartService, type CartItem } from "@/services/cart.service";
 
-interface PaymentSuccessResponse {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  amount: number;
-}
-
 const calculateItemPrice = (item: CartItem): number => {
-  // E-commerce product
   if (item.product_type === 2 && item.ecom_product) {
     return item.ecom_product.price * item.quantity;
   }
 
-  // Tree product
   if (item.product_type === 1 && item.product?.price?.length) {
     const priceInfo = item.duration
       ? item.product.price.find((p) => p.duration === item.duration)
@@ -54,7 +46,6 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Fetch cart data
   useEffect(() => {
     const fetchCart = async () => {
       if (!isAuthenticated) {
@@ -81,7 +72,7 @@ export default function CheckoutPage() {
     fetchCart();
   }, [isAuthenticated, router]);
 
-  const { baseTotal, hasTreeProducts, hasEcomProducts } = useMemo(() => {
+  const { baseTotal } = useMemo(() => {
     const total = cartItems.reduce(
       (sum, item) => sum + calculateItemPrice(item),
       0,
@@ -107,42 +98,12 @@ export default function CheckoutPage() {
     setDiscountAmount(0);
   }, []);
 
-  const handlePaymentSuccess = useCallback(
-    (response: PaymentSuccessResponse) => {
-      router.push(
-        `/payment/success?order_id=${response.razorpay_order_id}&transaction_id=${response.razorpay_payment_id}&amount=${response.amount}`,
-      );
-    },
-    [router],
-  );
-
-  const handlePaymentFailure = useCallback(
-    (error: unknown) => {
-      const orderTotal = Math.max(0, baseTotal - discountAmount);
-      let errorMessage = "Payment failed";
-
-      if (error && typeof error === "object") {
-        if ("description" in error && typeof error.description === "string") {
-          errorMessage = error.description;
-        } else if ("message" in error && typeof error.message === "string") {
-          errorMessage = error.message;
-        }
-      }
-
-      router.push(
-        `/payment/failed?error=${encodeURIComponent(errorMessage)}&amount=${orderTotal}`,
-      );
-    },
-    [router, baseTotal, discountAmount],
-  );
-
   const orderTotal = useMemo(() => {
     return Math.max(0, baseTotal - discountAmount);
   }, [baseTotal, discountAmount]);
 
   const isPaymentDisabled = !selectedAddressId || orderTotal <= 0 || isLoading;
 
-  // Show loading state
   if (isLoading) {
     return (
       <div className="container max-w-6xl mx-auto px-4 py-8">
@@ -161,7 +122,6 @@ export default function CheckoutPage() {
     );
   }
 
-  // Show error state
   if (error) {
     return (
       <Section>
@@ -186,7 +146,6 @@ export default function CheckoutPage() {
     );
   }
 
-  // Show empty cart state
   if (cartItems.length === 0) {
     return (
       <Section>
@@ -214,7 +173,6 @@ export default function CheckoutPage() {
         subtitle="Review your order, apply coupons, and complete your purchase"
       />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column - Shipping Information */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -235,7 +193,6 @@ export default function CheckoutPage() {
           </Card>
         </div>
 
-        {/* Right Column - Coupon and Order Summary */}
         <div className="space-y-6">
           <ApplyCoupon
             onCouponApplied={handleCouponApplied}

@@ -68,7 +68,7 @@ export function VerifyOtpForm({
     defaultValues: { otp: "" },
   });
 
-  // Initialize resend timer from storage
+  
   useEffect(() => {
     const savedTime = authStorage.getResendTime();
     if (savedTime) {
@@ -77,7 +77,7 @@ export function VerifyOtpForm({
     }
   }, []);
 
-  // Countdown timer
+  
   useEffect(() => {
     if (resendTimer <= 0) return;
     const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
@@ -103,15 +103,15 @@ export function VerifyOtpForm({
         });
 
         if (result.success && result.data?.user) {
-          // Store user data in Redux and localStorage
+          
           login(result.data.user);
 
-          // Clear OTP resend timer
+          
           authStorage.clearResendTime();
 
           toast.success("OTP verified successfully");
 
-          // Inline success callback if provided, otherwise default navigation
+          
           if (onSuccess) {
             onSuccess(result.data.user);
           } else {
@@ -195,7 +195,7 @@ export function VerifyOtpForm({
       ? `${country_code.startsWith("+") ? country_code : `+${country_code}`} ${phone}`
       : "";
 
-  // Error state: missing phone or country code
+  
   if (!phone || !country_code) {
     return (
       <div className={cn("flex flex-col gap-6", className)} {...props}>

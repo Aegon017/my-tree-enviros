@@ -9,7 +9,6 @@ import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import FeedTreeCardSkeleton from "@/components/skeletons/feed-tree-card-skeleton";
 import { Badge } from "@/components/ui/badge";
-import api from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,8 +18,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-
-import type { Campaign } from "@/types/campaign";
+import type { Campaign } from "@/types/campaign.types";
+import { campaignService } from "@/services/campaign.service";
 
 const calculateProgress = (raised: string, goal: string) => {
   const raisedNum = parseFloat(raised);
@@ -57,10 +56,8 @@ const Page = () => {
   useEffect(() => {
     const fetchFeedTrees = async () => {
       try {
-        const { data: json } = await api.get("/campaigns", {
-          params: { type: "feed", per_page: 50 },
-        });
-        setFeedTrees((json.data?.campaigns as Campaign[]) || []);
+        const response = await campaignService.getByType("feed", { per_page: 50 });
+        setFeedTrees(response.data.campaigns || []);
       } catch (err) {
         console.error("Error fetching feed trees:", err);
         setError("Failed to load feed trees");
@@ -121,12 +118,10 @@ const Page = () => {
           </div>
         ) : (
           feedTrees.map((tree) => {
-            const progress = calculateProgress("0", String(tree.amount ?? "0"));
+            const progress = calculateProgress(String(tree.raised_amount ?? "0"), String(tree.target_amount ?? "0"));
             const expired = isExpired(
               tree.end_date ?? new Date().toISOString(),
             );
-
-            console.log(tree);
 
             return (
               <Card
@@ -136,8 +131,7 @@ const Page = () => {
                 <div className="relative h-48">
                   <Image
                     src={
-                      tree.main_image_url ??
-                      tree.thumbnail_url ??
+                      tree.image ??
                       "/placeholder.svg"
                     }
                     alt={tree.name}
@@ -186,11 +180,11 @@ const Page = () => {
                     <div className="flex justify-between text-sm">
                       <span className="flex items-center gap-1">
                         <Target className="h-4 w-4" />
-                        Goal: {formatCurrency(String(tree.amount ?? "0"))}
+                        Goal: {formatCurrency(String(tree.target_amount ?? "0"))}
                       </span>
                       <span className="flex items-center gap-1 text-green-600">
                         <Heart className="h-4 w-4" />
-                        Suggested: {formatCurrency(String(tree.amount ?? "0"))}
+                        Raised: {formatCurrency(String(tree.raised_amount ?? "0"))}
                       </span>
                     </div>
 
@@ -198,8 +192,8 @@ const Page = () => {
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>{progress}% funded</span>
                       <span>
-                        {formatCurrency("0")} of{" "}
-                        {formatCurrency(String(tree.amount ?? "0"))}
+                        {formatCurrency(String(tree.raised_amount ?? "0"))} of{" "}
+                        {formatCurrency(String(tree.target_amount ?? "0"))}
                       </span>
                     </div>
                   </div>

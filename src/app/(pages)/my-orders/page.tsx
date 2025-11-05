@@ -290,7 +290,7 @@ const MyOrdersPage = () => {
         ))}
       </div>
 
-      {/* Order Detail Dialog */}
+      {}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -302,7 +302,7 @@ const MyOrdersPage = () => {
 
           {selectedOrder && (
             <div className="space-y-6">
-              {/* Order Status */}
+              {}
               <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                 <div>
                   <p className="text-sm text-muted-foreground">Order Status</p>
@@ -330,7 +330,7 @@ const MyOrdersPage = () => {
                 </div>
               </div>
 
-              {/* Order Items */}
+              {}
               <div>
                 <h3 className="font-semibold text-lg mb-4">Order Items</h3>
                 <div className="space-y-3">
@@ -404,7 +404,7 @@ const MyOrdersPage = () => {
                 </div>
               </div>
 
-              {/* Shipping Address */}
+              {}
               {selectedOrder.shipping_address && (
                 <div>
                   <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
@@ -440,7 +440,7 @@ const MyOrdersPage = () => {
                 </div>
               )}
 
-              {/* Payment Info */}
+              {}
               <div>
                 <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
@@ -491,7 +491,7 @@ const MyOrdersPage = () => {
                 </Card>
               </div>
 
-              {/* Action Buttons */}
+              {}
               <div className="flex gap-2 justify-end pt-4">
                 {orderService.canBeCancelled(selectedOrder) && (
                   <Button

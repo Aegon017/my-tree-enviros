@@ -12,20 +12,20 @@ interface Props {
 
 export const CartList = ({ isBackendCart = false }: Props) => {
   const { items, loading, error, removeFromCart, clearAllItems } = useCart();
-  const cart = items; // <-- use items directly from useCart
+  const cart = items; 
 
   if (loading) return <p>Loading cart...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
   if (!cart || cart.length === 0) return <p>Your cart is empty.</p>;
 
   const handleUpdate = (productId: number, params: CartItem) => {
-    // Handle update for both guest and backend cart
+    
     if (isBackendCart) {
-      // Backend cart update logic would go here
-      // For now, use the same logic as guest cart
+      
+      
       console.log("Update backend cart item:", productId, params);
     } else {
-      // Guest cart update logic - this would update localStorage
+      
       console.log("Update guest cart item:", productId, params);
     }
   };
@@ -39,7 +39,7 @@ export const CartList = ({ isBackendCart = false }: Props) => {
       <CardContent className="p-6">
         <h2 className="text-xl font-semibold mb-4">🛒 Your Cart</h2>
         
-        {/* Get cart total */}
+        {}
         <div className="mb-6">
           {cart.reduce((total, item) => {
             const price = item.price || item.ecom_product?.price || 0;

@@ -40,9 +40,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import type { FeedTree } from "@/types/feed-tree";
-import type { CampaignDetailResponse } from "@/types/campaign";
 import { authStorage } from "@/lib/auth-storage";
-import { campaignService, type DirectOrderRequest } from "@/services/campaign.service";
+import { campaignService } from "@/services/campaign.service";
+import type { DirectOrderRequest } from "@/types/campaign.types";
 
 interface ApiResponse {
   status: boolean;
@@ -58,30 +58,6 @@ interface ApiResponse {
       donor_name: string;
       amount: string;
     }>;
-  };
-}
-
-interface RazorpayOrderResponse {
-  order_id: string;
-  amount: number;
-  currency: string;
-}
-
-interface RazorpayOptions {
-  key: string;
-  amount: number;
-  currency: string;
-  name: string;
-  description: string;
-  order_id: string;
-  handler: (response: any) => void;
-  prefill: {
-    name?: string;
-    email?: string;
-    contact?: string;
-  };
-  theme: {
-    color: string;
   };
 }
 
@@ -247,16 +223,16 @@ const PaymentDialog = ({
   const processDirectPayment = useCallback(
     async (amount: number) => {
       try {
-        // Require authentication for direct payment
+        
         if (!authStorage.isAuthenticated()) {
           window.location.href = "/sign-in";
           return;
         }
 
-        // Load Razorpay script if not already loaded
+        
         await loadRazorpayScript();
 
-        // Create direct order
+        
         const orderRequest: DirectOrderRequest = {
           item_type: 'campaign',
           campaign_id: Number(campaignId),
@@ -266,13 +242,13 @@ const PaymentDialog = ({
 
         const { order } = await campaignService.createDirectOrder(orderRequest);
 
-        // Initiate payment
+        
         const paymentResponse = await campaignService.initiatePayment(
           order.id.toString(),
           { payment_method: 'razorpay' }
         );
 
-        // Open Razorpay payment
+        
         const options = {
           key: paymentResponse.key,
           amount: paymentResponse.amount,
@@ -282,7 +258,7 @@ const PaymentDialog = ({
           order_id: paymentResponse.razorpay_order_id,
           handler: async (response: any) => {
             try {
-              // Verify payment
+              
               await campaignService.verifyPayment(order.id.toString(), {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -294,7 +270,7 @@ const PaymentDialog = ({
               setSelectedAmount("500");
               setCustomAmount("");
               
-              // Redirect to success page
+              
               window.location.href = `/payment/success?order_id=${order.id}`;
             } catch (error) {
               console.error("Payment verification failed:", error);
@@ -487,88 +463,76 @@ const Page = () => {
   useEffect(() => {
     const fetchFeedTree = async () => {
       try {
-        // Try the new Campaigns API first
-        const resNew = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/campaigns/${id}`,
-          {
-            headers: {
-              accept: "application/json",
-            },
-            cache: "no-store",
-          },
-        );
-
-        if (resNew.ok) {
-          const newJson: CampaignDetailResponse = await resNew.json();
-          const c = newJson?.data?.campaign;
-
-          if (c) {
-            // Adapt new Campaign shape into legacy `ApiResponse["data"]` structure
-            const mapped: ApiResponse["data"] = {
-              campaign_id: c.id,
-              title: c.name,
-              campaign_details: {
-                id: c.id,
+        
+        const response = await campaignService.getById(Number(id));
+        
+        if (response.success && response.data.campaign) {
+          const c = response.data.campaign;
+          
+          
+          const mapped: ApiResponse["data"] = {
+            campaign_id: c.id,
+            title: c.name,
+            campaign_details: {
+              id: c.id,
+              state_id: 0,
+              city_id: 0,
+              area: c.location?.name || "",
+              type_id: null,
+              name: c.name,
+              slug: c.slug,
+              sku: "",
+              description: c.description || "",
+              goal_amount: String(c.target_amount ?? "0"),
+              raised_amount: String(c.raised_amount ?? "0"),
+              main_image: "",
+              expiration_date: c.end_date || new Date().toISOString(),
+              created_at: c.created_at || new Date().toISOString(),
+              updated_at: c.updated_at || new Date().toISOString(),
+              created_by: 0,
+              updated_by: 0,
+              trash: 0,
+              status: c.status,
+              main_image_url: c.image || "",
+              city: {
+                id: 0,
+                name: c.location?.name || "",
                 state_id: 0,
-                city_id: 0,
-                area: c.location?.name || "",
-                type_id: null,
-                name: c.name,
-                slug: c.slug,
-                sku: "",
-                description: c.description || "",
-                goal_amount: String(c.amount ?? "0"),
-                raised_amount: "0",
-                main_image: "",
-                expiration_date: c.end_date || new Date().toISOString(),
-                created_at: c.created_at || new Date().toISOString(),
-                updated_at: c.updated_at || new Date().toISOString(),
+                slug: "",
+                main_img: null,
+                status: 1,
+                trash: 0,
                 created_by: 0,
                 updated_by: 0,
-                trash: 0,
-                status: c.is_active ? 1 : 0,
-                main_image_url: c.main_image_url || "",
-                city: {
-                  id: 0,
-                  name: c.location?.name || "",
-                  state_id: 0,
-                  slug: "",
-                  main_img: null,
-                  status: 1,
-                  trash: 0,
-                  created_by: 0,
-                  updated_by: 0,
-                  created_at: c.created_at || "",
-                  updated_at: c.updated_at || "",
-                  main_img_url: "",
-                },
-                state: {
-                  id: 0,
-                  name: c.location?.name || "",
-                  slug: "",
-                  main_img: null,
-                  status: 1,
-                  trash: 0,
-                  created_by: 0,
-                  updated_by: 0,
-                  created_at: c.created_at || "",
-                  updated_at: c.updated_at || "",
-                  main_img_url: "",
-                },
-                donations: [],
+                created_at: c.created_at || "",
+                updated_at: c.updated_at || "",
+                main_img_url: "",
               },
-              raised_amount: 0,
-              pending_amount: c.amount ? Number(c.amount) : 0,
-              target_amount: c.amount ? Number(c.amount) : null,
-              donors: [],
-            };
+              state: {
+                id: 0,
+                name: c.location?.name || "",
+                slug: "",
+                main_img: null,
+                status: 1,
+                trash: 0,
+                created_by: 0,
+                updated_by: 0,
+                created_at: c.created_at || "",
+                updated_at: c.updated_at || "",
+                main_img_url: "",
+              },
+              donations: [],
+            },
+            raised_amount: Number(c.raised_amount ?? 0),
+            pending_amount: c.target_amount ? Number(c.target_amount) - Number(c.raised_amount ?? 0) : 0,
+            target_amount: c.target_amount || null,
+            donors: [],
+          };
 
-            setCampaignData(mapped);
-            return;
-          }
+          setCampaignData(mapped);
+          return;
         }
 
-        // Fallback to legacy feed-tree endpoint
         throw new Error("Campaign not found");
       } catch (err) {
         console.error("Error fetching feed tree:", err);
@@ -669,7 +633,7 @@ const Page = () => {
                 className="object-cover"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent" />
               <div className="absolute top-4 left-4">
                 <Badge
                   variant={

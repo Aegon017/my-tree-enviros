@@ -41,15 +41,9 @@ export interface PaymentStatusResponse {
   };
 }
 
-/**
- * Payment Service for managing payment operations
- * All endpoints require authentication
- */
+
 export const paymentService = {
-  /**
-   * Initiate Razorpay payment for an order
-   * @param orderId - Order ID
-   */
+  
   initiatePayment: async (orderId: number): Promise<RazorpayOrderResponse> => {
     const response = await api.post<RazorpayOrderResponse>(
       `/orders/${orderId}/payment/initiate`,
@@ -58,11 +52,7 @@ export const paymentService = {
     return response.data;
   },
 
-  /**
-   * Verify Razorpay payment after successful payment
-   * @param orderId - Order ID
-   * @param payload - Payment verification data from Razorpay
-   */
+  
   verifyPayment: async (
     orderId: number,
     payload: PaymentVerificationPayload,
@@ -74,10 +64,7 @@ export const paymentService = {
     return response.data;
   },
 
-  /**
-   * Get payment status for an order
-   * @param orderId - Order ID
-   */
+  
   getPaymentStatus: async (orderId: number): Promise<PaymentStatusResponse> => {
     const response = await api.get<PaymentStatusResponse>(
       `/orders/${orderId}/payment/status`,
@@ -85,9 +72,7 @@ export const paymentService = {
     return response.data;
   },
 
-  /**
-   * Load Razorpay script dynamically
-   */
+  
   loadRazorpayScript: (): Promise<boolean> => {
     return new Promise((resolve) => {
       if (typeof window === "undefined") {
@@ -95,7 +80,7 @@ export const paymentService = {
         return;
       }
 
-      // Check if script already loaded
+      
       if ((window as any).Razorpay) {
         resolve(true);
         return;
@@ -110,12 +95,7 @@ export const paymentService = {
     });
   },
 
-  /**
-   * Open Razorpay checkout
-   * @param options - Razorpay options
-   * @param onSuccess - Success callback
-   * @param onFailure - Failure callback
-   */
+  
   openRazorpayCheckout: async (
     options: {
       key: string;
@@ -168,13 +148,9 @@ export const paymentService = {
     }
   },
 
-  /**
-   * Format amount for display
-   * @param amount - Amount in smallest currency unit (paise)
-   * @param currency - Currency code
-   */
+  
   formatAmount: (amount: number, currency = "INR"): string => {
-    const value = amount / 100; // Convert paise to rupees
+    const value = amount / 100; 
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: currency,
@@ -182,26 +158,17 @@ export const paymentService = {
     }).format(value);
   },
 
-  /**
-   * Convert rupees to paise
-   * @param rupees - Amount in rupees
-   */
+  
   rupeesToPaise: (rupees: number): number => {
     return Math.round(rupees * 100);
   },
 
-  /**
-   * Convert paise to rupees
-   * @param paise - Amount in paise
-   */
+  
   paiseToRupees: (paise: number): number => {
     return paise / 100;
   },
 
-  /**
-   * Get payment status color for UI
-   * @param status - Payment status
-   */
+  
   getPaymentStatusColor: (status: string): string => {
     const colorMap: Record<string, string> = {
       pending: "orange",
@@ -214,10 +181,7 @@ export const paymentService = {
     return colorMap[status.toLowerCase()] || "gray";
   },
 
-  /**
-   * Get payment status text
-   * @param status - Payment status
-   */
+  
   getPaymentStatusText: (status: string): string => {
     const textMap: Record<string, string> = {
       pending: "Pending",
@@ -230,32 +194,23 @@ export const paymentService = {
     return textMap[status.toLowerCase()] || status;
   },
 
-  /**
-   * Check if payment is successful
-   * @param status - Payment status
-   */
+  
   isPaymentSuccessful: (status: string): boolean => {
     return status.toLowerCase() === "completed";
   },
 
-  /**
-   * Check if payment is pending
-   * @param status - Payment status
-   */
+  
   isPaymentPending: (status: string): boolean => {
     return ["pending", "processing"].includes(status.toLowerCase());
   },
 
-  /**
-   * Check if payment failed
-   * @param status - Payment status
-   */
+  
   isPaymentFailed: (status: string): boolean => {
     return status.toLowerCase() === "failed";
   },
 };
 
-// Legacy function exports for backward compatibility
+
 export async function createOrder(payload: {
   currency: string;
   type: "1" | "2" | "3";
@@ -263,8 +218,8 @@ export async function createOrder(payload: {
   cart_type: "1" | "2";
   shipping_address_id?: number;
 }) {
-  // This should now use orderService.createOrder instead
-  // Keeping for backward compatibility
+  
+  
   console.warn(
     "createOrder is deprecated. Use orderService.createOrder instead.",
   );
@@ -278,11 +233,11 @@ export async function paymentCallback(payload: {
   razorpay_signature: string;
   type: "1" | "2" | "3" | "4";
 }) {
-  // This should now use paymentService.verifyPayment instead
+  
   console.warn(
     "paymentCallback is deprecated. Use paymentService.verifyPayment instead.",
   );
-  // Extract order ID from razorpay_order_id or use a different method
-  // For now, just return the payload
+  
+  
   return payload;
 }

@@ -7,12 +7,9 @@ import type { CartType, PaymentType, ProductType } from "@/types/payment.type";
 import { orderService } from "@/services/order.service";
 import { paymentService } from "@/services/payment.service";
 
-/**
- * Arguments for initiating a payment with Razorpay.
- * This signature matches the existing <RazorpayButton /> usage.
- */
+
 type DirectExtras = {
-  // Preferred v1 schema
+  
   tree_instance_id?: number;
   tree_plan_price_id?: number;
   product_variant_id?: number;
@@ -21,9 +18,9 @@ type DirectExtras = {
   coupon_id?: number;
   shipping_address_id?: number;
 
-  // Legacy compatibility
-  product_type?: number; // 1 = tree, 2 = ecom product
-  type?: number; // 1 = sponsor, 2 = adopt
+  
+  product_type?: number; 
+  type?: number; 
   duration?: number;
   coupon_code?: string;
   name?: string;
@@ -42,17 +39,7 @@ type InitiateArgs = [
   extras?: DirectExtras,
 ];
 
-/**
- * Hook to handle Razorpay payment flows:
- * - Cart checkout: create order from cart, then initiate Razorpay
- * - Direct purchase: create direct order (buy now), then initiate Razorpay
- *
- * Endpoints (implemented via services):
- * - POST /orders
- * - POST /orders/direct
- * - POST /orders/{orderId}/payment/initiate
- * - POST /orders/{orderId}/payment/verify
- */
+
 export function useRazorpay() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -94,11 +81,7 @@ export function useRazorpay() {
     [router],
   );
 
-  /**
-   * Initiates the Razorpay payment flow.
-   * Usage aligns with <RazorpayButton />:
-   * initiatePayment(type, productType, cartType, shippingAddressId?, productId?, amountInRupees?)
-   */
+  
   const initiatePayment = useCallback(
     async (...args: InitiateArgs) => {
       const [
@@ -108,19 +91,19 @@ export function useRazorpay() {
         shippingAddressId,
         productId,
         ,
-        // amountInRupees is currently unused for order creation;
-        // backend calculates and returns the payable amount during initiation.
+        
+        
         extras,
       ] = args;
 
       setLoading(true);
 
       try {
-        // 1) Create order (cart or direct)
+        
         let orderId: number | null = null;
 
         if (cartType === 1) {
-          // From cart
+          
           const orderRes = await orderService.createOrder({
             shipping_address_id: shippingAddressId,
             cart_type: 1,
@@ -128,15 +111,15 @@ export function useRazorpay() {
 
           orderId = orderRes?.data?.order?.id ?? null;
         } else if (cartType === 2) {
-          // Direct (buy now)
+          
           if (!productId && productType === 2) {
             throw new Error("Missing product ID for direct purchase.");
           }
 
-          // Optional extra fields for the new /orders/direct schema
+          
           const extra: DirectExtras = (extras as DirectExtras) || {};
 
-          // Build payload favoring the v1 schema but keep legacy fields for compatibility
+          
           const directPayload = {
             item_type: productType === 1 ? "tree" : "product",
             tree_instance_id:
@@ -151,7 +134,7 @@ export function useRazorpay() {
             coupon_id: extra.coupon_id,
             shipping_address_id: shippingAddressId ?? extra.shipping_address_id,
 
-            // Legacy fallbacks
+            
             product_type: extra.product_type,
             type: extra.type,
             duration: extra.duration,
@@ -173,7 +156,7 @@ export function useRazorpay() {
           throw new Error("Failed to create order.");
         }
 
-        // 2) Initiate Razorpay for the created order
+        
         const init = await paymentService.initiatePayment(orderId);
         const {
           razorpay_order_id,
@@ -194,7 +177,7 @@ export function useRazorpay() {
           );
         }
 
-        // 3) Open Razorpay Checkout
+        
         await paymentService.openRazorpayCheckout(
           {
             key: razorpayKey,
@@ -204,11 +187,11 @@ export function useRazorpay() {
             name: "My Tree Enviros",
             description: "Secure payment via Razorpay",
             prefill: {
-              // Optionally prefill from user profile if available
+              
             },
             theme: { color: "#0f766e" },
           },
-          // Success handler
+          
           async (response) => {
             try {
               const verifyRes = await paymentService.verifyPayment(orderId!, {
@@ -236,7 +219,7 @@ export function useRazorpay() {
               redirectToFailure(msg, amountPaise);
             }
           },
-          // Failure handler
+          
           (error) => {
             const message =
               error?.description ||

@@ -16,7 +16,7 @@ export interface AuthResponse {
   message: string;
   data?: {
     user: User;
-    token?: string; // Only for mobile apps
+    token?: string; 
   };
 }
 

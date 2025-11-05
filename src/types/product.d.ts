@@ -1,3 +1,20 @@
+export interface Color {
+  id: number;
+  name: string;
+  code: string;
+}
+
+export interface Size {
+  id: number;
+  name: string;
+}
+
+export interface Planter {
+  id: number;
+  name: string;
+  image_url?: string;
+}
+
 export interface ProductVariant {
   id: number;
   sku: string;
@@ -5,20 +22,9 @@ export interface ProductVariant {
   variant_id: number;
   variant: {
     id: number;
-    color?: {
-      id: number;
-      name: string;
-      code: string;
-    };
-    size?: {
-      id: number;
-      name: string;
-    };
-    planter?: {
-      id: number;
-      name: string;
-      image_url?: string;
-    };
+    color?: Color;
+    size?: Size;
+    planter?: Planter;
   };
   variant_name: string;
   base_price: number;
@@ -82,9 +88,9 @@ export interface ProductFromAPI {
   default_variant?: ProductVariant | null;
   default_variant_id?: number | null;
   variant_options?: {
-    colors: Array<{ id: number; name: string; code: string }>;
-    sizes: Array<{ id: number; name: string }>;
-    planters: Array<{ id: number; name: string; image_url?: string }>;
+    colors: Color[];
+    sizes: Size[];
+    planters: Planter[];
   } | null;
 }
 

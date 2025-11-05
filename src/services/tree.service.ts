@@ -37,12 +37,10 @@ export interface TreeParams {
   page?: number;
 }
 
-/**
- * Normalize a tree item returned by the backend into the frontend Tree type.
- */
+
 function normalizeTree(apiTree: any): Tree {
   if (!apiTree || typeof apiTree !== "object") {
-    // Sensible defaults to avoid crashes in UI
+    
     return {
       id: 0,
       state_id: null,
@@ -75,7 +73,7 @@ function normalizeTree(apiTree: any): Tree {
     };
   }
 
-  // Build images array (TreeImage[])
+  
   const images =
     Array.isArray(apiTree.images) && apiTree.images.length > 0
       ? apiTree.images.map((img: any) => ({
@@ -88,7 +86,7 @@ function normalizeTree(apiTree: any): Tree {
         }))
       : [];
 
-  // Build price array (TreePrice[]) from plan_prices
+  
   const price =
     Array.isArray(apiTree.plan_prices) && apiTree.plan_prices.length > 0
       ? (apiTree.plan_prices
@@ -110,13 +108,13 @@ function normalizeTree(apiTree: any): Tree {
           .filter(Boolean) as Tree["price"])
       : [];
 
-  // Main image: prefer explicit main_image_url, then thumbnail
+  
   const mainImageUrl =
     (apiTree.main_image_url as string | undefined) ??
     (apiTree.thumbnail as string | undefined) ??
     "";
 
-  // Quantity: map from available_instances_count if present
+  
   const quantity =
     typeof apiTree.available_instances_count === "number"
       ? apiTree.available_instances_count
@@ -159,9 +157,7 @@ function normalizeTree(apiTree: any): Tree {
   };
 }
 
-/**
- * Normalize list response from backend to TreesResponse.
- */
+
 function normalizeTreesResponse(apiData: any): TreesResponse {
   const payload = apiData?.data ?? {};
   const meta = payload?.meta ?? {};
@@ -188,9 +184,7 @@ function normalizeTreesResponse(apiData: any): TreesResponse {
   };
 }
 
-/**
- * Normalize detail response from backend to TreeResponse.
- */
+
 function normalizeTreeResponse(apiData: any): TreeResponse {
   const payload = apiData?.data ?? {};
   const tree = normalizeTree(payload?.tree);
@@ -202,82 +196,51 @@ function normalizeTreeResponse(apiData: any): TreeResponse {
   };
 }
 
-/**
- * Tree Service for managing tree data
- * Handles API calls for trees with location filtering
- */
+
 export const treeService = {
-  /**
-   * Get all trees with optional filters
-   * @param params - Query parameters for filtering and pagination
-   */
+  
   getAll: async (params?: TreeParams) => {
     const { data } = await api.get("/trees", { params });
     return normalizeTreesResponse(data);
   },
 
-  /**
-   * Get trees available for sponsorship
-   * @param params - Query parameters including location_id for filtering
-   */
+  
   getSponsorship: async (params?: TreeParams) => {
     const { data } = await api.get("/trees/sponsorship", { params });
     return normalizeTreesResponse(data);
   },
 
-  /**
-   * Get trees available for adoption
-   * @param params - Query parameters including location_id for filtering
-   */
+  
   getAdoption: async (params?: TreeParams) => {
     const { data } = await api.get("/trees/adoption", { params });
     return normalizeTreesResponse(data);
   },
 
-  /**
-   * Get a specific tree by ID
-   * @param id - Tree ID
-   */
+  
   getById: async (id: number) => {
     const { data } = await api.get(`/trees/${id}`);
     return normalizeTreeResponse(data);
   },
 
-  /**
-   * Get available plans for a specific tree
-   * @param id - Tree ID
-   */
+  
   getPlans: async (id: number) => {
     const response = await api.get(`/trees/${id}/plans`);
     return response.data;
   },
 
-  /**
-   * Filter trees by location
-   * @param trees - Array of trees
-   * @param locationId - Location ID to filter by
-   */
+  
   filterByLocation: (trees: Tree[], _locationId: number): Tree[] => {
-    // Prefer using location_id parameter in API calls
+    
     return trees.filter((tree) => (tree.quantity ?? 0) > 0);
   },
 
-  /**
-   * Search trees by name
-   * @param trees - Array of trees
-   * @param query - Search query
-   */
+  
   searchByName: (trees: Tree[], query: string): Tree[] => {
     const lowerQuery = query.toLowerCase();
     return trees.filter((tree) => tree.name.toLowerCase().includes(lowerQuery));
   },
 
-  /**
-   * Sort trees
-   * @param trees - Array of trees
-   * @param sortBy - Field to sort by
-   * @param sortOrder - Sort direction
-   */
+  
   sort: (
     trees: Tree[],
     sortBy: "name" | "age" | "created_at" = "name",
@@ -303,10 +266,7 @@ export const treeService = {
     });
   },
 
-  /**
-   * Get cheapest plan for a tree
-   * @param tree - Tree object with price array
-   */
+  
   getCheapestPlan: (tree: Tree) => {
     if (!tree.price || tree.price.length === 0) {
       return null;
@@ -319,26 +279,17 @@ export const treeService = {
     );
   },
 
-  /**
-   * Format tree age display
-   * @param tree - Tree object
-   */
+  
   formatAge: (tree: Tree): string => {
     return tree.age;
   },
 
-  /**
-   * Check if tree is available
-   * @param tree - Tree object
-   */
+  
   isAvailable: (tree: Tree): boolean => {
     return (tree.status ?? 0) === 1 && (tree.quantity ?? 0) > 0;
   },
 
-  /**
-   * Get availability status text
-   * @param tree - Tree object
-   */
+  
   getAvailabilityStatus: (tree: Tree): string => {
     if ((tree.status ?? 0) !== 1) {
       return "Not Available";

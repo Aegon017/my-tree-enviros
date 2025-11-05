@@ -21,7 +21,7 @@ interface WishlistState {
 
 const WISHLIST_STORAGE_KEY = "guest_wishlist";
 
-// Load wishlist from localStorage
+
 const loadGuestWishlist = (): WishlistItem[] => {
   if (typeof window === "undefined") return [];
   try {
@@ -32,7 +32,7 @@ const loadGuestWishlist = (): WishlistItem[] => {
   }
 };
 
-// Save wishlist to localStorage
+
 const saveGuestWishlist = (items: WishlistItem[]) => {
   if (typeof window === "undefined") return;
   try {
@@ -42,7 +42,7 @@ const saveGuestWishlist = (items: WishlistItem[]) => {
   }
 };
 
-// Clear guest wishlist from localStorage
+
 const clearGuestWishlist = () => {
   if (typeof window === "undefined") return;
   localStorage.removeItem(WISHLIST_STORAGE_KEY);
@@ -59,7 +59,7 @@ const wishlistSlice = createSlice({
   name: "wishlist",
   initialState,
   reducers: {
-    // Add item to wishlist
+    
     addToWishlist: (state, action: PayloadAction<WishlistItem>) => {
       const exists = state.items.some(
         (item) =>
@@ -78,7 +78,7 @@ const wishlistSlice = createSlice({
       }
     },
 
-    // Remove item from wishlist
+    
     removeFromWishlist: (
       state,
       action: PayloadAction<{ id: number; type: string }>,
@@ -93,7 +93,7 @@ const wishlistSlice = createSlice({
       }
     },
 
-    // Toggle item in wishlist
+    
     toggleWishlist: (state, action: PayloadAction<WishlistItem>) => {
       const existingIndex = state.items.findIndex(
         (item) =>
@@ -114,7 +114,7 @@ const wishlistSlice = createSlice({
       }
     },
 
-    // Clear all items
+    
     clearWishlist: (state) => {
       state.items = [];
       if (state.isGuest) {
@@ -122,41 +122,41 @@ const wishlistSlice = createSlice({
       }
     },
 
-    // Set wishlist items (used when loading from backend)
+    
     setWishlistItems: (state, action: PayloadAction<WishlistItem[]>) => {
       state.items = action.payload;
     },
 
-    // Set loading state
+    
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
 
-    // Set error
+    
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
 
-    // Mark wishlist as synced with backend
+    
     markAsSynced: (state) => {
       state.isGuest = false;
-      clearGuestWishlist(); // Clear guest wishlist after sync
+      clearGuestWishlist(); 
     },
 
-    // Mark wishlist as guest (on logout)
+    
     markAsGuest: (state) => {
       state.isGuest = true;
       saveGuestWishlist(state.items);
     },
 
-    // Sync from localStorage
+    
     syncFromStorage: (state) => {
       if (state.isGuest) {
         state.items = loadGuestWishlist();
       }
     },
 
-    // Clear error
+    
     clearError: (state) => {
       state.error = null;
     },
@@ -179,7 +179,7 @@ export const {
 
 export default wishlistSlice.reducer;
 
-// Selectors
+
 export const selectWishlistItems = (state: { wishlist: WishlistState }) =>
   state.wishlist.items;
 export const selectWishlistItemCount = (state: { wishlist: WishlistState }) =>

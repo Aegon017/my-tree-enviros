@@ -2,13 +2,17 @@
 
 import { use } from "react";
 import useSWR from "swr";
-import api from "@/lib/axios";
 import TreeDetailsLayout from "@/components/tree-details-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trees } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { treeService } from "@/services/tree.service";
 
-const fetcher = (url: string) => api.get(url).then((res) => res.data);
+const fetcher = async (url: string) => {
+  const id = Number(url.split('/').pop());
+  const response = await treeService.getById(id);
+  return response;
+};
 
 interface Props {
   params: Promise<{ id: string }>;
