@@ -10,7 +10,6 @@ import type {
   OrderResponse,
   PaymentInitiateResponse,
   PaymentVerifyResponse,
-  CampaignStats
 } from '@/types/campaign.types';
 
 class CampaignService {
@@ -88,25 +87,11 @@ class CampaignService {
   }
 
   async getAll(params?: {
-    type?: string;
     status?: number;
     per_page?: number;
     page?: number;
   }): Promise<CampaignsResponse> {
     const response = await api.get<CampaignsResponse>("/campaigns", { params });
-    return response.data;
-  }
-
-  async getByType(
-    type: string,
-    params?: {
-      per_page?: number;
-      page?: number;
-    },
-  ): Promise<CampaignsResponse> {
-    const response = await api.get<CampaignsResponse>("/campaigns", {
-      params: { type, ...params },
-    });
     return response.data;
   }
 

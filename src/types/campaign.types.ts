@@ -6,7 +6,8 @@ export interface Campaign {
   type: string;
   target_amount?: number;
   raised_amount?: number;
-  image?: string;
+  thumbnail_url?: string;
+  image_urls?: string;
   status: number;
   start_date?: string;
   end_date?: string;
