@@ -493,7 +493,7 @@ const Page = () => {
               updated_by: 0,
               trash: 0,
               status: c.status,
-              main_image_url: c.image || "",
+              main_image_url: c.thumbnail_url || c.image_urls || "",
               city: {
                 id: 0,
                 name: c.location?.name || "",
