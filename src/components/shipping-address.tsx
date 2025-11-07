@@ -381,7 +381,7 @@ export default function ShippingAddresses({
     data: ShippingAddress[];
   }>( key, fetcher );
 
-  const addresses = useMemo(() => data?.data || [], [data?.data]);
+  const addresses = useMemo( () => data?.data.addresses || [], [ data?.data ] );
 
   useEffect(() => {
     if (addresses.length === 1 && selectedAddressId === null) {
@@ -465,8 +465,8 @@ export default function ShippingAddresses({
 
     try {
       const url = editingAddress
-        ? `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/shipping-address/${editingAddress.id}`
-        : `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/shipping-address`;
+        ? `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/v1/shipping-address/${editingAddress.id}`
+        : `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/v1/shipping-address`;
       const method = editingAddress ? "PUT" : "POST";
 
       if (editingAddress && data) {

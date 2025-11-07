@@ -59,17 +59,6 @@ export const productService = {
     return response.data;
   },
 
-  filterByPrice: async (
-    minPrice: number,
-    maxPrice: number,
-    params?: ProductParams,
-  ): Promise<ProductsResponse> => {
-    const response = await api.get<ProductsResponse>( "/products", {
-      params: { min_price: minPrice, max_price: maxPrice, ...params },
-    } );
-    return response.data;
-  },
-
   isInStock: ( product: Product ): boolean => {
     return product.status === 1 && product.quantity > 0;
   },
@@ -108,7 +97,7 @@ export const productService = {
       per_page?: number;
       sort_by?: "rating" | "created_at";
       sort_order?: "asc" | "desc";
-      rating?: number; 
+      rating?: number;
     },
   ): Promise<ProductReviewsResponse> => {
     const response = await api.get<ProductReviewsResponse>(

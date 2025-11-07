@@ -12,7 +12,8 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "api.mytree.care",
       },
-    ]
+    ],
+    unoptimized:true 
   },
 };
 

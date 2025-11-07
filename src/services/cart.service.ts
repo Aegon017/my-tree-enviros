@@ -4,35 +4,153 @@ import api from "@/lib/axios";
 
 export interface CartItem {
   id: number;
-  user_id: number;
-  type: number;
-  product_type: number;
-  product_id: number;
+  cart_id: number;
+  item_type: string;
   quantity: number;
-  duration?: number;
-  coupon_code: string | null;
-  name?: string;
-  occasion?: string;
-  message?: string;
-  location_id?: number;
-  ecom_product?: {
-    id: number;
+  price: number;
+  formatted_price: string;
+  subtotal: number;
+  formatted_subtotal: string;
+  item: {
+    type: string;
     name: string;
-    price: number;
-    main_image_url?: string;
+    sku: string;
+    image: string;
+    variant?: {
+      sku: string;
+      size: string | null;
+      color: string | null;
+    };
+    color: string | null;
+    size: string | null;
+    product: {
+      id: number;
+      name: string | null;
+      botanical_name: string;
+      slug: string | null;
+      sku: string;
+      type: number;
+      status: number;
+      trash: number;
+      category_id: number | null;
+      category: {
+        id: number | null;
+        name: string;
+        slug: string;
+        icon: string;
+        status: number;
+      };
+      description: string;
+      short_description: string;
+      price: number;
+      discount_price: number;
+      quantity: number;
+      thumbnail_url: string;
+      image_urls: string[];
+      reviews: any[];
+      wishlist_tag: boolean;
+      created_at: string;
+      updated_at: string;
+      created_by: number;
+      updated_by: number;
+      rating: number;
+      review_count: number;
+      is_active: boolean | null;
+      inventory: {
+        id: number;
+        stock_quantity: number;
+        is_instock: boolean;
+        has_variants: boolean;
+      };
+      variants: Array<{
+        id: number;
+        sku: string;
+        inventory_id: number;
+        variant_id: number;
+        variant: {
+          id: number;
+          color: {
+            id: number;
+            name: string;
+            code: string;
+          };
+          size: {
+            id: number;
+            name: string;
+          };
+          planter: {
+            id: number;
+            name: string;
+          };
+        };
+        variant_name: string;
+        base_price: number;
+        discount_price: number;
+        price: number;
+        formatted_price: string;
+        stock_quantity: number;
+        is_instock: boolean;
+        images: Array<{
+          id: number;
+          url: string;
+        }>;
+        created_at: string;
+        updated_at: string;
+      }>;
+      default_variant: any;
+      formatted_price: string;
+      has_variants: boolean;
+      default_variant_id: number;
+      variant_options: {
+        colors: Array<{
+          id: number;
+          name: string;
+          code: string;
+        }>;
+        sizes: Array<{
+          id: number;
+          name: string;
+        }>;
+        planters: Array<{
+          id: number;
+          name: string;
+          image_url: string;
+        }>;
+      };
+    };
   };
-  product?: {
-    id: number;
-    name: string;
-    main_image_url?: string;
-    price: Array<{
-      duration: number;
-      price: string;
-    }>;
+  options?: {
+    variant?: {
+      sku: string;
+      size: string | null;
+      color: string | null;
+    };
+    product_name?: string;
   };
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CartResponse {
+  success: boolean;
+  message: string;
+  data: {
+    cart: {
+      id: number;
+      user_id: number;
+      items: CartItem[];
+      total_items: number;
+      total_amount: number;
+      formatted_total: string;
+      expires_at: string;
+      is_expired: boolean;
+      created_at: string;
+      updated_at: string;
+    };
+  };
+}
+
+export interface CartItemsResponse {
   success: boolean;
   message: string;
   data: CartItem[];
@@ -102,16 +220,8 @@ export interface SyncCartPayload {
 export const cartService = {
   
   getCart: async (): Promise<CartResponse> => {
-    const response = await api.get<{
-      success: boolean;
-      message: string;
-      data: { cart: any };
-    }>("/cart");
-    return {
-      success: response.data.success,
-      message: response.data.message,
-      data: response.data.data.cart.items || [],
-    };
+    const response = await api.get<CartResponse>("/cart");
+    return response.data;
   },
 
   
