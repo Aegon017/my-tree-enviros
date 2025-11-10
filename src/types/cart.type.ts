@@ -1,4 +1,4 @@
-import type { Product, ProductVariant } from "./product";
+import type { Product, ProductVariant } from "./product.types";
 import type { Campaign, CampaignType } from "./campaign";
 
 export interface CartItem {

@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import type { Color, Size, Planter } from "@/types/product";
+import type { Color, Size, Planter } from "@/types/product.types";
 
 interface VariantSelectorProps {
   colors: Color[];

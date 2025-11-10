@@ -24,7 +24,7 @@ import { authStorage } from "@/lib/auth-storage";
 import { ProductType } from "@/enums/product.enum";
 import { CheckoutType } from "@/enums/checkout.enum";
 import { productService } from "@/services/product.service";
-import type { Product, Color, Size, Planter, ProductVariant } from "@/types/product";
+import type { Product, Color, Size, Planter, ProductVariant } from "@/types/product.types";
 import type { ProductReview } from "@/types/product-review.types";
 import {
   Form,
@@ -38,17 +38,8 @@ import api from "@/lib/axios";
 import { Review } from "@/types/review.type";
 
 const fetcher = async ( url: string ) => {
-  const response = await api.request({ url });
+  const response = await api.request( { url } );
   return response.data;
-};
-
-const productFetcher = async ( url: string ) => {
-  const response = await productService.getById(Number(url.split('/').pop()));
-  return {
-    success: response.success,
-    message: response.message,
-    data: { product: response.data.product }
-  };
 };
 
 const reviewSchema = z.object( {
@@ -192,8 +183,8 @@ function ProductGallery( {
           key={ image.id }
           onClick={ () => onImageChange( index ) }
           className={ `relative h-16 w-16 border-2 rounded-md overflow-hidden shrink-0 transition-all ${ currentImageIndex === index
-              ? "border-primary ring-2 ring-primary/20"
-              : "border-gray-300 hover:border-gray-400"
+            ? "border-primary ring-2 ring-primary/20"
+            : "border-gray-300 hover:border-gray-400"
             }` }
         >
           <Image
