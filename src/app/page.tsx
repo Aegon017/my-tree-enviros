@@ -42,6 +42,7 @@ import useSWR from "swr";
 import neemTree from "../../public/neem-tree.webp";
 import ProductCardSkeleton from "@/components/skeletons/product-card-skeleton";
 import ProductCard from "@/components/product-card";
+import { productService } from "@/services/product.service";
 
 interface PromoCard {
   id: number;
@@ -76,7 +77,6 @@ const promoCards: PromoCard[] = [
 export default function Home() {
   const plugin = useRef( Autoplay( { delay: 2000, stopOnInteraction: true } ) );
   const blogPlugin = useRef( Autoplay( { delay: 4000, stopOnInteraction: true } ) );
-  const [ blogRetryCount, setBlogRetryCount ] = useState( 0 );
   const { selectedLocation } = useLocation();
 
 
@@ -86,10 +86,25 @@ export default function Home() {
   const [ treesError, setTreesError ] = useState<Error | null>( null );
 
   const {
-    data: productsData,
+    data: productsList,
     error: productsError,
     isLoading: productsLoading,
-  } = useSWR( "/products", fetcher );
+  } = useSWR(
+    [ "home-products" ],
+    () =>
+      productService.getProducts( {
+        per_page: 6,
+        sort_by: "created_at",
+        sort_order: "desc",
+        in_stock: true,
+      } ),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+    }
+  );
+
+  const products = productsList?.products.slice( 0, 6 ) ?? [];
 
   const {
     data: blogsList,
@@ -151,7 +166,6 @@ export default function Home() {
   }, [ selectedLocation ] );
 
   const sliders = slidersList ?? [];
-  const products = productsData?.data?.data.slice( 0, 6 ) ?? [];
   const blogs =
     blogsList?.items?.map( ( b: BlogApiItem ) => ( {
       id: b.id,
@@ -169,7 +183,6 @@ export default function Home() {
     } ) ) ?? [];
 
   const handleBlogRetry = () => {
-    setBlogRetryCount( ( prev ) => prev + 1 );
     mutateBlogs();
   };
 
@@ -379,20 +392,22 @@ export default function Home() {
           subtitle="Discover a wide range of organic products derived directly from nature's bounty. From nourishing oils to flavorful spices and eco-friendly raw materials."
           align="center"
         />
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
+
+        <div className="mt-8 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
           { productsLoading
             ? Array.from( { length: 6 } ).map( ( _, i ) => (
-              <ProductCardSkeleton
-                key={ `product-skeleton-${ Date.now() }-${ i }` }
-              />
+              <ProductCardSkeleton key={ `product-skeleton-${ i }` } />
             ) )
-            : products?.map( ( product: Product ) => (
-              <ProductCard key={ product.id } product={ product } />
+            : products?.slice( 0, 4 ).map( ( product: Product ) => (
+              <ProductCard key={ product.slug } product={ product } />
             ) ) }
         </div>
+
         <div className="text-center mt-8">
           <Link href="/store">
-            <Button>View All Products</Button>
+            <Button>
+              View All Products
+            </Button>
           </Link>
         </div>
       </Section>

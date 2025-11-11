@@ -29,8 +29,8 @@ export interface ProductVariant {
   variant_name: string
   base_price: number
   discount_price: number | null
-  price: number
-  formatted_price: string
+  selling_price: number
+  original_price: number | null
   stock_quantity: number
   is_instock: boolean
   images: Array<{
@@ -40,6 +40,7 @@ export interface ProductVariant {
   created_at: string
   updated_at: string
 }
+
 
 export interface ProductCategory {
   id: number
@@ -67,14 +68,15 @@ export interface Product {
   }
   description: string
   short_description: string
-  price: number
-  discount_price: number | null
+
+  selling_price: number
+  original_price: number | null
+
   quantity: number
   thumbnail_url: string
   image_urls: string[]
   reviews: any[]
-  wishlist_tag: boolean
-  in_wishlist?: boolean
+  in_wishlist: boolean
   created_at: string
   updated_at: string
   created_by: number
@@ -89,7 +91,6 @@ export interface Product {
     has_variants: boolean
   } | null
   variants?: ProductVariant[]
-  formatted_price: string
   has_variants?: boolean
   default_variant?: ProductVariant | null
   default_variant_id?: number | null
@@ -132,7 +133,7 @@ export interface ProductParams {
   min_price?: number
   max_price?: number
   in_stock?: boolean
-  sort_by?: "name" | "price" | "created_at"
+  sort_by?: "name" | "selling_price" | "created_at"
   sort_order?: "asc" | "desc"
   per_page?: number
   page?: number

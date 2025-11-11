@@ -824,7 +824,9 @@ export default function CartPage() {
           const response = await cartService.getCart();
           if (response.success && response.data) {
             
-            const transformedItems = response.data.map((item: any) => {
+            const cartData = response.data.cart || response.data;
+            const items = cartData.items || [];
+            const transformedItems = items.map((item: any) => {
               
               return transformBackendCartItem(item);
             });

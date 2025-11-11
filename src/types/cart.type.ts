@@ -183,15 +183,15 @@ export function transformBackendCart(item: BackendCartItem): CartItem {
 
   if (variant) {
     
-    itemPrice = variant.price;
+    itemPrice = variant.base_price;
     itemImage = variant.images?.[0]?.url || itemImage;
     
   } else {
     
     itemPrice =
-      typeof product?.price === "string"
-        ? parseFloat(product.price)
-        : product?.price || 0;
+      typeof product?.selling_price === "string"
+        ? parseFloat(product.selling_price)
+        : product?.selling_price || 0;
   }
 
   return {

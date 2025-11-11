@@ -42,14 +42,14 @@ export const CartList = ({ isBackendCart = false }: Props) => {
         {}
         <div className="mb-6">
           {cart.reduce((total, item) => {
-            const price = item.price || item.ecom_product?.price || 0;
+            const price = item.price || item.ecom_product?.selling_price || 0;
             return total + (price * item.quantity);
           }, 0) > 0 && (
             <div className="flex justify-between items-center text-lg font-semibold p-3 bg-muted rounded-lg">
               <span>Total:</span>
               <span>
                 ₹{cart.reduce((total, item) => {
-                  const price = item.price || item.ecom_product?.price || 0;
+                  const price = item.price || item.ecom_product?.selling_price || 0;
                   return total + (price * item.quantity);
                 }, 0).toFixed(2)}
               </span>

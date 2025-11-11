@@ -14,7 +14,7 @@ import {
   PaginationItem,
   PaginationLink,
   PaginationNext,
-  PaginationPrevious,
+  PaginationPrevious
 } from "@/components/ui/pagination";
 import { Filter } from "lucide-react";
 import { productService } from "@/services/product.service";
@@ -44,65 +44,64 @@ const initialState: ProductsState = {
 export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const [ state, setState ] = useState<ProductsState>( initialState );
-
   const debouncedSearch = useDebounce( state.search, 400 );
 
   const getFiltersFromURL = useCallback( (): ProductParams => {
     return {
-      page: Number( searchParams.get( 'page' ) ) || 1,
+      page: Number( searchParams.get( "page" ) ) || 1,
       per_page: 15,
-      sort_by: ( searchParams.get( 'sort_by' ) as 'name' | 'price' | 'created_at' ) || 'name',
-      sort_order: ( searchParams.get( 'sort_order' ) as 'asc' | 'desc' ) || 'asc',
-      in_stock: searchParams.get( 'in_stock' ) !== 'false',
-      category_id: searchParams.get( 'category_id' ) ? Number( searchParams.get( 'category_id' ) ) : undefined,
-      search: searchParams.get( 'search' ) || undefined,
+      sort_by: ( searchParams.get( "sort_by" ) as "name" | "selling_price" | "created_at" ) || "name",
+      sort_order: ( searchParams.get( "sort_order" ) as "asc" | "desc" ) || "asc",
+      in_stock: searchParams.get( "in_stock" ) !== "false",
+      category_id: searchParams.get( "category_id" ) ? Number( searchParams.get( "category_id" ) ) : undefined,
+      search: searchParams.get( "search" ) || undefined
     };
   }, [ searchParams ] );
 
   const updateState = useCallback( ( newState: Partial<ProductsState> ) => {
-    setState( prev => ( { ...prev, ...newState } ) );
+    setState( ( prev ) => ( { ...prev, ...newState } ) );
   }, [] );
 
-  const updateURL = useCallback( ( newFilters: Partial<ProductParams> ) => {
-    const currentParams = new URLSearchParams( searchParams.toString() );
+  const updateURL = useCallback(
+    ( newFilters: Partial<ProductParams> ) => {
+      const currentParams = new URLSearchParams( searchParams.toString() );
+      Object.entries( newFilters ).forEach( ( [ key, value ] ) => {
+        if ( value === undefined || value === null || value === "" ) {
+          currentParams.delete( key );
+        } else {
+          currentParams.set( key, String( value ) );
+        }
+      } );
+      router.push( `?${ currentParams.toString() }`, { scroll: false } );
+    },
+    [ router, searchParams ]
+  );
 
-    Object.entries( newFilters ).forEach( ( [ key, value ] ) => {
-      if ( value === undefined || value === null || value === '' ) {
-        currentParams.delete( key );
-      } else {
-        currentParams.set( key, String( value ) );
+  const fetchProducts = useCallback(
+    async ( filters: ProductParams ) => {
+      updateState( { loading: true, error: "" } );
+      try {
+        const data = await productService.getProducts( filters );
+        updateState( { products: data.products, meta: data.meta } );
+      } catch ( err: any ) {
+        updateState( { error: err.message || "Failed to load products" } );
+      } finally {
+        updateState( { loading: false } );
       }
-    } );
-
-    router.push( `?${ currentParams.toString() }`, { scroll: false } );
-  }, [ router, searchParams ] );
-
-  const fetchProducts = useCallback( async ( filters: ProductParams ) => {
-    updateState( { loading: true, error: "" } );
-
-    try {
-      const data = await productService.getProducts( filters );
-      updateState( { products: data.products, meta: data.meta } );
-    } catch ( err: any ) {
-      updateState( { error: err.message || "Failed to load products" } );
-    } finally {
-      updateState( { loading: false } );
-    }
-  }, [ updateState ] );
+    },
+    [ updateState ]
+  );
 
   const fetchCategories = useCallback( async () => {
     try {
       const data = await productService.getCategories();
       updateState( { categories: data } );
-    } catch ( err ) {
-      console.error( 'Failed to fetch categories:', err );
-    }
+    } catch { }
   }, [ updateState ] );
 
   useEffect( () => {
-    const currentSearch = searchParams.get( 'search' ) || '';
+    const currentSearch = searchParams.get( "search" ) || "";
     if ( debouncedSearch !== currentSearch ) {
       updateURL( { search: debouncedSearch || undefined, page: 1 } );
     }
@@ -125,18 +124,12 @@ export default function ProductsPage() {
     const delta = 2;
     const pages: ( number | string )[] = [];
     const range: number[] = [];
-
-    for ( let i = Math.max( 2, current - delta ); i <= Math.min( last - 1, current + delta ); i++ ) {
-      range.push( i );
-    }
-
+    for ( let i = Math.max( 2, current - delta ); i <= Math.min( last - 1, current + delta ); i++ ) range.push( i );
     if ( current - delta > 2 ) range.unshift( -1 );
     if ( current + delta < last - 1 ) range.push( -2 );
-
     pages.push( 1 );
-    range.forEach( i => pages.push( i === -1 || i === -2 ? "..." : i ) );
+    range.forEach( ( i ) => pages.push( i === -1 || i === -2 ? "..." : i ) );
     if ( last > 1 ) pages.push( last );
-
     return [ ...new Set( pages ) ];
   };
 
@@ -145,9 +138,8 @@ export default function ProductsPage() {
     fetchProducts( filters );
   };
 
-  const handleSearchChange = ( value: string ) => {
-    updateState( { search: value } );
-  };
+  const handleSearchChange = ( value: string ) => updateState( { search: value } );
+  const currentFilters = getFiltersFromURL();
 
   if ( state.error ) {
     return (
@@ -156,12 +148,12 @@ export default function ProductsPage() {
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{ state.error }</AlertDescription>
         </Alert>
-        <Button className="mt-4" onClick={ handleRetry }>Retry</Button>
+        <Button className="mt-4" onClick={ handleRetry }>
+          Retry
+        </Button>
       </div>
     );
   }
-
-  const currentFilters = getFiltersFromURL();
 
   return (
     <div className="container max-w-6xl mx-auto px-4 py-8 space-y-6">
@@ -176,8 +168,7 @@ export default function ProductsPage() {
         <Sheet>
           <SheetTrigger asChild>
             <Button className="flex items-center gap-2 px-4 py-2">
-              <Filter className="h-4 w-4" />
-              Filters
+              <Filter className="h-4 w-4" /> Filters
             </Button>
           </SheetTrigger>
 
@@ -194,7 +185,7 @@ export default function ProductsPage() {
                   onValueChange={ ( value ) =>
                     updateURL( {
                       category_id: value === "all" ? undefined : Number( value ),
-                      page: 1,
+                      page: 1
                     } )
                   }
                 >
@@ -221,9 +212,9 @@ export default function ProductsPage() {
                       : "name_asc"
                   }
                   onValueChange={ ( value ) => {
-                    let sort_by: "name" | "price" | "created_at" = "name";
+                    let sort_by: "name" | "selling_price" | "created_at" = "name";
                     let sort_order: "asc" | "desc" = "asc";
-                    
+
                     switch ( value ) {
                       case "name_asc":
                         sort_by = "name";
@@ -233,28 +224,24 @@ export default function ProductsPage() {
                         sort_by = "name";
                         sort_order = "desc";
                         break;
-                      case "price_asc":
-                        sort_by = "price";
+                      case "selling_price_asc":
+                        sort_by = "selling_price";
                         sort_order = "asc";
                         break;
-                      case "price_desc":
-                        sort_by = "price";
+                      case "selling_price_desc":
+                        sort_by = "selling_price";
                         sort_order = "desc";
                         break;
                       case "created_at_desc":
                         sort_by = "created_at";
-                        sort_order = "desc"; // Newest = latest created_at
+                        sort_order = "desc";
                         break;
                       default:
                         sort_by = "name";
                         sort_order = "asc";
                     }
 
-                    updateURL( {
-                      sort_by,
-                      sort_order,
-                      page: 1,
-                    } );
+                    updateURL( { sort_by, sort_order, page: 1 } );
                   } }
                 >
                   <SelectTrigger className="h-11 w-full">
@@ -263,12 +250,13 @@ export default function ProductsPage() {
                   <SelectContent>
                     <SelectItem value="name_asc">Name (A → Z)</SelectItem>
                     <SelectItem value="name_desc">Name (Z → A)</SelectItem>
-                    <SelectItem value="price_asc">Price (Low → High)</SelectItem>
-                    <SelectItem value="price_desc">Price (High → Low)</SelectItem>
+                    <SelectItem value="selling_price_asc">Price (Low → High)</SelectItem>
+                    <SelectItem value="selling_price_desc">Price (High → Low)</SelectItem>
                     <SelectItem value="created_at_desc">Newest</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="h-11 px-4 border rounded-md bg-muted/30 flex items-center justify-between">
                 <label htmlFor="inStock" className="text-sm font-medium cursor-pointer">
                   In Stock Only
@@ -279,11 +267,12 @@ export default function ProductsPage() {
                   onCheckedChange={ ( checked ) =>
                     updateURL( {
                       in_stock: !!checked,
-                      page: 1,
+                      page: 1
                     } )
                   }
                 />
               </div>
+
               <Button
                 className="w-full font-medium"
                 onClick={ () =>
@@ -291,7 +280,7 @@ export default function ProductsPage() {
                     category_id: undefined,
                     sort_by: undefined,
                     in_stock: undefined,
-                    page: 1,
+                    page: 1
                   } )
                 }
               >
@@ -300,7 +289,6 @@ export default function ProductsPage() {
             </div>
           </SheetContent>
         </Sheet>
-
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -315,7 +303,9 @@ export default function ProductsPage() {
             <PaginationItem>
               <PaginationPrevious
                 onClick={ () => changePage( state.meta.current_page - 1 ) }
-                className={ state.meta.current_page === 1 || state.loading ? "pointer-events-none opacity-50" : "cursor-pointer" }
+                className={
+                  state.meta.current_page === 1 || state.loading ? "pointer-events-none opacity-50" : "cursor-pointer"
+                }
               />
             </PaginationItem>
 
@@ -338,7 +328,11 @@ export default function ProductsPage() {
             <PaginationItem>
               <PaginationNext
                 onClick={ () => changePage( state.meta.current_page + 1 ) }
-                className={ state.meta.current_page === state.meta.last_page || state.loading ? "pointer-events-none opacity-50" : "cursor-pointer" }
+                className={
+                  state.meta.current_page === state.meta.last_page || state.loading
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
               />
             </PaginationItem>
           </PaginationContent>

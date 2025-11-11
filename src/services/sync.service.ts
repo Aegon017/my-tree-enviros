@@ -34,29 +34,6 @@ export const syncService = {
     }
   },
 
-  
-  syncWishlist: async (guestWishlist: any[]): Promise<boolean> => {
-    if (!guestWishlist || guestWishlist.length === 0) {
-      return true; 
-    }
-
-    try {
-      
-      const items = guestWishlist.map((item) => ({
-        product_id: item.product_id ?? item.id,
-        product_variant_id: item.product_variant_id ?? null,
-      }));
-
-      
-      const response = await wishlistService.syncWishlist({ items });
-      return response.success;
-    } catch (error) {
-      console.error("Failed to sync wishlist:", error);
-      return false;
-    }
-  },
-
-  
   fetchCartFromBackend: async () => {
     try {
       const response = await cartService.getCart();
@@ -75,6 +52,28 @@ export const syncService = {
     } catch (error) {
       console.error("Failed to fetch wishlist:", error);
       return [];
+    }
+  },
+
+  
+  syncWishlist: async (guestWishlist: any[]): Promise<boolean> => {
+    if (!guestWishlist || guestWishlist.length === 0) {
+      return true;
+    }
+
+    try {
+      
+      const items = guestWishlist.map((item) => ({
+        product_id: item.product_id ?? item.id,
+        product_variant_id: item.product_variant_id ?? null,
+      }));
+
+      
+      const response = await wishlistService.syncWishlist({ items });
+      return response.success;
+    } catch (error) {
+      console.error("Failed to sync wishlist:", error);
+      return false;
     }
   },
 
@@ -101,8 +100,8 @@ export const syncService = {
       ]);
 
       return {
-        cart,
-        wishlist,
+        cart: Array.isArray(cart) ? cart : (cart?.cart?.items || []),
+        wishlist: Array.isArray(wishlist) ? wishlist : (wishlist?.data || []),
         success: true,
       };
     } catch (error) {

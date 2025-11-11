@@ -381,7 +381,7 @@ export default function ShippingAddresses({
     data: ShippingAddress[];
   }>( key, fetcher );
 
-  const addresses = useMemo( () => data?.data.addresses || [], [ data?.data ] );
+  const addresses = useMemo( () => data?.data || [], [ data?.data ] );
 
   useEffect(() => {
     if (addresses.length === 1 && selectedAddressId === null) {
