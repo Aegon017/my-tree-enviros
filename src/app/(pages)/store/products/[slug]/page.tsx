@@ -5,7 +5,6 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { Markup } from "interweave";
 import { Edit, Heart, Minus, Plus, Star } from "lucide-react";
-import Image from "next/image";
 import { use, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -16,7 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Lens } from "@/components/ui/lens";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,8 +34,9 @@ import { Review } from "@/types/review.type";
 import { productService } from "@/services/product.service";
 import { variantService } from "@/services/variant.service";
 import { reviewService, ReviewFormValues } from "@/services/review.service";
-import { wishlistFacade, wishlistService } from "@/services/wishlist.service";
 import ImageGallery from "@/components/image-gallery";
+import { LoginDialog } from "@/components/login-dialog";
+import { useProductWishlist } from "@/hooks/use-product-wishlist";
 
 const reviewSchema = z.object( {
   rating: z.number().min( 1 ).max( 5 ),
@@ -110,8 +109,6 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
   const isAuth = authStorage.isAuthenticated();
 
   const [ quantity, setQuantity ] = useState( 1 );
-  const [ isWishlistLoading, setIsWishlistLoading ] = useState( false );
-  const [ isFavorite, setIsFavorite ] = useState( false );
   const [ isSubmittingReview, setIsSubmittingReview ] = useState( false );
   const [ currentPage ] = useState( 1 );
   const [ editingReviewId, setEditingReviewId ] = useState<number | null>( null );
@@ -147,20 +144,9 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
   const reviewCount = reviews.length;
 
   useEffect( () => {
-    if ( !isAuth ) {
-      const w = localStorage.getItem( "guest_wishlist" );
-      if ( w ) setIsFavorite( JSON.parse( w ).some( ( i: any ) => i.slug === slug ) );
-    }
-  }, [ slug, isAuth ] );
-
-  useEffect( () => {
-    if ( product && isAuth ) setIsFavorite( ( product as any ).in_wishlist );
-  }, [ product, isAuth ] );
-
-  useEffect( () => {
     const im =
-      selectedVariant?.images ||
-      product?.default_variant?.images ||
+      selectedVariant?.image_urls ||
+      product?.default_variant?.image_urls ||
       product?.image_urls?.map( ( url: string, i: number ) => ( { id: i, url } ) ) ||
       [];
     setSelectedImages( im );
@@ -190,6 +176,9 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
   const availableSizes = useMemo( () => variantService.getAvailableSizes( product ), [ product ] );
   const availablePlanters = useMemo( () => variantService.getAvailablePlanters( product, selectedSize ), [ product, selectedSize ] );
 
+  const { isFavorite, loading: isWishlistLoading, toggleFavorite, loginOpen, setLoginOpen } =
+    useProductWishlist( product?.id, selectedVariant?.id );
+
   const handleQuantityChange = ( v: number ) => setQuantity( Math.max( 1, Math.min( v, maxStock ) ) );
 
   const handleVariantSelect = ( t: "color" | "size" | "planter", v: any ) => {
@@ -208,23 +197,8 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
     if ( t === "color" ) setSelectedColor( v );
   };
 
-  const toggleFavorite = async () => {
-    setIsWishlistLoading( true );
-    try {
-      const payload = { slug, name: product?.name, type: "product", price: displayPrice, image: productImage };
-      const status = await wishlistFacade.toggleProduct( product?.id || 0, payload, async () => {
-        await wishlistService.toggleWishlist( product?.id || 0 );
-      } );
-      setIsFavorite( status ?? !isFavorite );
-      if ( isAuth ) toast.success( isFavorite ? "Removed from wishlist" : "Added to wishlist" );
-    } catch {
-      toast.error( "Wishlist error" );
-    }
-    setIsWishlistLoading( false );
-  };
-
   const submitReview = async ( reviewId: number | null, v: ReviewFormValues ) => {
-    if ( !isAuth ) return;
+    if ( !authStorage.isAuthenticated() ) return;
     setIsSubmittingReview( true );
     try {
       if ( reviewId ) await reviewService.update( reviewId, slug, v );
@@ -260,7 +234,7 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
             <Skeleton className="aspect-square rounded-2xl" />
           ) : product ? (
             <ImageGallery
-              images={ selectedImages.map(img => img.url) }
+              images={ selectedImages.map( img => img.url ) }
               name={ product.name }
             />
           ) : null }
@@ -347,6 +321,7 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
                   <Heart className={ `mr-2 h-5 w-5 ${ isFavorite ? "fill-current" : "" }` } />
                   { isFavorite ? "In Wishlist" : "Wishlist" }
                 </Button>
+                <LoginDialog open={ loginOpen } onOpenChange={ setLoginOpen } />
               </div>
             </>
           ) : null }

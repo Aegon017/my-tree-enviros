@@ -13,16 +13,10 @@ import {
   markAsSynced as markCartSynced,
   markAsGuest as markCartGuest,
 } from "@/store/cart-slice";
-import {
-  setWishlistItems,
-  markAsSynced as markWishlistSynced,
-  markAsGuest as markWishlistGuest,
-} from "@/store/wishlist-slice";
 import type { User } from "@/types/auth.types";
 import { authService } from "@/services/auth.service";
 import { authStorage } from "@/lib/auth-storage";
 import { syncService } from "@/services/sync.service";
-import { store } from "@/store";
 
 export function useAuth() {
   const dispatch = useDispatch();
@@ -30,11 +24,7 @@ export function useAuth() {
     (state: RootState) => state.auth,
   );
   const cartItems = useSelector((state: RootState) => state.cart.items);
-  const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
   const isGuestCart = useSelector((state: RootState) => state.cart.isGuest);
-  const isGuestWishlist = useSelector(
-    (state: RootState) => state.wishlist.isGuest,
-  );
 
   
   const login = useCallback(
@@ -42,22 +32,16 @@ export function useAuth() {
       dispatch(setUserAction(userData));
 
       
-      if (isGuestCart || isGuestWishlist) {
+      if (isGuestCart) {
         try {
           const syncResult = await syncService.syncAllOnLogin(
-            isGuestCart ? cartItems : [],
-            isGuestWishlist ? wishlistItems : [],
-          );
+            isGuestCart ? cartItems : []);
 
           if (syncResult.success) {
             
             if (isGuestCart) {
               dispatch(setCartItems(syncResult.cart));
               dispatch(markCartSynced());
-            }
-            if (isGuestWishlist) {
-              dispatch(setWishlistItems(syncResult.wishlist));
-              dispatch(markWishlistSynced());
             }
           }
         } catch (error) {
@@ -66,29 +50,20 @@ export function useAuth() {
         }
       }
     },
-    [dispatch, cartItems, wishlistItems, isGuestCart, isGuestWishlist],
+    [dispatch, cartItems, isGuestCart],
   );
 
-  
   const logout = useCallback(async () => {
     try {
       dispatch(setLoadingAction(true));
       await authService.logout();
       dispatch(clearUserAction());
       authStorage.clearAll();
-
-      
       dispatch(markCartGuest());
-      dispatch(markWishlistGuest());
     } catch (error) {
-      console.error("Logout error:", error);
-      
       dispatch(clearUserAction());
       authStorage.clearAll();
-
-      
       dispatch(markCartGuest());
-      dispatch(markWishlistGuest());
     } finally {
       dispatch(setLoadingAction(false));
     }

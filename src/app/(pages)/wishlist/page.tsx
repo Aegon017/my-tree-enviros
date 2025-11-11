@@ -7,347 +7,165 @@ import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import WishlistItemCardSkeleton from "@/components/skeletons/wishlist-item-card-skeleton";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  wishlistService,
-  type WishlistItem,
-  type WishlistItemLocal,
-} from "@/services/wishlist.service";
+import { wishlistService, type WishlistItem } from "@/services/wishlist.service";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/hooks/use-cart";
 
-type WishlistItemType = WishlistItem | WishlistItemLocal;
+type WishlistItemType = WishlistItem;
 
 const WishlistPage = () => {
   const { isAuthenticated } = useAuth();
-  const [wishlistItems, setWishlistItems] = useState<WishlistItemType[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [removingIds, setRemovingIds] = useState<number[]>([]);
-  const [addingToCartIds, setAddingToCartIds] = useState<number[]>([]);
+  const [ wishlistItems, setWishlistItems ] = useState<WishlistItemType[]>( [] );
+  const [ isLoading, setIsLoading ] = useState( false );
+  const [ removingIds, setRemovingIds ] = useState<number[]>( [] );
+  const [ addingToCartIds, setAddingToCartIds ] = useState<number[]>( [] );
   const { addToCart } = useCart();
 
-  useEffect(() => {
+  useEffect( () => {
     const fetchWishlist = async () => {
-      if (!isAuthenticated) {
-        
-        try {
-          const guestWishlist = localStorage.getItem("guest_wishlist");
-          if (guestWishlist) {
-            setWishlistItems(JSON.parse(guestWishlist));
-          }
-        } catch (err) {
-          console.error("Failed to load guest wishlist:", err);
-        }
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
+      setIsLoading( true );
       try {
         const response = await wishlistService.getWishlist();
-        if (response.success) {
-          setWishlistItems(response.data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch wishlist:", err);
-        setError(err as Error);
+        if ( response.success ) setWishlistItems( response.data.wishlist.items || [] );
       } finally {
-        setIsLoading(false);
+        setIsLoading( false );
       }
     };
-
     fetchWishlist();
-  }, [isAuthenticated]);
+  }, [ isAuthenticated ] );
 
-  const handleRemove = async (itemId: number) => {
-    setRemovingIds((prev) => [...prev, itemId]);
 
+  const handleRemove = async ( id: number ) => {
+    setRemovingIds( ( p ) => [ ...p, id ] );
     try {
-      if (isAuthenticated) {
-        const response = await wishlistService.removeFromWishlist(itemId);
-        if (response.success) {
-          setWishlistItems((prev) => prev.filter((item) => item.id !== itemId));
-          toast.success("Item removed from wishlist");
-        }
-      } else {
-        
-        const updatedWishlist = wishlistItems.filter(
-          (item) => item.id !== itemId,
-        );
-        setWishlistItems(updatedWishlist);
-        localStorage.setItem("guest_wishlist", JSON.stringify(updatedWishlist));
-        toast.success("Item removed from wishlist");
-      }
-    } catch (err) {
-      console.error("Failed to remove from wishlist:", err);
-      toast.error("Failed to remove item from wishlist");
+      const res = await wishlistService.removeFromWishlist( id );
+      if ( res.success ) setWishlistItems( ( p ) => p.filter( ( i ) => i.id !== id ) );
+      toast.success( "Removed" );
     } finally {
-      setRemovingIds((prev) => prev.filter((id) => id !== itemId));
+      setRemovingIds( ( p ) => p.filter( ( x ) => x !== id ) );
     }
   };
 
-  const handleAddToCart = async (item: WishlistItemType) => {
-    // This function is only for guest users (non-authenticated)
-    if (!isAuthenticated) {
-      setAddingToCartIds((prev) => [...prev, item.id]);
-      try {
-        const name = wishlistService.getProductName(item);
-        const price = wishlistService.getProductPrice(item);
-        const image =
-          wishlistService.getProductImage(item) || "/placeholder.jpg";
-
-        // For guest wishlist items, the structure is different
-        const guestItem = item as WishlistItemLocal;
-        addToCart({
-          id: guestItem.product_id || guestItem.id,
-          product_id: guestItem.product_id || guestItem.id,
-          name,
-          type: "product",
-          price,
-          quantity: 1,
-          image,
-          metadata: {},
-        });
-
-        toast.success(`${name} added to cart`);
-      } catch (err) {
-        console.error("Failed to add to cart:", err);
-        toast.error("Failed to add item to cart");
-      } finally {
-        setAddingToCartIds((prev) => prev.filter((id) => id !== item.id));
-      }
-      return;
-    }
-
-    // For authenticated users, use the move to cart function instead
-    toast.error("Please use 'Move to Cart' while logged in");
+  const handleAddToCart = ( item: WishlistItemType ) => {
+    addToCart( {
+      id: item.product.id,
+      name: item.product.name,
+      price: item.product.selling_price,
+      quantity: 1,
+      image: item.product.thumbnail_url,
+      type: "product",
+    } as any );
+    const updated = wishlistItems.filter( ( i ) => i.id !== item.id );
+    setWishlistItems( updated );
+    localStorage.setItem( "guest_wishlist", JSON.stringify( updated ) );
+    toast.success( "Added to cart" );
   };
 
-  const handleMoveToCart = async (itemId: number) => {
-    if (!isAuthenticated) {
-      toast.error("Please login to move items to cart");
-      return;
-    }
-
-    setAddingToCartIds((prev) => [...prev, itemId]);
-
+  const handleMoveToCart = async ( id: number ) => {
+    setAddingToCartIds( ( p ) => [ ...p, id ] );
     try {
-      const response = await wishlistService.moveToCart(itemId);
-      if (response.success) {
-        setWishlistItems((prev) => prev.filter((item) => item.id !== itemId));
-        toast.success("Item moved to cart");
+      const res = await wishlistService.moveToCart( id );
+      if ( res.success ) {
+        setWishlistItems( ( p ) => p.filter( ( i ) => i.id !== id ) );
+        toast.success( "Moved to cart" );
       }
-    } catch (err) {
-      console.error("Failed to move to cart:", err);
-      toast.error("Failed to move item to cart");
     } finally {
-      setAddingToCartIds((prev) => prev.filter((id) => id !== itemId));
+      setAddingToCartIds( ( p ) => p.filter( ( x ) => x !== id ) );
     }
   };
 
-  const handleClearWishlist = async () => {
-    if (!isAuthenticated) {
-      localStorage.removeItem("guest_wishlist");
-      setWishlistItems([]);
-      toast.success("Wishlist cleared");
-      return;
-    }
-
-    try {
-      const response = await wishlistService.clearWishlist();
-      if (response.success) {
-        setWishlistItems([]);
-        toast.success("Wishlist cleared");
-      }
-    } catch (err) {
-      console.error("Failed to clear wishlist:", err);
-      toast.error("Failed to clear wishlist");
-    }
+  const handleClear = async () => {
+    const res = await wishlistService.clearWishlist();
+    if ( !res.success ) return;
+    setWishlistItems( [] );
+    toast.success( "Cleared" );
   };
 
-  if (isLoading) {
+  if ( isLoading )
     return (
       <Section>
-        <SectionTitle
-          align="center"
-          title="Wishlist"
-          subtitle="Your saved items and favorites are listed here."
-        />
+        <SectionTitle align="center" title="Wishlist" />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <WishlistItemCardSkeleton key={`wishlist-skeleton-${index}`} />
-          ))}
+          { Array.from( { length: 6 } ).map( ( _, i ) => (
+            <WishlistItemCardSkeleton key={ i } />
+          ) ) }
         </div>
       </Section>
     );
-  }
 
-  if (error) {
+  if ( wishlistItems.length === 0 )
     return (
       <Section>
-        <SectionTitle
-          align="center"
-          title="Wishlist"
-          subtitle="Your saved items and favorites are listed here."
-        />
-        <div className="text-center py-12">
-          <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">
-            Unable to load wishlist
-          </h3>
-          <p className="text-muted-foreground mb-4">{error.message}</p>
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
-        </div>
-      </Section>
-    );
-  }
-
-  if (wishlistItems.length === 0) {
-    return (
-      <Section>
-        <SectionTitle
-          align="center"
-          title="Wishlist"
-          subtitle="Your saved items and favorites are listed here."
-        />
+        <SectionTitle align="center" title="Wishlist" />
         <div className="text-center py-12">
           <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">Your wishlist is empty</h3>
-          <p className="text-muted-foreground mb-4">
-            Start adding your favorite trees and products to see them here!
-          </p>
           <div className="flex gap-4 justify-center">
-            <Link href="/sponsor-a-tree">
-              <Button>Browse Trees</Button>
-            </Link>
-            <Link href="/store">
-              <Button variant="outline">Browse Products</Button>
-            </Link>
+            <Link href="/sponsor-a-tree"><Button>Browse Trees</Button></Link>
+            <Link href="/store"><Button variant="outline">Browse Products</Button></Link>
           </div>
         </div>
       </Section>
     );
-  }
 
   return (
     <Section>
-      <SectionTitle
-        align="center"
-        title="Wishlist"
-        subtitle={`You have ${wishlistItems.length} item${wishlistItems.length !== 1 ? "s" : ""} in your wishlist`}
-      />
-
+      <SectionTitle align="center" title="Wishlist" subtitle={ `You have ${ wishlistItems.length } item${ wishlistItems.length !== 1 ? "s" : "" }` } />
       <div className="flex justify-end mb-4">
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={handleClearWishlist}
-          disabled={wishlistItems.length === 0}
-        >
-          Clear All
-        </Button>
+        <Button variant="destructive" size="sm" onClick={ handleClear }>Clear All</Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {wishlistItems.map((item) => {
-          const productName = wishlistService.getProductName(item);
-          const productPrice = wishlistService.getProductPrice(item);
-          const productImage = wishlistService.getProductImage(item);
-          const isAvailable = wishlistService.isAvailable(item);
-          const isRemoving = removingIds.includes(item.id);
-          const isAddingToCart = addingToCartIds.includes(item.id);
+        { wishlistItems.map( ( item ) => {
+          const image = item.image_url;
+          const name = item.name;
+          const price = item.price;
+          const available = item.quantity > 0;
+          const removing = removingIds.includes( item.id );
+          const adding = addingToCartIds.includes( item.id );
 
           return (
-            <Card key={item.id} className="overflow-hidden p-0 gap-0">
+            <Card key={ item.id } className="overflow-hidden p-0 gap-0">
               <CardHeader className="p-0">
                 <div className="relative aspect-video">
-                  {productImage ? (
-                    <Image
-                      src={productImage}
-                      alt={productName}
-                      fill
-                      className="object-cover"
-                    />
+                  { image ? (
+                    <Image src={ image } alt={ name } fill className="object-cover" />
                   ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center">
                       <Heart className="h-12 w-12 text-muted-foreground" />
                     </div>
-                  )}
-                  {!isAvailable && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute top-2 right-2"
-                    >
-                      Out of Stock
-                    </Badge>
-                  )}
+                  ) }
+                  { !available && <Badge variant="destructive" className="absolute top-2 right-2">Out of Stock</Badge> }
                 </div>
               </CardHeader>
               <CardContent className="p-4">
-                <h3 className="font-semibold text-lg mb-2 line-clamp-2">
-                  {productName}
-                </h3>
+                <h3 className="font-semibold text-lg mb-2 line-clamp-2">{ name }</h3>
                 <div className="flex items-center justify-between">
-                  <span className="text-xl font-bold text-primary">
-                    ₹{productPrice.toFixed(2)}
-                  </span>
+                  <span className="text-xl font-bold text-primary">₹{ price }</span>
                   <Badge variant="outline">Product</Badge>
                 </div>
               </CardContent>
               <CardFooter className="p-4 pt-0 flex gap-2">
-                {isAuthenticated ? (
-                  <Button
-                    className="flex-1"
-                    onClick={() => handleMoveToCart(item.id)}
-                    disabled={!isAvailable || isAddingToCart}
-                  >
-                    {isAddingToCart ? (
-                      "Adding..."
-                    ) : (
-                      <>
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Move to Cart
-                      </>
-                    )}
+                { isAuthenticated ? (
+                  <Button className="flex-1" onClick={ () => handleMoveToCart( item.id ) } disabled={ !available || adding }>
+                    { adding ? "Adding..." : <><ShoppingCart className="h-4 w-4 mr-2" />Move to Cart</> }
                   </Button>
                 ) : (
-                  <Button
-                    className="flex-1"
-                    onClick={() => handleAddToCart(item)}
-                    disabled={!isAvailable || isAddingToCart}
-                  >
-                    {isAddingToCart ? (
-                      "Adding..."
-                    ) : (
-                      <>
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Add to Cart
-                      </>
-                    )}
+                  <Button className="flex-1" onClick={ () => handleAddToCart( item ) } disabled={ !available }>
+                    <ShoppingCart className="h-4 w-4 mr-2" />Add to Cart
                   </Button>
-                )}
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleRemove(item.id)}
-                  disabled={isRemoving}
-                >
+                ) }
+                <Button variant="destructive" size="icon" onClick={ () => handleRemove( item.id ) } disabled={ removing }>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </CardFooter>
             </Card>
           );
-        })}
+        } ) }
       </div>
     </Section>
   );

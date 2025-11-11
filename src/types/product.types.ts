@@ -33,7 +33,7 @@ export interface ProductVariant {
   original_price: number | null
   stock_quantity: number
   is_instock: boolean
-  images: Array<{
+  image_urls: Array<{
     id: number
     url: string
   }>
