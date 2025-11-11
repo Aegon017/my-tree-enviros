@@ -45,21 +45,21 @@ const WishlistItemCard = ({
               </CardDescription>
             )}
           </div>
-          {product.price && (
+          {product.selling_price && (
             <div className="text-right">
-              {product.discount_price &&
-              product.discount_price < product.price ? (
+              {product.original_price &&
+              product.original_price > product.selling_price ? (
                 <>
                   <span className="font-semibold text-lg text-green-600">
-                    ₹{product.discount_price}
+                    ₹{product.selling_price}
                   </span>
                   <span className="text-sm text-muted-foreground line-through block">
-                    ₹{product.price}
+                    ₹{product.original_price}
                   </span>
                 </>
               ) : (
                 <span className="font-semibold text-lg text-green-600">
-                  ₹{product.price}
+                  ₹{product.selling_price}
                 </span>
               )}
             </div>
@@ -111,9 +111,9 @@ const WishlistItemCard = ({
           productId={product.id}
           productName={product.name}
           productPrice={
-            product.discount_price && product.discount_price < product.price
-              ? product.discount_price
-              : product.price
+            product.original_price && product.original_price > product.selling_price
+              ? product.original_price
+              : product.selling_price
           }
           productImage={product.thumbnail_url || "/placeholder.jpg"}
           quantity={1}

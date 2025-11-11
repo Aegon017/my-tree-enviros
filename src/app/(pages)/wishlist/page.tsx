@@ -18,15 +18,18 @@ import { useAuth } from "@/hooks/use-auth";
 import {
   wishlistService,
   type WishlistItem,
+  type WishlistItemLocal,
 } from "@/services/wishlist.service";
 import { cartService } from "@/services/cart.service";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/hooks/use-cart";
 
+type WishlistItemType = WishlistItem | WishlistItemLocal;
+
 const WishlistPage = () => {
   const { isAuthenticated } = useAuth();
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<WishlistItemType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [removingIds, setRemovingIds] = useState<number[]>([]);
@@ -94,8 +97,8 @@ const WishlistPage = () => {
     }
   };
 
-  const handleAddToCart = async (item: WishlistItem) => {
-    
+  const handleAddToCart = async (item: WishlistItemType) => {
+    // This function is only for guest users (non-authenticated)
     if (!isAuthenticated) {
       setAddingToCartIds((prev) => [...prev, item.id]);
       try {
@@ -104,16 +107,18 @@ const WishlistPage = () => {
         const image =
           wishlistService.getProductImage(item) || "/placeholder.jpg";
 
+        // For guest wishlist items, the structure is different
+        const guestItem = item as WishlistItemLocal;
         addToCart({
-          id: item.product_id,
-          product_id: item.product_id,
+          id: guestItem.product_id || guestItem.id,
+          product_id: guestItem.product_id || guestItem.id,
           name,
           type: "product",
           price,
           quantity: 1,
           image,
           metadata: {},
-        } as any);
+        });
 
         toast.success(`${name} added to cart`);
       } catch (err) {
@@ -125,7 +130,7 @@ const WishlistPage = () => {
       return;
     }
 
-    
+    // For authenticated users, use the move to cart function instead
     toast.error("Please use 'Move to Cart' while logged in");
   };
 
