@@ -93,7 +93,7 @@ export default function Home() {
     [ "home-products" ],
     () =>
       productService.getProducts( {
-        per_page: 6,
+        per_page: 4,
         sort_by: "created_at",
         sort_order: "desc",
         in_stock: true,
@@ -104,7 +104,7 @@ export default function Home() {
     }
   );
 
-  const products = productsList?.products.slice( 0, 6 ) ?? [];
+  const products = productsList?.products ?? [];
 
   const {
     data: blogsList,
@@ -395,10 +395,10 @@ export default function Home() {
 
         <div className="mt-8 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
           { productsLoading
-            ? Array.from( { length: 6 } ).map( ( _, i ) => (
+            ? Array.from( { length: 4 } ).map( ( _, i ) => (
               <ProductCardSkeleton key={ `product-skeleton-${ i }` } />
             ) )
-            : products?.slice( 0, 4 ).map( ( product: Product ) => (
+            : products.map( ( product: Product ) => (
               <ProductCard key={ product.slug } product={ product } />
             ) ) }
         </div>

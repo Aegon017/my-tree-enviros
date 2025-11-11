@@ -20,7 +20,6 @@ import {
   type WishlistItem,
   type WishlistItemLocal,
 } from "@/services/wishlist.service";
-import { cartService } from "@/services/cart.service";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/hooks/use-cart";

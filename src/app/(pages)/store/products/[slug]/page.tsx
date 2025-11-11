@@ -37,6 +37,7 @@ import { productService } from "@/services/product.service";
 import { variantService } from "@/services/variant.service";
 import { reviewService, ReviewFormValues } from "@/services/review.service";
 import { wishlistFacade, wishlistService } from "@/services/wishlist.service";
+import ImageGallery from "@/components/image-gallery";
 
 const reviewSchema = z.object( {
   rating: z.number().min( 1 ).max( 5 ),
@@ -254,36 +255,16 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-4 lg:sticky top-16">
+        <div className="space-y-6 lg:sticky top-24 self-start">
           { isLoading ? (
-            <Skeleton className="h-96 w-full rounded-xl" />
-          ) : (
-            <>
-              <div className="relative aspect-square overflow-hidden rounded-xl">
-                <Lens zoomFactor={ 2 }>
-                  <div className="relative h-full w-full">
-                    <Image
-                      src={ productImage }
-                      alt={ product?.name ?? "Product" }
-                      fill
-                      className="object-cover"
-                      priority
-                    />
-                  </div>
-                </Lens>
-              </div>
-
-              <div className="flex gap-2 overflow-x-auto">
-                { selectedImages.map( ( img, i ) => (
-                  <button key={ img.id } onClick={ () => setCurrentImageIndex( i ) } className={ `h-16 w-16 border-2 rounded-md overflow-hidden ${ i === currentImageIndex ? "border-primary" : "border-gray-300" }` }>
-                    <Image src={ img.url } alt="" fill className="object-cover" />
-                  </button>
-                ) ) }
-              </div>
-            </>
-          ) }
+            <Skeleton className="aspect-square rounded-2xl" />
+          ) : product ? (
+            <ImageGallery
+              images={ selectedImages.map(img => img.url) }
+              name={ product.name }
+            />
+          ) : null }
         </div>
-
         <div className="space-y-6">
           { isLoading ? (
             <>
@@ -393,7 +374,7 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
                 <CardContent>
                   { reviews.length > 0 ? (
                     <div className="space-y-6">
-                      { reviews.map( (r: any) => (
+                      { reviews.map( ( r: any ) => (
                         <div key={ r.id } className="border-b pb-4">
                           { editingReviewId === r.id ? (
                             <ReviewForm review={ r } onCancel={ () => setEditingReviewId( null ) } onSubmit={ submitReview } isSubmitting={ isSubmittingReview } />
