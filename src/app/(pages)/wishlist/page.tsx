@@ -1,20 +1,16 @@
 "use client";
 
-import { Heart, ShoppingCart, Trash2 } from "lucide-react";
+import { Heart, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import Image from "next/image";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import WishlistItemCardSkeleton from "@/components/skeletons/wishlist-item-card-skeleton";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/use-auth";
-import { useCart } from "@/hooks/use-cart";
-import { wishlistService, type WishlistItem } from "@/services/wishlist.service";
 import WishlistItemCard from "@/components/wishlist-item-card";
+import { useAuth } from "@/hooks/use-auth";
+import { wishlistService, type WishlistItem } from "@/services/wishlist.service";
 
 interface WishlistState {
   items: WishlistItem[];
@@ -26,18 +22,9 @@ interface WishlistState {
 const TOAST_MESSAGES = {
   REMOVED: "Removed from wishlist",
   MOVED_TO_CART: "Moved to cart",
-  ADDED_TO_CART: "Added to cart",
   CLEARED: "Wishlist cleared",
   ERROR: "Something went wrong",
 } as const;
-
-const EMPTY_STATE_CONFIG = {
-  icon: Heart,
-  title: "Your wishlist is empty",
-  actions: [
-    { href: "/store", label: "Browse Products", variant: "outline" as const },
-  ],
-};
 
 const useWishlist = () => {
   const [ state, setState ] = useState<WishlistState>( {
@@ -51,7 +38,6 @@ const useWishlist = () => {
 
   const fetchWishlist = useCallback( async () => {
     if ( !isAuthenticated ) return;
-
     setState( prev => ( { ...prev, isLoading: true } ) );
 
     try {
@@ -62,8 +48,7 @@ const useWishlist = () => {
           items: response.data.wishlist.items || [],
         } ) );
       }
-    } catch ( error ) {
-      console.error( "Failed to fetch wishlist:", error );
+    } catch {
       toast.error( TOAST_MESSAGES.ERROR );
     } finally {
       setState( prev => ( { ...prev, isLoading: false } ) );
@@ -72,7 +57,6 @@ const useWishlist = () => {
 
   const removeItem = useCallback( async ( id: number ) => {
     setState( prev => ( { ...prev, removingIds: [ ...prev.removingIds, id ] } ) );
-
     try {
       const response = await wishlistService.removeFromWishlist( id );
       if ( response.success ) {
@@ -82,8 +66,7 @@ const useWishlist = () => {
         } ) );
         toast.success( TOAST_MESSAGES.REMOVED );
       }
-    } catch ( error ) {
-      console.error( "Failed to remove item:", error );
+    } catch {
       toast.error( TOAST_MESSAGES.ERROR );
     } finally {
       setState( prev => ( {
@@ -95,7 +78,6 @@ const useWishlist = () => {
 
   const moveToCart = useCallback( async ( id: number ) => {
     setState( prev => ( { ...prev, addingToCartIds: [ ...prev.addingToCartIds, id ] } ) );
-
     try {
       const response = await wishlistService.moveToCart( id );
       if ( response.success ) {
@@ -105,8 +87,7 @@ const useWishlist = () => {
         } ) );
         toast.success( TOAST_MESSAGES.MOVED_TO_CART );
       }
-    } catch ( error ) {
-      console.error( "Failed to move item to cart:", error );
+    } catch {
       toast.error( TOAST_MESSAGES.ERROR );
     } finally {
       setState( prev => ( {
@@ -123,8 +104,7 @@ const useWishlist = () => {
         setState( prev => ( { ...prev, items: [] } ) );
         toast.success( TOAST_MESSAGES.CLEARED );
       }
-    } catch ( error ) {
-      console.error( "Failed to clear wishlist:", error );
+    } catch {
       toast.error( TOAST_MESSAGES.ERROR );
     }
   }, [] );
@@ -133,35 +113,21 @@ const useWishlist = () => {
     fetchWishlist();
   }, [ fetchWishlist ] );
 
-  return {
-    ...state,
-    removeItem,
-    moveToCart,
-    clearWishlist,
-  };
+  return { ...state, removeItem, moveToCart, clearWishlist };
 };
 
-const EmptyWishlistState: React.FC = () => {
-  const { icon: Icon, title, actions } = EMPTY_STATE_CONFIG;
-
-  return (
-    <div className="text-center">
-      <Icon className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-      <h3 className="text-lg font-semibold mb-4">{ title }</h3>
-      <div className="flex gap-4 justify-center">
-        { actions.map( ( action, index ) => (
-          <Link key={ index } href={ action.href }>
-            <Button variant={ action.variant }>{ action.label }</Button>
-          </Link>
-        ) ) }
-      </div>
-    </div>
-  );
-};
+const EmptyWishlistState = () => (
+  <div className="text-center">
+    <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+    <h3 className="text-lg font-semibold mb-4">Your wishlist is empty</h3>
+    <Button asChild variant="outline">
+      <Link href="/store">Browse Products</Link>
+    </Button>
+  </div>
+);
 
 const WishlistPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
-  const { addToCart } = useCart();
   const {
     items: wishlistItems,
     isLoading,
@@ -176,24 +142,6 @@ const WishlistPage: React.FC = () => {
     const count = wishlistItems.length;
     return `You have ${ count } item${ count !== 1 ? "s" : "" }`;
   }, [ wishlistItems.length ] );
-
-  const handleAddToCart = useCallback( ( item: WishlistItem ) => {
-    addToCart( {
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      quantity: 1,
-      image: item.image_url,
-      type: "product",
-    } );
-
-    if ( !isAuthenticated ) {
-      const updated = wishlistItems.filter( i => i.id !== item.id );
-      localStorage.setItem( "guest_wishlist", JSON.stringify( updated ) );
-    }
-
-    toast.success( TOAST_MESSAGES.ADDED_TO_CART );
-  }, [ addToCart, isAuthenticated, wishlistItems ] );
 
   if ( isLoading ) {
     return (
@@ -219,31 +167,24 @@ const WishlistPage: React.FC = () => {
 
   return (
     <Section>
-      <SectionTitle
-        align="center"
-        title="Wishlist"
-        subtitle={ itemCountText }
-      />
+      <SectionTitle align="center" title="Wishlist" subtitle={ itemCountText } />
 
       <div className="flex justify-end mb-6">
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={ clearWishlist }
-        >
+        <Button variant="destructive" size="sm" onClick={ clearWishlist }>
+          <Trash2 className="h-4 w-4 mr-2" />
           Clear All
         </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        { wishlistItems.map( ( item ) => (
+        { wishlistItems.map( item => (
           <WishlistItemCard
             key={ item.id }
             item={ item }
             isAuthenticated={ isAuthenticated }
             onRemove={ removeItem }
             onMoveToCart={ moveToCart }
-            onAddToCart={ handleAddToCart }
+            onAddToCart={ () => { } }
             removingIds={ removingIds }
             addingToCartIds={ addingToCartIds }
           />

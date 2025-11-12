@@ -1,9 +1,8 @@
 import type { Product } from "./product.types";
+import { ProductVariant } from "./variant.types";
 
 export interface WishlistItem {
-  id: number;
-  name: string;
-  image_url: string;
-  price: number;
-  quantity: number;
+  id: number
+  product: Product
+  variant: ProductVariant
 }
