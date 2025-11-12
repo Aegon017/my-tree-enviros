@@ -1,48 +1,54 @@
 "use client";
-
 import { useMemo, useEffect } from "react";
 import { variantService } from "@/services/variant.service";
-import type { Product, Color, Size, Planter, ProductVariant } from "@/types/product.types";
+import type { Product } from "@/types/product.types";
+import type {
+  ProductVariant,
+  VariantColor,
+  VariantPlanter,
+  VariantSize,
+} from "@/types/variant.types";
 
-interface UseProductVariantsProps {
+interface Props {
   product?: Product;
-  selectedColor?: Color;
-  selectedSize?: Size;
-  selectedPlanter?: Planter;
-  onVariantChange: (variant: ProductVariant | undefined) => void;
+  selectedColor?: VariantColor;
+  selectedSize?: VariantSize;
+  selectedPlanter?: VariantPlanter;
+  onVariantChange: ( v: ProductVariant | undefined ) => void;
 }
 
-export function useProductVariants({
+export function useProductVariants( {
   product,
   selectedColor,
   selectedSize,
   selectedPlanter,
   onVariantChange,
-}: UseProductVariantsProps) {
-  const availableColors = useMemo(
-    () => variantService.getAvailableColors(product, selectedPlanter),
-    [product, selectedPlanter]
-  );
-
+}: Props ) {
   const availableSizes = useMemo(
-    () => variantService.getAvailableSizes(product),
-    [product]
+    () => variantService.getAvailableSizes( product ),
+    [ product ]
   );
 
   const availablePlanters = useMemo(
-    () => variantService.getAvailablePlanters(product, selectedSize),
-    [product, selectedSize]
+    () => variantService.getAvailablePlanters( product, selectedSize ),
+    [ product, selectedSize ]
   );
 
-  useEffect(() => {
-    if (!product?.variants || !selectedPlanter) return;
-    const resolved = variantService.resolveVariant(product, selectedColor, selectedSize, selectedPlanter);
-    onVariantChange(resolved);
-  }, [product, selectedColor, selectedSize, selectedPlanter, onVariantChange]);
+  const availableColors = useMemo(
+    () =>
+      variantService.getAvailableColors( product, selectedSize, selectedPlanter ),
+    [ product, selectedSize, selectedPlanter ]
+  );
 
-  return {
-    availableColors,
-    availableSizes,
-    availablePlanters,
-  };
+  useEffect( () => {
+    const variant = variantService.resolveVariant(
+      product,
+      selectedColor,
+      selectedSize,
+      selectedPlanter
+    );
+    onVariantChange( variant );
+  }, [ product, selectedColor, selectedSize, selectedPlanter, onVariantChange ] );
+
+  return { availableColors, availableSizes, availablePlanters };
 }

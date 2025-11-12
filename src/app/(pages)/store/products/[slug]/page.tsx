@@ -30,13 +30,14 @@ import { useProductVariants } from "@/hooks/use-product-variants";
 import { useProductReviews } from "@/hooks/use-product-reviews";
 import type { ReviewFormValues } from "@/services/review.service";
 import type { Review } from "@/types/review.type";
+import { variantService } from "@/services/variant.service";
 
-const reviewSchema = z.object({
-  rating: z.number().min(1).max(5),
-  review: z.string().min(1),
-});
+const reviewSchema = z.object( {
+  rating: z.number().min( 1 ).max( 5 ),
+  review: z.string().min( 1 ),
+} );
 
-function ReviewForm({
+function ReviewForm( {
   review,
   onCancel,
   onSubmit,
@@ -44,60 +45,64 @@ function ReviewForm({
 }: {
   review?: Review;
   onCancel: () => void;
-  onSubmit: (reviewId: number | null, values: ReviewFormValues) => void;
+  onSubmit: ( reviewId: number | null, values: ReviewFormValues ) => void;
   isSubmitting: boolean;
-}) {
-  const form = useForm<ReviewFormValues>({
-    resolver: zodResolver(reviewSchema),
+} ) {
+  const form = useForm<ReviewFormValues>( {
+    resolver: zodResolver( reviewSchema ),
     defaultValues: {
       rating: review?.rating || 0,
       review: review?.review || "",
     },
-  });
+  } );
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit((v) => onSubmit(review?.id || null, v))} className="mt-4 p-4 border rounded-lg bg-muted/20 space-y-4">
-        <h4 className="text-lg font-semibold">{review ? "Edit Your Review" : "Add a Review"}</h4>
+    <Form { ...form }>
+      <form
+        onSubmit={ form.handleSubmit( ( v ) => onSubmit( review?.id || null, v ) ) }
+        className="mt-4 p-4 border rounded-lg bg-muted/20 space-y-4"
+      >
+        <h4 className="text-lg font-semibold">{ review ? "Edit Your Review" : "Add a Review" }</h4>
         <FormField
-          control={form.control}
+          control={ form.control }
           name="rating"
-          render={({ field }) => (
+          render={ ( { field } ) => (
             <FormItem>
               <FormLabel>Your Rating</FormLabel>
               <FormControl>
                 <div className="flex">
-                  {Array.from({ length: 5 }, (_, i) => (
+                  { Array.from( { length: 5 }, ( _, i ) => (
                     <Star
-                      key={i}
-                      className={`h-5 w-5 cursor-pointer ${i < field.value ? "text-yellow-400 fill-yellow-400" : "text-gray-300"} hover:text-yellow-400`}
-                      onClick={() => field.onChange(i + 1)}
+                      key={ i }
+                      className={ `h-5 w-5 cursor-pointer ${ i < field.value ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
+                        } hover:text-yellow-400` }
+                      onClick={ () => field.onChange( i + 1 ) }
                     />
-                  ))}
+                  ) ) }
                 </div>
               </FormControl>
               <FormMessage />
             </FormItem>
-          )}
+          ) }
         />
         <FormField
-          control={form.control}
+          control={ form.control }
           name="review"
-          render={({ field }) => (
+          render={ ( { field } ) => (
             <FormItem>
               <FormLabel>Your Review</FormLabel>
               <FormControl>
-                <Textarea className="min-h-32" {...field} />
+                <Textarea className="min-h-32" { ...field } />
               </FormControl>
               <FormMessage />
             </FormItem>
-          )}
+          ) }
         />
         <div className="flex gap-2">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : review ? "Update Review" : "Submit Review"}
+          <Button type="submit" disabled={ isSubmitting }>
+            { isSubmitting ? "Submitting..." : review ? "Update Review" : "Submit Review" }
           </Button>
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+          <Button type="button" variant="outline" onClick={ onCancel } disabled={ isSubmitting }>
             Cancel
           </Button>
         </div>
@@ -106,25 +111,25 @@ function ReviewForm({
   );
 }
 
-export default function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params);
+export default function ProductPage( { params }: { params: Promise<{ slug: string }> } ) {
+  const { slug } = use( params );
 
   const { data: product, error, isLoading, mutate: mutateProduct } = useSWR(
-    ["product", slug],
-    () => productService.getProductBySlug(slug),
+    [ "product", slug ],
+    () => productService.getProductBySlug( slug ),
     { revalidateOnFocus: false, shouldRetryOnError: false }
   );
 
-  const productState = useProductState(product);
-  const { images, currentImage } = useProductImages(product, productState.selectedVariant);
-  
-  const { availableColors, availableSizes, availablePlanters } = useProductVariants({
+  const productState = useProductState( product );
+  const { images, currentImage } = useProductImages( product, productState.selectedVariant );
+
+  const { availableColors, availableSizes, availablePlanters } = useProductVariants( {
     product,
     selectedColor: productState.selectedColor,
     selectedSize: productState.selectedSize,
     selectedPlanter: productState.selectedPlanter,
     onVariantChange: productState.setVariant,
-  });
+  } );
 
   const {
     reviews,
@@ -137,231 +142,283 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     setEditingReviewId,
     isSubmitting: isSubmittingReview,
     submitReview,
-  } = useProductReviews(slug);
+  } = useProductReviews( slug );
 
-  const [localWishlistState, setLocalWishlistState] = useState<Record<number, boolean>>({});
-  
+  const [ localWishlistState, setLocalWishlistState ] = useState<Record<number, boolean>>( {} );
   const { loading: isWishlistLoading, toggleFavorite, loginOpen, setLoginOpen } = useProductWishlist(
     product?.id,
     productState.selectedVariant?.id,
     mutateProduct
   );
 
-  useEffect(() => {
-    if (product?.default_variant && !productState.selectedVariant && !productState.isUserInteracting) {
-      productState.initialize({
-        selectedVariant: product.default_variant,
-        selectedColor: product.default_variant?.variant?.color,
-        selectedSize: product.default_variant?.variant?.size,
-        selectedPlanter: product.default_variant?.variant?.planter,
-      });
+  useEffect( () => {
+    if ( !product || productState.isUserInteracting ) return;
+    if ( !productState.selectedVariant && product.variants?.length ) {
+      const sizes = variantService.getAvailableSizes( product );
+      const size = sizes[ 0 ];
+      const planters = variantService.getAvailablePlanters( product, size );
+      const planter = planters[ 0 ];
+      const colors = variantService.getAvailableColors( product, size, planter );
+      const color = colors[ 0 ];
+      const resolved = variantService.resolveVariant( product, color, size, planter );
+      productState.initialize( {
+        selectedVariant: resolved,
+        selectedColor: color,
+        selectedSize: size,
+        selectedPlanter: planter,
+      } );
     }
-  }, [product, productState]);
-
-  const handleQuantityChange = (v: number) => {
-    productState.setQuantity(Math.max(1, Math.min(v, productState.maxStock)));
-  };
-
-  const handleVariantSelect = (t: "color" | "size" | "planter", v: any) => {
-    if (t === "size") {
-      productState.setSize(v);
-      if (productState.selectedPlanter && !product?.variants?.some((x) => x.variant.size?.id === v.id && x.variant.planter?.id === productState.selectedPlanter?.id)) {
-        productState.setPlanter(undefined);
-      }
-      if (productState.selectedColor && !product?.variants?.some((x) => x.variant.size?.id === v.id && x.variant.color?.id === productState.selectedColor?.id)) {
-        productState.setColor(undefined);
-      }
-    } else if (t === "planter") {
-      productState.setPlanter(v);
-    } else if (t === "color") {
-      productState.setColor(v);
-    }
-  };
-
+  }, [ product, productState ] );
+  const handleQty = ( q: number ) => productState.setQuantity( Math.max( 1, Math.min( q, productState.maxStock ) ) );
   const variantId = productState.selectedVariant?.id;
-  const currentInWishlist = variantId && localWishlistState[variantId] !== undefined 
-    ? localWishlistState[variantId] 
-    : productState.selectedVariant?.in_wishlist ?? false;
+  const inWishlist =
+    variantId && localWishlistState[ variantId ] !== undefined
+      ? localWishlistState[ variantId ]
+      : productState.selectedVariant?.in_wishlist ?? false;
 
-  if (error) {
+  if ( error )
     return (
       <div className="flex justify-center items-center h-96">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6 text-center">
-            <h2 className="text-xl font-bold text-destructive mb-2">Error Loading Product</h2>
-            <Button onClick={() => window.location.reload()}>Retry</Button>
-          </CardContent>
+        <Card className="w-full max-w-md text-center p-6">
+          <h2 className="text-xl font-bold text-destructive mb-3">Error loading product</h2>
+          <Button onClick={ () => window.location.reload() }>Retry</Button>
         </Card>
       </div>
     );
-  }
 
+  if ( isLoading || !product )
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <Skeleton className="h-8 w-3/4 mb-4" />
+        <Skeleton className="aspect-square rounded-2xl" />
+      </div>
+    );
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-6 lg:sticky top-24 self-start">
-          {isLoading ? (
-            <Skeleton className="aspect-square rounded-2xl" />
-          ) : product ? (
-            <ImageGallery images={images.map((img) => img.url)} name={product.name} />
-          ) : null}
+        <div>
+          <ImageGallery images={ images.map( ( img ) => img.url ) } name={ product.name } />
         </div>
+
         <div className="space-y-6">
-          {isLoading ? (
-            <>
-              <Skeleton className="h-8 w-3/4" />
-              <Skeleton className="h-4 w-full" />
-            </>
-          ) : product ? (
-            <>
-              <Badge variant="outline">{product.category.name}</Badge>
-              <h1 className="text-3xl font-bold">{product.name}</h1>
-              <p className="italic text-muted-foreground">{product.nick_name}</p>
-              <RatingStars rating={averageRating} size="md" showCount reviewCount={reviewCount} />
+          <Badge variant="outline">{ product.category.name }</Badge>
+          <h1 className="text-3xl font-bold">{ product.name }</h1>
+          <p className="italic text-muted-foreground">{ product.nick_name }</p>
+          <RatingStars rating={ averageRating } size="md" showCount reviewCount={ reviewCount } />
 
-              {product.has_variants && (
-                <div className="space-y-6 border-b pb-8">
-                  <VariantSelector
-                    colors={availableColors}
-                    sizes={availableSizes}
-                    planters={availablePlanters}
-                    selectedColor={productState.selectedColor}
-                    selectedSize={productState.selectedSize}
-                    selectedPlanter={productState.selectedPlanter}
-                    onColorSelect={(v) => handleVariantSelect("color", v)}
-                    onSizeSelect={(v) => handleVariantSelect("size", v)}
-                    onPlanterSelect={(v) => handleVariantSelect("planter", v)}
+          <VariantSelector
+            colors={ availableColors }
+            sizes={ availableSizes }
+            planters={ availablePlanters }
+            selectedColor={ productState.selectedColor }
+            selectedSize={ productState.selectedSize }
+            selectedPlanter={ productState.selectedPlanter }
+            onColorSelect={ productState.setColor }
+            onSizeSelect={ productState.setSize }
+            onPlanterSelect={ productState.setPlanter }
+          />
+
+          { productState.selectedVariant && (
+            <div className="bg-muted/50 p-4 rounded-lg border border-border">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-1">
+                    { productState.selectedVariant.variant?.name }
+                  </h4>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    { productState.selectedVariant.variant?.color && (
+                      <div
+                        className="w-4 h-4 rounded-full border border-border"
+                        style={ {
+                          backgroundColor:
+                            productState.selectedVariant.variant.color.code || "transparent",
+                        } }
+                        title={ productState.selectedVariant.variant.color.name }
+                      />
+                    ) }
+                    { productState.selectedVariant.variant?.size?.name && (
+                      <span className="px-2 py-0.5 rounded-md bg-background border text-xs font-medium">
+                        { productState.selectedVariant.variant.size.name }
+                      </span>
+                    ) }
+                    { productState.selectedVariant.variant?.planter?.name && (
+                      <span className="text-xs font-medium text-foreground">
+                        { productState.selectedVariant.variant.planter.name }
+                      </span>
+                    ) }
+                  </div>
+                </div>
+
+                <div
+                  className={ `
+          flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium border
+          ${ productState.selectedVariant.is_instock
+                      ? "bg-primary/10 text-primary border-primary/20"
+                      : "bg-destructive/10 text-destructive border-destructive/20"
+                    }
+        `}
+                >
+                  <div
+                    className={ `w-2 h-2 rounded-full ${ productState.selectedVariant.is_instock
+                        ? "bg-primary"
+                        : "bg-destructive"
+                      }` }
                   />
-
-                  {productState.selectedVariant && (
-                    <div className="bg-muted p-4 rounded-lg text-sm">
-                      <div className="font-medium mb-1">{productState.selectedVariant.variant_name}</div>
-                      {productState.selectedVariant.is_instock ? `In Stock (${productState.selectedVariant.stock_quantity})` : "Out of Stock"}
-                    </div>
-                  )}
+                  { productState.selectedVariant.is_instock ? (
+                    <span>
+                      In Stock ({ productState.selectedVariant.stock_quantity })
+                    </span>
+                  ) : (
+                    <span>Out of Stock</span>
+                  ) }
                 </div>
-              )}
-
-              {(!product.has_variants || !productState.selectedVariant) && (
-                <div className="text-sm">{product.inventory?.is_instock ? "In Stock" : "Out of Stock"}</div>
-              )}
-
-              {productState.isInStock && (
-                <div className="flex gap-4 items-center">
-                  <div className="flex border rounded-md items-center">
-                    <Button variant="ghost" size="icon" onClick={() => handleQuantityChange(productState.quantity - 1)} disabled={productState.quantity <= 1}>
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <Input type="number" value={productState.quantity} onChange={(e) => handleQuantityChange(+e.target.value)} className="w-16 text-center border-0" />
-                    <Button variant="ghost" size="icon" onClick={() => handleQuantityChange(productState.quantity + 1)} disabled={productState.quantity >= productState.maxStock}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="text-sm">{productState.maxStock} available</div>
-
-                  <div className="flex gap-2 items-baseline">
-                    <span className="text-3xl font-bold">₹{productState.displayPrice}</span>
-                    {productState.displayBasePrice && productState.displayBasePrice > productState.displayPrice && (
-                      <span className="line-through text-muted-foreground">₹{productState.displayBasePrice}</span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <AddToCartButton
-                  productId={product.id}
-                  quantity={productState.quantity}
-                  productType={ProductType.ECOMMERCE}
-                  cartType={CheckoutType.CART}
-                  disabled={!product || (product.has_variants && !productState.selectedVariant) || (product.has_variants && !productState.selectedVariant?.is_instock) || (!product.has_variants && !product.inventory?.is_instock)}
-                  productName={product.name}
-                  productPrice={productState.displayPrice}
-                  productImage={currentImage}
-                  selectedVariantId={productState.selectedVariant?.id}
-                  selectedVariant={productState.selectedVariant}
-                  product={product}
-                  onProductUpdate={mutateProduct}
-                />
-
-                <Button variant="outline" size="lg" onClick={() => {
-                  const newState = !currentInWishlist;
-                  if (variantId) {
-                    setLocalWishlistState(prev => ({ ...prev, [variantId]: newState }));
-                  }
-                  toggleFavorite(currentInWishlist);
-                }} disabled={isWishlistLoading || !productState.selectedVariant?.id}>
-                  <Heart className={`mr-2 h-5 w-5 ${currentInWishlist ? "fill-current text-red-500" : ""}`} />
-                  {currentInWishlist ? "In Wishlist" : "Wishlist"}
-                </Button>
-                <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
               </div>
-            </>
-          ) : null}
+            </div>
+          ) }
+
+          { productState.isInStock && (
+            <div className="flex gap-4 items-center">
+              <div className="flex border rounded-md items-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={ () => handleQty( productState.quantity - 1 ) }
+                  disabled={ productState.quantity <= 1 }
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Input
+                  type="number"
+                  value={ productState.quantity }
+                  onChange={ ( e ) => handleQty( +e.target.value ) }
+                  className="w-16 text-center border-0"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={ () => handleQty( productState.quantity + 1 ) }
+                  disabled={ productState.quantity >= productState.maxStock }
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="flex gap-2 items-baseline">
+                <span className="text-3xl font-bold">₹{ productState.displayPrice }</span>
+                { productState.displayBasePrice && (
+                  <span className="line-through text-muted-foreground">₹{ productState.displayBasePrice }</span>
+                ) }
+              </div>
+            </div>
+          ) }
+
+          <div className="flex gap-3">
+            <AddToCartButton
+              productId={ product.id }
+              quantity={ productState.quantity }
+              productType={ ProductType.ECOMMERCE }
+              cartType={ CheckoutType.CART }
+              disabled={ !productState.isInStock }
+              productName={ product.name }
+              productPrice={ productState.displayPrice }
+              productImage={ currentImage }
+              selectedVariantId={ productState.selectedVariant?.id }
+              product={ product }
+              onProductUpdate={ mutateProduct }
+            />
+
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={ () => {
+                const next = !inWishlist;
+                if ( variantId ) setLocalWishlistState( ( p ) => ( { ...p, [ variantId ]: next } ) );
+                toggleFavorite( inWishlist );
+              } }
+              disabled={ isWishlistLoading || !productState.selectedVariant?.id }
+            >
+              <Heart className={ `mr-2 h-5 w-5 ${ inWishlist ? "fill-current text-red-500" : "" }` } />
+              { inWishlist ? "In Wishlist" : "Wishlist" }
+            </Button>
+            <LoginDialog open={ loginOpen } onOpenChange={ setLoginOpen } />
+          </div>
         </div>
       </div>
 
-      {!isLoading && product && (
-        <div className="mt-12">
-          <Tabs defaultValue="description">
-            <TabsList className="grid grid-cols-2">
-              <TabsTrigger value="description">Description</TabsTrigger>
-              <TabsTrigger value="reviews">Reviews ({reviewCount})</TabsTrigger>
-            </TabsList>
+      <div className="mt-12">
+        <Tabs defaultValue="description">
+          <TabsList className="grid grid-cols-2">
+            <TabsTrigger value="description">Description</TabsTrigger>
+            <TabsTrigger value="reviews">Reviews ({ reviewCount })</TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="description" className="pt-4">
-              <Card>
-                <CardContent>
-                  <Markup content={product.description} />
-                </CardContent>
-              </Card>
-            </TabsContent>
+          <TabsContent value="description" className="pt-4">
+            <Card>
+              <CardContent>
+                <Markup content={ product.description } />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <TabsContent value="reviews" className="pt-4">
-              <Card>
-                <CardContent>
-                  {reviews.length > 0 ? (
-                    <div className="space-y-6">
-                      {reviews.map((r: any) => (
-                        <div key={r.id} className="border-b pb-4">
-                          {editingReviewId === r.id ? (
-                            <ReviewForm review={r} onCancel={() => setEditingReviewId(null)} onSubmit={submitReview} isSubmitting={isSubmittingReview} />
-                          ) : (
-                            <>
-                              <div className="flex justify-between items-start">
-                                <div className="flex gap-2 items-center">
-                                  <RatingStars rating={r.rating} size="sm" />
-                                  <span className="font-semibold">{r.user.name}</span>
-                                </div>
-                                <span className="text-sm text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+          <TabsContent value="reviews" className="pt-4">
+            <Card>
+              <CardContent>
+                { reviews.length ? (
+                  <div className="space-y-6">
+                    { reviews.map( ( r: any ) => (
+                      <div key={ r.id } className="border-b pb-4">
+                        { editingReviewId === r.id ? (
+                          <ReviewForm
+                            review={ r }
+                            onCancel={ () => setEditingReviewId( null ) }
+                            onSubmit={ submitReview }
+                            isSubmitting={ isSubmittingReview }
+                          />
+                        ) : (
+                          <>
+                            <div className="flex justify-between items-start">
+                              <div className="flex gap-2 items-center">
+                                <RatingStars rating={ r.rating } size="sm" />
+                                <span className="font-semibold">{ r.user.name }</span>
                               </div>
-                              <p className="mt-2">{r.review}</p>
-                              {r.id === userReview?.id && (
-                                <Button variant="ghost" size="sm" className="mt-2" onClick={() => setEditingReviewId(r.id)}>
-                                  <Edit className="h-4 w-4 mr-1" /> Edit
-                                </Button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground">No reviews yet.</p>
-                  )}
+                              <span className="text-sm text-muted-foreground">
+                                { new Date( r.created_at ).toLocaleDateString() }
+                              </span>
+                            </div>
+                            <p className="mt-2">{ r.review }</p>
+                            { r.id === userReview?.id && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="mt-2"
+                                onClick={ () => setEditingReviewId( r.id ) }
+                              >
+                                <Edit className="h-4 w-4 mr-1" /> Edit
+                              </Button>
+                            ) }
+                          </>
+                        ) }
+                      </div>
+                    ) ) }
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">No reviews yet.</p>
+                ) }
 
-                  {canReview && !hasReviewed && editingReviewId === null && (
-                    <div className="mt-8">
-                      <ReviewForm onCancel={() => {}} onSubmit={submitReview} isSubmitting={isSubmittingReview} />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      )}
+                { canReview && !hasReviewed && editingReviewId === null && (
+                  <div className="mt-8">
+                    <ReviewForm
+                      onCancel={ () => { } }
+                      onSubmit={ submitReview }
+                      isSubmitting={ isSubmittingReview }
+                    />
+                  </div>
+                ) }
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
