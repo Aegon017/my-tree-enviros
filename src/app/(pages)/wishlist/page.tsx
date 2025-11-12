@@ -1,8 +1,10 @@
 "use client";
 
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import Image from "next/image";
+import Link from "next/link";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import WishlistItemCardSkeleton from "@/components/skeletons/wishlist-item-card-skeleton";
@@ -10,162 +12,242 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { wishlistService, type WishlistItem } from "@/services/wishlist.service";
-import Image from "next/image";
-import Link from "next/link";
 import { useCart } from "@/hooks/use-cart";
+import { wishlistService, type WishlistItem } from "@/services/wishlist.service";
+import WishlistItemCard from "@/components/wishlist-item-card";
 
-type WishlistItemType = WishlistItem;
+interface WishlistState {
+  items: WishlistItem[];
+  isLoading: boolean;
+  removingIds: number[];
+  addingToCartIds: number[];
+}
 
-const WishlistPage = () => {
+const TOAST_MESSAGES = {
+  REMOVED: "Removed from wishlist",
+  MOVED_TO_CART: "Moved to cart",
+  ADDED_TO_CART: "Added to cart",
+  CLEARED: "Wishlist cleared",
+  ERROR: "Something went wrong",
+} as const;
+
+const EMPTY_STATE_CONFIG = {
+  icon: Heart,
+  title: "Your wishlist is empty",
+  actions: [
+    { href: "/store", label: "Browse Products", variant: "outline" as const },
+  ],
+};
+
+const useWishlist = () => {
+  const [ state, setState ] = useState<WishlistState>( {
+    items: [],
+    isLoading: false,
+    removingIds: [],
+    addingToCartIds: [],
+  } );
+
   const { isAuthenticated } = useAuth();
-  const [ wishlistItems, setWishlistItems ] = useState<WishlistItemType[]>( [] );
-  const [ isLoading, setIsLoading ] = useState( false );
-  const [ removingIds, setRemovingIds ] = useState<number[]>( [] );
-  const [ addingToCartIds, setAddingToCartIds ] = useState<number[]>( [] );
-  const { addToCart } = useCart();
 
-  useEffect( () => {
-    const fetchWishlist = async () => {
-      setIsLoading( true );
-      try {
-        const response = await wishlistService.getWishlist();
-        if ( response.success ) setWishlistItems( response.data.wishlist.items || [] );
-      } finally {
-        setIsLoading( false );
+  const fetchWishlist = useCallback( async () => {
+    if ( !isAuthenticated ) return;
+
+    setState( prev => ( { ...prev, isLoading: true } ) );
+
+    try {
+      const response = await wishlistService.getWishlist();
+      if ( response.success ) {
+        setState( prev => ( {
+          ...prev,
+          items: response.data.wishlist.items || [],
+        } ) );
       }
-    };
-    fetchWishlist();
+    } catch ( error ) {
+      console.error( "Failed to fetch wishlist:", error );
+      toast.error( TOAST_MESSAGES.ERROR );
+    } finally {
+      setState( prev => ( { ...prev, isLoading: false } ) );
+    }
   }, [ isAuthenticated ] );
 
+  const removeItem = useCallback( async ( id: number ) => {
+    setState( prev => ( { ...prev, removingIds: [ ...prev.removingIds, id ] } ) );
 
-  const handleRemove = async ( id: number ) => {
-    setRemovingIds( ( p ) => [ ...p, id ] );
     try {
-      const res = await wishlistService.removeFromWishlist( id );
-      if ( res.success ) setWishlistItems( ( p ) => p.filter( ( i ) => i.id !== id ) );
-      toast.success( "Removed" );
-    } finally {
-      setRemovingIds( ( p ) => p.filter( ( x ) => x !== id ) );
-    }
-  };
-
-  const handleAddToCart = ( item: WishlistItemType ) => {
-    addToCart( {
-      id: item.product.id,
-      name: item.product.name,
-      price: item.product.selling_price,
-      quantity: 1,
-      image: item.product.thumbnail_url,
-      type: "product",
-    } as any );
-    const updated = wishlistItems.filter( ( i ) => i.id !== item.id );
-    setWishlistItems( updated );
-    localStorage.setItem( "guest_wishlist", JSON.stringify( updated ) );
-    toast.success( "Added to cart" );
-  };
-
-  const handleMoveToCart = async ( id: number ) => {
-    setAddingToCartIds( ( p ) => [ ...p, id ] );
-    try {
-      const res = await wishlistService.moveToCart( id );
-      if ( res.success ) {
-        setWishlistItems( ( p ) => p.filter( ( i ) => i.id !== id ) );
-        toast.success( "Moved to cart" );
+      const response = await wishlistService.removeFromWishlist( id );
+      if ( response.success ) {
+        setState( prev => ( {
+          ...prev,
+          items: prev.items.filter( item => item.id !== id ),
+        } ) );
+        toast.success( TOAST_MESSAGES.REMOVED );
       }
+    } catch ( error ) {
+      console.error( "Failed to remove item:", error );
+      toast.error( TOAST_MESSAGES.ERROR );
     } finally {
-      setAddingToCartIds( ( p ) => p.filter( ( x ) => x !== id ) );
+      setState( prev => ( {
+        ...prev,
+        removingIds: prev.removingIds.filter( itemId => itemId !== id ),
+      } ) );
     }
-  };
+  }, [] );
 
-  const handleClear = async () => {
-    const res = await wishlistService.clearWishlist();
-    if ( !res.success ) return;
-    setWishlistItems( [] );
-    toast.success( "Cleared" );
-  };
+  const moveToCart = useCallback( async ( id: number ) => {
+    setState( prev => ( { ...prev, addingToCartIds: [ ...prev.addingToCartIds, id ] } ) );
 
-  if ( isLoading )
+    try {
+      const response = await wishlistService.moveToCart( id );
+      if ( response.success ) {
+        setState( prev => ( {
+          ...prev,
+          items: prev.items.filter( item => item.id !== id ),
+        } ) );
+        toast.success( TOAST_MESSAGES.MOVED_TO_CART );
+      }
+    } catch ( error ) {
+      console.error( "Failed to move item to cart:", error );
+      toast.error( TOAST_MESSAGES.ERROR );
+    } finally {
+      setState( prev => ( {
+        ...prev,
+        addingToCartIds: prev.addingToCartIds.filter( itemId => itemId !== id ),
+      } ) );
+    }
+  }, [] );
+
+  const clearWishlist = useCallback( async () => {
+    try {
+      const response = await wishlistService.clearWishlist();
+      if ( response.success ) {
+        setState( prev => ( { ...prev, items: [] } ) );
+        toast.success( TOAST_MESSAGES.CLEARED );
+      }
+    } catch ( error ) {
+      console.error( "Failed to clear wishlist:", error );
+      toast.error( TOAST_MESSAGES.ERROR );
+    }
+  }, [] );
+
+  useEffect( () => {
+    fetchWishlist();
+  }, [ fetchWishlist ] );
+
+  return {
+    ...state,
+    removeItem,
+    moveToCart,
+    clearWishlist,
+  };
+};
+
+const EmptyWishlistState: React.FC = () => {
+  const { icon: Icon, title, actions } = EMPTY_STATE_CONFIG;
+
+  return (
+    <div className="text-center">
+      <Icon className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+      <h3 className="text-lg font-semibold mb-4">{ title }</h3>
+      <div className="flex gap-4 justify-center">
+        { actions.map( ( action, index ) => (
+          <Link key={ index } href={ action.href }>
+            <Button variant={ action.variant }>{ action.label }</Button>
+          </Link>
+        ) ) }
+      </div>
+    </div>
+  );
+};
+
+const WishlistPage: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+  const { addToCart } = useCart();
+  const {
+    items: wishlistItems,
+    isLoading,
+    removingIds,
+    addingToCartIds,
+    removeItem,
+    moveToCart,
+    clearWishlist,
+  } = useWishlist();
+
+  const itemCountText = useMemo( () => {
+    const count = wishlistItems.length;
+    return `You have ${ count } item${ count !== 1 ? "s" : "" }`;
+  }, [ wishlistItems.length ] );
+
+  const handleAddToCart = useCallback( ( item: WishlistItem ) => {
+    addToCart( {
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: 1,
+      image: item.image_url,
+      type: "product",
+    } );
+
+    if ( !isAuthenticated ) {
+      const updated = wishlistItems.filter( i => i.id !== item.id );
+      localStorage.setItem( "guest_wishlist", JSON.stringify( updated ) );
+    }
+
+    toast.success( TOAST_MESSAGES.ADDED_TO_CART );
+  }, [ addToCart, isAuthenticated, wishlistItems ] );
+
+  if ( isLoading ) {
     return (
       <Section>
         <SectionTitle align="center" title="Wishlist" />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          { Array.from( { length: 6 } ).map( ( _, i ) => (
-            <WishlistItemCardSkeleton key={ i } />
+          { Array.from( { length: 6 } ).map( ( _, index ) => (
+            <WishlistItemCardSkeleton key={ index } />
           ) ) }
         </div>
       </Section>
     );
+  }
 
-  if ( wishlistItems.length === 0 )
+  if ( wishlistItems.length === 0 ) {
     return (
       <Section>
         <SectionTitle align="center" title="Wishlist" />
-        <div className="text-center py-12">
-          <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Your wishlist is empty</h3>
-          <div className="flex gap-4 justify-center">
-            <Link href="/sponsor-a-tree"><Button>Browse Trees</Button></Link>
-            <Link href="/store"><Button variant="outline">Browse Products</Button></Link>
-          </div>
-        </div>
+        <EmptyWishlistState />
       </Section>
     );
+  }
 
   return (
     <Section>
-      <SectionTitle align="center" title="Wishlist" subtitle={ `You have ${ wishlistItems.length } item${ wishlistItems.length !== 1 ? "s" : "" }` } />
-      <div className="flex justify-end mb-4">
-        <Button variant="destructive" size="sm" onClick={ handleClear }>Clear All</Button>
+      <SectionTitle
+        align="center"
+        title="Wishlist"
+        subtitle={ itemCountText }
+      />
+
+      <div className="flex justify-end mb-6">
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={ clearWishlist }
+        >
+          Clear All
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        { wishlistItems.map( ( item ) => {
-          const image = item.image_url;
-          const name = item.name;
-          const price = item.price;
-          const available = item.quantity > 0;
-          const removing = removingIds.includes( item.id );
-          const adding = addingToCartIds.includes( item.id );
-
-          return (
-            <Card key={ item.id } className="overflow-hidden p-0 gap-0">
-              <CardHeader className="p-0">
-                <div className="relative aspect-video">
-                  { image ? (
-                    <Image src={ image } alt={ name } fill className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-muted flex items-center justify-center">
-                      <Heart className="h-12 w-12 text-muted-foreground" />
-                    </div>
-                  ) }
-                  { !available && <Badge variant="destructive" className="absolute top-2 right-2">Out of Stock</Badge> }
-                </div>
-              </CardHeader>
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-lg mb-2 line-clamp-2">{ name }</h3>
-                <div className="flex items-center justify-between">
-                  <span className="text-xl font-bold text-primary">₹{ price }</span>
-                  <Badge variant="outline">Product</Badge>
-                </div>
-              </CardContent>
-              <CardFooter className="p-4 pt-0 flex gap-2">
-                { isAuthenticated ? (
-                  <Button className="flex-1" onClick={ () => handleMoveToCart( item.id ) } disabled={ !available || adding }>
-                    { adding ? "Adding..." : <><ShoppingCart className="h-4 w-4 mr-2" />Move to Cart</> }
-                  </Button>
-                ) : (
-                  <Button className="flex-1" onClick={ () => handleAddToCart( item ) } disabled={ !available }>
-                    <ShoppingCart className="h-4 w-4 mr-2" />Add to Cart
-                  </Button>
-                ) }
-                <Button variant="destructive" size="icon" onClick={ () => handleRemove( item.id ) } disabled={ removing }>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </CardFooter>
-            </Card>
-          );
-        } ) }
+        { wishlistItems.map( ( item ) => (
+          <WishlistItemCard
+            key={ item.id }
+            item={ item }
+            isAuthenticated={ isAuthenticated }
+            onRemove={ removeItem }
+            onMoveToCart={ moveToCart }
+            onAddToCart={ handleAddToCart }
+            removingIds={ removingIds }
+            addingToCartIds={ addingToCartIds }
+          />
+        ) ) }
       </div>
     </Section>
   );

@@ -183,8 +183,8 @@ export function transformBackendCart(item: BackendCartItem): CartItem {
 
   if (variant) {
     
-    itemPrice = variant.base_price;
-    itemImage = variant.images?.[0]?.url || itemImage;
+    itemPrice = variant.original_price;
+    itemImage = variant.image_urls?.[0]?.url || itemImage;
     
   } else {
     

@@ -32,6 +32,7 @@ interface AddToCartButtonProps {
   selectedVariantId?: number;
   selectedVariant?: any;
   product?: any;
+  onProductUpdate?: () => void;
 }
 
 interface PendingAction {
@@ -58,6 +59,7 @@ export default function AddToCartButton({
   selectedVariantId,
   selectedVariant,
   product,
+  onProductUpdate,
 }: AddToCartButtonProps) {
   const router = useRouter();
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
@@ -206,6 +208,11 @@ export default function AddToCartButton({
       const actionText = cartType === 1 ? "added to cart" : "sponsored";
       const treeText = quantity > 1 ? "trees" : "tree";
       toast.success(`${quantity} ${treeText} ${actionText}`);
+      
+      // Update product data to refresh wishlist status
+      if (onProductUpdate) {
+        setTimeout(() => onProductUpdate(), 100);
+      }
     } catch (error) {
       const errorMessage =
         (error as ApiError)?.message || "Failed to process request";
@@ -358,6 +365,11 @@ export default function AddToCartButton({
         pendingAction.cartType === 1 ? "added to cart" : "sponsored";
       const treeText = quantity > 1 ? "trees" : "tree";
       toast.success(`Cart cleared and ${quantity} ${treeText} ${actionText}`);
+      
+      // Update product data to refresh wishlist status
+      if (onProductUpdate) {
+        setTimeout(() => onProductUpdate(), 100);
+      }
     } catch (error) {
       const errorMessage =
         (error as ApiError)?.message || "Failed to clear cart and add item";

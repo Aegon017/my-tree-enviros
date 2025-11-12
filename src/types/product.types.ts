@@ -27,16 +27,15 @@ export interface ProductVariant {
     planter?: Planter
   }
   variant_name: string
-  base_price: number
-  discount_price: number | null
-  selling_price: number
-  original_price: number | null
+  original_price: number
+  selling_price: number | null
   stock_quantity: number
   is_instock: boolean
   image_urls: Array<{
     id: number
     url: string
   }>
+  in_wishlist?: boolean
   created_at: string
   updated_at: string
 }

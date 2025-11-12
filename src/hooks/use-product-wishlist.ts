@@ -1,55 +1,60 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { wishlistService } from "@/services/wishlist.service";
 import { authStorage } from "@/lib/auth-storage";
+import type { KeyedMutator } from "swr";
+import type { Product } from "@/types/product.types";
 
-export function useProductWishlist( productId?: number, variantId?: number ) {
-    const [ isFavorite, setIsFavorite ] = useState( false );
+export function useProductWishlist(
+    productId?: number,
+    variantId?: number,
+    mutateProduct?: KeyedMutator<any>
+) {
     const [ loginOpen, setLoginOpen ] = useState( false );
     const [ loading, setLoading ] = useState( false );
     const isAuth = authStorage.isAuthenticated();
 
-    useEffect( () => {
-        if ( !isAuth || !productId ) return;
-        ( async () => {
-            const res = await wishlistService.checkInWishlist( productId, variantId );
-            setIsFavorite( res?.data?.in_wishlist );
-        } )();
-    }, [ isAuth, productId, variantId ] );
-
-    const toggleFavorite = async () => {
+    const toggleFavorite = async ( inWishlist: boolean ) => {
         if ( !isAuth ) {
             setLoginOpen( true );
+            return;
+        }
+
+        if ( !productId || !variantId ) {
+            toast.error( "No variant selected" );
             return;
         }
 
         setLoading( true );
 
         try {
-            if ( isFavorite ) {
-                const res = await wishlistService.getWishlist();
-                const item = res.data.wishlist.items.find(
-                    ( i: any ) =>
-                        i.product_id === productId &&
-                        ( variantId ? i.product_variant_id === variantId : true )
-                );
-                if ( item ) await wishlistService.removeFromWishlist( item.id );
-                setIsFavorite( false );
+            if ( inWishlist ) {
+                // Try the new variant-based removal method first
+                try {
+                    await wishlistService.removeFromWishlistByVariant( productId, variantId );
+                } catch ( variantError ) {
+                    // Fallback to the original method if the new endpoint doesn't exist
+                    await wishlistService.removeFromWishlist( variantId );
+                }
                 toast.success( "Removed from wishlist" );
             } else {
-                await wishlistService.addToWishlist( {
-                    product_id: productId!,
-                    product_variant_id: variantId,
-                } );
-                setIsFavorite( true );
+                await wishlistService.addToWishlist( { product_id: productId, product_variant_id: variantId } );
                 toast.success( "Added to wishlist" );
             }
+
+            // Optional: revalidate product data
+            if ( mutateProduct ) {
+                setTimeout(() => mutateProduct(), 1000);
+            }
+        } catch ( error ) {
+            toast.error( "Failed to update wishlist" );
+            console.error( "Wishlist error:", error );
         } finally {
             setLoading( false );
         }
     };
 
-    return { isFavorite, loading, toggleFavorite, loginOpen, setLoginOpen };
+    return { toggleFavorite, loading, loginOpen, setLoginOpen };
 }

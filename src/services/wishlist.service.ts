@@ -17,6 +17,11 @@ export const wishlistService = {
     return data;
   },
 
+  async removeFromWishlistByVariant( productId: number, variantId: number ) {
+    const { data } = await api.delete( `/wishlist/items/variant/${ variantId }` );
+    return data;
+  },
+
   async clearWishlist() {
     const { data } = await api.delete( "/wishlist" );
     return data;

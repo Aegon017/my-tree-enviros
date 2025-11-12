@@ -43,7 +43,7 @@ export interface CartItem {
       description: string;
       short_description: string;
       price: number;
-      discount_price: number;
+      selling_price: number;
       quantity: number;
       thumbnail_url: string;
       image_urls: string[];
@@ -84,8 +84,8 @@ export interface CartItem {
           };
         };
         variant_name: string;
-        base_price: number;
-        discount_price: number;
+        original_price: number;
+        selling_price: number;
         price: number;
         formatted_price: string;
         stock_quantity: number;
