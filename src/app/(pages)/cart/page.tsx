@@ -459,7 +459,7 @@ function CartItemComponent({
       productData?.thumbnail_url ||
       
       item.image ||
-      item.ecom_product?.thumbnail_url ||
+      item.ecom_product ||
       DEFAULT_IMAGE;
     const itemPrice =
       typeof item.price === "number"
