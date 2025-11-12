@@ -223,9 +223,10 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h4 className="text-sm font-semibold text-foreground mb-1">
-                    { productState.selectedVariant.variant?.name }
+                    { productState.selectedVariant.variant?.name || "Default Variant" }
                   </h4>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                     { productState.selectedVariant.variant?.color && (
                       <div
                         className="w-4 h-4 rounded-full border border-border"
@@ -236,32 +237,38 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
                         title={ productState.selectedVariant.variant.color.name }
                       />
                     ) }
+
                     { productState.selectedVariant.variant?.size?.name && (
                       <span className="px-2 py-0.5 rounded-md bg-background border text-xs font-medium">
                         { productState.selectedVariant.variant.size.name }
                       </span>
                     ) }
+
                     { productState.selectedVariant.variant?.planter?.name && (
                       <span className="text-xs font-medium text-foreground">
                         { productState.selectedVariant.variant.planter.name }
                       </span>
                     ) }
+
+                    {/* 🎨 Elegant fallback */ }
+                    { !productState.selectedVariant.variant?.color &&
+                      !productState.selectedVariant.variant?.size &&
+                      !productState.selectedVariant.variant?.planter && (
+                        <span className="px-2 py-0.5 rounded-md border border-dashed text-muted-foreground text-xs bg-background/60">
+                          Standard Variant
+                        </span>
+                      ) }
                   </div>
                 </div>
 
                 <div
-                  className={ `
-          flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium border
-          ${ productState.selectedVariant.is_instock
+                  className={ `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium border ${ productState.selectedVariant.is_instock
                       ? "bg-primary/10 text-primary border-primary/20"
                       : "bg-destructive/10 text-destructive border-destructive/20"
-                    }
-        `}
+                    }` }
                 >
                   <div
-                    className={ `w-2 h-2 rounded-full ${ productState.selectedVariant.is_instock
-                        ? "bg-primary"
-                        : "bg-destructive"
+                    className={ `w-2 h-2 rounded-full ${ productState.selectedVariant.is_instock ? "bg-primary" : "bg-destructive"
                       }` }
                   />
                   { productState.selectedVariant.is_instock ? (
