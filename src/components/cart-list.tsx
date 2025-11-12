@@ -40,7 +40,7 @@ export const CartList = ({ isBackendCart = false }: Props) => {
         <h2 className="text-xl font-semibold mb-4">🛒 Your Cart</h2>
         
         {}
-        <div className="mb-6">
+        {/* <div className="mb-6">
           {cart.reduce((total, item) => {
             const price = item.price || item.ecom_product?.selling_price || 0;
             return total + (price * item.quantity);
@@ -55,7 +55,7 @@ export const CartList = ({ isBackendCart = false }: Props) => {
               </span>
             </div>
           )}
-        </div>
+        </div> */}
 
         <div className="space-y-4">
           {cart.map((item: CartItem, index) => (

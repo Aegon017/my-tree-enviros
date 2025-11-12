@@ -18,7 +18,6 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useLocation } from "@/hooks/use-location";
-import { fetcher } from "@/lib/fetcher";
 import {
   getBlogsSWRKey,
   listBlogs,
@@ -31,7 +30,7 @@ import {
 } from "@/services/slider.service";
 import { treeService } from "@/services/tree.service";
 import type { Blog } from "@/types/blog";
-import type { Product } from "@/types/product.types";
+import type { Product, ProductListItem } from "@/types/product.types";
 import type { Tree } from "@/types/tree";
 import Autoplay from "embla-carousel-autoplay";
 import { AlertCircle, MapPin, RefreshCw } from "lucide-react";
@@ -104,7 +103,7 @@ export default function Home() {
     }
   );
 
-  const products = productsList?.products ?? [];
+  const products = productsList?.data?.products ?? [];
 
   const {
     data: blogsList,
@@ -398,7 +397,7 @@ export default function Home() {
             ? Array.from( { length: 4 } ).map( ( _, i ) => (
               <ProductCardSkeleton key={ `product-skeleton-${ i }` } />
             ) )
-            : products.map( ( product: Product ) => (
+            : products.map( ( product: ProductListItem ) => (
               <ProductCard key={ product.slug } product={ product } />
             ) ) }
         </div>

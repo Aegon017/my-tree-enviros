@@ -23,12 +23,17 @@ export const productService = {
     return data.data.product;
   },
 
-  async getProducts( params: ProductParams ) {
-    const query = buildQuery( params );
-    const res = await fetch( `${ baseUrl }/products?${ query }`, { cache: "no-store" } );
-    const data: ProductCollectionResponse = await res.json();
-    if ( !data.success ) throw new Error( data.message );
-    return data.data;
+  async getProducts( params: ProductParams ): Promise<ProductCollectionResponse> {
+    const query = new URLSearchParams();
+    Object.entries( params ).forEach( ( [ k, v ] ) => {
+      if ( v !== undefined && v !== null && v !== "" ) query.set( k, String( v ) );
+    } );
+
+    const { data } = await api.get<ProductCollectionResponse>(
+      `${ baseUrl }/products?${ query.toString() }`
+    );
+
+    return data;
   },
 
   async getCategories() {

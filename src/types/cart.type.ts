@@ -1,5 +1,6 @@
-import type { Product, ProductVariant } from "./product.types";
+import type { Product } from "./product.types";
 import type { Campaign, CampaignType } from "./campaign";
+import type { ProductVariant } from "./variant.types";
 
 export interface CartItem {
   id: number;
@@ -10,21 +11,7 @@ export interface CartItem {
   formatted_price?: string;
   subtotal?: number;
   formatted_subtotal?: string;
-  item?: {
-    type?: string;
-    name?: string;
-    sku?: string;
-    image?: string;
-    variant?: any;
-    color?: any;
-    size?: any;
-    product?: any; 
-  };
-  options?: any;
-  created_at?: string;
-  updated_at?: string;
 
-  
   name?: string;
   type?: "tree" | "product" | "campaign";
   image?: string;
@@ -34,14 +21,16 @@ export interface CartItem {
   occasion?: string;
   message?: string;
   location_id?: number;
-  
+
   campaign_type?: CampaignType;
   location?: string;
   description?: string;
+
+  /** Always linked to a variant */
+  product_variant_id?: number;
   variant?: {
     id?: number;
     name?: string;
-    value?: string;
     sku?: string;
     color?: string;
     size?: string;
@@ -50,28 +39,41 @@ export interface CartItem {
     size_id?: number;
     planter_id?: number;
   };
-  product_variant_id?: number;
+
   metadata?: {
     duration?: number;
     occasion?: string;
     message?: string;
     location_id?: number;
-    plan_id?: number;
     product_variant_id?: number;
-    selected_variant?: any;
-    product_data?: any;
+    selected_variant?: ProductVariant | null;
+    product_data?: Product | null;
   };
-  
+
   user_id?: number;
   product_id?: number;
   tree_id?: number;
-  
+
+  item?: {
+    type?: string;
+    name?: string;
+    sku?: string;
+    image?: string;
+    variant?: any;
+    color?: any;
+    size?: any;
+    product?: Product;
+  };
+
+  options?: any;
+  created_at?: string;
+  updated_at?: string;
+
   product?: Product;
   ecom_product?: Product;
   tree?: any;
   campaign?: Campaign;
 }
-
 
 export interface BackendCartItem {
   id: number;
@@ -94,9 +96,8 @@ export interface BackendCartItem {
   updated_by: number;
   ecom_product?: Product;
   product?: Product;
-  product_variant?: ProductVariant;
+  product_variant?: ProductVariant | null;
 }
-
 
 export interface BackendCartResponse {
   id: number;
@@ -112,128 +113,120 @@ export interface BackendCartResponse {
     name?: string;
     sku?: string;
     image?: string;
+    product?: Product;
     variant?: {
       sku?: string;
       size?: string;
       color?: string;
+      planter?: string;
     };
-    color?: any;
-    size?: any;
-    product?: Product; 
   };
   options?: any;
   created_at?: string;
   updated_at?: string;
 }
 
+/**
+ * Transform backend response format to CartItem (variant-based)
+ */
+export function transformBackendCartItem( item: BackendCartResponse ): CartItem {
+  const product = item.item?.product;
+  const variant = product?.variants?.[ 0 ] ?? null;
 
-export function transformBackendCartItem(item: BackendCartResponse): CartItem {
-  
-  const productData = item.item;
-  const product = productData?.product;
-  
-  
-  let variantInfo = null;
-  if (product?.variants && product.variants.length > 0) {
-    variantInfo = product.variants[0]; 
-  }
-  
+  const selectedVariant = variant || null;
+  const variantImage = selectedVariant?.image_urls?.[ 0 ]?.url ?? "/placeholder.jpg";
+
   return {
     id: item.cart_id,
     cart_id: item.cart_id,
-    name: productData?.name || product?.name || "",
-    type: "product" as const,
+    name: item.item?.name || selectedVariant?.variant?.name || product?.name || "",
+    type: "product",
     price: item.price,
     quantity: item.quantity,
-    image: productData?.image || product?.thumbnail_url || "",
+    image: variantImage,
     slug: product?.slug,
-    product_type: 2, 
+    product_type: 2,
     formatted_price: item.formatted_price,
     subtotal: item.subtotal,
     formatted_subtotal: item.formatted_subtotal,
-    variant: variantInfo
+    product_variant_id: selectedVariant?.id,
+    variant: selectedVariant
       ? {
-          id: variantInfo.id,
-          name: variantInfo.variant_name,
-          sku: variantInfo.sku,
-          color: variantInfo.variant?.color?.name,
-          size: variantInfo.variant?.size?.name,
-          planter: variantInfo.variant?.planter?.name,
-          color_id: variantInfo.variant?.color?.id,
-          size_id: variantInfo.variant?.size?.id,
-          planter_id: variantInfo.variant?.planter?.id,
-        }
+        id: selectedVariant.id,
+        name: selectedVariant.variant?.name ?? "",
+        sku: selectedVariant.sku,
+        color: selectedVariant.variant?.color?.name,
+        size: selectedVariant.variant?.size?.name,
+        planter: selectedVariant.variant?.planter?.name,
+        color_id: selectedVariant.variant?.color?.id,
+        size_id: selectedVariant.variant?.size?.id,
+        planter_id: selectedVariant.variant?.planter?.id,
+      }
       : undefined,
-    item: productData, 
-    options: item.options,
+    metadata: {
+      product_variant_id: selectedVariant?.id,
+      selected_variant: selectedVariant,
+      product_data: product,
+    },
+    product,
+    ecom_product: product,
     created_at: item.created_at,
     updated_at: item.updated_at,
-    product: product,
-    ecom_product: product,
   };
 }
 
-
-export function transformBackendCart(item: BackendCartItem): CartItem {
+/**
+ * Transform BackendCartItem (from DB structure) to frontend CartItem (variant-based)
+ */
+export function transformBackendCart( item: BackendCartItem ): CartItem {
   const product = item.product || item.ecom_product;
-  const variant = item.product_variant;
-  let itemPrice = 0;
-  let itemName = item.name || product?.name || "";
-  let itemImage = product?.thumbnail_url || "";
+  const variant = item.product_variant ?? null;
 
-  if (variant) {
-    
-    itemPrice = variant.original_price;
-    itemImage = variant.image_urls?.[0]?.url || itemImage;
-    
-  } else {
-    
-    itemPrice =
-      typeof product?.selling_price === "string"
-        ? parseFloat(product.selling_price)
-        : product?.selling_price || 0;
-  }
+  const variantImage = variant?.image_urls?.[ 0 ]?.url ?? "/placeholder.jpg";
+  const itemPrice = variant?.selling_price ?? 0;
 
   return {
-    id: item.product_id,
+    id: item.id,
     cart_id: item.id,
-    name: itemName,
-    type: item.product_type === 1 ? "product" : "tree",
+    name: variant?.variant?.name || product?.name || "",
+    type: "product",
     price: itemPrice,
     quantity: item.quantity,
-    image: itemImage,
+    image: variantImage,
     slug: product?.slug,
     product_type: item.product_type,
     duration: item.duration,
     occasion: item.occasion,
     message: item.message,
     location_id: item.location_id,
-    product_variant_id: item.product_variant_id,
+    product_variant_id: variant?.id,
     variant: variant
       ? {
-          id: variant.id,
-          name: variant.variant_name,
-          sku: variant.sku,
-          color: variant.variant.color?.name,
-          size: variant.variant.size?.name,
-          planter: variant.variant.planter?.name,
-          color_id: variant.variant.color?.id,
-          size_id: variant.variant.size?.id,
-          planter_id: variant.variant.planter?.id,
-        }
+        id: variant.id,
+        name: variant.variant?.name ?? "",
+        sku: variant.sku,
+        color: variant.variant?.color?.name,
+        size: variant.variant?.size?.name,
+        planter: variant.variant?.planter?.name,
+        color_id: variant.variant?.color?.id,
+        size_id: variant.variant?.size?.id,
+        planter_id: variant.variant?.planter?.id,
+      }
       : undefined,
     metadata: {
       duration: item.duration,
       occasion: item.occasion,
       message: item.message,
       location_id: item.location_id,
-      product_variant_id: item.product_variant_id,
+      product_variant_id: variant?.id,
+      selected_variant: variant,
+      product_data: product,
     },
     user_id: item.user_id,
     product_id: item.product_id,
     created_at: item.created_at,
     updated_at: item.updated_at,
-    product: product,
+    product,
     ecom_product: item.ecom_product,
   };
 }

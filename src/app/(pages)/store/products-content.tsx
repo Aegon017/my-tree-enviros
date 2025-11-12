@@ -5,9 +5,21 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Pagination,
   PaginationContent,
@@ -15,18 +27,24 @@ import {
   PaginationItem,
   PaginationLink,
   PaginationNext,
-  PaginationPrevious
+  PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Filter } from "lucide-react";
 import { productService } from "@/services/product.service";
-import { Product, Meta, ProductParams, ProductCategory } from "@/types/product.types";
+import type {
+  ProductListItem,
+  ProductParams,
+  ProductCollectionResponse,
+} from "@/types/product.types";
 import { useDebounce } from "@/hooks/use-debounce";
 import ProductCardSkeleton from "@/components/skeletons/product-card-skeleton";
 import ProductCard from "@/components/product-card";
+import type { BaseMeta } from "@/types/common.types";
+import type { ProductCategory } from "@/types/category.types";
 
 interface ProductsState {
-  products: Product[];
-  meta: Meta;
+  products: ProductListItem[];
+  meta: BaseMeta;
   categories: ProductCategory[];
   search: string;
   loading: boolean;
@@ -35,11 +53,18 @@ interface ProductsState {
 
 const initialState: ProductsState = {
   products: [],
-  meta: { current_page: 1, last_page: 1, per_page: 15, total: 0, from: 0, to: 0 },
+  meta: {
+    current_page: 1,
+    last_page: 1,
+    per_page: 15,
+    total: 0,
+    from: 0,
+    to: 0,
+  },
   categories: [],
   search: "",
   loading: false,
-  error: ""
+  error: "",
 };
 
 export default function ProductsPageContent() {
@@ -52,11 +77,18 @@ export default function ProductsPageContent() {
     return {
       page: Number( searchParams.get( "page" ) ) || 1,
       per_page: 15,
-      sort_by: ( searchParams.get( "sort_by" ) as "name" | "selling_price" | "created_at" ) || "name",
-      sort_order: ( searchParams.get( "sort_order" ) as "asc" | "desc" ) || "asc",
+      sort_by:
+        ( searchParams.get( "sort_by" ) as
+          | "name"
+          | "selling_price"
+          | "created_at" ) || "name",
+      sort_order:
+        ( searchParams.get( "sort_order" ) as "asc" | "desc" ) || "asc",
       in_stock: searchParams.get( "in_stock" ) !== "false",
-      category_id: searchParams.get( "category_id" ) ? Number( searchParams.get( "category_id" ) ) : undefined,
-      search: searchParams.get( "search" ) || undefined
+      category_id: searchParams.get( "category_id" )
+        ? Number( searchParams.get( "category_id" ) )
+        : undefined,
+      search: searchParams.get( "search" ) || undefined,
     };
   }, [ searchParams ] );
 
@@ -83,8 +115,19 @@ export default function ProductsPageContent() {
     async ( filters: ProductParams ) => {
       updateState( { loading: true, error: "" } );
       try {
-        const data = await productService.getProducts( filters );
-        updateState( { products: data.products, meta: data.meta } );
+        const response: ProductCollectionResponse =
+          await productService.getProducts( filters );
+
+        if ( response.success ) {
+          updateState( {
+            products: response.data.products,
+            meta: response.data.meta,
+          } );
+        } else {
+          updateState( {
+            error: response.message || "Failed to load products",
+          } );
+        }
       } catch ( err: any ) {
         updateState( { error: err.message || "Failed to load products" } );
       } finally {
@@ -96,9 +139,11 @@ export default function ProductsPageContent() {
 
   const fetchCategories = useCallback( async () => {
     try {
-      const data = await productService.getCategories();
+      const data: ProductCategory[] = await productService.getCategories();
       updateState( { categories: data } );
-    } catch { }
+    } catch {
+      // fail silently
+    }
   }, [ updateState ] );
 
   useEffect( () => {
@@ -125,9 +170,17 @@ export default function ProductsPageContent() {
     const delta = 2;
     const pages: ( number | string )[] = [];
     const range: number[] = [];
-    for ( let i = Math.max( 2, current - delta ); i <= Math.min( last - 1, current + delta ); i++ ) range.push( i );
+
+    for (
+      let i = Math.max( 2, current - delta );
+      i <= Math.min( last - 1, current + delta );
+      i++
+    )
+      range.push( i );
+
     if ( current - delta > 2 ) range.unshift( -1 );
     if ( current + delta < last - 1 ) range.push( -2 );
+
     pages.push( 1 );
     range.forEach( ( i ) => pages.push( i === -1 || i === -2 ? "..." : i ) );
     if ( last > 1 ) pages.push( last );
@@ -158,6 +211,7 @@ export default function ProductsPageContent() {
 
   return (
     <div className="container max-w-6xl mx-auto px-4 py-8 space-y-6">
+      {/* --- Filters + Search --- */ }
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <Input
           className="flex-1 min-w-[200px]"
@@ -175,18 +229,26 @@ export default function ProductsPageContent() {
 
           <SheetContent className="w-[380px] p-6">
             <SheetHeader>
-              <SheetTitle className="text-lg font-semibold">Filter Products</SheetTitle>
+              <SheetTitle className="text-lg font-semibold">
+                Filter Products
+              </SheetTitle>
             </SheetHeader>
 
             <div className="mt-6 space-y-6">
+              {/* --- Category Filter --- */ }
               <div className="space-y-2">
                 <label className="text-sm font-medium">Category</label>
                 <Select
-                  value={ currentFilters.category_id ? String( currentFilters.category_id ) : "all" }
+                  value={
+                    currentFilters.category_id
+                      ? String( currentFilters.category_id )
+                      : "all"
+                  }
                   onValueChange={ ( value ) =>
                     updateURL( {
-                      category_id: value === "all" ? undefined : Number( value ),
-                      page: 1
+                      category_id:
+                        value === "all" ? undefined : Number( value ),
+                      page: 1,
                     } )
                   }
                 >
@@ -196,7 +258,10 @@ export default function ProductsPageContent() {
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
                     { state.categories.map( ( category ) => (
-                      <SelectItem key={ category.id } value={ String( category.id ) }>
+                      <SelectItem
+                        key={ category.id }
+                        value={ String( category.id ) }
+                      >
                         { category.name }
                       </SelectItem>
                     ) ) }
@@ -204,6 +269,7 @@ export default function ProductsPageContent() {
                 </Select>
               </div>
 
+              {/* --- Sort Filter --- */ }
               <div className="space-y-2">
                 <label className="text-sm font-medium">Sort By</label>
                 <Select
@@ -213,35 +279,10 @@ export default function ProductsPageContent() {
                       : "name_asc"
                   }
                   onValueChange={ ( value ) => {
-                    let sort_by: "name" | "selling_price" | "created_at" = "name";
-                    let sort_order: "asc" | "desc" = "asc";
-
-                    switch ( value ) {
-                      case "name_asc":
-                        sort_by = "name";
-                        sort_order = "asc";
-                        break;
-                      case "name_desc":
-                        sort_by = "name";
-                        sort_order = "desc";
-                        break;
-                      case "selling_price_asc":
-                        sort_by = "selling_price";
-                        sort_order = "asc";
-                        break;
-                      case "selling_price_desc":
-                        sort_by = "selling_price";
-                        sort_order = "desc";
-                        break;
-                      case "created_at_desc":
-                        sort_by = "created_at";
-                        sort_order = "desc";
-                        break;
-                      default:
-                        sort_by = "name";
-                        sort_order = "asc";
-                    }
-
+                    let [ sort_by, sort_order ] = value.split( "_" ) as [
+                      ProductParams[ "sort_by" ],
+                      ProductParams[ "sort_order" ]
+                    ];
                     updateURL( { sort_by, sort_order, page: 1 } );
                   } }
                 >
@@ -251,37 +292,44 @@ export default function ProductsPageContent() {
                   <SelectContent>
                     <SelectItem value="name_asc">Name (A → Z)</SelectItem>
                     <SelectItem value="name_desc">Name (Z → A)</SelectItem>
-                    <SelectItem value="selling_price_asc">Price (Low → High)</SelectItem>
-                    <SelectItem value="selling_price_desc">Price (High → Low)</SelectItem>
+                    <SelectItem value="selling_price_asc">
+                      Price (Low → High)
+                    </SelectItem>
+                    <SelectItem value="selling_price_desc">
+                      Price (High → Low)
+                    </SelectItem>
                     <SelectItem value="created_at_desc">Newest</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* --- In-stock Filter --- */ }
               <div className="h-11 px-4 border rounded-md bg-muted/30 flex items-center justify-between">
-                <label htmlFor="inStock" className="text-sm font-medium cursor-pointer">
+                <label
+                  htmlFor="inStock"
+                  className="text-sm font-medium cursor-pointer"
+                >
                   In Stock Only
                 </label>
                 <Checkbox
                   id="inStock"
-                  checked={ currentFilters.in_stock }
+                  checked={ !!currentFilters.in_stock }
                   onCheckedChange={ ( checked ) =>
-                    updateURL( {
-                      in_stock: !!checked,
-                      page: 1
-                    } )
+                    updateURL( { in_stock: !!checked, page: 1 } )
                   }
                 />
               </div>
 
               <Button
+                variant="outline"
                 className="w-full font-medium"
                 onClick={ () =>
                   updateURL( {
                     category_id: undefined,
                     sort_by: undefined,
+                    sort_order: undefined,
                     in_stock: undefined,
-                    page: 1
+                    page: 1,
                   } )
                 }
               >
@@ -292,19 +340,32 @@ export default function ProductsPageContent() {
         </Sheet>
       </div>
 
+      {/* --- Product Grid --- */ }
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         { state.loading && state.meta.current_page === 1
-          ? [ ...Array( 9 ) ].map( ( _, index ) => <ProductCardSkeleton key={ index } /> )
-          : state.products.map( ( product ) => <ProductCard key={ product.id } product={ product } /> ) }
+          ? Array.from( { length: 9 } ).map( ( _, index ) => (
+            <ProductCardSkeleton key={ index } />
+          ) )
+          : state.products.map( ( product ) => (
+            <ProductCard key={ product.id } product={ product } />
+          ) ) }
       </div>
 
+      {/* --- Pagination --- */ }
       { state.meta.last_page > 1 && (
         <Pagination>
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={ () => state.meta.current_page > 1 && changePage( state.meta.current_page - 1 ) }
-                className={ state.meta.current_page === 1 || state.loading ? "pointer-events-none opacity-50" : "" }
+                onClick={ () =>
+                  state.meta.current_page > 1 &&
+                  changePage( state.meta.current_page - 1 )
+                }
+                className={
+                  state.meta.current_page === 1 || state.loading
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }
               />
             </PaginationItem>
 
@@ -314,9 +375,13 @@ export default function ProductsPageContent() {
                   <PaginationEllipsis />
                 ) : (
                   <PaginationLink
-                    onClick={ () => !state.loading && changePage( page as number ) }
+                    onClick={ () =>
+                      !state.loading && changePage( page as number )
+                    }
                     isActive={ state.meta.current_page === page }
-                    className={ state.loading ? "pointer-events-none opacity-50" : "" }
+                    className={
+                      state.loading ? "pointer-events-none opacity-50" : ""
+                    }
                   >
                     { page }
                   </PaginationLink>
@@ -326,8 +391,16 @@ export default function ProductsPageContent() {
 
             <PaginationItem>
               <PaginationNext
-                onClick={ () => state.meta.current_page < state.meta.last_page && changePage( state.meta.current_page + 1 ) }
-                className={ state.meta.current_page === state.meta.last_page || state.loading ? "pointer-events-none opacity-50" : "" }
+                onClick={ () =>
+                  state.meta.current_page < state.meta.last_page &&
+                  changePage( state.meta.current_page + 1 )
+                }
+                className={
+                  state.meta.current_page === state.meta.last_page ||
+                    state.loading
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }
               />
             </PaginationItem>
           </PaginationContent>

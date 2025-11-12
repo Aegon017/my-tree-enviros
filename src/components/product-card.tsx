@@ -1,4 +1,4 @@
-import { Product } from "@/types/product.types"
+import { Product, ProductListItem } from "@/types/product.types"
 import { Card, CardContent } from "./ui/card"
 import Link from "next/link"
 import Image from "next/image"
@@ -6,11 +6,11 @@ import { Badge } from "./ui/badge"
 import RatingStars from "./rating-stars"
 import { Button } from "./ui/button"
 
-export default function ProductCard( { product }: { product: Product } ) {
+export default function ProductCard( { product }: { product: ProductListItem } ) {
   const price = product.selling_price || 0
   const original = product.original_price ?? null
   const discount = original && original > price ? Math.round( ( ( original - price ) / original ) * 100 ) : 0
-  const img = product.thumbnail_url || product.image_urls?.[ 0 ] || "/placeholder.png"
+  const img = product.thumbnail_url || "/placeholder.png"
 
   return (
     <Card className="group flex flex-col py-0 gap-0 overflow-hidden bg-card border rounded-xl transition-shadow hover:shadow-md">

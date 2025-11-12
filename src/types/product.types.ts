@@ -27,10 +27,12 @@ export interface ProductListItem {
   selling_price: number
   original_price: number | null
   thumbnail_url?: string | null
+  short_description: string
   rating: number
   review_count: number
   in_wishlist: boolean
   is_instock: boolean
+  has_variants: boolean
 }
 
 export interface ProductParams {

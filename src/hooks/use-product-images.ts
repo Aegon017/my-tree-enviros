@@ -1,32 +1,48 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import type { Product, ProductVariant } from "@/types/product.types";
+import type { Product } from "@/types/product.types";
+import { ProductVariant } from "@/types/variant.types";
 
 interface ImageItem {
   id: number;
   url: string;
 }
 
-export function useProductImages(product?: Product, selectedVariant?: ProductVariant) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+export function useProductImages( product?: Product, selectedVariant?: ProductVariant ) {
+  const [ currentIndex, setCurrentIndex ] = useState( 0 );
 
-  const images = useMemo<ImageItem[]>(() => {
-    const variantImages = selectedVariant?.image_urls;
-    const defaultImages = product?.default_variant?.image_urls;
-    const productImages = product?.image_urls?.map((url: string, i: number) => ({ id: i, url }));
+  const images = useMemo<ImageItem[]>( () => {
+    if ( selectedVariant?.image_urls?.length ) {
+      return selectedVariant.image_urls.map( ( img, i ) => ( { id: i, url: img.url } ) );
+    }
 
-    return variantImages || defaultImages || productImages || [];
-  }, [selectedVariant, product]);
+    const defaultVariant = product?.variants?.[ 0 ];
+    if ( defaultVariant?.image_urls?.length ) {
+      return defaultVariant.image_urls.map( ( img, i ) => ( { id: i, url: img.url } ) );
+    }
 
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [images]);
+    const productImageUrls = ( product as any )?.image_urls as string[] | undefined;
+    if ( productImageUrls?.length ) {
+      return productImageUrls.map( ( url, i ) => ( { id: i, url } ) );
+    }
+
+    return [];
+  }, [ selectedVariant, product ] );
+
+  useEffect( () => {
+    setCurrentIndex( 0 );
+  }, [ images ] );
+
+  const currentImage =
+    images[ currentIndex ]?.url ??
+    product?.variants?.[ 0 ]?.image_urls?.[ 0 ]?.url ??
+    "/placeholder.jpg";
 
   return {
     images,
     currentIndex,
     setCurrentIndex,
-    currentImage: images[currentIndex]?.url ?? product?.thumbnail_url ?? "/placeholder.jpg",
+    currentImage,
   };
 }
