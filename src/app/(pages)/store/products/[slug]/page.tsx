@@ -218,6 +218,42 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
             onPlanterSelect={ productState.setPlanter }
           />
 
+          { productState.isInStock && (
+            <div className="flex gap-4 items-center">
+              <div className="flex border rounded-md items-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={ () => handleQty( productState.quantity - 1 ) }
+                  disabled={ productState.quantity <= 1 }
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Input
+                  type="number"
+                  value={ productState.quantity }
+                  onChange={ ( e ) => handleQty( +e.target.value ) }
+                  className="w-16 text-center border-0"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={ () => handleQty( productState.quantity + 1 ) }
+                  disabled={ productState.quantity >= productState.maxStock }
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="flex gap-2 items-baseline">
+                <span className="text-3xl font-bold">₹{ productState.displayPrice }</span>
+                { productState.displayBasePrice && (
+                  <span className="line-through text-muted-foreground">₹{ productState.displayBasePrice }</span>
+                ) }
+              </div>
+            </div>
+          ) }
+
           { productState.selectedVariant && (
             <div className="bg-muted/50 p-4 rounded-lg border border-border">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -263,8 +299,8 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
 
                 <div
                   className={ `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium border ${ productState.selectedVariant.is_instock
-                      ? "bg-primary/10 text-primary border-primary/20"
-                      : "bg-destructive/10 text-destructive border-destructive/20"
+                    ? "bg-primary/10 text-primary border-primary/20"
+                    : "bg-destructive/10 text-destructive border-destructive/20"
                     }` }
                 >
                   <div
@@ -279,42 +315,6 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
                     <span>Out of Stock</span>
                   ) }
                 </div>
-              </div>
-            </div>
-          ) }
-
-          { productState.isInStock && (
-            <div className="flex gap-4 items-center">
-              <div className="flex border rounded-md items-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={ () => handleQty( productState.quantity - 1 ) }
-                  disabled={ productState.quantity <= 1 }
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="number"
-                  value={ productState.quantity }
-                  onChange={ ( e ) => handleQty( +e.target.value ) }
-                  className="w-16 text-center border-0"
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={ () => handleQty( productState.quantity + 1 ) }
-                  disabled={ productState.quantity >= productState.maxStock }
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="flex gap-2 items-baseline">
-                <span className="text-3xl font-bold">₹{ productState.displayPrice }</span>
-                { productState.displayBasePrice && (
-                  <span className="line-through text-muted-foreground">₹{ productState.displayBasePrice }</span>
-                ) }
               </div>
             </div>
           ) }
