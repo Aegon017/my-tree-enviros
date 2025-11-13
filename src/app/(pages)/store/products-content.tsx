@@ -320,7 +320,7 @@ export default function ProductsPageContent() {
               </div>
 
               <Button
-                variant="outline"
+                variant="destructive"
                 className="w-full font-medium"
                 onClick={ () =>
                   updateURL( {
