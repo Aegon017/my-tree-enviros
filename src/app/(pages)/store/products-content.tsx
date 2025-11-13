@@ -141,9 +141,7 @@ export default function ProductsPageContent() {
     try {
       const data: ProductCategory[] = await productService.getCategories();
       updateState( { categories: data } );
-    } catch {
-      // fail silently
-    }
+    } catch { }
   }, [ updateState ] );
 
   useEffect( () => {
@@ -211,7 +209,6 @@ export default function ProductsPageContent() {
 
   return (
     <div className="container max-w-6xl mx-auto px-4 py-8 space-y-6">
-      {/* --- Filters + Search --- */ }
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <Input
           className="flex-1 min-w-[200px]"
@@ -235,7 +232,6 @@ export default function ProductsPageContent() {
             </SheetHeader>
 
             <div className="mt-6 space-y-6">
-              {/* --- Category Filter --- */ }
               <div className="space-y-2">
                 <label className="text-sm font-medium">Category</label>
                 <Select
@@ -269,41 +265,44 @@ export default function ProductsPageContent() {
                 </Select>
               </div>
 
-              {/* --- Sort Filter --- */ }
               <div className="space-y-2">
                 <label className="text-sm font-medium">Sort By</label>
                 <Select
                   value={
                     currentFilters.sort_by && currentFilters.sort_order
-                      ? `${ currentFilters.sort_by }_${ currentFilters.sort_order }`
-                      : "name_asc"
+                      ? `${ currentFilters.sort_by }-${ currentFilters.sort_order }`
+                      : "name-asc"
                   }
                   onValueChange={ ( value ) => {
-                    let [ sort_by, sort_order ] = value.split( "_" ) as [
-                      ProductParams[ "sort_by" ],
-                      ProductParams[ "sort_order" ]
-                    ];
+                    const [ sort_by_raw, sort_order_raw ] = value.split( "-" );
+
+                    const sort_by = sort_by_raw as ProductParams[ "sort_by" ];
+                    const sort_order = sort_order_raw as ProductParams[ "sort_order" ];
+
                     updateURL( { sort_by, sort_order, page: 1 } );
                   } }
                 >
                   <SelectTrigger className="h-11 w-full">
                     <SelectValue placeholder="Select option" />
                   </SelectTrigger>
+
                   <SelectContent>
-                    <SelectItem value="name_asc">Name (A → Z)</SelectItem>
-                    <SelectItem value="name_desc">Name (Z → A)</SelectItem>
-                    <SelectItem value="selling_price_asc">
+                    <SelectItem value="name-asc">Name (A → Z)</SelectItem>
+                    <SelectItem value="name-desc">Name (Z → A)</SelectItem>
+
+                    <SelectItem value="selling_price-asc">
                       Price (Low → High)
                     </SelectItem>
-                    <SelectItem value="selling_price_desc">
+                    <SelectItem value="selling_price-desc">
                       Price (High → Low)
                     </SelectItem>
-                    <SelectItem value="created_at_desc">Newest</SelectItem>
+
+                    <SelectItem value="created_at-desc">Newest</SelectItem>
                   </SelectContent>
                 </Select>
+
               </div>
 
-              {/* --- In-stock Filter --- */ }
               <div className="h-11 px-4 border rounded-md bg-muted/30 flex items-center justify-between">
                 <label
                   htmlFor="inStock"
@@ -340,7 +339,6 @@ export default function ProductsPageContent() {
         </Sheet>
       </div>
 
-      {/* --- Product Grid --- */ }
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         { state.loading && state.meta.current_page === 1
           ? Array.from( { length: 9 } ).map( ( _, index ) => (
@@ -351,7 +349,6 @@ export default function ProductsPageContent() {
           ) ) }
       </div>
 
-      {/* --- Pagination --- */ }
       { state.meta.last_page > 1 && (
         <Pagination>
           <PaginationContent>
