@@ -60,7 +60,7 @@ function ReviewForm( {
     <Form { ...form }>
       <form
         onSubmit={ form.handleSubmit( ( v ) => onSubmit( review?.id || null, v ) ) }
-        className="mt-4 p-4 border rounded-lg bg-muted/20 space-y-4"
+        className="mt-4 p-4 border rounded-md bg-muted/20 space-y-4"
       >
         <h4 className="text-lg font-semibold">{ review ? "Edit Your Review" : "Add a Review" }</h4>
         <FormField
@@ -255,7 +255,7 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
           ) }
 
           { productState.selectedVariant && (
-            <div className="bg-muted/50 p-4 rounded-lg border border-border">
+            <div className="bg-muted/50 p-4 rounded-md border border-border">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h4 className="text-sm font-semibold text-foreground mb-1">

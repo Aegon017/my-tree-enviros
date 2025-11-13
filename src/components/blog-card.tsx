@@ -21,7 +21,7 @@ const BlogCard = ({ blog }: Props) => {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="absolute top-4 left-4 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold tracking-wide">
+        <div className="absolute top-4 left-4 bg-primary text-primary-foreground px-3 py-1.5 rounded-md shadow-md text-xs font-semibold tracking-wide">
           {new Date(blog.created_at).toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "short",

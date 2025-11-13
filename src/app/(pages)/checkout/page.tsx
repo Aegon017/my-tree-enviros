@@ -188,7 +188,7 @@ export default function CheckoutPage() {
             <CardContent>
               <div className="space-y-4">
                 {cartItems.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-4 p-3 border rounded-lg">
+                  <div key={item.id} className="flex items-center space-x-4 p-3 border rounded-md">
                     <div className="shrink-0">
                       <img
                         src={item.item.image || item.item.product.thumbnail_url}

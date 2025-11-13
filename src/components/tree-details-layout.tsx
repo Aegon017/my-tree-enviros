@@ -302,7 +302,7 @@ export default function TreeDetailsLayout( {
                             <Trees className="h-4 w-4" />
                             Number of Trees
                           </Label>
-                          <div className="flex items-center border rounded-lg bg-background justify-between">
+                          <div className="flex items-center border rounded-md bg-background justify-between">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -340,7 +340,7 @@ export default function TreeDetailsLayout( {
                             <Calendar className="h-4 w-4" />
                             Duration (Years)
                           </Label>
-                          <div className="flex items-center border rounded-lg bg-background justify-between">
+                          <div className="flex items-center border rounded-md bg-background justify-between">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -380,7 +380,7 @@ export default function TreeDetailsLayout( {
                       </div>
                       { planOptions.length > 0 && (
                         <div className="space-y-4">
-                          <div className="bg-primary/5 p-4 rounded-lg border">
+                          <div className="bg-primary/5 p-4 rounded-md border">
                             <div className="flex justify-between items-center">
                               <div>
                                 <span className="font-semibold">
@@ -578,7 +578,7 @@ export default function TreeDetailsLayout( {
                     ( sponsor: any, index: number ) => (
                       <div
                         key={ index }
-                        className="flex items-center justify-between p-3 rounded-lg border"
+                        className="flex items-center justify-between p-3 rounded-md border"
                       >
                         <div className="flex items-center gap-3">
                           <div className="bg-muted rounded-full p-2">

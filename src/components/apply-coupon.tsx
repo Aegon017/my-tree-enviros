@@ -108,7 +108,7 @@ export function ApplyCoupon({
           </div>
 
           {appliedCoupon && (
-            <div className="p-3 bg-muted rounded-lg">
+            <div className="p-3 bg-muted rounded-md">
               <div className="flex justify-between items-center">
                 <div>
                   <Label className="text-sm font-medium">Applied Coupon</Label>

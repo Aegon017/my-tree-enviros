@@ -19,7 +19,7 @@ const WishlistItemCardSkeleton = () => (
         <div className="h-4 bg-muted rounded w-full"></div>
         <div className="h-4 bg-muted rounded w-3/4"></div>
       </div>
-      <div className="relative mt-4 aspect-video bg-muted rounded-lg"></div>
+      <div className="relative mt-4 aspect-video bg-muted rounded-md"></div>
     </CardContent>
     <CardFooter className="flex flex-col gap-2">
       <div className="h-10 bg-muted rounded w-full"></div>

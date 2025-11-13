@@ -303,7 +303,7 @@ const MyOrdersPage = () => {
           {selectedOrder && (
             <div className="space-y-6">
               {}
-              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-muted rounded-md">
                 <div>
                   <p className="text-sm text-muted-foreground">Order Status</p>
                   <p className="font-semibold">

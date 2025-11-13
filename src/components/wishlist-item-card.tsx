@@ -71,7 +71,7 @@ const WishlistItemCard: React.FC<Props> = ( {
 
           {/* ✅ Variant Info Block (from your design) */ }
           { variant && (
-            <div className="bg-muted/50 p-3 rounded-lg border border-border mt-2">
+            <div className="bg-muted/50 p-3 rounded-md border border-border mt-2">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h4 className="text-sm font-semibold text-foreground mb-1">

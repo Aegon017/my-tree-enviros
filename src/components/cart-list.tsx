@@ -45,7 +45,7 @@ export const CartList = ({ isBackendCart = false }: Props) => {
             const price = item.price || item.ecom_product?.selling_price || 0;
             return total + (price * item.quantity);
           }, 0) > 0 && (
-            <div className="flex justify-between items-center text-lg font-semibold p-3 bg-muted rounded-lg">
+            <div className="flex justify-between items-center text-lg font-semibold p-3 bg-muted rounded-md">
               <span>Total:</span>
               <span>
                 ₹{cart.reduce((total, item) => {

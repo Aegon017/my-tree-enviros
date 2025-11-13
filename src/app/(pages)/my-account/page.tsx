@@ -309,7 +309,7 @@ const AddressModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-background rounded-md max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <Card>
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -490,7 +490,7 @@ const OrderDetailsModal = ({
   if (!open || !order) return null;
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-background rounded-md max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <Card>
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -553,7 +553,7 @@ const OrderDetailsModal = ({
                 order.items.map((it) => (
                   <div
                     key={it.id}
-                    className="flex items-center gap-4 p-3 border rounded-lg"
+                    className="flex items-center gap-4 p-3 border rounded-md"
                   >
                     <div className="w-16 h-16 rounded bg-muted flex items-center justify-center overflow-hidden">
                       {it.item?.image ? (
@@ -992,10 +992,10 @@ export default function AccountPage() {
                         {orders.map((o) => (
                           <div
                             key={o.id}
-                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors gap-4"
+                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-md hover:bg-accent/50 transition-colors gap-4"
                           >
                             <div className="flex items-center gap-4">
-                              <div className="bg-primary/10 p-3 rounded-lg">
+                              <div className="bg-primary/10 p-3 rounded-md">
                                 <ShoppingCart className="h-6 w-6 text-primary" />
                               </div>
                               <div>

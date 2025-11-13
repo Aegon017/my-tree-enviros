@@ -7,7 +7,7 @@ const BlogCardSkeleton = () => {
       <div className="relative w-full overflow-hidden aspect-video">
         <Skeleton className="h-full w-full rounded-none" />
         <div className="absolute top-4 left-4">
-          <Skeleton className="h-6 w-24 rounded-lg" />
+          <Skeleton className="h-6 w-24 rounded-md" />
         </div>
       </div>
 

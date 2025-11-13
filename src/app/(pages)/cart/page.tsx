@@ -528,7 +528,7 @@ function CartItemComponent({
     <Card className="mb-4 border border-border rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
       <CardContent className="p-4 md:p-6">
         <div className="flex items-start gap-4 md:gap-6">
-          <div className="relative h-20 w-20 md:h-24 md:w-24 rounded-lg overflow-hidden shrink-0">
+          <div className="relative h-20 w-20 md:h-24 md:w-24 rounded-md overflow-hidden shrink-0">
             <Image
               src={imageUrl}
               alt={productName}

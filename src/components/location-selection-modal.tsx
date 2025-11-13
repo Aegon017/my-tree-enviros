@@ -101,7 +101,7 @@ export function LocationSelectionModal() {
                     key={location.id}
                     onClick={() => handleLocationSelect(location)}
                     className={cn(
-                      "w-full text-left px-4 py-3 rounded-lg border-2 transition-all",
+                      "w-full text-left px-4 py-3 rounded-md border-2 transition-all",
                       "hover:border-primary hover:bg-primary/5",
                       "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
                       "group",

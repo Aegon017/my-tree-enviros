@@ -100,7 +100,7 @@ interface DonorAvatarProps {
 
 const DonorAvatar = ({ name, amount }: DonorAvatarProps) => {
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:border-primary/20 transition-colors">
+    <div className="flex items-center justify-between p-3 rounded-md border border-border/50 hover:border-primary/20 transition-colors">
       <div className="flex items-center gap-3">
         <Avatar className="h-8 w-8">
           <AvatarFallback className="bg-primary/10 text-primary text-xs">
@@ -144,13 +144,13 @@ const ProgressStats = ({
       <Progress value={progress} className="h-2" />
 
       <div className="grid grid-cols-2 gap-4 text-center">
-        <div className="p-3 rounded-lg bg-muted/30 border">
+        <div className="p-3 rounded-md bg-muted/30 border">
           <div className="text-lg font-bold text-green-600">
             {formatCurrency(raised)}
           </div>
           <div className="text-xs text-muted-foreground">Raised</div>
         </div>
-        <div className="p-3 rounded-lg bg-muted/30 border">
+        <div className="p-3 rounded-md bg-muted/30 border">
           <div className="text-lg font-bold text-blue-600">
             {formatCurrency(goal)}
           </div>
@@ -326,14 +326,14 @@ const PaymentDialog = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          <div className="bg-muted/30 p-4 rounded-lg">
+          <div className="bg-muted/30 p-4 rounded-md">
             <div className="flex items-center gap-3">
               <div className="relative h-12 w-12">
                 <Image
                   src={campaignDetails.main_image_url}
                   alt={campaignDetails.name}
                   fill
-                  className="object-cover rounded-lg"
+                  className="object-cover rounded-md"
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -391,7 +391,7 @@ const PaymentDialog = ({
             )}
           </div>
 
-          <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+          <div className="bg-muted/30 p-4 rounded-md space-y-2">
             <div className="flex justify-between text-sm">
               <span>Selected Amount</span>
               <span className="font-semibold">

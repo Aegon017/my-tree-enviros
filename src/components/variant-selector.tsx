@@ -85,7 +85,7 @@ export function VariantSelector( {
                 variant="outline"
                 onClick={ () => handlePlanterSelect( planter ) }
                 className={ cn(
-                  "relative p-3 border-2 rounded-lg transition-all duration-200 flex gap-2 items-center h-auto",
+                  "relative p-3 border-2 rounded-md transition-all duration-200 flex gap-2 items-center h-auto",
                   selectedPlanter?.name === planter.name
                     ? "border-primary shadow-md"
                     : "border-muted hover:border-primary/50"
