@@ -16,7 +16,7 @@ export default function ProductCard( { product }: { product: ProductListItem } )
     <Card className="group flex flex-col py-0 gap-0 overflow-hidden bg-card border rounded-xl transition-shadow hover:shadow-md">
       <Link
         href={ `/store/products/${ product.slug }` }
-        className="relative h-56 w-full overflow-hidden rounded-b-none"
+        className="relative h-60 w-full overflow-hidden rounded-b-none"
       >
         <Image
           src={ img }
