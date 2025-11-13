@@ -22,11 +22,6 @@ export const wishlistService = {
     return data;
   },
 
-  async clearWishlist() {
-    const { data } = await api.delete( "/wishlist" );
-    return data;
-  },
-
   async checkInWishlist( productId: number, variantId?: number ) {
     const url = variantId
       ? `/wishlist/check/${ productId }?variant_id=${ variantId }`

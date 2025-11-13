@@ -18,15 +18,15 @@ const alignmentClasses = {
   right: "text-right items-end",
 };
 
-const SectionTitle: React.FC<Props> = ({
+const SectionTitle: React.FC<Props> = ( {
   title,
   subtitle,
   align = "center",
   className,
   variant = "elegant",
-}) => {
+} ) => {
   const getVariantStyles = () => {
-    switch (variant) {
+    switch ( variant ) {
       case "elegant":
         return {
           container: "relative",
@@ -72,46 +72,46 @@ const SectionTitle: React.FC<Props> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-      viewport={{ once: true, margin: "-50px" }}
-      className={cn(
+      initial={ { opacity: 0, y: 30 } }
+      whileInView={ { opacity: 1, y: 0 } }
+      transition={ { duration: 0.8, ease: [ 0.25, 0.46, 0.45, 0.94 ] } }
+      viewport={ { once: true, margin: "-50px" } }
+      className={ cn(
         "flex flex-col gap-4 mb-16",
-        alignmentClasses[align],
+        alignmentClasses[ align ],
         styles.container,
         className,
-      )}
+      ) }
     >
       <div className="space-y-3">
-        <div className={styles.titleWrapper}>
-          <div className={styles.decorativeElement} />
-          <h2 className={styles.title}>
-            <span className={styles.titleGradient}>{title}</span>
+        <div className={ styles.titleWrapper }>
+          <div className={ styles.decorativeElement } />
+          <h2 className={ styles.title }>
+            <span className={ styles.titleGradient }>{ title }</span>
           </h2>
         </div>
 
         <div
-          className={cn(
+          className={ cn(
             styles.underline,
             "transition-all duration-300 ease-out",
             align === "center" && "mx-auto",
             align === "right" && "ml-auto",
-          )}
+          ) }
         />
       </div>
 
-      {subtitle && (
+      { subtitle !== undefined && (
         <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          viewport={{ once: true }}
-          className={styles.subtitle}
+          initial={ { opacity: 0 } }
+          whileInView={ { opacity: 1 } }
+          transition={ { duration: 0.6, delay: 0.2 } }
+          viewport={ { once: true } }
+          className={ styles.subtitle }
         >
-          {subtitle}
+          { subtitle }
         </motion.p>
-      )}
+      ) }
     </motion.div>
   );
 };

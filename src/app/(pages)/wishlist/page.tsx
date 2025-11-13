@@ -29,7 +29,7 @@ const TOAST_MESSAGES = {
 const useWishlist = () => {
   const [ state, setState ] = useState<WishlistState>( {
     items: [],
-    isLoading: false,
+    isLoading: true,
     removingIds: [],
     addingToCartIds: [],
   } );
@@ -37,7 +37,11 @@ const useWishlist = () => {
   const { isAuthenticated } = useAuth();
 
   const fetchWishlist = useCallback( async () => {
-    if ( !isAuthenticated ) return;
+    if ( !isAuthenticated ) {
+      setState( prev => ( { ...prev, isLoading: false } ) );
+      return;
+    }
+
     setState( prev => ( { ...prev, isLoading: true } ) );
 
     try {
@@ -97,23 +101,11 @@ const useWishlist = () => {
     }
   }, [] );
 
-  const clearWishlist = useCallback( async () => {
-    try {
-      const response = await wishlistService.clearWishlist();
-      if ( response.success ) {
-        setState( prev => ( { ...prev, items: [] } ) );
-        toast.success( TOAST_MESSAGES.CLEARED );
-      }
-    } catch {
-      toast.error( TOAST_MESSAGES.ERROR );
-    }
-  }, [] );
-
   useEffect( () => {
     fetchWishlist();
   }, [ fetchWishlist ] );
 
-  return { ...state, removeItem, moveToCart, clearWishlist };
+  return { ...state, removeItem, moveToCart };
 };
 
 const EmptyWishlistState = () => (
@@ -135,7 +127,6 @@ const WishlistPage: React.FC = () => {
     addingToCartIds,
     removeItem,
     moveToCart,
-    clearWishlist,
   } = useWishlist();
 
   const itemCountText = useMemo( () => {
@@ -143,53 +134,36 @@ const WishlistPage: React.FC = () => {
     return `You have ${ count } item${ count !== 1 ? "s" : "" }`;
   }, [ wishlistItems.length ] );
 
-  if ( isLoading ) {
-    return (
-      <Section>
-        <SectionTitle align="center" title="Wishlist" />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          { Array.from( { length: 6 } ).map( ( _, index ) => (
+  return (
+    <Section>
+      <SectionTitle
+        align="center"
+        title="Wishlist"
+        subtitle={ isLoading ? "Loading..." : itemCountText }
+      />
+      { isLoading ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          { Array.from( { length: 8 } ).map( ( _, index ) => (
             <WishlistItemCardSkeleton key={ index } />
           ) ) }
         </div>
-      </Section>
-    );
-  }
-
-  if ( wishlistItems.length === 0 ) {
-    return (
-      <Section>
-        <SectionTitle align="center" title="Wishlist" />
+      ) : wishlistItems.length === 0 ? (
         <EmptyWishlistState />
-      </Section>
-    );
-  }
-
-  return (
-    <Section>
-      <SectionTitle align="center" title="Wishlist" subtitle={ itemCountText } />
-
-      <div className="flex justify-end mb-6">
-        <Button variant="destructive" size="sm" onClick={ clearWishlist }>
-          <Trash2 className="h-4 w-4 mr-2" />
-          Clear All
-        </Button>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        { wishlistItems.map( item => (
-          <WishlistItemCard
-            key={ item.id }
-            item={ item }
-            isAuthenticated={ isAuthenticated }
-            onRemove={ removeItem }
-            onMoveToCart={ moveToCart }
-            onAddToCart={ () => { } }
-            removingIds={ removingIds }
-            addingToCartIds={ addingToCartIds }
-          />
-        ) ) }
-      </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          { wishlistItems.map( item => (
+            <WishlistItemCard
+              key={ item.id }
+              item={ item }
+              isAuthenticated={ isAuthenticated }
+              onRemove={ removeItem }
+              onMoveToCart={ moveToCart }
+              removingIds={ removingIds }
+              addingToCartIds={ addingToCartIds }
+            />
+          ) ) }
+        </div>
+      ) }
     </Section>
   );
 };
