@@ -33,7 +33,7 @@ export default function ProductCard( { product }: { product: ProductListItem } )
 
       <CardContent className="flex flex-col p-4 gap-3 flex-1">
         { product.category?.name && (
-          <Badge variant="outline" className="rounded text-[10px] uppercase tracking-wide w-fit">
+          <Badge variant="outline" className="rounded-md text-[10px] uppercase tracking-wide w-fit">
             { product.category.name }
           </Badge>
         ) }
