@@ -339,7 +339,7 @@ export default function ProductsPageContent() {
         </Sheet>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         { state.loading && state.meta.current_page === 1
           ? Array.from( { length: 9 } ).map( ( _, index ) => (
             <ProductCardSkeleton key={ index } />
