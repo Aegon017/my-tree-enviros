@@ -76,7 +76,7 @@ export default function ProductsPageContent() {
   const getFiltersFromURL = useCallback( (): ProductParams => {
     return {
       page: Number( searchParams.get( "page" ) ) || 1,
-      per_page: 15,
+      per_page: 12,
       sort_by:
         ( searchParams.get( "sort_by" ) as
           | "name"
