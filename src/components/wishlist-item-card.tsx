@@ -36,7 +36,7 @@ const WishlistItemCard: React.FC<Props> = ( {
 
   return (
     <Card className="overflow-hidden p-0 flex flex-col gap-0">
-      <CardHeader className="p-0">
+      <CardHeader className="p-0 gap-0">
         <div className="relative h-60">
           { imageUrl ? (
             <Image
@@ -65,11 +65,9 @@ const WishlistItemCard: React.FC<Props> = ( {
           <h3 className="font-semibold text-lg mb-1 line-clamp-2">
             <Link href={ `/store/products/${ product?.slug }` }>{ product?.name }</Link>
           </h3>
-
           { variant && (
             <div className="bg-muted/40 p-2 rounded-md border border-border/40 mt-2">
               <div className="flex flex-col gap-2.5">
-
                 <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   { variant.variant?.color && (
                     <div
