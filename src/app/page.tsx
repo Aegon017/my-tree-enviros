@@ -52,27 +52,6 @@ interface PromoCard {
   linkUrl: string;
 }
 
-const promoCards: PromoCard[] = [
-  {
-    id: 1,
-    image: neemTree,
-    title: "Adopt A Tree",
-    description:
-      "Join us in planting trees and creating a healthier, greener environment for all.",
-    linkText: "Adopt Now",
-    linkUrl: "/adopt-a-tree",
-  },
-  {
-    id: 2,
-    image: neemTree,
-    title: "Feed A Tree",
-    description:
-      "Nurture the roots of sustainability—feed a tree and help it thrive. Together, let's grow a greener future.",
-    linkText: "Feed Now",
-    linkUrl: "/feed-a-tree",
-  },
-];
-
 export default function Home() {
   const plugin = useRef( Autoplay( { delay: 2000, stopOnInteraction: true } ) );
   const blogPlugin = useRef( Autoplay( { delay: 4000, stopOnInteraction: true } ) );
@@ -300,7 +279,7 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section className="bg-background">
+      <Section className="bg-muted">
         <div className="flex flex-col items-center mb-6">
           <SectionTitle
             title="Adopt A Tree"
@@ -371,21 +350,6 @@ export default function Home() {
       </Section>
 
       <Section className="bg-background">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          { promoCards.map( ( promo ) => (
-            <PromoTreeCard
-              key={ promo.id }
-              image={ promo.image }
-              title={ promo.title }
-              description={ promo.description }
-              linkText={ promo.linkText }
-              linkUrl={ promo.linkUrl }
-            />
-          ) ) }
-        </div>
-      </Section>
-
-      <Section className="bg-muted">
         <SectionTitle
           title="Natural Goodness from Trees"
           subtitle="Discover a wide range of organic products derived directly from nature's bounty. From nourishing oils to flavorful spices and eco-friendly raw materials."
