@@ -94,7 +94,7 @@ export default function ImageGallery( { images, name }: Props ) {
 
                     { isZooming && (
                         <div
-                            className="absolute border-2 border-primary/60 bg-primary/10 rounded-md pointer-events-none shadow-md transition-transform"
+                            className="absolute border-2 border-primary/60 bg-primary/10 rounded-lg pointer-events-none shadow-md transition-transform"
                             style={ {
                                 width: `${ lensSize }px`,
                                 height: `${ lensSize }px`,

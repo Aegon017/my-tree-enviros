@@ -1,84 +1,108 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "@/store";
-import {
-  addItem,
-  updateQuantity,
-  removeItem,
-  clearCart,
-  syncFromStorage,
-} from "@/store/cart-slice";
-import {
-  selectCartItems,
-  selectIsGuestCart,
-} from "@/store/selectors/cart-selectors";
-import type { CartItem } from "@/types/cart.type";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import { cartService } from "@/services/cart.service";
 
 export function useCart() {
-  const dispatch = useDispatch();
-  const cartItems = useSelector(selectCartItems);
-  const itemCount = useMemo(
-    () => cartItems.reduce((total, item) => total + item.quantity, 0),
-    [cartItems],
-  );
-  const total = useMemo(
-    () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    [cartItems],
-  );
-  const isGuest = useSelector(selectIsGuestCart);
-  const loading = useSelector((state: RootState) => state.cart.loading);
-  const error = useSelector((state: RootState) => state.cart.error);
+  const [ cart, setCart ] = useState<any>( null );
+  const [ loading, setLoading ] = useState( true );
 
-  const addToCart = useCallback(
-    (item: CartItem) => {
-      dispatch(addItem(item));
-    },
-    [dispatch],
-  );
+  const fetchCart = useCallback( async () => {
+    try {
+      const res = await cartService.get();
+      setCart( res.data.data.cart );
+    } catch {
+      toast.error( "Failed to load cart" );
+    } finally {
+      setLoading( false );
+    }
+  }, [] );
 
-  const updateItemQuantity = useCallback(
-    (id: number, type: string, quantity: number) => {
-      dispatch(updateQuantity({ id, type, quantity }));
-    },
-    [dispatch],
-  );
+  const addProduct = async ( variantId: number, quantity = 1 ) => {
+    try {
+      const res = await cartService.addProduct( variantId, quantity );
+      setCart( res.data.data.cart );
+      toast.success( "Added to cart" );
+    } catch ( e: any ) {
+      toast.error( e?.response?.data?.message || "Error" );
+    }
+  };
 
-  const removeFromCart = useCallback(
-    (id: number, type: string) => {
-      dispatch(removeItem({ id, type }));
-    },
-    [dispatch],
-  );
+  const addProductByProductId = async ( productId: number, quantity = 1 ) => {
+    try {
+      const res = await cartService.addProductByProductId( productId, quantity );
+      setCart( res.data.data.cart );
+      toast.success( "Added to cart" );
+    } catch ( e: any ) {
+      toast.error( e?.response?.data?.message || "Error" );
+    }
+  };
 
-  const clearAllItems = useCallback(() => {
-    dispatch(clearCart());
-  }, [dispatch]);
+  const addTree = async ( instanceId: number, planPriceId: number ) => {
+    try {
+      const res = await cartService.addTree( instanceId, planPriceId );
+      setCart( res.data.data.cart );
+      toast.success( "Tree added to cart" );
+    } catch ( e: any ) {
+      toast.error( e?.response?.data?.message || "Error" );
+    }
+  };
 
-  const syncCart = useCallback(() => {
-    dispatch(syncFromStorage());
-  }, [dispatch]);
+  const increase = async ( itemId: number ) => {
+    const item = cart.items.find( ( i: any ) => i.id === itemId );
+    await update( itemId, item.quantity + 1 );
+  };
 
-  const isInCart = useCallback(
-    (id: number, type: string) => {
-      return cartItems.some((item) => item.id === id && item.type === type);
-    },
-    [cartItems],
-  );
+  const decrease = async ( itemId: number ) => {
+    const item = cart.items.find( ( i: any ) => i.id === itemId );
+    if ( item.quantity <= 1 ) return;
+    await update( itemId, item.quantity - 1 );
+  };
+
+  const update = async ( itemId: number, quantity: number ) => {
+    try {
+      const res = await cartService.updateQuantity( itemId, quantity );
+      setCart( res.data.data.cart );
+    } catch ( e: any ) {
+      toast.error( e?.response?.data?.message || "Error" );
+    }
+  };
+
+  const remove = async ( itemId: number ) => {
+    try {
+      const res = await cartService.remove( itemId );
+      setCart( res.data.data.cart );
+      toast.success( "Removed" );
+    } catch {
+      toast.error( "Error removing item" );
+    }
+  };
+
+  const clear = async () => {
+    try {
+      const res = await cartService.clear();
+      setCart( res.data.data.cart );
+      toast.success( "Cart cleared" );
+    } catch {
+      toast.error( "Unable to clear cart" );
+    }
+  };
+
+  useEffect( () => {
+    fetchCart();
+  }, [ fetchCart ] );
 
   return {
-    items: cartItems,
-    itemCount,
-    total,
+    cart,
     loading,
-    error,
-    isGuest,
-    addToCart,
-    updateItemQuantity,
-    removeFromCart,
-    clearAllItems,
-    syncCart,
-    isInCart,
+    addProduct,
+    addProductByProductId,
+    addTree,
+    increase,
+    decrease,
+    update,
+    remove,
+    clear,
   };
 }

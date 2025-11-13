@@ -68,13 +68,13 @@ interface Area {
   locationId: number;
 }
 
-const detailsSchema = z.object({
-  state_id: z.string().min(1, "State is required."),
-  area_id: z.string().min(1, "Area is required."),
-  name: z.string().min(1, "Name is required."),
-  occasion: z.string().min(1, "Occasion is required."),
-  message: z.string().min(1, "Message is required."),
-});
+const detailsSchema = z.object( {
+  state_id: z.string().min( 1, "State is required." ),
+  area_id: z.string().min( 1, "Area is required." ),
+  name: z.string().min( 1, "Name is required." ),
+  occasion: z.string().min( 1, "Occasion is required." ),
+  message: z.string().min( 1, "Message is required." ),
+} );
 
 type DetailsFormValues = z.infer<typeof detailsSchema>;
 
@@ -82,7 +82,7 @@ const DEFAULT_IMAGE = "/placeholder.jpg";
 const MAX_DURATION = 50;
 const MIN_QUANTITY = 1;
 
-function AddDetailModal({
+function AddDetailModal( {
   open,
   onClose,
   item,
@@ -100,13 +100,13 @@ function AddDetailModal({
       location_id: number;
     },
   ) => void;
-}) {
-  const [states, setStates] = useState<State[]>([]);
-  const [areas, setAreas] = useState<Area[]>([]);
-  const [isAreaLoading, setIsAreaLoading] = useState(false);
+} ) {
+  const [ states, setStates ] = useState<State[]>( [] );
+  const [ areas, setAreas ] = useState<Area[]>( [] );
+  const [ isAreaLoading, setIsAreaLoading ] = useState( false );
 
-  const form = useForm<DetailsFormValues>({
-    resolver: zodResolver(detailsSchema),
+  const form = useForm<DetailsFormValues>( {
+    resolver: zodResolver( detailsSchema ),
     defaultValues: {
       state_id: "",
       area_id: "",
@@ -114,86 +114,86 @@ function AddDetailModal({
       occasion: "",
       message: "",
     },
-  });
+  } );
 
-  const watchedStateId = form.watch("state_id");
+  const watchedStateId = form.watch( "state_id" );
 
-  useEffect(() => {
-    if (open && item) {
-      form.reset({
+  useEffect( () => {
+    if ( open && item ) {
+      form.reset( {
         name: item.name || "",
         occasion: item.occasion || "",
         message: item.message || "",
-        state_id: (item.metadata as any)?.state_id
-          ? String((item.metadata as any).state_id)
+        state_id: ( item.metadata as any )?.state_id
+          ? String( ( item.metadata as any ).state_id )
           : "",
         area_id:
-          item.metadata && (item.metadata as any).location_id
-            ? String((item.metadata as any).location_id)
+          item.metadata && ( item.metadata as any ).location_id
+            ? String( ( item.metadata as any ).location_id )
             : "",
-      });
+      } );
     }
-  }, [open, item, form]);
+  }, [ open, item, form ] );
 
-  useEffect(() => {
+  useEffect( () => {
     const fetchStates = async () => {
       try {
         const response = await locationService.getTreeLocationStates();
-        setStates(response.data || []);
-      } catch (err) {
-        console.error("Failed to fetch states:", err);
+        setStates( response.data || [] );
+      } catch ( err ) {
+        console.error( "Failed to fetch states:", err );
       }
     };
-    if (open) fetchStates();
-  }, [open]);
+    if ( open ) fetchStates();
+  }, [ open ] );
 
-  useEffect(() => {
-    if (!watchedStateId) {
-      setAreas([]);
+  useEffect( () => {
+    if ( !watchedStateId ) {
+      setAreas( [] );
       return;
     }
 
-    const fetchAreas = async (stateId: string) => {
-      setIsAreaLoading(true);
+    const fetchAreas = async ( stateId: string ) => {
+      setIsAreaLoading( true );
       try {
-        const response = await locationService.getTreeLocationAreas(Number(stateId));
-        const mapped: Area[] = (response.data || []).map((a: any) => ({
+        const response = await locationService.getTreeLocationAreas( Number( stateId ) );
+        const mapped: Area[] = ( response.data || [] ).map( ( a: any ) => ( {
           id: a.area_id,
           name: a.area_name,
           locationId: a.location_id,
-        }));
-        setAreas(mapped);
-      } catch (err) {
-        console.error("Failed to fetch areas:", err);
+        } ) );
+        setAreas( mapped );
+      } catch ( err ) {
+        console.error( "Failed to fetch areas:", err );
       } finally {
-        setIsAreaLoading(false);
+        setIsAreaLoading( false );
       }
     };
 
-    fetchAreas(watchedStateId);
-  }, [watchedStateId]);
+    fetchAreas( watchedStateId );
+  }, [ watchedStateId ] );
 
-  const onSubmit = (values: DetailsFormValues) => {
-    if (!item) return;
+  const onSubmit = ( values: DetailsFormValues ) => {
+    if ( !item ) return;
     const selectedArea = areas.find(
-      (area) => area.id.toString() === values.area_id,
+      ( area ) => area.id.toString() === values.area_id,
     );
-    if (!selectedArea) {
-      form.setError("area_id", { message: "Please select a valid area." });
+    if ( !selectedArea ) {
+      form.setError( "area_id", { message: "Please select a valid area." } );
       return;
     }
 
-    onUpdateDetails(item.id, {
+    onUpdateDetails( item.id, {
       name: values.name,
       occasion: values.occasion,
       message: values.message,
       location_id: selectedArea.locationId,
-    });
+    } );
     onClose();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={ open } onOpenChange={ onClose }>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Add Details</DialogTitle>
@@ -201,17 +201,17 @@ function AddDetailModal({
             Please provide the necessary details for your order.
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
+        <Form { ...form }>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={ form.handleSubmit( onSubmit ) }
             className="space-y-4 grow overflow-hidden flex flex-col"
           >
             <ScrollArea className="grow pr-4">
               <div className="space-y-4">
                 <FormField
-                  control={form.control}
+                  control={ form.control }
                   name="state_id"
-                  render={({ field }) => (
+                  render={ ( { field } ) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>State*</FormLabel>
                       <Popover>
@@ -220,17 +220,17 @@ function AddDetailModal({
                             <Button
                               variant="outline"
                               role="combobox"
-                              className={cn(
+                              className={ cn(
                                 "w-full justify-between",
                                 !field.value && "text-muted-foreground",
-                              )}
+                              ) }
                             >
-                              {field.value
+                              { field.value
                                 ? states.find(
-                                    (state) =>
-                                      state.id.toString() === field.value,
-                                  )?.name
-                                : "Select State"}
+                                  ( state ) =>
+                                    state.id.toString() === field.value,
+                                )?.name
+                                : "Select State" }
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </FormControl>
@@ -241,29 +241,29 @@ function AddDetailModal({
                             <CommandEmpty>No state found.</CommandEmpty>
                             <CommandGroup>
                               <ScrollArea className="h-48">
-                                {states.map((state) => (
+                                { states.map( ( state ) => (
                                   <CommandItem
-                                    value={state.name}
-                                    key={state.id}
-                                    onSelect={() => {
+                                    value={ state.name }
+                                    key={ state.id }
+                                    onSelect={ () => {
                                       form.setValue(
                                         "state_id",
                                         state.id.toString(),
                                       );
-                                      form.setValue("area_id", "");
-                                    }}
+                                      form.setValue( "area_id", "" );
+                                    } }
                                   >
                                     <Check
-                                      className={cn(
+                                      className={ cn(
                                         "mr-2 h-4 w-4",
                                         state.id.toString() === field.value
                                           ? "opacity-100"
                                           : "opacity-0",
-                                      )}
+                                      ) }
                                     />
-                                    {state.name}
+                                    { state.name }
                                   </CommandItem>
-                                ))}
+                                ) ) }
                               </ScrollArea>
                             </CommandGroup>
                           </Command>
@@ -271,38 +271,38 @@ function AddDetailModal({
                       </Popover>
                       <FormMessage />
                     </FormItem>
-                  )}
+                  ) }
                 />
 
                 <FormField
-                  control={form.control}
+                  control={ form.control }
                   name="area_id"
-                  render={({ field }) => (
+                  render={ ( { field } ) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Area*</FormLabel>
                       <Popover>
                         <PopoverTrigger
                           asChild
-                          disabled={!watchedStateId || isAreaLoading}
+                          disabled={ !watchedStateId || isAreaLoading }
                         >
                           <FormControl>
                             <Button
                               variant="outline"
                               role="combobox"
-                              className={cn(
+                              className={ cn(
                                 "w-full justify-between",
                                 !field.value && "text-muted-foreground",
-                              )}
+                              ) }
                             >
-                              {isAreaLoading ? (
+                              { isAreaLoading ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              ) : null}
-                              {field.value
+                              ) : null }
+                              { field.value
                                 ? areas.find(
-                                    (area) =>
-                                      area.id.toString() === field.value,
-                                  )?.name
-                                : "Select Area"}
+                                  ( area ) =>
+                                    area.id.toString() === field.value,
+                                )?.name
+                                : "Select Area" }
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </FormControl>
@@ -313,28 +313,28 @@ function AddDetailModal({
                             <CommandEmpty>No area found.</CommandEmpty>
                             <CommandGroup>
                               <ScrollArea className="h-48">
-                                {areas.map((area) => (
+                                { areas.map( ( area ) => (
                                   <CommandItem
-                                    value={area.name}
-                                    key={area.id}
-                                    onSelect={() => {
+                                    value={ area.name }
+                                    key={ area.id }
+                                    onSelect={ () => {
                                       form.setValue(
                                         "area_id",
                                         area.id.toString(),
                                       );
-                                    }}
+                                    } }
                                   >
                                     <Check
-                                      className={cn(
+                                      className={ cn(
                                         "mr-2 h-4 w-4",
                                         area.id.toString() === field.value
                                           ? "opacity-100"
                                           : "opacity-0",
-                                      )}
+                                      ) }
                                     />
-                                    {area.name}
+                                    { area.name }
                                   </CommandItem>
-                                ))}
+                                ) ) }
                               </ScrollArea>
                             </CommandGroup>
                           </Command>
@@ -342,52 +342,52 @@ function AddDetailModal({
                       </Popover>
                       <FormMessage />
                     </FormItem>
-                  )}
+                  ) }
                 />
 
                 <FormField
-                  control={form.control}
+                  control={ form.control }
                   name="name"
-                  render={({ field }) => (
+                  render={ ( { field } ) => (
                     <FormItem>
                       <FormLabel>Name*</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter name" {...field} />
+                        <Input placeholder="Enter name" { ...field } />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )}
+                  ) }
                 />
 
                 <FormField
-                  control={form.control}
+                  control={ form.control }
                   name="occasion"
-                  render={({ field }) => (
+                  render={ ( { field } ) => (
                     <FormItem>
                       <FormLabel>Occasion*</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter occasion" {...field} />
+                        <Input placeholder="Enter occasion" { ...field } />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )}
+                  ) }
                 />
 
                 <FormField
-                  control={form.control}
+                  control={ form.control }
                   name="message"
-                  render={({ field }) => (
+                  render={ ( { field } ) => (
                     <FormItem>
                       <FormLabel>Special Message*</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Enter special message"
-                          {...field}
+                          { ...field }
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )}
+                  ) }
                 />
               </div>
             </ScrollArea>
@@ -395,7 +395,7 @@ function AddDetailModal({
               <Button
                 type="button"
                 variant="outline"
-                onClick={onClose}
+                onClick={ onClose }
                 className="flex-1"
               >
                 Cancel
@@ -403,7 +403,7 @@ function AddDetailModal({
               <Button
                 type="submit"
                 className="flex-1"
-                disabled={form.formState.isSubmitting}
+                disabled={ form.formState.isSubmitting }
               >
                 Save Details
               </Button>
@@ -415,7 +415,7 @@ function AddDetailModal({
   );
 }
 
-function CartItemComponent({
+function CartItemComponent( {
   item,
   isUpdating,
   onUpdateItem,
@@ -428,9 +428,9 @@ function CartItemComponent({
     cartId: number,
     params: { quantity?: number; duration?: number },
   ) => void;
-  onRemoveItem: (itemId: number) => void;
-  onOpenDetailModal: (item: CartItem) => void;
-}) {
+  onRemoveItem: ( itemId: number ) => void;
+  onOpenDetailModal: ( item: CartItem ) => void;
+} ) {
   const {
     imageUrl,
     productName,
@@ -438,49 +438,49 @@ function CartItemComponent({
     isTreeProduct,
     variantInfo,
     stockInfo,
-  } = useMemo(() => {
+  } = useMemo( () => {
     const isProductItem = item.item_type === "product";
-    const productData = isProductItem ? (item.item as any)?.product : null;
+    const productData = isProductItem ? ( item.item as any )?.product : null;
 
-    
+
     const productName =
-      
+
       productData?.name ||
-      
+
       item.item?.name ||
-      
+
       item.ecom_product?.name ||
       item.name ||
       "Product";
-    
+
     const imageUrl =
-      
+
       item.item?.image ||
       productData?.thumbnail_url ||
-      
+
       item.image ||
       item.ecom_product ||
       DEFAULT_IMAGE;
     const itemPrice =
       typeof item.price === "number"
         ? item.price
-        : parseFloat(item.price as string) || 0;
+        : parseFloat( item.price as string ) || 0;
 
     const variantInfo = isProductItem
       ? {
-          sku: item.item?.variant?.sku || item.item?.sku,
-          color: item.item?.variant?.color || item.item?.color,
-          size: item.item?.variant?.size || item.item?.size,
-          planter: item.item?.variant?.planter,
-          name: item.item?.variant?.name,
-        }
+        sku: item.item?.variant?.sku || item.item?.sku,
+        color: item.item?.variant?.color || item.item?.color,
+        size: item.item?.variant?.size || item.item?.size,
+        planter: item.item?.variant?.planter,
+        name: item.item?.variant?.name,
+      }
       : null;
 
     const stockInfo = productData
       ? {
-          quantity: productData.inventory?.stock_quantity || 0,
-          isInStock: productData.inventory?.is_instock || false,
-        }
+        quantity: productData.inventory?.stock_quantity || 0,
+        isInStock: productData.inventory?.is_instock || false,
+      }
       : null;
 
     return {
@@ -491,37 +491,37 @@ function CartItemComponent({
       variantInfo,
       stockInfo,
     };
-  }, [item]);
+  }, [ item ] );
 
   const handleQuantityChange = useCallback(
-    (newQ: number) => {
-      onUpdateItem(item.id, {
-        quantity: Math.max(MIN_QUANTITY, newQ),
-      });
+    ( newQ: number ) => {
+      onUpdateItem( item.id, {
+        quantity: Math.max( MIN_QUANTITY, newQ ),
+      } );
     },
-    [onUpdateItem, item.id],
+    [ onUpdateItem, item.id ],
   );
 
   const handleDurationChange = useCallback(
-    (newD: number) => {
-      onUpdateItem(item.id, {
-        duration: Math.max(MIN_QUANTITY, Math.min(MAX_DURATION, newD)),
-      });
+    ( newD: number ) => {
+      onUpdateItem( item.id, {
+        duration: Math.max( MIN_QUANTITY, Math.min( MAX_DURATION, newD ) ),
+      } );
     },
-    [onUpdateItem, item.id],
+    [ onUpdateItem, item.id ],
   );
 
   const handleInputChange = useCallback(
-    (field: "quantity" | "duration") => (value: number) => {
+    ( field: "quantity" | "duration" ) => ( value: number ) => {
       const clamped = Math.max(
         MIN_QUANTITY,
-        field === "duration" ? Math.min(MAX_DURATION, value) : value,
+        field === "duration" ? Math.min( MAX_DURATION, value ) : value,
       );
-      onUpdateItem(item.id, {
-        [field]: clamped,
-      });
+      onUpdateItem( item.id, {
+        [ field ]: clamped,
+      } );
     },
-    [onUpdateItem, item.id],
+    [ onUpdateItem, item.id ],
   );
 
   return (
@@ -530,8 +530,8 @@ function CartItemComponent({
         <div className="flex items-start gap-4 md:gap-6">
           <div className="relative h-20 w-20 md:h-24 md:w-24 rounded-md overflow-hidden shrink-0">
             <Image
-              src={imageUrl}
-              alt={productName}
+              src={ imageUrl }
+              alt={ productName }
               fill
               className="object-cover transition-transform duration-300 hover:scale-105"
               sizes="(max-width: 768px) 80px, 96px"
@@ -542,26 +542,26 @@ function CartItemComponent({
           <div className="flex-1 min-w-0 space-y-3 md:space-y-4">
             <div>
               <h3 className="font-semibold text-base md:text-lg truncate">
-                {productName}
+                { productName }
               </h3>
-              {!isTreeProduct && (
+              { !isTreeProduct && (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground truncate">
-                    {stockInfo ? `Stock: ${stockInfo.quantity} available` : ""}
+                    { stockInfo ? `Stock: ${ stockInfo.quantity } available` : "" }
                   </p>
-                  {variantInfo && (
+                  { variantInfo && (
                     <p className="text-xs text-primary font-medium">
-                      {variantInfo.name ||
-                        `${variantInfo.color || ""} ${variantInfo.size || ""} ${variantInfo.planter || ""}`.trim()}
+                      { variantInfo.name ||
+                        `${ variantInfo.color || "" } ${ variantInfo.size || "" } ${ variantInfo.planter || "" }`.trim() }
                     </p>
-                  )}
+                  ) }
                 </div>
-              )}
-              {isTreeProduct && (
+              ) }
+              { isTreeProduct && (
                 <p className="text-sm text-muted-foreground truncate">
-                  Tree {item.type === "tree" ? "(Sponsorship/Adoption)" : ""}
+                  Tree { item.type === "tree" ? "(Sponsorship/Adoption)" : "" }
                 </p>
-              )}
+              ) }
             </div>
 
             <div className="flex flex-wrap items-center gap-4 md:gap-6">
@@ -574,31 +574,31 @@ function CartItemComponent({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 rounded-r-none hover:bg-accent transition-colors"
-                    onClick={() => handleQuantityChange(item.quantity - 1)}
-                    disabled={item.quantity <= MIN_QUANTITY || isUpdating}
+                    onClick={ () => handleQuantityChange( item.quantity - 1 ) }
+                    disabled={ item.quantity <= MIN_QUANTITY || isUpdating }
                   >
                     <Minus className="h-3 w-3" />
                   </Button>
                   <Input
                     type="number"
-                    min={MIN_QUANTITY}
-                    value={item.quantity}
-                    onChange={(e) =>
-                      handleInputChange("quantity")(
-                        parseInt(e.target.value) || MIN_QUANTITY,
+                    min={ MIN_QUANTITY }
+                    value={ item.quantity }
+                    onChange={ ( e ) =>
+                      handleInputChange( "quantity" )(
+                        parseInt( e.target.value ) || MIN_QUANTITY,
                       )
                     }
                     className="w-12 text-center border-x-0 bg-transparent focus-visible:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    disabled={isUpdating}
+                    disabled={ isUpdating }
                   />
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 rounded-l-none hover:bg-accent transition-colors"
-                    onClick={() => handleQuantityChange(item.quantity + 1)}
+                    onClick={ () => handleQuantityChange( item.quantity + 1 ) }
                     disabled={
                       item.quantity >=
-                        (stockInfo?.quantity || Number.MAX_SAFE_INTEGER) ||
+                      ( stockInfo?.quantity || Number.MAX_SAFE_INTEGER ) ||
                       isUpdating
                     }
                   >
@@ -607,7 +607,7 @@ function CartItemComponent({
                 </div>
               </div>
 
-              {isTreeProduct && (
+              { isTreeProduct && (
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium text-foreground">
                     Duration
@@ -617,13 +617,13 @@ function CartItemComponent({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 rounded-r-none hover:bg-accent transition-colors"
-                      onClick={() =>
+                      onClick={ () =>
                         handleDurationChange(
-                          (item.duration ?? MIN_QUANTITY) - 1,
+                          ( item.duration ?? MIN_QUANTITY ) - 1,
                         )
                       }
                       disabled={
-                        (item.duration ?? MIN_QUANTITY) <= MIN_QUANTITY ||
+                        ( item.duration ?? MIN_QUANTITY ) <= MIN_QUANTITY ||
                         isUpdating
                       }
                     >
@@ -631,28 +631,28 @@ function CartItemComponent({
                     </Button>
                     <Input
                       type="number"
-                      min={MIN_QUANTITY}
-                      max={MAX_DURATION}
-                      value={item.duration ?? MIN_QUANTITY}
-                      onChange={(e) =>
-                        handleInputChange("duration")(
-                          parseInt(e.target.value) || MIN_QUANTITY,
+                      min={ MIN_QUANTITY }
+                      max={ MAX_DURATION }
+                      value={ item.duration ?? MIN_QUANTITY }
+                      onChange={ ( e ) =>
+                        handleInputChange( "duration" )(
+                          parseInt( e.target.value ) || MIN_QUANTITY,
                         )
                       }
                       className="w-12 text-center border-x-0 bg-transparent focus-visible:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      disabled={isUpdating}
+                      disabled={ isUpdating }
                     />
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 rounded-l-none hover:bg-accent transition-colors"
-                      onClick={() =>
+                      onClick={ () =>
                         handleDurationChange(
-                          (item.duration ?? MIN_QUANTITY) + 1,
+                          ( item.duration ?? MIN_QUANTITY ) + 1,
                         )
                       }
                       disabled={
-                        (item.duration ?? MIN_QUANTITY) >= MAX_DURATION ||
+                        ( item.duration ?? MIN_QUANTITY ) >= MAX_DURATION ||
                         isUpdating
                       }
                     >
@@ -660,51 +660,51 @@ function CartItemComponent({
                     </Button>
                   </div>
                 </div>
-              )}
+              ) }
             </div>
 
-            {isTreeProduct && (
+            { isTreeProduct && (
               <div className="space-y-3 md:space-y-4">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onOpenDetailModal(item)}
+                  onClick={ () => onOpenDetailModal( item ) }
                   className="hover:bg-accent hover:text-accent-foreground transition-colors"
                 >
                   Edit Details
                 </Button>
                 <div className="text-sm space-y-1 text-foreground">
-                  {item.name && (
+                  { item.name && (
                     <p>
-                      <span className="font-medium">Name:</span> {item.name}
+                      <span className="font-medium">Name:</span> { item.name }
                     </p>
-                  )}
-                  {item.occasion && (
+                  ) }
+                  { item.occasion && (
                     <p>
-                      <span className="font-medium">Occasion:</span>{" "}
-                      {item.occasion}
+                      <span className="font-medium">Occasion:</span>{ " " }
+                      { item.occasion }
                     </p>
-                  )}
-                  {item.message && (
+                  ) }
+                  { item.message && (
                     <p>
-                      <span className="font-medium">Message:</span>{" "}
-                      {item.message}
+                      <span className="font-medium">Message:</span>{ " " }
+                      { item.message }
                     </p>
-                  )}
+                  ) }
                 </div>
               </div>
-            )}
+            ) }
           </div>
 
           <div className="flex flex-col items-end gap-3 md:gap-4">
             <p className="text-lg md:text-xl font-bold text-foreground">
-              ₹{(itemPrice * item.quantity).toFixed(2)}
+              ₹{ ( itemPrice * item.quantity ).toFixed( 2 ) }
             </p>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onRemoveItem(item.id)}
-              disabled={isUpdating}
+              onClick={ () => onRemoveItem( item.id ) }
+              disabled={ isUpdating }
               className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
             >
               <Trash2 className="h-4 w-4" />
@@ -716,7 +716,7 @@ function CartItemComponent({
   );
 }
 
-function OrderSummary({
+function OrderSummary( {
   subtotal,
   onClearCart,
   isClearing,
@@ -724,7 +724,7 @@ function OrderSummary({
   subtotal: number;
   onClearCart: () => void;
   isClearing: boolean;
-}) {
+} ) {
   return (
     <Card className="sticky top-20">
       <CardContent className="p-6">
@@ -732,7 +732,7 @@ function OrderSummary({
         <div className="space-y-4">
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>₹{subtotal.toFixed(2)}</span>
+            <span>₹{ subtotal.toFixed( 2 ) }</span>
           </div>
           <div className="flex justify-between">
             <span>Shipping</span>
@@ -740,7 +740,7 @@ function OrderSummary({
           </div>
           <div className="flex justify-between font-bold text-lg pt-4 border-t">
             <span>Total</span>
-            <span>₹{subtotal.toFixed(2)}</span>
+            <span>₹{ subtotal.toFixed( 2 ) }</span>
           </div>
         </div>
         <Link href="/checkout">
@@ -751,12 +751,12 @@ function OrderSummary({
         <Button
           variant="outline"
           className="w-full mt-3"
-          onClick={onClearCart}
-          disabled={isClearing}
+          onClick={ onClearCart }
+          disabled={ isClearing }
         >
-          {isClearing ? (
+          { isClearing ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : null}
+          ) : null }
           Clear Cart
         </Button>
       </CardContent>
@@ -787,11 +787,11 @@ function LoadingState() {
   );
 }
 
-function ErrorState({ onRetry }: { onRetry: () => void }) {
+function ErrorState( { onRetry }: { onRetry: () => void } ) {
   return (
     <div className="container mx-auto p-6 text-center">
       <p>Failed to load cart</p>
-      <Button className="mt-4" onClick={onRetry}>
+      <Button className="mt-4" onClick={ onRetry }>
         Retry
       </Button>
     </div>
@@ -812,62 +812,62 @@ export default function CartPage() {
   const { isAuthenticated } = useAuth();
   const dispatch = useDispatch();
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [ mounted, setMounted ] = useState( false );
+  useEffect( () => setMounted( true ), [] );
 
   const cartData = cartItems || [];
 
-  useEffect(() => {
-    if (mounted && isAuthenticated) {
+  useEffect( () => {
+    if ( mounted && isAuthenticated ) {
       const fetchCartFromBackend = async () => {
         try {
           const response = await cartService.getCart();
-          if (response.success && response.data) {
-            
+          if ( response.success && response.data ) {
+
             const cartData = response.data.cart || response.data;
             const items = cartData.items || [];
-            const transformedItems = items.map((item: any) => {
-              
-              return transformBackendCartItem(item);
-            });
-            dispatch(setCartItems(transformedItems));
+            const transformedItems = items.map( ( item: any ) => {
+
+              return transformBackendCartItem( item );
+            } );
+            dispatch( setCartItems( transformedItems ) );
           }
-        } catch (err) {
-          console.error("Failed to fetch cart from backend:", err);
+        } catch ( err ) {
+          console.error( "Failed to fetch cart from backend:", err );
         }
       };
       fetchCartFromBackend();
     }
-  }, [mounted, isAuthenticated, dispatch]);
+  }, [ mounted, isAuthenticated, dispatch ] );
 
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<CartItem | null>(null);
-  const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
-  const [isClearing, setIsClearing] = useState(false);
+  const [ detailModalOpen, setDetailModalOpen ] = useState( false );
+  const [ selectedItem, setSelectedItem ] = useState<CartItem | null>( null );
+  const [ updatingItems, setUpdatingItems ] = useState<Set<number>>( new Set() );
+  const [ isClearing, setIsClearing ] = useState( false );
 
-  const handleOpenDetailModal = useCallback((item: CartItem) => {
-    setSelectedItem(item);
-    setDetailModalOpen(true);
-  }, []);
+  const handleOpenDetailModal = useCallback( ( item: CartItem ) => {
+    setSelectedItem( item );
+    setDetailModalOpen( true );
+  }, [] );
 
-  const handleCloseDetailModal = useCallback(() => {
-    setDetailModalOpen(false);
-    setSelectedItem(null);
-  }, []);
+  const handleCloseDetailModal = useCallback( () => {
+    setDetailModalOpen( false );
+    setSelectedItem( null );
+  }, [] );
 
   const wrapAsyncAction = useCallback(
-    async (itemId: number, fn: () => Promise<any>) => {
-      setUpdatingItems((prev) => new Set(prev).add(itemId));
+    async ( itemId: number, fn: () => Promise<any> ) => {
+      setUpdatingItems( ( prev ) => new Set( prev ).add( itemId ) );
       try {
         await fn();
-      } catch (err) {
-        console.error("Cart action failed:", err);
+      } catch ( err ) {
+        console.error( "Cart action failed:", err );
       } finally {
-        setUpdatingItems((prev) => {
-          const s = new Set(prev);
-          s.delete(itemId);
+        setUpdatingItems( ( prev ) => {
+          const s = new Set( prev );
+          s.delete( itemId );
           return s;
-        });
+        } );
       }
     },
     [],
@@ -878,22 +878,22 @@ export default function CartPage() {
       cartId: number,
       params: { quantity?: number; duration?: number },
     ) => {
-      const item = cartData.find((item) => item.id === cartId);
-      if (!item) return;
+      const item = cartData.find( ( item ) => item.id === cartId );
+      if ( !item ) return;
 
-      wrapAsyncAction(cartId, async () => {
-        if (isAuthenticated && !isGuest) {
-          await cartService.updateCartItem(item.cart_id || cartId, {
+      wrapAsyncAction( cartId, async () => {
+        if ( isAuthenticated && !isGuest ) {
+          await cartService.updateCartItem( item.cart_id || cartId, {
             quantity: params.quantity,
             duration: params.duration,
-          });
+          } );
         }
 
         const productType = item.product_type;
         const productId =
           productType === 1 ? item.product?.id : item.ecom_product?.id;
 
-        if (!productId) return;
+        if ( !productId ) return;
 
         const payload = {
           type: item.type,
@@ -906,23 +906,23 @@ export default function CartPage() {
           item.type || "product",
           payload.quantity,
         );
-      });
+      } );
     },
-    [wrapAsyncAction, updateItemQuantity, cartData, isAuthenticated, isGuest],
+    [ wrapAsyncAction, updateItemQuantity, cartData, isAuthenticated, isGuest ],
   );
 
   const handleRemoveItem = useCallback(
-    (itemId: number) => {
-      const item = cartData.find((i) => i.id === itemId);
-      if (!item) return;
-      wrapAsyncAction(itemId, async () => {
-        if (isAuthenticated && !isGuest) {
-          await cartService.removeCartItem(item.cart_id || itemId);
+    ( itemId: number ) => {
+      const item = cartData.find( ( i ) => i.id === itemId );
+      if ( !item ) return;
+      wrapAsyncAction( itemId, async () => {
+        if ( isAuthenticated && !isGuest ) {
+          await cartService.removeCartItem( item.cart_id || itemId );
         }
-        removeFromCart(itemId, item.type || "product");
-      });
+        removeFromCart( itemId, item.type || "product" );
+      } );
     },
-    [wrapAsyncAction, removeFromCart, cartData, isAuthenticated, isGuest],
+    [ wrapAsyncAction, removeFromCart, cartData, isAuthenticated, isGuest ],
   );
 
   const handleUpdateDetails = useCallback(
@@ -935,94 +935,94 @@ export default function CartPage() {
         location_id: number;
       },
     ) => {
-      wrapAsyncAction(cartId, async () => {
-        const existing = cartData.find((i) => i.id === cartId);
-        if (!existing) return;
-        await removeFromCart(cartId, existing.type || "product");
+      wrapAsyncAction( cartId, async () => {
+        const existing = cartData.find( ( i ) => i.id === cartId );
+        if ( !existing ) return;
+        await removeFromCart( cartId, existing.type || "product" );
         return Promise.resolve(
-          addToCart({
+          addToCart( {
             ...existing,
             metadata: {
-              ...(existing.metadata || {}),
+              ...( existing.metadata || {} ),
               ...details,
             },
-          } as any),
+          } as any ),
         );
-      });
+      } );
     },
-    [wrapAsyncAction, removeFromCart, addToCart, cartData],
+    [ wrapAsyncAction, removeFromCart, addToCart, cartData ],
   );
 
-  const handleClearCart = useCallback(async () => {
-    setIsClearing(true);
+  const handleClearCart = useCallback( async () => {
+    setIsClearing( true );
     try {
-      if (isAuthenticated && !isGuest) {
+      if ( isAuthenticated && !isGuest ) {
         await cartService.clearCart();
       }
       await clearAllItems();
-    } catch (err) {
-      console.error("Failed to clear cart:", err);
+    } catch ( err ) {
+      console.error( "Failed to clear cart:", err );
     } finally {
-      setIsClearing(false);
+      setIsClearing( false );
     }
-  }, [clearAllItems, isAuthenticated, isGuest]);
+  }, [ clearAllItems, isAuthenticated, isGuest ] );
 
   const subtotal = useMemo(
     () =>
-      cartData.reduce((sum, item) => {
+      cartData.reduce( ( sum, item ) => {
         const p =
           typeof item.price === "number"
             ? item.price
-            : parseFloat(item.price) || 0;
+            : parseFloat( item.price ) || 0;
         return sum + p * item.quantity;
-      }, 0),
-    [cartData],
+      }, 0 ),
+    [ cartData ],
   );
 
-  if (error) return <ErrorState onRetry={() => window.location.reload()} />;
-  if (loading) return <LoadingState />;
+  if ( error ) return <ErrorState onRetry={ () => window.location.reload() } />;
+  if ( loading ) return <LoadingState />;
 
   return (
     <div className="container mx-auto py-16 px-4 max-w-6xl">
       <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
 
-      {!mounted ? (
+      { !mounted ? (
         <LoadingState />
       ) : cartData.length === 0 ? (
         <EmptyCart />
       ) : (
         <div className="lg:grid gap-8 lg:grid-cols-12">
           <div className="lg:col-span-8">
-            {cartData.map((item) => (
+            { cartData.map( ( item ) => (
               <CartItemComponent
-                key={item.id}
-                item={item}
-                isUpdating={updatingItems.has(item.id)}
-                onUpdateItem={handleUpdateItem}
-                onRemoveItem={handleRemoveItem}
-                onOpenDetailModal={handleOpenDetailModal}
+                key={ item.id }
+                item={ item }
+                isUpdating={ updatingItems.has( item.id ) }
+                onUpdateItem={ handleUpdateItem }
+                onRemoveItem={ handleRemoveItem }
+                onOpenDetailModal={ handleOpenDetailModal }
               />
-            ))}
+            ) ) }
           </div>
 
           <div className="lg:col-span-4">
             <OrderSummary
-              subtotal={subtotal}
-              onClearCart={handleClearCart}
-              isClearing={isClearing}
+              subtotal={ subtotal }
+              onClearCart={ handleClearCart }
+              isClearing={ isClearing }
             />
           </div>
         </div>
-      )}
+      ) }
 
-      {mounted && (
+      { mounted && (
         <AddDetailModal
-          open={detailModalOpen}
-          onClose={handleCloseDetailModal}
-          item={selectedItem}
-          onUpdateDetails={handleUpdateDetails}
+          open={ detailModalOpen }
+          onClose={ handleCloseDetailModal }
+          item={ selectedItem }
+          onUpdateDetails={ handleUpdateDetails }
         />
-      )}
+      ) }
     </div>
   );
 }
