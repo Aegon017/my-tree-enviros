@@ -2,7 +2,6 @@
 
 import { Markup } from "interweave";
 import { Calendar, Leaf, Minus, Plus, Trees, User, Users } from "lucide-react";
-import Image from "next/image";
 import { useMemo, useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lens } from "@/components/ui/lens";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RazorpayButton from "@/components/razorpay-button";
@@ -30,11 +28,6 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { SigninForm } from "@/components/sign-in-form";
-import { useAuth } from "@/hooks/use-auth";
-import { useCart } from "@/hooks/use-cart";
-import { VerifyOtpForm } from "@/components/verify-otp-form";
-import { cartService } from "@/services/cart.service";
 import {
   Form,
   FormField,
@@ -44,9 +37,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import type { Tree } from "@/types/tree";
+import { useAuth } from "@/hooks/use-auth";
+import type { Tree } from "@/types/tree.types";
 import ImageGallery from "./image-gallery";
+import { SigninForm } from "./sign-in-form";
+import { VerifyOtpForm } from "./verify-otp-form";
 
 const sponsorshipDetailsSchema = z.object( {
   area_id: z.string().min( 1, "Please select an area." ),
@@ -73,7 +68,6 @@ export default function TreeDetailsLayout( {
   const [ selectedYears, setSelectedYears ] = useState( 1 );
   const [ loginOpen, setLoginOpen ] = useState( false );
   const { isAuthenticated } = useAuth();
-  const { addToCart } = useCart();
   const [ otpStep, setOtpStep ] = useState<"signin" | "verify">( "signin" );
   const [ otpCC, setOtpCC ] = useState<string | undefined>( undefined );
   const [ otpPhone, setOtpPhone ] = useState<string | undefined>( undefined );
@@ -90,145 +84,46 @@ export default function TreeDetailsLayout( {
     },
   } );
 
-  const allImages = useMemo(
-    () =>
-      tree
-        ? [
-          tree.main_image_url,
-          ...( tree.images?.map(
-            ( img: { image_url: string } ) => img.image_url,
-          ) || [] ),
-        ].filter( Boolean )
-        : [],
-    [ tree ],
-  );
+  /* -------------------------------------------------------------------------- */
+  /*                 PLAN OPTIONS — CLEAN & MATCHING YOUR BACKEND               */
+  /* -------------------------------------------------------------------------- */
 
   const planOptions = useMemo( () => {
-    const list =
-      ( ( tree as any )?.plan_prices ?? [] ).map( ( pp: any ) => {
-        const duration = Number( pp?.plan?.duration ?? 0 );
-        const durationDisplay = String(
-          pp?.plan?.duration_display ??
-          ( duration ? `${ duration } Year${ duration > 1 ? "s" : "" }` : "" ),
-        );
-        const features = Array.isArray( pp?.plan?.features )
-          ? pp.plan.features
-          : [];
-        const priceNumeric =
-          typeof pp?.numeric_price === "number"
-            ? pp.numeric_price
-            : Number( String( pp?.price ?? "0" ).replace( /,/g, "" ) );
-        return {
-          id: Number( pp?.id ?? 0 ),
-          duration,
-          durationDisplay,
-          features,
-          priceNumeric,
-        };
-      } ) || [];
-    return list.filter( ( o: { duration: number } ) => o.duration > 0 );
-  }, [ ( tree as any )?.plan_prices ] );
+    if ( !tree?.plan_prices ) return [];
+
+    return tree.plan_prices.map( ( pp ) => ( {
+      id: pp.id,
+      duration: pp.plan.duration,
+      durationDisplay:
+        pp.plan.duration > 1
+          ? `${ pp.plan.duration } Years`
+          : `${ pp.plan.duration } Year`,
+      price: Number( pp.price.replace( /,/g, "" ) ),
+    } ) );
+  }, [ tree?.plan_prices ] );
 
   useEffect( () => {
     if ( planOptions.length > 0 ) {
-      const durations = planOptions.map(
-        ( p: { duration: number } ) => p.duration,
-      );
+      const durations = planOptions.map( ( p ) => p.duration );
       if ( !durations.includes( selectedYears ) ) {
-        const defaultDuration = durations.includes( 1 )
-          ? 1
-          : Math.min( ...durations );
-        setSelectedYears( defaultDuration );
+        setSelectedYears( durations.includes( 1 ) ? 1 : Math.min( ...durations ) );
       }
     }
   }, [ planOptions, selectedYears ] );
 
-  const maxAvailableDuration = useMemo( () => {
-    if ( planOptions.length === 0 ) return 1;
-    return Math.max(
-      ...planOptions.map( ( p: { duration: number } ) => p.duration ),
-    );
-  }, [ planOptions ] );
-
-  const mainImage = allImages[ selectedImage ] || "/placeholder.jpg";
-
-  const priceOption = useMemo(
-    () =>
-      planOptions.find(
-        ( p: { duration: number } ) => p.duration === selectedYears,
-      ),
-    [ planOptions, selectedYears ],
+  const selectedPlan = useMemo(
+    () => planOptions.find( ( p ) => p.duration === selectedYears ),
+    [ planOptions, selectedYears ]
   );
 
-  const totalPrice = useMemo(
-    () => ( priceOption ? Number( priceOption.priceNumeric ) * quantity : 0 ),
-    [ priceOption, quantity ],
-  );
+  const totalPrice = selectedPlan
+    ? selectedPlan.price * quantity
+    : 0;
 
-  const handleQuantityChange = ( value: number ) => {
-    if ( tree && value >= 1 && value <= ( tree.quantity || 999 ) )
-      setQuantity( value );
-  };
-
-  const handleYearsChange = ( value: number ) => {
-    if ( value >= 1 && value <= maxAvailableDuration ) setSelectedYears( value );
-  };
-
-  const pageTitle = pageType === "sponsor" ? "Sponsor A Tree" : "Adopt A Tree";
-  const breadcrumbItems = useMemo(
-    () => [
-      { title: "Home", href: "/" },
-      { title: pageTitle, href: `/${ pageType }-a-tree` },
-      { title: tree?.name || "Tree Details", href: "" },
-    ],
-    [ tree?.name, pageTitle, pageType ],
-  );
-
-  const onAddToCart = async ( values: SponsorshipDetailsValues ) => {
-    if ( !tree || !priceOption ) return;
-    setIsAddingToCart( true );
-    try {
-      const details = { ...values, duration: selectedYears, quantity };
-      localStorage.setItem( `tree_details_${ tree.id }`, JSON.stringify( details ) );
-      if ( isAuthenticated ) {
-        await cartService.addTreeToCart( {
-          tree_instance_id: tree.id,
-          location_id: Number( values.area_id ),
-          tree_plan_price_id: priceOption.id,
-          name: values.name || undefined,
-          occasion: values.occasion || undefined,
-          message: values.message || undefined,
-          quantity: quantity,
-        } );
-        toast.success( "Tree added to cart successfully!" );
-      } else {
-        addToCart( {
-          id: tree.id,
-          name: tree.name,
-          type: "tree",
-          price: Number( priceOption.priceNumeric ),
-          quantity,
-          image: mainImage,
-          metadata: {
-            duration: selectedYears,
-            occasion: values.occasion,
-            message: values.message,
-            location_id: Number( values.area_id ),
-            plan_id: priceOption.id,
-          },
-        } as any );
-        toast.success( "Tree added to cart!" );
-      }
-    } catch ( error ) {
-      console.error( "Error adding to cart:", error );
-      toast.error( "Failed to add tree to cart. Please try again." );
-    } finally {
-      setIsAddingToCart( false );
-    }
-  };
+  /* -------------------------------------------------------------------------- */
 
   const onSponsorNow = ( values: SponsorshipDetailsValues ) => {
-    if ( !tree || !priceOption ) return;
+    if ( !tree || !selectedPlan ) return;
     const details = { ...values, duration: selectedYears, quantity };
     localStorage.setItem( `tree_details_${ tree.id }`, JSON.stringify( details ) );
     if ( isAuthenticated ) {
@@ -240,15 +135,26 @@ export default function TreeDetailsLayout( {
 
   const handleLoginSuccess = async () => {
     setLoginOpen( false );
-    if ( tree && priceOption ) {
+    if ( tree && selectedPlan ) {
       setShowRazorpay( true );
     }
     setOtpStep( "signin" );
   };
 
+  const pageTitle = pageType === "sponsor" ? "Sponsor A Tree" : "Adopt A Tree";
+
+  const breadcrumbItems = [
+    { title: "Home", href: "/" },
+    { title: pageType === "sponsor" ? "Sponsor A Tree" : "Adopt A Tree", href: `/${ pageType }-a-tree` },
+    { title: tree?.name || "Tree Details", href: "" },
+  ];
+
+  /* -------------------------------------------------------------------------- */
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl bg-background">
       <BreadcrumbNav items={ breadcrumbItems } className="mb-8" />
+
       <Form { ...form }>
         <form
           onSubmit={ ( e ) => e.preventDefault() }
@@ -258,13 +164,7 @@ export default function TreeDetailsLayout( {
             { isLoading ? (
               <Skeleton className="aspect-square rounded-2xl" />
             ) : tree ? (
-              <ImageGallery
-                images={ [
-                  tree.main_image_url,
-                  ...( tree.images?.map( ( i: any ) => i.image_url ) || [] )
-                ].filter( Boolean ) }
-                name={ tree.name }
-              />
+              <ImageGallery images={ tree.image_urls || [] } name={ tree.name } />
             ) : null }
           </div>
 
@@ -277,17 +177,20 @@ export default function TreeDetailsLayout( {
               </>
             ) : tree ? (
               <>
+                {/* --------------------------------- Title & Age --------------------------------- */ }
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-2 items-center">
-                    <Badge variant="outline" className="px-3 py-1">
+                    <Badge variant="outline">
                       <Leaf className="h-3 w-3 mr-1" />
                       { tree.age } years old
                     </Badge>
                   </div>
-                  <h1 className="text-4xl font-bold tracking-tight from-foreground to-foreground/80 bg-clip-text text-transparent">
+                  <h1 className="text-4xl font-bold tracking-tight">
                     { tree.name }
                   </h1>
                 </div>
+
+                {/* --------------------------------- Plan / Duration --------------------------------- */ }
                 <Card className="border-l-4 border-l-primary">
                   <CardContent className="p-6">
                     <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
@@ -295,110 +198,96 @@ export default function TreeDetailsLayout( {
                       Configure Your{ " " }
                       { pageType === "sponsor" ? "Sponsorship" : "Adoption" }
                     </h3>
+
                     <div className="space-y-6">
+                      {/* ---------- Quantity ---------- */ }
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3">
                           <Label className="text-sm font-medium flex items-center gap-2">
                             <Trees className="h-4 w-4" />
                             Number of Trees
                           </Label>
+
                           <div className="flex items-center border rounded-md bg-background justify-between">
                             <Button
                               variant="ghost"
                               size="icon"
                               type="button"
-                              className="h-10 w-10 rounded-r-none"
-                              onClick={ () => handleQuantityChange( quantity - 1 ) }
-                              disabled={ quantity <= 1 }
+                              onClick={ () => setQuantity( Math.max( 1, quantity - 1 ) ) }
                             >
                               <Minus className="h-4 w-4" />
                             </Button>
                             <Input
                               type="number"
                               min="1"
-                              max={ tree.quantity || 999 }
+                              max="999"
                               value={ quantity }
                               onChange={ ( e ) =>
-                                handleQuantityChange( Number( e.target.value ) )
+                                setQuantity( Math.max( 1, Number( e.target.value ) ) )
                               }
-                              className="w-16 text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              className="w-16 text-center border-0"
                             />
                             <Button
                               variant="ghost"
                               size="icon"
                               type="button"
-                              className="h-10 w-10 rounded-l-none"
-                              onClick={ () => handleQuantityChange( quantity + 1 ) }
-                              disabled={ quantity >= ( tree.quantity || 999 ) }
+                              onClick={ () => setQuantity( Math.min( 999, quantity + 1 ) ) }
                             >
                               <Plus className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
+
+                        {/* ---------- Duration Dropdown (NEW) ---------- */ }
                         <div className="space-y-3">
                           <Label className="text-sm font-medium flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
                             Duration (Years)
                           </Label>
-                          <div className="flex items-center border rounded-md bg-background justify-between">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              type="button"
-                              className="h-10 w-10 rounded-r-none"
-                              onClick={ () =>
-                                handleYearsChange( selectedYears - 1 )
-                              }
-                              disabled={ selectedYears <= 1 }
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <Input
-                              type="number"
-                              min="1"
-                              max={ maxAvailableDuration }
-                              value={ selectedYears }
-                              onChange={ ( e ) =>
-                                handleYearsChange( Number( e.target.value ) )
-                              }
-                              className="w-16 text-center border-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              type="button"
-                              className="h-10 w-10 rounded-l-none"
-                              onClick={ () =>
-                                handleYearsChange( selectedYears + 1 )
-                              }
-                              disabled={ selectedYears >= maxAvailableDuration }
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
+
+                          <Select
+                            value={ String( selectedYears ) }
+                            onValueChange={ ( val ) => setSelectedYears( Number( val ) ) }
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-11 w-full">
+                                <SelectValue placeholder="Select duration" />
+                              </SelectTrigger>
+                            </FormControl>
+
+                            <SelectContent>
+                              { planOptions.map( ( p ) => (
+                                <SelectItem
+                                  key={ p.id }
+                                  value={ String( p.duration ) }
+                                >
+                                  { p.durationDisplay }
+                                </SelectItem>
+                              ) ) }
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
-                      { planOptions.length > 0 && (
-                        <div className="space-y-4">
-                          <div className="bg-primary/5 p-4 rounded-md border">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <span className="font-semibold">
-                                  Total Contribution
-                                </span>
-                                <p className="text-sm text-muted-foreground">
-                                  { quantity } tree{ quantity > 1 ? "s" : "" } ×{ " " }
-                                  { selectedYears } year
-                                  { selectedYears > 1 ? "s" : "" }
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <div className="flex items-center gap-1">
-                                  <span className="text-3xl font-bold text-primary">
-                                    ₹{ totalPrice.toLocaleString( "en-IN" ) }
-                                  </span>
-                                </div>
-                              </div>
+
+                      {/* ---------- Total Price ---------- */ }
+                      { selectedPlan && (
+                        <div className="bg-primary/5 p-4 rounded-md border">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <span className="font-semibold">
+                                Total Contribution
+                              </span>
+                              <p className="text-sm text-muted-foreground">
+                                { quantity } tree{ quantity > 1 ? "s" : "" } ×{ " " }
+                                { selectedPlan.duration } year
+                                { selectedPlan.duration > 1 ? "s" : "" }
+                              </p>
+                            </div>
+
+                            <div className="text-right">
+                              <span className="text-3xl font-bold text-primary">
+                                ₹{ totalPrice.toLocaleString( "en-IN" ) }
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -406,11 +295,12 @@ export default function TreeDetailsLayout( {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* --------------------------------- Form --------------------------------- */ }
                 <Card className="border-l-4 border-l-primary mt-8">
                   <CardContent className="p-6">
-                    <h3 className="text-xl font-semibold mb-6">
-                      Add Your Details
-                    </h3>
+                    <h3 className="text-xl font-semibold mb-6">Add Your Details</h3>
+
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
@@ -443,6 +333,7 @@ export default function TreeDetailsLayout( {
                             </FormItem>
                           ) }
                         />
+
                         <FormField
                           control={ form.control }
                           name="name"
@@ -460,6 +351,7 @@ export default function TreeDetailsLayout( {
                             </FormItem>
                           ) }
                         />
+
                         <FormField
                           control={ form.control }
                           name="occasion"
@@ -469,7 +361,7 @@ export default function TreeDetailsLayout( {
                               <FormControl>
                                 <Input
                                   className="h-11 w-full"
-                                  placeholder="e.g., Birthday, Anniversary"
+                                  placeholder="Birthday, Anniversary, etc."
                                   { ...field }
                                 />
                               </FormControl>
@@ -477,6 +369,7 @@ export default function TreeDetailsLayout( {
                             </FormItem>
                           ) }
                         />
+
                         <FormField
                           control={ form.control }
                           name="message"
@@ -499,16 +392,18 @@ export default function TreeDetailsLayout( {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* --------------------------------- Actions --------------------------------- */ }
                 <div className="flex gap-3">
                   <Button
                     type="button"
                     variant="outline"
                     className="flex-1 w-full"
-                    disabled={ !priceOption || isAddingToCart }
-                    onClick={ form.handleSubmit( onAddToCart ) }
+                    disabled={ !selectedPlan || isAddingToCart }
                   >
-                    { isAddingToCart ? "Adding..." : "Add To Cart" }
+                    Add To Cart
                   </Button>
+
                   { showRazorpay && isAuthenticated ? (
                     <RazorpayButton
                       type={ 1 }
@@ -524,22 +419,27 @@ export default function TreeDetailsLayout( {
                       occasion={ form.getValues( "occasion" ) }
                       message={ form.getValues( "message" ) }
                       tree_instance_id={ tree.id }
-                      plan_id={ priceOption.id }
+                      plan_id={ selectedPlan.id }
                     />
                   ) : (
                     <Button
                       type="button"
                       className="flex-1 w-full"
                       onClick={ form.handleSubmit( onSponsorNow ) }
-                      disabled={ !priceOption }
-                    >{ `${ pageType === "sponsor" ? "Sponsor" : "Adopt" } Now` }</Button>
+                      disabled={ !selectedPlan }
+                    >
+                      { pageType === "sponsor" ? "Sponsor" : "Adopt" } Now
+                    </Button>
                   ) }
                 </div>
+
+                {/* -------------------------------- Login Modal -------------------------------- */ }
                 <Dialog open={ loginOpen } onOpenChange={ setLoginOpen }>
                   <DialogContent className="sm:max-w-3xl">
                     <DialogHeader>
                       <DialogTitle>Login to continue</DialogTitle>
                     </DialogHeader>
+
                     { otpStep === "signin" ? (
                       <SigninForm
                         onOtpSent={ ( { country_code, phone } ) => {
@@ -563,52 +463,16 @@ export default function TreeDetailsLayout( {
         </form>
       </Form>
 
+      {/* --------------------------------- Description Section --------------------------------- */ }
       { !isLoading && tree && (
         <div className="mt-16">
-          { ( ( tree as any )?.sponsors ?? [] ).length > 0 && (
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" /> Recent Sponsors
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  { ( ( tree as any ).sponsors ?? [] ).map(
-                    ( sponsor: any, index: number ) => (
-                      <div
-                        key={ index }
-                        className="flex items-center justify-between p-3 rounded-md border"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="bg-muted rounded-full p-2">
-                            <User className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <p className="font-semibold">{ sponsor.name }</p>
-                            <p className="text-sm text-muted-foreground">
-                              { sponsor.duration } year
-                              { sponsor.duration > 1 ? "s" : "" }
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ),
-                  ) }
-                </div>
-              </CardContent>
-            </Card>
-          ) }
-
           <Tabs defaultValue="description" className="w-full">
             <TabsList className="grid w-full grid-cols-1 max-w-md mx-auto mb-8">
-              <TabsTrigger
-                value="description"
-                className="flex items-center gap-2"
-              >
+              <TabsTrigger value="description">
                 About This Tree
               </TabsTrigger>
             </TabsList>
+
             <TabsContent value="description" className="space-y-6">
               <Card className="bg-card">
                 <CardContent className="p-8">

@@ -1,16 +1,22 @@
 "use client";
 
-import type { EnhancedStore } from "@reduxjs/toolkit";
-import type { ReactNode } from "react";
 import { Provider } from "react-redux";
-import { store as defaultStore } from "@/store";
+import { PersistGate } from "redux-persist/integration/react";
 
-export function ReduxProvider({
+export function ReduxProvider( {
   children,
-  store = defaultStore,
+  store,
+  persistor,
 }: {
-  children: ReactNode;
-  store?: EnhancedStore;
-}) {
-  return <Provider store={store}>{children}</Provider>;
+  children: React.ReactNode;
+  store: any;
+  persistor: any;
+} ) {
+  return (
+    <Provider store={ store }>
+      <PersistGate loading={ null } persistor={ persistor }>
+        { children }
+      </PersistGate>
+    </Provider>
+  );
 }

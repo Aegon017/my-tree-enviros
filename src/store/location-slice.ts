@@ -1,61 +1,61 @@
 "use client";
 
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { Location } from "@/types/location.types";
+
+export interface UserGeoLocation {
+  lat: number;
+  lng: number;
+  area: string;
+  city: string;
+  postal_code: string;
+  post_office_name: string;
+  post_office_branch_type?: string;
+}
 
 interface LocationState {
-  selectedLocation: Location | null;
-  locations: Location[];
+  selectedLocation: UserGeoLocation | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: LocationState = {
   selectedLocation: null,
-  locations: [],
   loading: false,
   error: null,
 };
 
-const locationSlice = createSlice({
+const slice = createSlice( {
   name: "location",
   initialState,
   reducers: {
-    setSelectedLocation: (state, action: PayloadAction<Location | null>) => {
+    setSelectedLocation: ( state, action: PayloadAction<UserGeoLocation | null> ) => {
       state.selectedLocation = action.payload;
-      
-      if (typeof window !== "undefined") {
-        if (action.payload) {
-          localStorage.setItem(
-            "selected_location",
-            JSON.stringify(action.payload),
-          );
+      if ( typeof window !== "undefined" ) {
+        if ( action.payload ) {
+          localStorage.setItem( "selected_location", JSON.stringify( action.payload ) );
         } else {
-          localStorage.removeItem("selected_location");
+          localStorage.removeItem( "selected_location" );
         }
       }
     },
-    setLocations: (state, action: PayloadAction<Location[]>) => {
-      state.locations = action.payload;
-    },
-    setLoading: (state, action: PayloadAction<boolean>) => {
+    setLoading: ( state, action: PayloadAction<boolean> ) => {
       state.loading = action.payload;
     },
-    setError: (state, action: PayloadAction<string | null>) => {
+    setError: ( state, action: PayloadAction<string | null> ) => {
       state.error = action.payload;
     },
-    clearSelectedLocation: (state) => {
+    clearSelectedLocation: ( state ) => {
       state.selectedLocation = null;
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("selected_location");
+      if ( typeof window !== "undefined" ) {
+        localStorage.removeItem( "selected_location" );
       }
     },
-    syncLocationFromStorage: (state) => {
-      if (typeof window !== "undefined") {
-        const stored = localStorage.getItem("selected_location");
-        if (stored) {
+    syncLocationFromStorage: ( state ) => {
+      if ( typeof window !== "undefined" ) {
+        const stored = localStorage.getItem( "selected_location" );
+        if ( stored ) {
           try {
-            state.selectedLocation = JSON.parse(stored);
+            state.selectedLocation = JSON.parse( stored );
           } catch {
             state.selectedLocation = null;
           }
@@ -63,15 +63,14 @@ const locationSlice = createSlice({
       }
     },
   },
-});
+} );
 
 export const {
   setSelectedLocation,
-  setLocations,
   setLoading,
   setError,
   clearSelectedLocation,
   syncLocationFromStorage,
-} = locationSlice.actions;
+} = slice.actions;
 
-export default locationSlice.reducer;
+export default slice.reducer;

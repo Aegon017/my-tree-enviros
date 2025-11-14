@@ -2,7 +2,6 @@
 
 import BasicTreeCard from "@/components/basic-tree-card";
 import BlogCard from "@/components/blog-card";
-import PromoTreeCard from "@/components/promo-tree-card";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import BasicTreeCardSkeleton from "@/components/skeletons/basic-tree-card-skeleton";
@@ -30,11 +29,9 @@ import {
 } from "@/services/slider.service";
 import { treeService } from "@/services/tree.service";
 import type { Blog } from "@/types/blog";
-import type { Product, ProductListItem } from "@/types/product.types";
-import type { Tree } from "@/types/tree";
 import Autoplay from "embla-carousel-autoplay";
 import { AlertCircle, MapPin, RefreshCw } from "lucide-react";
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
@@ -42,24 +39,16 @@ import neemTree from "../../public/neem-tree.webp";
 import ProductCardSkeleton from "@/components/skeletons/product-card-skeleton";
 import ProductCard from "@/components/product-card";
 import { productService } from "@/services/product.service";
-
-interface PromoCard {
-  id: number;
-  image: StaticImageData;
-  title: string;
-  description: string;
-  linkText: string;
-  linkUrl: string;
-}
+import { TreeListItem } from "@/types/tree.types";
+import { ProductListItem } from "@/types/product.types";
 
 export default function Home() {
   const plugin = useRef( Autoplay( { delay: 2000, stopOnInteraction: true } ) );
   const blogPlugin = useRef( Autoplay( { delay: 4000, stopOnInteraction: true } ) );
   const { selectedLocation } = useLocation();
 
-
-  const [ sponsorTrees, setSponsorTrees ] = useState<Tree[]>( [] );
-  const [ adoptTrees, setAdoptTrees ] = useState<Tree[]>( [] );
+  const [ sponsorTrees, setSponsorTrees ] = useState<TreeListItem[]>( [] );
+  const [ adoptTrees, setAdoptTrees ] = useState<TreeListItem[]>( [] );
   const [ treesLoading, setTreesLoading ] = useState( false );
   const [ treesError, setTreesError ] = useState<Error | null>( null );
 
@@ -76,10 +65,7 @@ export default function Home() {
         sort_order: "desc",
         in_stock: true,
       } ),
-    {
-      revalidateOnFocus: false,
-      shouldRetryOnError: false,
-    }
+    { revalidateOnFocus: false, shouldRetryOnError: false }
   );
 
   const products = productsList?.data?.products ?? [];
@@ -91,57 +77,68 @@ export default function Home() {
     mutate: mutateBlogs,
   } = useSWR(
     getBlogsSWRKey( { per_page: 6, sort_by: "created_at", sort_order: "desc" } ),
-    () => listBlogs( { per_page: 6, sort_by: "created_at", sort_order: "desc" } ),
-    {
-      revalidateOnFocus: false,
-      shouldRetryOnError: false,
-    },
+    () =>
+      listBlogs( { per_page: 6, sort_by: "created_at", sort_order: "desc" } ),
+    { revalidateOnFocus: false, shouldRetryOnError: false }
   );
 
-  const { data: slidersList } = useSWR( getSlidersSWRKey( { active: true } ), () =>
-    listSliders( { active: true } ),
+  const { data: slidersList } = useSWR(
+    getSlidersSWRKey( { active: true } ),
+    () => listSliders( { active: true } )
   );
-
 
   useEffect( () => {
-    const fetchLocationTrees = async () => {
-      if ( !selectedLocation ) {
-        setSponsorTrees( [] );
-        setAdoptTrees( [] );
-        return;
-      }
+    const user_lat = selectedLocation?.lat;
+    const user_lng = selectedLocation?.lng;
 
+    if ( typeof user_lat !== "number" || typeof user_lng !== "number" ) {
+      setSponsorTrees( [] );
+      setAdoptTrees( [] );
+      setTreesError( null );
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchLocationTrees = async () => {
       setTreesLoading( true );
       setTreesError( null );
 
       try {
-        const sponsorResponse = await treeService.getSponsorship( {
-          location_id: selectedLocation.id,
+        const sponsorResponse = await treeService.getTrees( {
+          user_lat,
+          user_lng,
+          radius_km: 50,
           per_page: 5,
+          type: "sponsorship",
         } );
 
-        const adoptResponse = await treeService.getAdoption( {
-          location_id: selectedLocation.id,
+        const adoptResponse = await treeService.getTrees( {
+          user_lat,
+          user_lng,
+          radius_km: 50,
           per_page: 5,
+          type: "adoption",
         } );
 
-        if ( sponsorResponse.success ) {
-          setSponsorTrees( sponsorResponse.data.trees );
-        }
-
-        if ( adoptResponse.success ) {
-          setAdoptTrees( adoptResponse.data.trees );
-        }
+        setSponsorTrees( sponsorResponse?.data?.trees ?? [] );
+        setAdoptTrees( adoptResponse?.data?.trees ?? [] );
       } catch ( error ) {
-        console.error( "Error fetching trees:", error );
-        setTreesError( error as Error );
+        if ( !cancelled ) {
+          console.error( "Error fetching trees:", error );
+          setTreesError( error as Error );
+        }
       } finally {
-        setTreesLoading( false );
+        if ( !cancelled ) setTreesLoading( false );
       }
     };
 
     fetchLocationTrees();
-  }, [ selectedLocation ] );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ selectedLocation?.lat, selectedLocation?.lng ] );
 
   const sliders = slidersList ?? [];
   const blogs =
@@ -217,26 +214,25 @@ export default function Home() {
             align="center"
           />
         </div>
+
         { selectedLocation && (
           <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground justify-center">
             <MapPin className="h-4 w-4" />
             <span>
-              Showing trees in <strong>{ selectedLocation.name }</strong>
+              Showing trees near <strong>{ selectedLocation.area }, { selectedLocation.city }</strong>
             </span>
           </div>
         ) }
+
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 justify-center gap-6">
           { treesLoading ? (
-            Array.from( { length: 5 } ).map( ( _, i ) => {
-              return (
-                <BasicTreeCardSkeleton
-                  key={ `sponsor-skeleton-${ Date.now() }-${ i }` }
-                />
-              );
-            } )
+            Array.from( { length: 5 } ).map( ( _, i ) => (
+              <BasicTreeCardSkeleton key={ `sponsor-skeleton-${ i }` } />
+            ) )
           ) : treesError ? (
             <div className="col-span-5 text-center">
               <Alert variant="destructive">
+                <AlertTitle>Error</AlertTitle>
                 <AlertDescription>
                   Failed to load trees. Please try again later.
                 </AlertDescription>
@@ -252,26 +248,25 @@ export default function Home() {
           ) : sponsorTrees.length === 0 ? (
             <div className="col-span-5 text-center py-12">
               <p className="text-lg text-muted-foreground">
-                No trees available for sponsorship in { selectedLocation.name }
+                No trees available for sponsorship near <strong>{ selectedLocation.area }, { selectedLocation.city }</strong>
               </p>
             </div>
           ) : (
-            sponsorTrees.map( ( tree: Tree ) => (
+            sponsorTrees.map( ( tree: TreeListItem ) => (
               <Link
                 key={ tree.id }
-                href={ `/sponsor-a-tree/${ tree.id }` }
+                href={ `/sponsor-a-tree/${ tree.slug }` }
                 className="transition-transform hover:scale-105"
               >
                 <BasicTreeCard
                   name={ tree.name }
-                  image={
-                    tree.thumbnail || tree.main_image_url || "/placeholder.svg"
-                  }
+                  image={ tree.thumbnail_url }
                 />
               </Link>
             ) )
           ) }
         </div>
+
         <div className="text-center mt-8">
           <Link href="/sponsor-a-tree">
             <Button>View All Trees</Button>
@@ -287,23 +282,21 @@ export default function Home() {
             align="center"
           />
         </div>
+
         { selectedLocation && (
           <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground justify-center">
             <MapPin className="h-4 w-4" />
             <span>
-              Showing trees in <strong>{ selectedLocation.name }</strong>
+              Showing trees near <strong>{ selectedLocation.area }, { selectedLocation.city }</strong>
             </span>
           </div>
         ) }
+
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 justify-center gap-6">
           { treesLoading ? (
-            Array.from( { length: 5 } ).map( ( _, i ) => {
-              return (
-                <BasicTreeCardSkeleton
-                  key={ `adopt-skeleton-${ Date.now() }-${ i }` }
-                />
-              );
-            } )
+            Array.from( { length: 5 } ).map( ( _, i ) => (
+              <BasicTreeCardSkeleton key={ `adopt-skeleton-${ i }` } />
+            ) )
           ) : treesError ? (
             <div className="col-span-5 text-center">
               <Alert variant="destructive">
@@ -322,26 +315,25 @@ export default function Home() {
           ) : adoptTrees.length === 0 ? (
             <div className="col-span-5 text-center py-12">
               <p className="text-lg text-muted-foreground">
-                No trees available for adoption in { selectedLocation.name }
+                No trees available for adoption near <strong>{ selectedLocation.area }, { selectedLocation.city }</strong>
               </p>
             </div>
           ) : (
-            adoptTrees.map( ( tree: Tree ) => (
+            adoptTrees.map( ( tree: TreeListItem ) => (
               <Link
                 key={ tree.id }
-                href={ `/adopt-a-tree/${ tree.id }` }
+                href={ `/adopt-a-tree/${ tree.slug }` }
                 className="transition-transform hover:scale-105"
               >
                 <BasicTreeCard
                   name={ tree.name }
-                  image={
-                    tree.thumbnail || tree.main_image_url || "/placeholder.svg"
-                  }
+                  image={ tree.thumbnail_url }
                 />
               </Link>
             ) )
           ) }
         </div>
+
         <div className="text-center mt-8">
           <Link href="/adopt-a-tree">
             <Button>View All Trees</Button>
@@ -368,9 +360,7 @@ export default function Home() {
 
         <div className="text-center mt-8">
           <Link href="/store">
-            <Button>
-              View All Products
-            </Button>
+            <Button>View All Products</Button>
           </Link>
         </div>
       </Section>
@@ -392,10 +382,7 @@ export default function Home() {
               </AlertDescription>
             </Alert>
             <div className="flex justify-center">
-              <Button
-                onClick={ handleBlogRetry }
-                className="flex items-center gap-2"
-              >
+              <Button onClick={ handleBlogRetry } className="flex items-center gap-2">
                 <RefreshCw className="h-4 w-4" />
                 Retry Loading
               </Button>
@@ -412,15 +399,10 @@ export default function Home() {
             <CarouselContent>
               { blogsLoading
                 ? Array.from( { length: 3 } ).map( ( _, i ) => (
-                  <BlogCardSkeleton
-                    key={ `blog-skeleton-${ Date.now() }-${ i }` }
-                  />
+                  <BlogCardSkeleton key={ `blog-skeleton-${ i }` } />
                 ) )
                 : blogs?.map( ( blog: Blog ) => (
-                  <CarouselItem
-                    key={ blog.id }
-                    className="md:basis-1/2 lg:basis-1/3"
-                  >
+                  <CarouselItem key={ blog.id } className="md:basis-1/2 lg:basis-1/3">
                     <BlogCard blog={ blog } />
                   </CarouselItem>
                 ) ) }

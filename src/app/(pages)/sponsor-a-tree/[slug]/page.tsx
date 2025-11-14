@@ -8,28 +8,22 @@ import { Trees } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { treeService } from "@/services/tree.service";
 
-const fetcher = async (url: string) => {
-  const id = Number(url.split('/').pop());
-  const response = await treeService.getById(id);
+const fetcher = async ( url: string ) => {
+  const slug = String( url.split( '/' ).pop() );
+  const response = await treeService.getTree( slug );
   return response;
 };
 
-interface Props {
-  params: Promise<{ id: string }>;
-}
-
-export default function Page({ params }: Props) {
-  const { id } = use(params);
+export default function Page( { params }: { params: Promise<{ slug: string }> } ) {
+  const { slug } = use( params );
 
   const {
     data: response,
     error,
     isLoading,
-  } = useSWR(id ? `/trees/${id}` : null, fetcher, {
-    revalidateOnFocus: false,
-  });
+  } = useSWR( slug ? `/trees/${ slug }` : null, fetcher, { revalidateOnFocus: false } );
 
-  if (error) {
+  if ( error ) {
     return (
       <div className="container mx-auto p-6 flex items-center justify-center min-h-[50vh] bg-background">
         <Card className="w-full max-w-md border-destructive/20">
@@ -43,7 +37,7 @@ export default function Page({ params }: Props) {
             <p className="text-muted-foreground">
               Sorry, we couldn't load the tree details. Please try again later.
             </p>
-            <Button onClick={() => window.location.reload()} variant="outline">
+            <Button onClick={ () => window.location.reload() } variant="outline">
               Retry
             </Button>
           </CardContent>
@@ -54,8 +48,8 @@ export default function Page({ params }: Props) {
 
   return (
     <TreeDetailsLayout
-      tree={response?.data?.tree}
-      isLoading={isLoading}
+      tree={ response?.data?.tree }
+      isLoading={ isLoading }
       pageType="sponsor"
     />
   );

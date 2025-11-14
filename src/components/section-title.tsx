@@ -77,7 +77,7 @@ const SectionTitle: React.FC<Props> = ( {
       transition={ { duration: 0.8, ease: [ 0.25, 0.46, 0.45, 0.94 ] } }
       viewport={ { once: true, margin: "-50px" } }
       className={ cn(
-        "flex flex-col gap-4 mb-16",
+        "flex flex-col gap-4 mb-4",
         alignmentClasses[ align ],
         styles.container,
         className,

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "@/hooks/use-location";
 import { treeService } from "@/services/tree.service";
 import type { BreadcrumbItemType } from "@/types/home";
-import type { Tree } from "@/types/tree";
+import type { Tree } from "@/types/tree.types";
 
 const breadcrumbItems: BreadcrumbItemType[] = [
   { title: "Home", href: "/" },

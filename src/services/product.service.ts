@@ -9,14 +9,6 @@ import {
 
 const baseUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL as string;
 
-const buildQuery = ( params: ProductParams ) => {
-  const query = new URLSearchParams();
-  Object.entries( params ).forEach( ( [ k, v ] ) => {
-    if ( v !== undefined && v !== null && v !== "" ) query.set( k, String( v ) );
-  } );
-  return query.toString();
-};
-
 export const productService = {
   async getProductBySlug( slug: string ) {
     const { data } = await api.get<ProductResponse>( `${ baseUrl }/products/${ slug }` );

@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 import Footer from "@/components/app-footer";
 import Header from "@/components/app-header";
 import { LocationProvider } from "@/components/location-provider";
-import { store } from "@/store";
+import { store, persistor } from "@/store";
 import { ReduxProvider } from "./redux-provider";
 
 export const metadata: Metadata = {
@@ -15,11 +15,7 @@ export const metadata: Metadata = {
     "From vibrant flowering plants to lush tropical greens, we offer an incredible variety to turn your space into a living paradise.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout( { children }: { children: React.ReactNode } ) {
   return (
     <html lang="en">
       <head>
@@ -31,15 +27,17 @@ export default function RootLayout({
       </head>
 
       <body>
-        <NextTopLoader color="#715130" showSpinner={false} />
-        <ReduxProvider store={store}>
+        <NextTopLoader color="#715130" showSpinner={ false } />
+
+        <ReduxProvider store={ store } persistor={ persistor }>
           <LocationProvider>
             <Header />
-            {children}
+            { children }
             <Footer />
           </LocationProvider>
         </ReduxProvider>
-        <Toaster richColors position="top-center" closeButton={true} />
+
+        <Toaster richColors position="top-center" closeButton={ true } />
       </body>
     </html>
   );
