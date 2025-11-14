@@ -242,7 +242,7 @@ export default function TreeDetailsLayout( {
                         <div className="space-y-3">
                           <Label className="text-sm font-medium flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
-                            Duration (Years)
+                            Duration
                           </Label>
 
                           <Select
@@ -419,7 +419,7 @@ export default function TreeDetailsLayout( {
                       occasion={ form.getValues( "occasion" ) }
                       message={ form.getValues( "message" ) }
                       tree_instance_id={ tree.id }
-                      plan_id={ selectedPlan.id }
+                      // plan_id={ selectedPlan.id }
                     />
                   ) : (
                     <Button

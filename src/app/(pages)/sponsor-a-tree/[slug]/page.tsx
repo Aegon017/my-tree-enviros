@@ -10,7 +10,7 @@ import { treeService } from "@/services/tree.service";
 
 const fetcher = async ( url: string ) => {
   const slug = String( url.split( '/' ).pop() );
-  const response = await treeService.getTree( slug );
+  const response = await treeService.getSponsorTree( slug );
   return response;
 };
 

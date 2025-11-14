@@ -10,7 +10,7 @@ export default function ProductCard( { product }: { product: ProductListItem } )
   const price = product.selling_price || 0
   const original = product.original_price ?? null
   const discount = original && original > price ? Math.round( ( ( original - price ) / original ) * 100 ) : 0
-  const img = product.thumbnail_url || "/placeholder.png"
+  const img = product.thumbnail_url || "/placeholder.svg"
 
   return (
     <Card className="group flex flex-col py-0 gap-0 overflow-hidden bg-card border rounded-xl transition-shadow hover:shadow-md">
@@ -61,10 +61,10 @@ export default function ProductCard( { product }: { product: ProductListItem } )
           ) }
         </div>
 
-        { product.has_variants && <Badge variant="secondary" className="rounded text-[10px]">Multiple Options</Badge> }
+        { product.has_variants && <Badge variant="secondary" className="rounded-md text-[10px]">Multiple Options</Badge> }
 
         <Link href={ `/store/products/${ product.slug }` } className="mt-auto">
-          <Button className="w-full rounded-md">View Product</Button>
+          <Button className="w-full">View Product</Button>
         </Link>
       </CardContent>
     </Card>

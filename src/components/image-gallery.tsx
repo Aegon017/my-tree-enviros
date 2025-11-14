@@ -106,7 +106,7 @@ export default function ImageGallery( { images, name }: Props ) {
                 </div>
 
                 { images.length > 1 && (
-                    <div className="flex gap-3 overflow-x-auto pb-2">
+                    <div className="flex gap-3 overflow-x-auto p-1">
                         { images.map( ( url, idx ) => (
                             <Button
                                 key={ idx }
