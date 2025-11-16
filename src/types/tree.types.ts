@@ -25,6 +25,7 @@ export interface Tree {
   thumbnail_url: string;
   image_urls: string[];
   plan_prices: PlanPrice[];
+  adoptable_count?: number;
 }
 
 export interface PlanPrice {
@@ -34,6 +35,7 @@ export interface PlanPrice {
 }
 
 export interface Plan {
+  id: number;
   duration: number;
   duration_type: string;
 }

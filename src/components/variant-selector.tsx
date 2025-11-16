@@ -93,7 +93,7 @@ export function VariantSelector( {
               >
                 <div className="relative w-8 h-8 rounded-md overflow-hidden bg-muted">
                   <Image
-                    src={ planter.image_url || "/placeholder.jpg" }
+                    src={ planter.image_url || "/placeholder.svg" }
                     alt={ planter.name }
                     fill
                     sizes="32px"

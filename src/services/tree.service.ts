@@ -2,35 +2,20 @@ import api from "@/lib/axios";
 import type { TreeCollectionResponse, TreeResponse } from "@/types/tree.types";
 
 export const treeService = {
-  async getSponsorTrees( params: {
+  async getTrees( params: {
     user_lat: number;
     user_lng: number;
     radius_km?: number;
     per_page?: number;
     page?: number;
+    type?: string;
   } ): Promise<TreeCollectionResponse> {
-    const { data } = await api.get( `/trees/sponsor`, { params } );
+    const { data } = await api.get( "/trees", { params } );
     return data;
   },
 
-  async getSponsorTree( slug: string ): Promise<TreeResponse> {
-    const { data } = await api.get( `/trees/sponsor/${ slug }` );
+  async getTree( slug: string ): Promise<TreeResponse> {
+    const { data } = await api.get( `/trees/${ slug }` );
     return data;
-  },
-
-  async getAdoptTrees( params: {
-    user_lat: number;
-    user_lng: number;
-    radius_km?: number;
-    per_page?: number;
-    page?: number;
-  } ): Promise<TreeCollectionResponse> {
-    const { data } = await api.get( `/trees/adopt`, { params } );
-    return data;
-  },
-
-  async getAdoptTree( slug: string ): Promise<TreeResponse> {
-    const { data } = await api.get( `/trees/adopt/${ slug }` );
-    return data;
-  },
+  }
 };

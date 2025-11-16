@@ -19,6 +19,10 @@ export function useCart() {
     }
   }, [] );
 
+  const refresh = async () => {
+    await fetchCart();
+  };
+
   const addProduct = async ( variantId: number, quantity = 1 ) => {
     try {
       const res = await cartService.addProduct( variantId, quantity );
@@ -29,21 +33,45 @@ export function useCart() {
     }
   };
 
-  const addProductByProductId = async ( productId: number, quantity = 1 ) => {
+  const addSponsor = async (
+    treeId: number,
+    planId: number,
+    planPriceId: number,
+    quantity: number,
+    dedication?: any
+  ) => {
     try {
-      const res = await cartService.addProductByProductId( productId, quantity );
+      const res = await cartService.addSponsor(
+        treeId,
+        planId,
+        planPriceId,
+        quantity,
+        dedication
+      );
       setCart( res.data.data.cart );
-      toast.success( "Added to cart" );
+      toast.success( "Tree sponsorship added to cart" );
     } catch ( e: any ) {
       toast.error( e?.response?.data?.message || "Error" );
     }
   };
 
-  const addTree = async ( instanceId: number, planPriceId: number ) => {
+  const addAdopt = async (
+    treeId: number,
+    planId: number,
+    planPriceId: number,
+    quantity: number,
+    dedication?: any
+  ) => {
     try {
-      const res = await cartService.addTree( instanceId, planPriceId );
+      const res = await cartService.addAdopt(
+        treeId,
+        planId,
+        planPriceId,
+        quantity,
+        dedication
+      );
       setCart( res.data.data.cart );
-      toast.success( "Tree added to cart" );
+      toast.success( "Tree adoption added to cart" );
     } catch ( e: any ) {
       toast.error( e?.response?.data?.message || "Error" );
     }
@@ -96,9 +124,10 @@ export function useCart() {
   return {
     cart,
     loading,
+    refresh,
     addProduct,
-    addProductByProductId,
-    addTree,
+    addSponsor,
+    addAdopt,
     increase,
     decrease,
     update,

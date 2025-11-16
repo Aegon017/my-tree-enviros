@@ -10,24 +10,18 @@ import { treeService } from "@/services/tree.service";
 
 const fetcher = async ( url: string ) => {
   const slug = String( url.split( '/' ).pop() );
-  const response = await treeService.getAdoptTree( slug );
+  const response = await treeService.getTree( slug );
   return response;
 };
 
-interface Props {
-  params: Promise<{ id: string }>;
-}
-
-export default function Page( { params }: Props ) {
-  const { id } = use( params );
+export default function Page( { params }: { params: Promise<{ slug: string }> } ) {
+  const { slug } = use( params );
 
   const {
     data: response,
     error,
     isLoading,
-  } = useSWR( id ? `/trees/${ id }` : null, fetcher, {
-    revalidateOnFocus: false,
-  } );
+  } = useSWR( slug ? `/trees/${ slug }?type=adopt` : null, fetcher, { revalidateOnFocus: false } );
 
   if ( error ) {
     return (

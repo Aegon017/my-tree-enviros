@@ -10,7 +10,7 @@ import { treeService } from "@/services/tree.service";
 
 const fetcher = async ( url: string ) => {
   const slug = String( url.split( '/' ).pop() );
-  const response = await treeService.getSponsorTree( slug );
+  const response = await treeService.getTree( slug );
   return response;
 };
 
@@ -21,7 +21,7 @@ export default function Page( { params }: { params: Promise<{ slug: string }> } 
     data: response,
     error,
     isLoading,
-  } = useSWR( slug ? `/trees/${ slug }` : null, fetcher, { revalidateOnFocus: false } );
+  } = useSWR( slug ? `/trees/${ slug }?type=sponsor` : null, fetcher, { revalidateOnFocus: false } );
 
   if ( error ) {
     return (

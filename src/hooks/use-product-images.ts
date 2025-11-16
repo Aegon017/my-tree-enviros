@@ -37,7 +37,7 @@ export function useProductImages( product?: Product, selectedVariant?: ProductVa
   const currentImage =
     images[ currentIndex ]?.url ??
     product?.variants?.[ 0 ]?.image_urls?.[ 0 ]?.url ??
-    "/placeholder.jpg";
+    "/placeholder.svg";
 
   return {
     images,

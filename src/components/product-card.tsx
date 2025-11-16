@@ -55,7 +55,9 @@ export default function ProductCard( { product }: { product: ProductListItem } )
         </Link>
 
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold tracking-tight">₹{ price }</span>
+          <span className="text-lg font-bold tracking-tight">
+            { product.has_variants && "From: " }₹{ price }
+          </span>
           { original && original > price && (
             <span className="text-sm text-muted-foreground line-through">₹{ original }</span>
           ) }

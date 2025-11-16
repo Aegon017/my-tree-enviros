@@ -11,8 +11,8 @@ interface Props {
 const BasicTreeCard = ({ name, image }: Props) => {
   const src: StaticImageData | string =
     typeof image === "string"
-      ? image || "/placeholder.jpg"
-      : (image ?? "/placeholder.jpg");
+      ? image || "/placeholder.svg"
+      : (image ?? "/placeholder.svg");
   const alt = name || "Tree image";
   return (
     <Card className="gap-0 elegant-hover group relative overflow-hidden bg-card border border-border/50 shadow-sm hover:shadow-lg hover:border-border transition-all duration-300 ease-out py-0">

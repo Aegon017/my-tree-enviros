@@ -134,7 +134,7 @@ export function transformBackendCartItem( item: BackendCartResponse ): CartItem 
   const variant = product?.variants?.[ 0 ] ?? null;
 
   const selectedVariant = variant || null;
-  const variantImage = selectedVariant?.image_urls?.[ 0 ]?.url ?? "/placeholder.jpg";
+  const variantImage = selectedVariant?.image_urls?.[ 0 ]?.url ?? "/placeholder.svg";
 
   return {
     id: item.cart_id,
@@ -182,7 +182,7 @@ export function transformBackendCart( item: BackendCartItem ): CartItem {
   const product = item.product || item.ecom_product;
   const variant = item.product_variant ?? null;
 
-  const variantImage = variant?.image_urls?.[ 0 ]?.url ?? "/placeholder.jpg";
+  const variantImage = variant?.image_urls?.[ 0 ]?.url ?? "/placeholder.svg";
   const itemPrice = variant?.selling_price ?? 0;
 
   return {

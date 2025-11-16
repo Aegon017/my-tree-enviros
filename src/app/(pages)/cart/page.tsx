@@ -78,7 +78,7 @@ const detailsSchema = z.object( {
 
 type DetailsFormValues = z.infer<typeof detailsSchema>;
 
-const DEFAULT_IMAGE = "/placeholder.jpg";
+const DEFAULT_IMAGE = "/placeholder.svg";
 const MAX_DURATION = 50;
 const MIN_QUANTITY = 1;
 

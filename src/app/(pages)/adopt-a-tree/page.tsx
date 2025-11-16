@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { MapPin } from "lucide-react";
 import BasicTreeCard from "@/components/basic-tree-card";
 import BreadcrumbNav from "@/components/breadcrumb-nav";
@@ -22,31 +22,52 @@ const breadcrumbItems: BreadcrumbItemType[] = [
 
 const Page = () => {
   const { selectedLocation } = useLocation();
-
   const [ trees, setTrees ] = useState<TreeListItem[]>( [] );
   const [ isLoading, setIsLoading ] = useState( false );
   const [ error, setError ] = useState<Error | null>( null );
   const [ page, setPage ] = useState( 1 );
   const [ hasMore, setHasMore ] = useState( true );
+  const initialLoadRef = useRef( false );
+  const locationKeyRef = useRef<string>( "" );
+
+  const getLocationKey = ( location: typeof selectedLocation ) => {
+    if ( !location?.lat || !location?.lng ) return "";
+    return `${ location.lat }-${ location.lng }`;
+  };
 
   useEffect( () => {
     const fetchTrees = async () => {
       if ( !selectedLocation?.lat || !selectedLocation?.lng ) {
         setTrees( [] );
         setPage( 1 );
+        setHasMore( false );
+        initialLoadRef.current = false;
+        locationKeyRef.current = "";
         return;
       }
+
+      const currentLocationKey = getLocationKey( selectedLocation );
+
+      if ( !initialLoadRef.current || locationKeyRef.current !== currentLocationKey ) {
+        initialLoadRef.current = true;
+        locationKeyRef.current = currentLocationKey;
+        setPage( 1 );
+        setHasMore( true );
+      }
+
+      if ( page === 1 && locationKeyRef.current !== currentLocationKey ) return;
 
       setIsLoading( true );
       setError( null );
 
       try {
-        const response = await treeService.getAdoptTrees( {
+        const response = await treeService.getTrees( {
           user_lat: selectedLocation.lat,
           user_lng: selectedLocation.lng,
           radius_km: 50,
           page,
           per_page: 20,
+          type: 'adopt'
         } );
 
         if ( response.success ) {
@@ -62,7 +83,6 @@ const Page = () => {
           setHasMore( meta.current_page < meta.last_page );
         }
       } catch ( err ) {
-        console.error( "Failed to fetch trees:", err );
         setError( err as Error );
       } finally {
         setIsLoading( false );

@@ -17,7 +17,7 @@ export default function ImageGallery( { images, name }: Props ) {
     const [ containerRect, setContainerRect ] = useState<DOMRect | null>( null );
     const [ imgSize, setImgSize ] = useState( { width: 0, height: 0 } );
 
-    const main = images[ selected ] || "/placeholder.jpg";
+    const main = images[ selected ] || "/placeholder.svg";
     const lensSize = 170;
     const zoomFactor = 2.4;
     const zoomBoxSize = 550;

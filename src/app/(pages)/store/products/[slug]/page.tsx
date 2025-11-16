@@ -286,7 +286,6 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
                       </span>
                     ) }
 
-                    {/* 🎨 Elegant fallback */ }
                     { !productState.selectedVariant.variant?.color &&
                       !productState.selectedVariant.variant?.size &&
                       !productState.selectedVariant.variant?.planter && (
