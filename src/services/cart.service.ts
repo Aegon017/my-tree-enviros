@@ -22,7 +22,7 @@ export const cartService = {
       tree_id: treeId,
       plan_id: planId,
       plan_price_id: planPriceId,
-      quantity: quantity,
+      quantity,
       dedication: dedication ?? null,
     } ),
 

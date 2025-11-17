@@ -320,17 +320,9 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
 
           <div className="flex gap-3">
             <AddToCartButton
-              productId={ product.id }
+              type="product"
               quantity={ productState.quantity }
-              productType={ ProductType.ECOMMERCE }
-              cartType={ CheckoutType.CART }
-              disabled={ !productState.isInStock }
-              productName={ product.name }
-              productPrice={ productState.displayPrice }
-              productImage={ currentImage }
-              selectedVariantId={ productState.selectedVariant?.id }
-              product={ product }
-              onProductUpdate={ mutateProduct }
+              variantId={ productState.selectedVariant?.id }
             />
 
             <Button

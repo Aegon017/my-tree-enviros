@@ -10,21 +10,28 @@ import { toast } from "sonner";
 export default function AddToCartButton( {
   type,
   treeId,
+  variantId,
   planId,
   planPriceId,
   quantity,
   dedication,
   disabled,
 }: any ) {
+  console.log(dedication);
+  
   const [ showConfirm, setShowConfirm ] = useState( false );
   const [ loading, setLoading ] = useState( false );
 
-  const { addSponsor, addAdopt, clear } = useCart();
+  const { addProduct, addSponsor, addAdopt, clear } = useCart();
 
   const handleAdd = async () => {
     setLoading( true );
 
     try {
+      if ( type === "product" ) {
+        await addProduct( variantId, quantity );
+      }
+
       if ( type === "sponsor" ) {
         await addSponsor( treeId, planId, planPriceId, quantity, dedication );
       }

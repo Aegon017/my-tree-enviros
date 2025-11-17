@@ -12,9 +12,9 @@ export interface CartItem {
   subtotal?: number;
   formatted_subtotal?: string;
 
-  name?: string;
+  name: string;
   type?: "tree" | "product" | "campaign";
-  image?: string;
+  image_url: string;
   slug?: string;
   product_type?: number;
   duration?: number;
@@ -124,109 +124,4 @@ export interface BackendCartResponse {
   options?: any;
   created_at?: string;
   updated_at?: string;
-}
-
-/**
- * Transform backend response format to CartItem (variant-based)
- */
-export function transformBackendCartItem( item: BackendCartResponse ): CartItem {
-  const product = item.item?.product;
-  const variant = product?.variants?.[ 0 ] ?? null;
-
-  const selectedVariant = variant || null;
-  const variantImage = selectedVariant?.image_urls?.[ 0 ]?.url ?? "/placeholder.svg";
-
-  return {
-    id: item.cart_id,
-    cart_id: item.cart_id,
-    name: item.item?.name || selectedVariant?.variant?.name || product?.name || "",
-    type: "product",
-    price: item.price,
-    quantity: item.quantity,
-    image: variantImage,
-    slug: product?.slug,
-    product_type: 2,
-    formatted_price: item.formatted_price,
-    subtotal: item.subtotal,
-    formatted_subtotal: item.formatted_subtotal,
-    product_variant_id: selectedVariant?.id,
-    variant: selectedVariant
-      ? {
-        id: selectedVariant.id,
-        name: selectedVariant.variant?.name ?? "",
-        sku: selectedVariant.sku,
-        color: selectedVariant.variant?.color?.name,
-        size: selectedVariant.variant?.size?.name,
-        planter: selectedVariant.variant?.planter?.name,
-        color_id: selectedVariant.variant?.color?.id,
-        size_id: selectedVariant.variant?.size?.id,
-        planter_id: selectedVariant.variant?.planter?.id,
-      }
-      : undefined,
-    metadata: {
-      product_variant_id: selectedVariant?.id,
-      selected_variant: selectedVariant,
-      product_data: product,
-    },
-    product,
-    ecom_product: product,
-    created_at: item.created_at,
-    updated_at: item.updated_at,
-  };
-}
-
-/**
- * Transform BackendCartItem (from DB structure) to frontend CartItem (variant-based)
- */
-export function transformBackendCart( item: BackendCartItem ): CartItem {
-  const product = item.product || item.ecom_product;
-  const variant = item.product_variant ?? null;
-
-  const variantImage = variant?.image_urls?.[ 0 ]?.url ?? "/placeholder.svg";
-  const itemPrice = variant?.selling_price ?? 0;
-
-  return {
-    id: item.id,
-    cart_id: item.id,
-    name: variant?.variant?.name || product?.name || "",
-    type: "product",
-    price: itemPrice,
-    quantity: item.quantity,
-    image: variantImage,
-    slug: product?.slug,
-    product_type: item.product_type,
-    duration: item.duration,
-    occasion: item.occasion,
-    message: item.message,
-    location_id: item.location_id,
-    product_variant_id: variant?.id,
-    variant: variant
-      ? {
-        id: variant.id,
-        name: variant.variant?.name ?? "",
-        sku: variant.sku,
-        color: variant.variant?.color?.name,
-        size: variant.variant?.size?.name,
-        planter: variant.variant?.planter?.name,
-        color_id: variant.variant?.color?.id,
-        size_id: variant.variant?.size?.id,
-        planter_id: variant.variant?.planter?.id,
-      }
-      : undefined,
-    metadata: {
-      duration: item.duration,
-      occasion: item.occasion,
-      message: item.message,
-      location_id: item.location_id,
-      product_variant_id: variant?.id,
-      selected_variant: variant,
-      product_data: product,
-    },
-    user_id: item.user_id,
-    product_id: item.product_id,
-    created_at: item.created_at,
-    updated_at: item.updated_at,
-    product,
-    ecom_product: item.ecom_product,
-  };
 }
