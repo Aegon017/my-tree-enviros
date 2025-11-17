@@ -13,7 +13,6 @@ import {
 } from 'redux-persist';
 
 import authReducer from "./auth-slice";
-import cartReducer from "./cart-slice";
 import locationReducer from "./location-slice";
 
 const persistedLocationReducer = persistReducer(
@@ -24,7 +23,6 @@ const persistedLocationReducer = persistReducer(
 export const store = configureStore( {
   reducer: {
     auth: authReducer,
-    cart: cartReducer,
     location: persistedLocationReducer,
   },
   middleware: ( getDefaultMiddleware ) =>

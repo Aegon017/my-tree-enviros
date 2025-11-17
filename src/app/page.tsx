@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Autoplay from "embla-carousel-autoplay";
@@ -31,13 +31,13 @@ import neemTree from "../../public/neem-tree.webp";
 import { useLocation } from "@/hooks/use-location";
 import { treeService } from "@/services/tree.service";
 import { productService } from "@/services/product.service";
-import { getBlogsSWRKey, listBlogs } from "@/services/blog.service";
+import { listBlogs } from "@/services/blog.service";
 import { getSlidersSWRKey, listSliders } from "@/services/slider.service";
 
 import type { TreeListItem } from "@/types/tree.types";
 import type { ProductListItem } from "@/types/product.types";
-import type { BlogApiItem } from "@/services/blog.service";
 import type { SliderApiItem } from "@/services/slider.service";
+import { Blog, BlogListItem } from "@/types/blog.types";
 
 const PRODUCTS_KEY = [ "home-products" ] as const;
 
@@ -69,8 +69,8 @@ function useLocationTrees( lat?: number, lng?: number, deps: any[] = [] ) {
       setError( null );
       try {
         const [ sponsorResponse, adoptResponse ] = await Promise.all( [
-          treeService.getSponsorTrees( { user_lat: lat, user_lng: lng, radius_km: 50, per_page: 5 } ),
-          treeService.getAdoptTrees( { user_lat: lat, user_lng: lng, radius_km: 50, per_page: 5 } ),
+          treeService.getTrees( { user_lat: lat, user_lng: lng, radius_km: 50, per_page: 5, type: 'sponsor' } ),
+          treeService.getTrees( { user_lat: lat, user_lng: lng, radius_km: 50, per_page: 5, type: 'adopt' } ),
         ] );
 
         if ( !active ) return;
@@ -114,32 +114,22 @@ export default function Home() {
     { revalidateOnFocus: false, shouldRetryOnError: false }
   );
 
-  const { data: blogsList, error: blogsError, isLoading: blogsLoading, mutate: mutateBlogs } = useSWR(
-    getBlogsSWRKey( { per_page: 6, sort_by: "created_at", sort_order: "desc" } ),
-    () => listBlogs( { per_page: 6, sort_by: "created_at", sort_order: "desc" } ),
-    { revalidateOnFocus: false, shouldRetryOnError: false }
+  const { data, error: blogsError, isLoading: blogsLoading } = useSWR(
+    [ "blogs", 1 ],
+    () =>
+      listBlogs( {
+        page: 1,
+        per_page: 12,
+        sort_by: "created_at",
+        sort_order: "desc",
+      } )
   );
+
+  const blogs = data?.blogs ?? [];
 
   const { data: slidersList } = useSWR( getSlidersSWRKey( { active: true } ), () => listSliders( { active: true } ) );
 
   const products = productsList?.data?.products ?? [];
-
-  const blogs = useMemo( () => {
-    return (
-      blogsList?.items?.map( ( b: BlogApiItem ) => ( {
-        id: b.id,
-        title: b.title,
-        content: b.short_description ?? "",
-        main_image: "",
-        main_image_url: b.thumbnail_url ?? "",
-        slug: b.slug,
-        created_at: b.created_at ?? "",
-        updated_at: b.updated_at ?? "",
-        status: 1,
-        trash: 0,
-      } ) ) ?? []
-    );
-  }, [ blogsList ] );
 
   const sliders = slidersList ?? [];
 
@@ -309,19 +299,13 @@ export default function Home() {
               <AlertTitle>Error Loading Blogs</AlertTitle>
               <AlertDescription>Failed to load blog posts. Please try again.</AlertDescription>
             </Alert>
-            <div className="flex justify-center">
-              <Button onClick={ () => mutateBlogs() } className="flex items-center gap-2">
-                <RefreshCw className="h-4 w-4" />
-                Retry Loading
-              </Button>
-            </div>
           </div>
         ) : (
           <Carousel opts={ { align: "start", loop: true } } plugins={ [ blogPlugin.current ] } className="w-full max-w-6xl mx-auto mt-8" onMouseEnter={ blogPlugin.current.stop } onMouseLeave={ blogPlugin.current.reset }>
             <CarouselContent>
               { blogsLoading
                 ? Array.from( { length: 3 } ).map( ( _, i ) => <BlogCardSkeleton key={ `blog-skeleton-${ i }` } /> )
-                : blogs.map( ( blog ) => (
+                : blogs.map( ( blog: BlogListItem ) => (
                   <CarouselItem key={ blog.id } className="md:basis-1/2 lg:basis-1/3">
                     <BlogCard blog={ blog } />
                   </CarouselItem>

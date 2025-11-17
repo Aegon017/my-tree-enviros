@@ -25,7 +25,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cartService } from "@/services/cart.service";
-import type { CartItem } from "@/types/cart.type";
 import {
   Form,
   FormControl,
@@ -36,6 +35,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import api from "@/lib/axios";
+import { CartItem } from "@/types/cart.types";
 
 const detailsSchema = z.object({
   name: z.string().min(1, "Name is required."),

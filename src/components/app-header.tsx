@@ -205,13 +205,6 @@ function TopBar( { user, logout }: { user: boolean; logout: () => void } ) {
 
 function HeaderMiddle( { user }: { user: boolean } ) {
   const isMobile = useIsMobile();
-  const cartItems = useSelector( ( state: RootState ) => state.cart.items );
-
-
-  const totalItems = Array.isArray( cartItems )
-    ? cartItems.reduce( ( sum, item ) => sum + ( item.quantity || 1 ), 0 )
-    : 0;
-
   return (
     <div className="border-b">
       <div className="container mx-auto max-w-6xl px-3 sm:px-4 flex items-center justify-between">
@@ -250,16 +243,6 @@ function HeaderMiddle( { user }: { user: boolean } ) {
                 >
                   <Link href="/cart">
                     <ShoppingCart className="w-4 h-4" />
-                    { totalItems > 0 && (
-                      <div className="absolute top-0 right-0">
-                        <span className="relative flex h-4 w-4 items-center justify-center">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-                          <span className="relative z-10 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold leading-none">
-                            { totalItems > 9 ? "9+" : totalItems }
-                          </span>
-                        </span>
-                      </div>
-                    ) }
                   </Link>
                 </Button>
               );
