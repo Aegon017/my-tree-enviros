@@ -64,10 +64,6 @@ export default function ProductCard( { product }: { product: ProductListItem } )
         </div>
 
         { product.has_variants && <Badge variant="secondary" className="rounded-md text-[10px]">Multiple Options</Badge> }
-
-        {/* <Link href={ `/store/products/${ product.slug }` } className="mt-auto">
-          <Button className="w-full">View Product</Button>
-        </Link> */}
       </CardContent>
     </Card>
   )
