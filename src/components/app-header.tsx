@@ -53,7 +53,7 @@ const ICON_LINKS = [
 export default function Header() {
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, signOut } = useAuth();
   const [ isClient, setIsClient ] = useState( false );
 
   useEffect( () => {
@@ -64,7 +64,7 @@ export default function Header() {
     <>
       <TopNotice />
       <div className={ cn( "bg-background z-50", isMobile && "sticky top-0" ) }>
-        { isClient && <TopBar user={ isAuthenticated } logout={ logout } /> }
+        { isClient && <TopBar user={ isAuthenticated } signOut={ signOut } /> }
         { isClient && <HeaderMiddle user={ isAuthenticated } /> }
       </div>
       { !isMobile && isClient && <HeaderBottom pathname={ pathname } /> }
@@ -96,7 +96,7 @@ function TopNotice() {
   );
 }
 
-function TopBar( { user, logout }: { user: boolean; logout: () => void } ) {
+function TopBar( { user, signOut }: { user: boolean; signOut: () => void } ) {
   const { selectedLocation, syncFromStorage } = useLocation();
 
   useEffect( () => {
@@ -152,7 +152,7 @@ function TopBar( { user, logout }: { user: boolean; logout: () => void } ) {
           { user && (
             <Button
               variant="ghost"
-              onClick={ logout }
+              onClick={ signOut }
               className="text-xs text-muted-foreground hover:text-primary transition-colors px-2 h-6"
             >
               Sign Out
@@ -164,7 +164,7 @@ function TopBar( { user, logout }: { user: boolean; logout: () => void } ) {
           { user ? (
             <Button
               variant="ghost"
-              onClick={ logout }
+              onClick={ signOut }
               className="text-xs text-muted-foreground hover:text-primary transition-colors"
             >
               Sign Out
@@ -288,7 +288,7 @@ function HeaderBottom( { pathname }: { pathname: string } ) {
 
 function MobileNavigation( { user }: { user: boolean } ) {
   const [ open, setOpen ] = useState( false );
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
   const pathname = usePathname();
 
   return (
@@ -355,7 +355,7 @@ function MobileNavigation( { user }: { user: boolean } ) {
             { user && (
               <Button
                 variant="ghost"
-                onClick={ logout }
+                onClick={ signOut }
                 className="justify-start text-sm text-muted-foreground hover:text-primary px-2 py-2 h-auto"
               >
                 Sign Out

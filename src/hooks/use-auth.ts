@@ -8,6 +8,6 @@ export function useAuth() {
     return {
         isAuthenticated: !!token,
         user,
-        logout: () => authService.signOut(),
+        signOut: () => authService.signOut(),
     };
 }

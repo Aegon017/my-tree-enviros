@@ -1,4 +1,4 @@
-import { fetchJson, ApiResponse } from "@/lib/fetch-json";
+import { fetchJson } from "@/lib/fetch-json";
 import { authStorage } from "@/lib/auth-storage";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -17,16 +17,14 @@ function buildHeaders( extra: Record<string, string> = {} ) {
     ...extra,
   };
 
-  if ( token ) {
-    headers[ "Authorization" ] = `Bearer ${ token }`;
-  }
+  if ( token ) headers[ "Authorization" ] = `Bearer ${ token }`;
 
   return headers;
 }
 
 export const authService = {
   async signIn( payload: SignInPayload ) {
-    return await fetchJson<ApiResponse>( `${ API_BASE }/sign-in`, {
+    return await fetchJson( `${ API_BASE }/sign-in`, {
       method: "POST",
       headers: buildHeaders(),
       body: JSON.stringify( payload ),
@@ -34,7 +32,7 @@ export const authService = {
   },
 
   async signUp( payload: SignUpPayload ) {
-    return await fetchJson<ApiResponse>( `${ API_BASE }/sign-up`, {
+    return await fetchJson( `${ API_BASE }/sign-up`, {
       method: "POST",
       headers: buildHeaders(),
       body: JSON.stringify( payload ),
@@ -42,24 +40,30 @@ export const authService = {
   },
 
   async verifyOtp( payload: VerifyPayload ) {
-    const res = await fetchJson<{ user: any; token?: string }>(
-      `${ API_BASE }/verify-otp`,
-      {
-        method: "POST",
-        headers: buildHeaders(),
-        body: JSON.stringify( payload ),
-      }
-    );
+    const res = await fetchJson<{ user: any; token?: string }>( `${ API_BASE }/verify-otp`, {
+      method: "POST",
+      headers: buildHeaders(),
+      body: JSON.stringify( payload ),
+    } );
 
-    const data = res.data;
+    if ( res.data?.token ) {
+      authStorage.setToken( res.data.token );
+      authStorage.setUser( res.data.user ?? null );
 
-    if ( data?.token ) {
-      authStorage.setToken( data.token );
-      authStorage.setUser( data.user ?? null );
-
-      useAuthStore.getState().setToken( data.token );
-      useAuthStore.getState().setUser( data.user ?? null );
+      const s = useAuthStore.getState();
+      s.setToken( res.data.token );
+      s.setUser( res.data.user ?? null );
     }
+
+    return res;
+  },
+
+  async resendOtp( payload: { country_code: string; phone: string } ) {
+    const res = await fetchJson( `${ API_BASE }/resend-otp`, {
+      method: "POST",
+      headers: buildHeaders(),
+      body: JSON.stringify( payload ),
+    } );
 
     return res;
   },
@@ -82,7 +86,7 @@ export const authService = {
     const body = all ? JSON.stringify( { all: true } ) : undefined;
 
     try {
-      await fetchJson( `${ API_BASE }/logout`, {
+      await fetchJson( `${ API_BASE }/sign-out`, {
         method: "POST",
         headers: buildHeaders(),
         body,

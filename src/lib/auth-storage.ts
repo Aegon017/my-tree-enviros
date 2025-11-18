@@ -13,23 +13,21 @@ function getCookie( name: string ): string | null {
 }
 
 export const authStorage = {
-  getToken(): string | null {
+  getToken() {
     if ( typeof window === "undefined" ) return null;
-    return localStorage.getItem( TOKEN_KEY ) || getCookie( TOKEN_KEY );
+    return getCookie( TOKEN_KEY );
   },
   setToken( token: string ) {
     if ( typeof window !== "undefined" ) {
-      localStorage.setItem( TOKEN_KEY, token );
       setCookie( TOKEN_KEY, token, 30 );
     }
   },
   clearToken() {
     if ( typeof window !== "undefined" ) {
-      localStorage.removeItem( TOKEN_KEY );
       document.cookie = `${ TOKEN_KEY }=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
     }
   },
-  getUser(): any | null {
+  getUser() {
     if ( typeof window === "undefined" ) return null;
     const raw = localStorage.getItem( USER_KEY );
     return raw ? JSON.parse( raw ) : null;
@@ -45,11 +43,11 @@ export const authStorage = {
     }
   },
   setResendTime( ts: number ) {
-    if ( typeof window !== "undefined" ) localStorage.setItem( RESEND_KEY, String( ts ) );
+    if ( typeof window !== "undefined" ) localStorage.setItem( "mte_resend_time", String( ts ) );
   },
-  getResendTime(): number | null {
+  getResendTime() {
     if ( typeof window === "undefined" ) return null;
-    const v = localStorage.getItem( RESEND_KEY );
+    const v = localStorage.getItem( "mte_resend_time" );
     return v ? Number( v ) : null;
   },
   clearAll() {

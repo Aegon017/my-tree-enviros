@@ -5,8 +5,8 @@ export type ApiResponse<T = unknown> = {
 };
 
 export class ApiError extends Error {
-    public status: number;
-    public body: any;
+    status: number;
+    body: any;
 
     constructor( message: string, status = 500, body: any = null ) {
         super( message );
@@ -15,15 +15,7 @@ export class ApiError extends Error {
     }
 }
 
-const defaultHeaders = {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-};
-
-export async function fetchJson<T = any>(
-    input: RequestInfo,
-    init?: RequestInit,
-): Promise<ApiResponse<T>> {
+export async function fetchJson<T = any>( input: RequestInfo, init?: RequestInit ) {
     const res = await fetch( input, init );
     const contentType = res.headers.get( "content-type" ) || "";
 

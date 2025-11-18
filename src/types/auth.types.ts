@@ -16,7 +16,7 @@ export interface AuthResponse {
   message: string;
   data?: {
     user: User;
-    token?: string; 
+    token?: string;
   };
 }
 
@@ -49,3 +49,14 @@ export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
 }
+
+export type PhonePayload = {
+  country_code: string;
+  phone: string;
+};
+
+export type VerifyOtpPayload = {
+  country_code: string;
+  phone: string;
+  otp: string;
+};
