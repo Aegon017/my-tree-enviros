@@ -10,7 +10,7 @@ import SectionTitle from "@/components/section-title";
 import BasicTreeCardSkeleton from "@/components/skeletons/basic-tree-card-skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useLocation } from "@/hooks/use-location";
+import { useLocation } from "@/hooks/use-location-search";
 import { treeService } from "@/services/tree.service";
 import type { BreadcrumbItemType } from "@/types/home";
 import type { TreeListItem } from "@/types/tree.types";

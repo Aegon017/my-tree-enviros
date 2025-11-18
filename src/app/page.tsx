@@ -28,7 +28,6 @@ import { AlertCircle, MapPin, RefreshCw } from "lucide-react";
 
 import neemTree from "../../public/neem-tree.webp";
 
-import { useLocation } from "@/hooks/use-location";
 import { treeService } from "@/services/tree.service";
 import { productService } from "@/services/product.service";
 import { listBlogs } from "@/services/blog.service";
@@ -99,7 +98,7 @@ function useLocationTrees( lat?: number, lng?: number, deps: any[] = [] ) {
 export default function Home() {
   const plugin = useCarouselAutoplay( 2000 );
   const blogPlugin = useCarouselAutoplay( 4000 );
-  const { selectedLocation } = useLocation();
+  const { selectedLocation } = useLocationStore();
 
   const lat = selectedLocation?.lat;
   const lng = selectedLocation?.lng;

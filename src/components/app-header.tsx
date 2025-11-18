@@ -23,11 +23,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useLocation } from "@/hooks/use-location";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import AppLogo from "./ui/app-logo";
 import { useAuth } from "@/hooks/use-auth";
+import { LocationButton } from "./location/location-button";
 
 const NOTICE_TEXT = "Get Up to 20% OFF On First Time Purchase";
 const PHONE_NUMBER = "+91 89777 30566";
@@ -97,31 +97,10 @@ function TopNotice() {
 }
 
 function TopBar( { user, signOut }: { user: boolean; signOut: () => void } ) {
-  const { selectedLocation, syncFromStorage } = useLocation();
-
-  useEffect( () => {
-    syncFromStorage();
-  }, [ syncFromStorage ] );
-
   return (
     <div className="bg-muted text-muted-foreground text-xs">
       <div className="container mx-auto max-w-6xl py-1.5 sm:py-2 flex justify-between items-center px-2">
-
-        <Button
-          variant="ghost"
-          className="p-0 h-auto font-normal text-muted-foreground hover:bg-muted/80 text-xs flex items-center"
-          onClick={ () => {
-            window.dispatchEvent( new CustomEvent( "open-location-modal" ) );
-          } }
-        >
-          <MapPin className="w-3 h-3 mr-1 shrink-0" />
-          <span>
-            { selectedLocation
-              ? `${ selectedLocation.area }, ${ selectedLocation.city }`
-              : "Select Location" }
-          </span>
-        </Button>
-
+        <LocationButton />
         <div className="hidden md:flex items-center">
           { TOP_BAR_LINKS.map( ( item, index ) => {
             if ( user && item.isAuth ) return null;
