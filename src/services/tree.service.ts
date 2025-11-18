@@ -8,7 +8,7 @@ export const treeService = {
     return fetchJson( `${ API }/trees?${ query }` );
   },
 
-  async get( slug: string ) {
-    return fetchJson( `${ API }/trees/${ slug }` );
+  async get( slug: string, type: string ) {
+    return fetchJson( `${ API }/trees/${ slug }?type=${ type }` );
   }
 };

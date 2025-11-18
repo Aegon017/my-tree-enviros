@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Autoplay from "embla-carousel-autoplay";
@@ -22,7 +22,7 @@ import {
   CarouselContent,
   CarouselItem,
   CarouselNext,
-  CarouselPrevious
+  CarouselPrevious,
 } from "@/components/ui/carousel";
 
 import { Button } from "@/components/ui/button";
@@ -39,88 +39,129 @@ import { useBlogData } from "@/hooks/use-blog-data";
 export default function Home() {
   const { selected } = useLocationStore();
 
-  const sliderAutoplay = useRef(
+  const sliderAutoplayRef = useRef(
     Autoplay( { delay: 2500, stopOnInteraction: true } )
   );
-
-  const blogAutoplay = useRef(
+  const blogAutoplayRef = useRef(
     Autoplay( { delay: 4000, stopOnInteraction: true } )
   );
 
-  const [ products, setProducts ] = useState( [] );
-  const [ sliders, setSliders ] = useState( [] );
-  const [ loadingProducts, setLoadingProducts ] = useState( true );
-  const [ loadingSliders, setLoadingSliders ] = useState( true );
+  const [ products, setProducts ] = useState<any[]>( [] );
+  const [ sliders, setSliders ] = useState<any[]>( [] );
+  const [ loadingProducts, setLoadingProducts ] = useState<boolean>( true );
+  const [ loadingSliders, setLoadingSliders ] = useState<boolean>( true );
 
-  const { sponsorTrees, adoptTrees, loading: treesLoading } =
-    useLocationTrees( selected?.lat, selected?.lng );
+  const { sponsorTrees, adoptTrees, loading: treesLoading } = useLocationTrees(
+    selected?.lat,
+    selected?.lng
+  );
 
-  const { blogs, loading: loadingBlogs } = useBlogData( {
-    listParams: {
+  const {
+    blogs,
+    loading: loadingBlogs,
+  } = useBlogData( {
+    initialParams: {
       page: 1,
       per_page: 12,
       sort_by: "created_at",
-      sort_order: "desc"
-    }
+      sort_order: "desc",
+    },
   } );
 
+  const isMountedRef = useRef( true );
+
   useEffect( () => {
-    const loadProducts = async () => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [] );
+
+  useEffect( () => {
+    let cancelled = false;
+    const load = async () => {
       setLoadingProducts( true );
       try {
         const res = await productService.list( {
           per_page: 4,
           sort_by: "created_at",
           sort_order: "desc",
-          in_stock: true
+          in_stock: true,
         } );
-        setProducts( res.data?.products ?? [] );
+        if ( !cancelled && isMountedRef.current && res?.success ) {
+          setProducts( res.data?.products ?? [] );
+        }
+      } catch ( e ) {
+        if ( !cancelled && isMountedRef.current ) {
+          setProducts( [] );
+        }
       } finally {
-        setLoadingProducts( false );
+        if ( !cancelled && isMountedRef.current ) setLoadingProducts( false );
       }
     };
-    loadProducts();
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [] );
 
   useEffect( () => {
-    const loadSliders = async () => {
+    let cancelled = false;
+    const load = async () => {
       setLoadingSliders( true );
       try {
         const res = await sliderService.list( { active: true } );
-        setSliders( res.data ?? [] );
+        if ( !cancelled && isMountedRef.current ) {
+          setSliders( res?.data ?? [] );
+        }
+      } catch ( e ) {
+        if ( !cancelled && isMountedRef.current ) setSliders( [] );
       } finally {
-        setLoadingSliders( false );
+        if ( !cancelled && isMountedRef.current ) setLoadingSliders( false );
       }
     };
-    loadSliders();
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [] );
+
+  const sliderPlugins = useMemo( () => [ sliderAutoplayRef.current ], [] );
+  const blogPlugins = useMemo( () => [ blogAutoplayRef.current ], [] );
+
+  const onMouseEnterSlider = () =>
+    sliderAutoplayRef.current && sliderAutoplayRef.current.stop();
+  const onMouseLeaveSlider = () =>
+    sliderAutoplayRef.current && sliderAutoplayRef.current.reset();
+
+  const onMouseEnterBlog = () =>
+    blogAutoplayRef.current && blogAutoplayRef.current.stop();
+  const onMouseLeaveBlog = () =>
+    blogAutoplayRef.current && blogAutoplayRef.current.reset();
 
   return (
     <div className="min-h-screen">
-
       <Carousel
-        plugins={ [ sliderAutoplay.current ] }
+        plugins={ sliderPlugins }
         opts={ { loop: true } }
-        onMouseEnter={ sliderAutoplay.current.stop }
-        onMouseLeave={ sliderAutoplay.current.reset }
+        onMouseEnter={ onMouseEnterSlider }
+        onMouseLeave={ onMouseLeaveSlider }
         className="w-full relative"
       >
         <CarouselContent>
-          { ( loadingSliders ? Array.from( { length: 1 } ) : sliders ).map(
-            ( slider: any, idx: number ) => (
-              <CarouselItem key={ slider?.id ?? idx }>
-                <div className="relative h-dvh">
-                  <Image
-                    src={ slider?.main_image_url || neemTree }
-                    alt={ slider?.title || "Slider" }
-                    fill
-                    priority
-                    className="object-cover"
-                  />
-                </div>
-              </CarouselItem>
-            )
-          ) }
+          { ( loadingSliders ? [ null ] : sliders ).map( ( slider, idx ) => (
+            <CarouselItem key={ slider?.id ?? idx }>
+              <div className="relative h-dvh">
+                <Image
+                  src={ slider?.main_image_url ?? neemTree }
+                  alt={ slider?.title ?? "Slider" }
+                  fill
+                  priority
+                  className="object-cover"
+                />
+              </div>
+            </CarouselItem>
+          ) ) }
         </CarouselContent>
         <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2" />
         <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2" />
@@ -141,23 +182,29 @@ export default function Home() {
         ) }
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6">
-          { treesLoading
-            ? Array.from( { length: 5 } ).map( ( _, i ) => (
+          { treesLoading ? (
+            Array.from( { length: 5 } ).map( ( _, i ) => (
               <BasicTreeCardSkeleton key={ i } />
             ) )
-            : !selected
-              ? <p className="col-span-5 text-center text-muted-foreground py-10">Please select a location.</p>
-              : sponsorTrees.length === 0
-                ? <p className="col-span-5 text-center text-muted-foreground py-10">No trees available near { selected.area }.</p>
-                : sponsorTrees.map( ( tree: any ) => (
-                  <Link
-                    key={ tree.id }
-                    href={ `/sponsor-a-tree/${ tree.slug }` }
-                    className="transition-transform hover:scale-105"
-                  >
-                    <BasicTreeCard name={ tree.name } image={ tree.thumbnail_url } />
-                  </Link>
-                ) ) }
+          ) : !selected ? (
+            <p className="col-span-5 text-center text-muted-foreground py-10">
+              Please select a location.
+            </p>
+          ) : sponsorTrees.length === 0 ? (
+            <p className="col-span-5 text-center text-muted-foreground py-10">
+              No trees available near { selected.area }.
+            </p>
+          ) : (
+            sponsorTrees.map( ( tree: any ) => (
+              <Link
+                key={ tree.id }
+                href={ `/sponsor-a-tree/${ tree.slug }` }
+                className="transition-transform hover:scale-105"
+              >
+                <BasicTreeCard name={ tree.name } image={ tree.thumbnail_url } />
+              </Link>
+            ) )
+          ) }
         </div>
 
         <div className="text-center mt-8">
@@ -182,23 +229,29 @@ export default function Home() {
         ) }
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6">
-          { treesLoading
-            ? Array.from( { length: 5 } ).map( ( _, i ) => (
+          { treesLoading ? (
+            Array.from( { length: 5 } ).map( ( _, i ) => (
               <BasicTreeCardSkeleton key={ i } />
             ) )
-            : !selected
-              ? <p className="col-span-5 text-center text-muted-foreground py-10">Please select a location.</p>
-              : adoptTrees.length === 0
-                ? <p className="col-span-5 text-center text-muted-foreground py-10">No trees available near { selected.area }.</p>
-                : adoptTrees.map( ( tree: any ) => (
-                  <Link
-                    key={ tree.id }
-                    href={ `/adopt-a-tree/${ tree.slug }` }
-                    className="transition-transform hover:scale-105"
-                  >
-                    <BasicTreeCard name={ tree.name } image={ tree.thumbnail_url } />
-                  </Link>
-                ) ) }
+          ) : !selected ? (
+            <p className="col-span-5 text-center text-muted-foreground py-10">
+              Please select a location.
+            </p>
+          ) : adoptTrees.length === 0 ? (
+            <p className="col-span-5 text-center text-muted-foreground py-10">
+              No trees available near { selected.area }.
+            </p>
+          ) : (
+            adoptTrees.map( ( tree: any ) => (
+              <Link
+                key={ tree.id }
+                href={ `/adopt-a-tree/${ tree.slug }` }
+                className="transition-transform hover:scale-105"
+              >
+                <BasicTreeCard name={ tree.name } image={ tree.thumbnail_url } />
+              </Link>
+            ) )
+          ) }
         </div>
 
         <div className="text-center mt-8">
@@ -209,20 +262,12 @@ export default function Home() {
       </Section>
 
       <Section>
-        <SectionTitle
-          title="Natural Products"
-          subtitle="From nature's bounty."
-          align="center"
-        />
+        <SectionTitle title="Natural Products" subtitle="From nature's bounty." align="center" />
 
         <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           { loadingProducts
-            ? Array.from( { length: 4 } ).map( ( _, i ) => (
-              <ProductCardSkeleton key={ i } />
-            ) )
-            : products.map( ( product: any ) => (
-              <ProductCard key={ product.slug } product={ product } />
-            ) ) }
+            ? Array.from( { length: 4 } ).map( ( _, i ) => <ProductCardSkeleton key={ i } /> )
+            : products.map( ( product: any ) => <ProductCard key={ product.slug } product={ product } /> ) }
         </div>
 
         <div className="text-center mt-8">
@@ -233,24 +278,18 @@ export default function Home() {
       </Section>
 
       <Section className="bg-muted">
-        <SectionTitle
-          title="Insights From Nature"
-          subtitle="Learn and explore."
-          align="center"
-        />
+        <SectionTitle title="Insights From Nature" subtitle="Learn and explore." align="center" />
 
         { loadingBlogs ? (
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            { Array.from( { length: 3 } ).map( ( _, i ) => (
-              <BlogCardSkeleton key={ i } />
-            ) ) }
+            { Array.from( { length: 3 } ).map( ( _, i ) => <BlogCardSkeleton key={ i } /> ) }
           </div>
         ) : (
           <Carousel
             opts={ { loop: true } }
-            plugins={ [ blogAutoplay.current ] }
-            onMouseEnter={ blogAutoplay.current.stop }
-            onMouseLeave={ blogAutoplay.current.reset }
+            plugins={ blogPlugins }
+            onMouseEnter={ onMouseEnterBlog }
+            onMouseLeave={ onMouseLeaveBlog }
             className="mt-10 max-w-6xl mx-auto"
           >
             <CarouselContent>
