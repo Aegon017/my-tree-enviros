@@ -1,7 +1,7 @@
 "use client";
 
 import { Markup } from "interweave";
-import { Calendar, Leaf, Minus, Plus, Trees } from "lucide-react";
+import { Calendar, Leaf, Minus, Plus } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,19 +16,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RazorpayButton from "@/components/razorpay-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import type { Tree } from "@/types/tree.types";
 import ImageGallery from "./image-gallery";
 import AddToCartButton from "./add-to-cart-button";
 
-const sponsorshipDetailsSchema = z.object({
-  name: z.string().min(1, "Name is required."),
-  occasion: z.string().min(1, "Occasion is required."),
-  message: z.string().min(1, "Message is required."),
-});
+const dedicationSchema = z.object( {
+  name: z.string().min( 1, "Name is required." ),
+  occasion: z.string().min( 1, "Occasion is required." ),
+  message: z.string().min( 1, "Message is required." ),
+} );
 
-type SponsorshipDetailsValues = z.infer<typeof sponsorshipDetailsSchema>;
+type DedicationValues = z.infer<typeof dedicationSchema>;
 
 interface TreeDetailsLayoutProps {
   tree: Tree | undefined;
@@ -36,292 +43,334 @@ interface TreeDetailsLayoutProps {
   pageType: "sponsor" | "adopt";
 }
 
-export default function TreeDetailsLayout({ tree, isLoading, pageType }: TreeDetailsLayoutProps) {
-  const [quantity, setQuantity] = useState(1);
-  const [selectedYears, setSelectedYears] = useState<number>(1);
-  const [startPayment, setStartPayment] = useState(false);
+export default function TreeDetailsLayout( {
+  tree,
+  isLoading,
+  pageType,
+}: TreeDetailsLayoutProps ) {
+  const [ quantity, setQuantity ] = useState( 1 );
+  const [ selectedYears, setSelectedYears ] = useState<number>( 1 );
+  const [ startPayment, setStartPayment ] = useState( false );
 
-  const form = useForm<SponsorshipDetailsValues>({
-    resolver: zodResolver(sponsorshipDetailsSchema),
-    defaultValues: {
-      name: "",
-      occasion: "",
-      message: "",
-    },
-  });
+  // FORM IS NOW USED FOR BOTH ACTIONS
+  const form = useForm<DedicationValues>( {
+    resolver: zodResolver( dedicationSchema ),
+    mode: "onChange",
+    defaultValues: { name: "", occasion: "", message: "" },
+  } );
 
-  const planOptions = useMemo(() => {
-    if (!tree?.plan_prices) return [];
+  const watchName = form.watch( "name" );
+  const watchOccasion = form.watch( "occasion" );
+  const watchMessage = form.watch( "message" );
 
-    return tree.plan_prices.map(pp => ({
+  const planOptions = useMemo( () => {
+    if ( !tree?.plan_prices ) return [];
+    return tree.plan_prices.map( ( pp ) => ( {
       planPriceId: pp.id,
       planId: pp.plan?.id,
       duration: pp.plan.duration,
       durationDisplay:
-        pp.plan.duration > 1
-          ? `${pp.plan.duration} Years`
-          : `${pp.plan.duration} Year`,
-      price: Number(pp.price.replace(/,/g, "")),
-    }));
-  }, [tree?.plan_prices]);
+        pp.plan.duration > 1 ? `${ pp.plan.duration } Years` : `${ pp.plan.duration } Year`,
+      price: Number( pp.price.replace( /,/g, "" ) ),
+    } ) );
+  }, [ tree?.plan_prices ] );
 
-  useEffect(() => {
-    if (planOptions.length > 0) {
-      const durations = planOptions.map((p) => p.duration);
-      const defaultDuration = durations.includes(1) ? 1 : Math.min(...durations);
-      setSelectedYears((prev) => (durations.includes(prev) ? prev : defaultDuration));
+  useEffect( () => {
+    if ( planOptions.length > 0 ) {
+      const durations = planOptions.map( ( p ) => p.duration );
+      const defaultDuration = durations.includes( 1 ) ? 1 : Math.min( ...durations );
+      setSelectedYears( ( prev ) => ( durations.includes( prev ) ? prev : defaultDuration ) );
     }
-  }, [planOptions]);
+  }, [ planOptions ] );
 
-  const selectedPlan = planOptions.find(p => p.duration === selectedYears);
+  const selectedPlan = planOptions.find( ( p ) => p.duration === selectedYears );
   const totalPrice = selectedPlan ? selectedPlan.price * quantity : 0;
 
-  const handleSponsorNow = (values: SponsorshipDetailsValues) => {
-    if (!tree || !selectedPlan) return;
-    const details = { ...values, duration: selectedYears, quantity, price: selectedPlan.price };
-    localStorage.setItem(`tree_details_${tree.id}`, JSON.stringify(details));
-    setStartPayment(true);
+  const handleSponsorNow = ( values: DedicationValues ) => {
+    if ( !tree || !selectedPlan ) return;
+
+    const details = {
+      ...values,
+      duration: selectedYears,
+      quantity,
+      price: selectedPlan.price,
+    };
+
+    localStorage.setItem( `tree_details_${ tree.id }`, JSON.stringify( details ) );
+    setStartPayment( true );
   };
 
-  const breadcrumbItems = [
-    { title: "Home", href: "/" },
-    { title: pageType === "sponsor" ? "Sponsor A Tree" : "Adopt A Tree", href: `/${pageType}-a-tree` },
-    { title: tree?.name || "Tree Details", href: "" },
-  ];
+  const adoptableLimit: number =
+    pageType === "adopt" ? tree?.adoptable_count ?? 0 : Infinity;
 
-  const adoptableLimit: number = pageType === "adopt"
-    ? (tree?.adoptable_count ?? 0)
-    : Infinity;
+  if ( isLoading || !tree ) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <Skeleton className="w-full h-96 rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl bg-background">
-      <BreadcrumbNav items={breadcrumbItems} className="mb-8" />
+      <BreadcrumbNav
+        items={ [
+          { title: "Home", href: "/" },
+          {
+            title: pageType === "sponsor" ? "Sponsor A Tree" : "Adopt A Tree",
+            href: `/${ pageType }-a-tree`,
+          },
+          { title: tree.name, href: "" },
+        ] }
+        className="mb-8"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {/* LEFT */ }
         <div className="space-y-6 lg:sticky top-24 self-start">
-          {isLoading ? <Skeleton className="aspect-square rounded-2xl" /> : tree ? <ImageGallery images={tree.image_urls || []} name={tree.name} /> : null}
+          <ImageGallery images={ tree.image_urls || [] } name={ tree.name } />
         </div>
 
+        {/* RIGHT */ }
         <div className="space-y-8">
-          {!isLoading && tree && (
-            <>
-              <div className="space-y-4">
-                <Badge variant="outline">
-                  <Leaf className="h-3 w-3 mr-1" />
-                  {tree.age ?? 0} years old
-                </Badge>
-                <h1 className="text-4xl font-bold tracking-tight">{tree.name}</h1>
-              </div>
+          {/* Title */ }
+          <div className="space-y-4">
+            <Badge variant="outline">
+              <Leaf className="h-3 w-3 mr-1" />
+              { tree.age ?? 0 } years old
+            </Badge>
 
-              <Card className="border-l-4 border-l-primary">
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" />
-                    Configure Your {pageType === "sponsor" ? "Sponsorship" : "Adoption"}
-                  </h3>
+            <h1 className="text-4xl font-bold tracking-tight">{ tree.name }</h1>
+          </div>
 
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium flex items-center gap-2">
-                          <Trees className="h-4 w-4" />
-                          Number of Trees
-                        </Label>
+          {/* Contribution Config */ }
+          <Card className="border-l-4 border-l-primary">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Configure Your { pageType === "sponsor" ? "Sponsorship" : "Adoption" }
+              </h3>
 
-                        <div className="flex items-center border rounded-md bg-background justify-between">
-                          <Button variant="ghost" size="icon" type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
-                            <Minus className="h-4 w-4" />
-                          </Button>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={999}
-                            value={quantity}
-                            onChange={(e) => setQuantity(Math.max(1, Number(e.target.value || 1)))}
-                            className="w-16 text-center border-0"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            type="button"
-                            onClick={() => {
-                              if (pageType === "adopt" && adoptableLimit !== null) {
-                                setQuantity(Math.min(adoptableLimit, quantity + 1));
-                              } else {
-                                setQuantity(Math.min(999, quantity + 1));
-                              }
-                            }}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        {pageType === "adopt" && (
-                          adoptableLimit > 0 ? (
-                            <p className="text-sm text-green-600 font-medium">
-                              {adoptableLimit} tree{adoptableLimit > 1 ? "s" : ""} available for adoption
-                            </p>
-                          ) : (
-                            <p className="text-sm text-red-600 font-medium">
-                              No trees available for adoption right now
-                            </p>
+              <div className="space-y-6">
+                {/* Quantity + Duration */ }
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* QUANTITY */ }
+                  <div className="space-y-3">
+                    <Label>Number of Trees</Label>
+
+                    <div className="flex items-center border rounded-md bg-background justify-between">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={ () => setQuantity( Math.max( 1, quantity - 1 ) ) }
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+
+                      <Input
+                        type="number"
+                        min={ 1 }
+                        max={ 999 }
+                        value={ quantity }
+                        onChange={ ( e ) =>
+                          setQuantity( Math.max( 1, Number( e.target.value || 1 ) ) )
+                        }
+                        className="w-16 text-center border-0"
+                      />
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={ () =>
+                          setQuantity(
+                            pageType === "adopt"
+                              ? Math.min( adoptableLimit, quantity + 1 )
+                              : quantity + 1
                           )
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          Duration
-                        </Label>
-
-                        <Select value={String(selectedYears)} onValueChange={(val) => setSelectedYears(Number(val))}>
-                          <SelectTrigger className="h-11 w-full">
-                            <SelectValue placeholder="Select duration" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {planOptions.map((p) => (
-                              <SelectItem key={p.planId} value={String(p.duration)}>
-                                {p.durationDisplay}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                        }
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </div>
 
-                    {selectedPlan && (
-                      <div className="bg-primary/5 p-4 rounded-md border">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <span className="font-semibold">Total Contribution</span>
-                            <p className="text-sm text-muted-foreground">
-                              {quantity} tree{quantity > 1 ? "s" : ""} × {selectedPlan.duration} year{selectedPlan.duration > 1 ? "s" : ""}
-                            </p>
-                          </div>
-                          <span className="text-3xl font-bold text-primary">₹{totalPrice.toLocaleString("en-IN")}</span>
-                        </div>
+                    { pageType === "adopt" &&
+                      ( adoptableLimit > 0 ? (
+                        <p className="text-sm text-green-600">{ adoptableLimit } available</p>
+                      ) : (
+                        <p className="text-sm text-red-600">No trees available</p>
+                      ) ) }
+                  </div>
+
+                  {/* DURATION */ }
+                  <div className="space-y-3">
+                    <Label>Duration</Label>
+                    <Select
+                      value={ String( selectedYears ) }
+                      onValueChange={ ( val ) => setSelectedYears( Number( val ) ) }
+                    >
+                      <SelectTrigger className="h-11 w-full">
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        { planOptions.map( ( p ) => (
+                          <SelectItem key={ p.planPriceId } value={ String( p.duration ) }>
+                            { p.durationDisplay }
+                          </SelectItem>
+                        ) ) }
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* TOTAL */ }
+                { selectedPlan && (
+                  <div className="bg-primary/5 p-4 rounded-md border">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="font-semibold">Total Contribution</span>
+                        <p className="text-sm text-muted-foreground">
+                          { quantity } × { selectedPlan.duration } year(s)
+                        </p>
                       </div>
-                    )}
+
+                      <span className="text-3xl font-bold text-primary">
+                        ₹{ totalPrice.toLocaleString( "en-IN" ) }
+                      </span>
+                    </div>
+                  </div>
+                ) }
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* FORM */ }
+          <Form { ...form }>
+            <form className="space-y-6">
+              <Card className="border-l-4 border-l-primary">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold mb-6">Add Your Details</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* NAME */ }
+                    <FormField
+                      control={ form.control }
+                      name="name"
+                      render={ ( { field } ) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Name on certificate" { ...field } />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      ) }
+                    />
+
+                    {/* OCCASION */ }
+                    <FormField
+                      control={ form.control }
+                      name="occasion"
+                      render={ ( { field } ) => (
+                        <FormItem>
+                          <FormLabel>Occasion</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Birthday, Anniversary, etc." { ...field } />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      ) }
+                    />
+
+                    {/* MESSAGE */ }
+                    <FormField
+                      control={ form.control }
+                      name="message"
+                      render={ ( { field } ) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>Special Message</FormLabel>
+                          <FormControl>
+                            <Textarea rows={ 3 } placeholder="A message for the certificate" { ...field } />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      ) }
+                    />
                   </div>
                 </CardContent>
               </Card>
 
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleSponsorNow)}>
-                  <Card className="border-l-4 border-l-primary mt-8">
-                    <CardContent className="p-6">
-                      <h3 className="text-xl font-semibold mb-6">Add Your Details</h3>
+              {/* ACTION BUTTONS */ }
+              <div className="flex gap-3">
+                {/* ADD TO CART must validate dedication */ }
+                <AddToCartButton
+                  type={ pageType }
+                  treeId={ tree.id }
+                  planId={ selectedPlan?.planId }
+                  planPriceId={ selectedPlan?.planPriceId }
+                  quantity={ quantity }
+                  dedication={ {
+                    name: watchName,
+                    occasion: watchOccasion,
+                    message: watchMessage,
+                  } }
+                  validateDedication={ () => form.trigger() } // 🔥 validate before API call
+                  disabled={ pageType === "adopt" && adoptableLimit === 0 }
+                />
 
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Name</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Name on certificate" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                {/* SPONSOR NOW (ZOD VALIDATED) */ }
+                <Button
+                  className="flex-1"
+                  disabled={ !selectedPlan }
+                  onClick={ form.handleSubmit( handleSponsorNow ) }
+                >
+                  { pageType === "sponsor" ? "Sponsor" : "Adopt" } Now
+                </Button>
+              </div>
+            </form>
+          </Form>
 
-                          <FormField
-                            control={form.control}
-                            name="occasion"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Occasion</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Birthday, Anniversary, etc." {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="message"
-                            render={({ field }) => (
-                              <FormItem className="md:col-span-2">
-                                <FormLabel>Special Message</FormLabel>
-                                <FormControl>
-                                  <Textarea rows={3} placeholder="A message for the certificate" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <div className="flex gap-3 mt-8">
-                    <AddToCartButton
-                      type={pageType}
-                      treeId={tree.id}
-                      planId={selectedPlan?.planId}
-                      planPriceId={selectedPlan?.planPriceId}
-                      quantity={quantity}
-                      dedication={{
-                        name: form.getValues("name"),
-                        occasion: form.getValues("occasion"),
-                        message: form.getValues("message"),
-                      }}
-                      disabled={pageType === "adopt" && adoptableLimit === 0}
-                    />
-
-                    <Button type="submit" className="flex-1 w-full" disabled={!selectedPlan}>
-                      {pageType === "sponsor" ? "Sponsor" : "Adopt"} Now
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-
-              {startPayment && selectedPlan && tree && (
-                <div className="mt-4">
-                  <RazorpayButton
-                    type={1}
-                    productType={1}
-                    cartType={2}
-                    label={`${pageType === "sponsor" ? "Sponsor" : "Adopt"} Now`}
-                    productId={tree.id}
-                    amount={Number(totalPrice)}
-                    duration={selectedYears}
-                    quantity={quantity}
-                    name={form.getValues("name")}
-                    occasion={form.getValues("occasion")}
-                    message={form.getValues("message")}
-                    tree_instance_id={tree.id}
-                  />
-                </div>
-              )}
-            </>
-          )}
+          {/* RAZORPAY */ }
+          { startPayment && selectedPlan && (
+            <div className="mt-4">
+              <RazorpayButton
+                type={ 1 }
+                productType={ 1 }
+                cartType={ 2 }
+                label={ `${ pageType === "sponsor" ? "Sponsor" : "Adopt" } Now` }
+                productId={ tree.id }
+                amount={ Number( totalPrice ) }
+                duration={ selectedYears }
+                quantity={ quantity }
+                name={ watchName }
+                occasion={ watchOccasion }
+                message={ watchMessage }
+                tree_instance_id={ tree.id }
+              />
+            </div>
+          ) }
         </div>
       </div>
 
-      {!isLoading && tree && (
-        <div className="mt-16">
-          <Tabs defaultValue="description" className="w-full">
-            <TabsList className="grid w-full grid-cols-1 max-w-md mx-auto mb-8">
-              <TabsTrigger value="description">About This Tree</TabsTrigger>
-            </TabsList>
+      {/* DESCRIPTION */ }
+      <div className="mt-16">
+        <Tabs defaultValue="description">
+          <TabsList className="grid w-full grid-cols-1 max-w-md mx-auto mb-8">
+            <TabsTrigger value="description">About This Tree</TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="description" className="space-y-6">
-              <Card className="bg-card">
-                <CardContent className="p-8">
-                  <Markup className="prose max-w-none dark:prose-invert" content={tree.description} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      )}
+          <TabsContent value="description">
+            <Card>
+              <CardContent className="p-8">
+                <Markup
+                  className="prose max-w-none dark:prose-invert"
+                  content={ tree.description }
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

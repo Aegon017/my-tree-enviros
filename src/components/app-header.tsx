@@ -2,7 +2,6 @@
 
 import {
   Bell,
-  ChevronDown,
   Heart,
   MapPin,
   Menu,
@@ -14,14 +13,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -31,20 +23,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "@/hooks/use-location";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import type { RootState } from "@/store";
 import AppLogo from "./ui/app-logo";
+import { useAuth } from "@/hooks/use-auth";
 
 const NOTICE_TEXT = "Get Up to 20% OFF On First Time Purchase";
 const PHONE_NUMBER = "+91 89777 30566";
 const TOP_BAR_LINKS = [
   { name: "My Account", href: "/my-account" },
   { name: "Blogs", href: "/blogs" },
-  { name: "Sign In", href: "/sign-in", isAuth: true },
-  { name: "Sign Up", href: "/sign-up", isAuth: true, highlight: true },
+  { name: "Sign In", href: "/sign-in", isAuth: true, highlight: true }
 ];
 const MAIN_NAV_ITEMS = [
   { href: "/", label: "Home" },

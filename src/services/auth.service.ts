@@ -1,61 +1,95 @@
-import api from "@/lib/axios";
-import type {
-  AuthResponse,
-  ResendOtpData,
-  SignInData,
-  SignUpData,
-  VerifyOtpData,
-} from "@/types/auth.types";
+import { fetchJson, ApiResponse } from "@/lib/fetch-json";
+import { authStorage } from "@/lib/auth-storage";
+import { useAuthStore } from "@/store/auth-store";
 
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_API_URL || "";
+
+type SignInPayload = { country_code: string; phone: string };
+type SignUpPayload = { country_code: string; phone: string; type: string };
+type VerifyPayload = { country_code: string; phone: string; otp: string };
+
+function buildHeaders( extra: Record<string, string> = {} ) {
+  const token = authStorage.getToken();
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    ...extra,
+  };
+
+  if ( token ) {
+    headers[ "Authorization" ] = `Bearer ${ token }`;
+  }
+
+  return headers;
+}
 
 export const authService = {
-  
-  signUp: async (data: SignUpData) => {
-    const response = await api.post("/sign-up", data);
-    return response.data;
+  async signIn( payload: SignInPayload ) {
+    return await fetchJson<ApiResponse>( `${ API_BASE }/sign-in`, {
+      method: "POST",
+      headers: buildHeaders(),
+      body: JSON.stringify( payload ),
+    } );
   },
 
-  
-  signIn: async (data: SignInData) => {
-    const response = await api.post("/sign-in", data);
-    return response.data;
+  async signUp( payload: SignUpPayload ) {
+    return await fetchJson<ApiResponse>( `${ API_BASE }/sign-up`, {
+      method: "POST",
+      headers: buildHeaders(),
+      body: JSON.stringify( payload ),
+    } );
   },
 
-  
-  verifyOtp: async (data: VerifyOtpData) => {
-    const response = await api.post<AuthResponse>("/verify-otp", data, {
-      headers: {
-        "X-Platform": "web", 
-      },
-    });
-    return response.data;
+  async verifyOtp( payload: VerifyPayload ) {
+    const res = await fetchJson<{ user: any; token?: string }>(
+      `${ API_BASE }/verify-otp`,
+      {
+        method: "POST",
+        headers: buildHeaders(),
+        body: JSON.stringify( payload ),
+      }
+    );
+
+    const data = res.data;
+
+    if ( data?.token ) {
+      authStorage.setToken( data.token );
+      authStorage.setUser( data.user ?? null );
+
+      useAuthStore.getState().setToken( data.token );
+      useAuthStore.getState().setUser( data.user ?? null );
+    }
+
+    return res;
   },
 
-  
-  resendOtp: async (data: ResendOtpData) => {
-    const response = await api.post("/resend-otp", data);
-    return response.data;
+  async me() {
+    const res = await fetchJson<{ user: any }>( `${ API_BASE }/me`, {
+      method: "GET",
+      headers: buildHeaders(),
+    } );
+
+    if ( res.data?.user ) {
+      authStorage.setUser( res.data.user );
+      useAuthStore.getState().setUser( res.data.user );
+    }
+
+    return res;
   },
 
-  
-  logout: async () => {
-    const response = await api.post("/logout");
-    return response.data;
-  },
+  async signOut( all = false ) {
+    const body = all ? JSON.stringify( { all: true } ) : undefined;
 
-  
-  me: async () => {
-    const response = await api.get<AuthResponse>("/me");
-    return response.data;
-  },
-
-  
-  checkAuth: async (): Promise<boolean> => {
     try {
-      const response = await api.get<AuthResponse>("/me");
-      return response.data.success && !!response.data.data?.user;
-    } catch {
-      return false;
+      await fetchJson( `${ API_BASE }/logout`, {
+        method: "POST",
+        headers: buildHeaders(),
+        body,
+      } );
+    } finally {
+      authStorage.clearAll();
+      useAuthStore.getState().clearAuth();
     }
   },
 };

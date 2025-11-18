@@ -5,9 +5,6 @@ import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";
 import Footer from "@/components/app-footer";
 import Header from "@/components/app-header";
-import { LocationProvider } from "@/components/location-provider";
-import { store, persistor } from "@/store";
-import { ReduxProvider } from "./redux-provider";
 
 export const metadata: Metadata = {
   title: "My Tree Enviros",
@@ -28,15 +25,9 @@ export default function RootLayout( { children }: { children: React.ReactNode } 
 
       <body>
         <NextTopLoader color="#715130" showSpinner={ false } />
-
-        <ReduxProvider store={ store } persistor={ persistor }>
-          <LocationProvider>
-            <Header />
-            { children }
-            <Footer />
-          </LocationProvider>
-        </ReduxProvider>
-
+        <Header />
+        { children }
+        <Footer />
         <Toaster richColors position="top-center" closeButton={ true } />
       </body>
     </html>

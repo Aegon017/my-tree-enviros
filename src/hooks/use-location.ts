@@ -1,49 +1,18 @@
 "use client";
 
-import { useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "@/store";
+import { useLocationStore } from "@/store/location-store";
 
-import {
-  setSelectedLocation,
-  clearSelectedLocation,
-  syncLocationFromStorage,
-  setLoading,
-  setError,
-} from "@/store/location-slice";
-
-import type { UserGeoLocation } from "@/store/location-slice";
 
 export function useLocation() {
-  const dispatch = useDispatch();
-  const { selectedLocation, loading, error } = useSelector(
-    (state: RootState) => state.location
-  );
+  const selectedLocation = useLocationStore( ( s ) => s.selectedLocation );
+  const loading = useLocationStore( ( s ) => s.loading );
+  const error = useLocationStore( ( s ) => s.error );
 
-  const setLocation = useCallback(
-    (geo: UserGeoLocation) => {
-      dispatch(setSelectedLocation(geo));
-    },
-    [dispatch]
-  );
-
-  const clearLocation = useCallback(() => {
-    dispatch(clearSelectedLocation());
-  }, [dispatch]);
-
-  const syncFromStorageSafe = useCallback(() => {
-    dispatch(syncLocationFromStorage());
-  }, [dispatch]);
-
-  const setLoadingState = useCallback(
-    (v: boolean) => dispatch(setLoading(v)),
-    [dispatch]
-  );
-
-  const setErrorState = useCallback(
-    (msg: string | null) => dispatch(setError(msg)),
-    [dispatch]
-  );
+  const setLocation = useLocationStore( ( s ) => s.setLocation );
+  const clearLocation = useLocationStore( ( s ) => s.clearLocation );
+  const syncFromStorage = useLocationStore( ( s ) => s.syncFromStorage );
+  const setLoadingState = useLocationStore( ( s ) => s.setLoading );
+  const setErrorState = useLocationStore( ( s ) => s.setError );
 
   return {
     selectedLocation,
@@ -51,7 +20,7 @@ export function useLocation() {
     error,
     setLocation,
     clearLocation,
-    syncFromStorage: syncFromStorageSafe,
+    syncFromStorage,
     setLoadingState,
     setErrorState,
   };
