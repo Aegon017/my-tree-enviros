@@ -1,52 +1,60 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { blogService } from "@/services/blog.service";
+import { BaseMeta } from "@/types/common.types";
 
-type ListParams = {
-    page?: number;
-    per_page?: number;
-    sort_by?: string;
-    sort_order?: string;
-};
-
-type UseBlogDataProps = {
-    slug?: string;
-    listParams?: ListParams;
-};
-
-export function useBlogData( props?: UseBlogDataProps ) {
-    const { slug, listParams } = props || {};
-
-    const [ blog, setBlog ] = useState<any>( null );
-    const [ blogs, setBlogs ] = useState<any[]>( [] );
-    const [ meta, setMeta ] = useState<any>( null );
-
+export function useBlogData( { slug, initialParams = {} }: { slug?: string; initialParams?: any } = {} ) {
+    const [ blog, setBlog ] = useState( null );
+    const [ blogs, setBlogs ] = useState( [] );
+    const [ meta, setMeta ] = useState<BaseMeta | null>( null );
     const [ loading, setLoading ] = useState( false );
-    const [ error, setError ] = useState<any>( null );
+    const [ error, setError ] = useState( null );
 
-    const initialLoadRef = useRef( false );
+    const paramsRef = useRef( initialParams );
+    const initializedRef = useRef( false );
 
-    const loadList = async ( params?: ListParams ) => {
+    const loadList = useCallback( async ( overrideParams?: any, reset = false ) => {
         setLoading( true );
         setError( null );
 
         try {
-            const res = await blogService.list( params || listParams || {} );
-            setBlogs( res.data?.blogs ?? [] );
-            setMeta( res.data?.meta ?? null );
+            const params = overrideParams || paramsRef.current;
+            const res = await blogService.list( params );
+
+            const list = res.data?.blogs ?? [];
+            const m = res.data?.meta ?? null;
+
+            setBlogs( prev => ( reset ? list : [ ...prev, ...list ] ) );
+            setMeta( m );
+
+            if ( overrideParams ) {
+                paramsRef.current = overrideParams;
+            }
         } catch ( err: any ) {
             setError( err.message || "Failed to load blogs" );
         } finally {
             setLoading( false );
         }
+    }, [] );
+
+    const loadMore = () => {
+        if ( !meta || loading ) return;
+        if ( meta.current_page >= meta.last_page ) return;
+
+        const nextParams = {
+            ...paramsRef.current,
+            page: meta.current_page + 1,
+        };
+
+        loadList( nextParams );
     };
 
     useEffect( () => {
-        if ( initialLoadRef.current ) return;
-        initialLoadRef.current = true;
+        if ( initializedRef.current ) return;
+        initializedRef.current = true;
 
-        const init = async () => {
+        ( async () => {
             setLoading( true );
             setError( null );
 
@@ -56,19 +64,13 @@ export function useBlogData( props?: UseBlogDataProps ) {
                     setBlog( res.data?.blog ?? null );
                 }
 
-                if ( listParams ) {
-                    const res = await blogService.list( listParams );
-                    setBlogs( res.data?.blogs ?? [] );
-                    setMeta( res.data?.meta ?? null );
-                }
+                await loadList( paramsRef.current, true );
             } catch ( err: any ) {
                 setError( err.message || "Failed to load blog data" );
             } finally {
                 setLoading( false );
             }
-        };
-
-        init();
+        } )();
     }, [] );
 
     return {
@@ -77,6 +79,7 @@ export function useBlogData( props?: UseBlogDataProps ) {
         meta,
         loading,
         error,
-        loadList
+        loadList,
+        loadMore,
     };
 }
