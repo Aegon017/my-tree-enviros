@@ -353,7 +353,7 @@ export default function ProductPage( { params }: { params: Promise<{ slug: strin
           <TabsContent value="description" className="pt-4">
             <Card>
               <CardContent>
-                <Markup content={ product.description } />
+                <Markup className="prose max-w-none dark:prose-invert" content={ product.description } />
               </CardContent>
             </Card>
           </TabsContent>

@@ -26,43 +26,46 @@ import {
 } from "@/components/ui/carousel";
 
 import { Button } from "@/components/ui/button";
-
 import { MapPin } from "lucide-react";
 import neemTree from "../../public/neem-tree.webp";
 
 import { productService } from "@/services/product.service";
-import { blogService } from "@/services/blog.service";
 import { sliderService } from "@/services/slider.service";
 
 import { useLocationStore } from "@/store/location-store";
 import { useLocationTrees } from "@/hooks/use-location-trees";
+import { useBlogData } from "@/hooks/use-blog-data";
 
 export default function Home() {
   const { selected } = useLocationStore();
 
-  const plugin = useRef( Autoplay( { delay: 2500, stopOnInteraction: true } ) );
-  const blogPlugin = useRef( Autoplay( { delay: 4000, stopOnInteraction: true } ) );
+  const sliderAutoplay = useRef(
+    Autoplay( { delay: 2500, stopOnInteraction: true } )
+  );
+
+  const blogAutoplay = useRef(
+    Autoplay( { delay: 4000, stopOnInteraction: true } )
+  );
 
   const [ products, setProducts ] = useState( [] );
-  const [ blogs, setBlogs ] = useState( [] );
   const [ sliders, setSliders ] = useState( [] );
-
   const [ loadingProducts, setLoadingProducts ] = useState( true );
-  const [ loadingBlogs, setLoadingBlogs ] = useState( true );
   const [ loadingSliders, setLoadingSliders ] = useState( true );
 
-  const lat = selected?.lat;
-  const lng = selected?.lng;
+  const { sponsorTrees, adoptTrees, loading: treesLoading } =
+    useLocationTrees( selected?.lat, selected?.lng );
 
-  const {
-    sponsorTrees,
-    adoptTrees,
-    loading: treesLoading,
-    error: treesError
-  } = useLocationTrees( lat, lng );
+  const { blogs, loading: loadingBlogs } = useBlogData( {
+    listParams: {
+      page: 1,
+      per_page: 12,
+      sort_by: "created_at",
+      sort_order: "desc"
+    }
+  } );
 
   useEffect( () => {
-    const load = async () => {
+    const loadProducts = async () => {
       setLoadingProducts( true );
       try {
         const res = await productService.list( {
@@ -76,29 +79,11 @@ export default function Home() {
         setLoadingProducts( false );
       }
     };
-    load();
+    loadProducts();
   }, [] );
 
   useEffect( () => {
-    const load = async () => {
-      setLoadingBlogs( true );
-      try {
-        const res = await blogService.list( {
-          page: 1,
-          per_page: 12,
-          sort_by: "created_at",
-          sort_order: "desc"
-        } );
-        setBlogs( res.data?.blogs ?? [] );
-      } finally {
-        setLoadingBlogs( false );
-      }
-    };
-    load();
-  }, [] );
-
-  useEffect( () => {
-    const load = async () => {
+    const loadSliders = async () => {
       setLoadingSliders( true );
       try {
         const res = await sliderService.list( { active: true } );
@@ -107,28 +92,27 @@ export default function Home() {
         setLoadingSliders( false );
       }
     };
-    load();
+    loadSliders();
   }, [] );
 
   return (
     <div className="min-h-screen">
 
-      {/* SLIDER SECTION */ }
       <Carousel
-        plugins={ [ plugin.current ] }
+        plugins={ [ sliderAutoplay.current ] }
         opts={ { loop: true } }
-        onMouseEnter={ plugin.current.stop }
-        onMouseLeave={ plugin.current.reset }
+        onMouseEnter={ sliderAutoplay.current.stop }
+        onMouseLeave={ sliderAutoplay.current.reset }
         className="w-full relative"
       >
         <CarouselContent>
           { ( loadingSliders ? Array.from( { length: 1 } ) : sliders ).map(
-            ( slider, i ) => (
-              <CarouselItem key={ slider?.id ?? i }>
-                <div className="h-dvh relative">
+            ( slider: any, idx: number ) => (
+              <CarouselItem key={ slider?.id ?? idx }>
+                <div className="relative h-dvh">
                   <Image
                     src={ slider?.main_image_url || neemTree }
-                    alt={ slider?.title || "Slider image" }
+                    alt={ slider?.title || "Slider" }
                     fill
                     priority
                     className="object-cover"
@@ -138,13 +122,11 @@ export default function Home() {
             )
           ) }
         </CarouselContent>
-
         <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2" />
         <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2" />
       </Carousel>
 
-      {/* SPONSOR SECTION */ }
-      <Section className="bg-background">
+      <Section>
         <SectionTitle
           title="Sponsor A Tree"
           subtitle="Sponsoring a tree helps create a sustainable future."
@@ -152,8 +134,8 @@ export default function Home() {
         />
 
         { selected && (
-          <div className="mt-4 flex justify-center text-sm text-muted-foreground">
-            <MapPin className="h-4 w-4 mr-1" />
+          <div className="mt-3 flex justify-center text-sm text-muted-foreground">
+            <MapPin className="w-4 h-4 mr-1" />
             Showing trees near { selected.area }, { selected.city }
           </div>
         ) }
@@ -164,18 +146,10 @@ export default function Home() {
               <BasicTreeCardSkeleton key={ i } />
             ) )
             : !selected
-              ? (
-                <p className="col-span-5 text-center text-muted-foreground py-10">
-                  Please select a location.
-                </p>
-              )
+              ? <p className="col-span-5 text-center text-muted-foreground py-10">Please select a location.</p>
               : sponsorTrees.length === 0
-                ? (
-                  <p className="col-span-5 text-center text-muted-foreground py-10">
-                    No trees available near { selected.area }.
-                  </p>
-                )
-                : sponsorTrees.map( ( tree ) => (
+                ? <p className="col-span-5 text-center text-muted-foreground py-10">No trees available near { selected.area }.</p>
+                : sponsorTrees.map( ( tree: any ) => (
                   <Link
                     key={ tree.id }
                     href={ `/sponsor-a-tree/${ tree.slug }` }
@@ -193,7 +167,6 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* ADOPT SECTION */ }
       <Section className="bg-muted">
         <SectionTitle
           title="Adopt A Tree"
@@ -201,14 +174,12 @@ export default function Home() {
           align="center"
         />
 
-        <div className="mt-4 flex justify-center text-sm text-muted-foreground">
-          { selected && (
-            <>
-              <MapPin className="h-4 w-4 mr-1" />
-              Showing trees near { selected.area }, { selected.city }
-            </>
-          ) }
-        </div>
+        { selected && (
+          <div className="mt-3 flex justify-center text-sm text-muted-foreground">
+            <MapPin className="w-4 h-4 mr-1" />
+            Showing trees near { selected.area }, { selected.city }
+          </div>
+        ) }
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6">
           { treesLoading
@@ -216,18 +187,10 @@ export default function Home() {
               <BasicTreeCardSkeleton key={ i } />
             ) )
             : !selected
-              ? (
-                <p className="col-span-5 text-center text-muted-foreground py-10">
-                  Please select a location.
-                </p>
-              )
+              ? <p className="col-span-5 text-center text-muted-foreground py-10">Please select a location.</p>
               : adoptTrees.length === 0
-                ? (
-                  <p className="col-span-5 text-center text-muted-foreground py-10">
-                    No trees available near { selected.area }.
-                  </p>
-                )
-                : adoptTrees.map( ( tree ) => (
+                ? <p className="col-span-5 text-center text-muted-foreground py-10">No trees available near { selected.area }.</p>
+                : adoptTrees.map( ( tree: any ) => (
                   <Link
                     key={ tree.id }
                     href={ `/adopt-a-tree/${ tree.slug }` }
@@ -245,20 +208,19 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* PRODUCTS */ }
-      <Section className="bg-background">
+      <Section>
         <SectionTitle
           title="Natural Products"
           subtitle="From nature's bounty."
           align="center"
         />
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8">
+        <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           { loadingProducts
             ? Array.from( { length: 4 } ).map( ( _, i ) => (
               <ProductCardSkeleton key={ i } />
             ) )
-            : products.map( ( product ) => (
+            : products.map( ( product: any ) => (
               <ProductCard key={ product.slug } product={ product } />
             ) ) }
         </div>
@@ -270,7 +232,6 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* BLOGS */ }
       <Section className="bg-muted">
         <SectionTitle
           title="Insights From Nature"
@@ -287,13 +248,13 @@ export default function Home() {
         ) : (
           <Carousel
             opts={ { loop: true } }
-            plugins={ [ blogPlugin.current ] }
-            onMouseEnter={ blogPlugin.current.stop }
-            onMouseLeave={ blogPlugin.current.reset }
+            plugins={ [ blogAutoplay.current ] }
+            onMouseEnter={ blogAutoplay.current.stop }
+            onMouseLeave={ blogAutoplay.current.reset }
             className="mt-10 max-w-6xl mx-auto"
           >
             <CarouselContent>
-              { blogs.map( ( b ) => (
+              { blogs.map( ( b: any ) => (
                 <CarouselItem key={ b.id } className="md:basis-1/2 lg:basis-1/3">
                   <BlogCard blog={ b } />
                 </CarouselItem>

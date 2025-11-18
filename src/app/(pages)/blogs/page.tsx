@@ -1,33 +1,40 @@
 "use client";
 
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { useState } from "react";
-import useSWR from "swr";
-import BlogCard from "@/components/blog-card";
+import { useState, useEffect } from "react";
+import { AlertCircle } from "lucide-react";
+
 import BreadcrumbNav from "@/components/breadcrumb-nav";
+import BlogCard from "@/components/blog-card";
 import BlogCardSkeleton from "@/components/skeletons/blog-card-skeleton";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import type { Blog, BlogListItem } from "@/types/blog.types";
+
+import type { BlogListItem } from "@/types/blog.types";
 import type { BreadcrumbItemType } from "@/types/home";
-import { listBlogs } from "@/services/blog.service";
 
-const Page = () => {
-  const [ currentPage, setCurrentPage ] = useState( 1 );
+import { useBlogData } from "@/hooks/use-blog-data";
 
-  const { data, error, isLoading } = useSWR(
-    [ "blogs", currentPage ],
-    () =>
-      listBlogs( {
-        page: currentPage,
-        per_page: 12,
-        sort_by: "created_at",
-        sort_order: "desc",
-      } )
-  );
+export default function Page() {
+  const [ page, setPage ] = useState( 1 );
 
-  const blogs = data?.blogs ?? [];
-  const meta = data?.meta;
+  const { blogs, meta, loading, error, loadList } = useBlogData( {
+    listParams: {
+      page,
+      per_page: 12,
+      sort_by: "created_at",
+      sort_order: "desc"
+    }
+  } );
+
+  useEffect( () => {
+    loadList( {
+      page,
+      per_page: 12,
+      sort_by: "created_at",
+      sort_order: "desc"
+    } );
+  }, [ page ] );
 
   if ( error ) {
     return (
@@ -45,7 +52,7 @@ const Page = () => {
 
   const breadcrumbItems: BreadcrumbItemType[] = [
     { title: "Home", href: "/" },
-    { title: "Blogs", href: "" },
+    { title: "Blogs", href: "" }
   ];
 
   return (
@@ -63,22 +70,13 @@ const Page = () => {
         </div>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-          { isLoading
+          { loading
             ? Array.from( { length: 6 } ).map( ( _, i ) => (
-              <BlogCardSkeleton key={ `skeleton-${ i }` } />
+              <BlogCardSkeleton key={ i } />
             ) )
-            : blogs.map( ( b: BlogListItem ) => {
-              const blog: BlogListItem = {
-                id: b.id,
-                slug: b.slug,
-                title: b.title,
-                category: b.category,
-                short_description: b.short_description ?? "",
-                thumbnail_url: b.thumbnail_url ?? "",
-                created_at: b.created_at ?? "",
-              };
-              return <BlogCard key={ blog.id } blog={ blog } />;
-            } ) }
+            : blogs.map( ( b: BlogListItem ) => (
+              <BlogCard key={ b.id } blog={ b } />
+            ) ) }
         </div>
 
         { meta && meta.last_page > 1 && (
@@ -87,7 +85,7 @@ const Page = () => {
               <Button
                 variant="outline"
                 disabled={ meta.current_page === 1 }
-                onClick={ () => setCurrentPage( ( p ) => p - 1 ) }
+                onClick={ () => setPage( ( p ) => p - 1 ) }
               >
                 Previous
               </Button>
@@ -95,7 +93,7 @@ const Page = () => {
               <Button
                 variant="outline"
                 disabled={ meta.current_page === meta.last_page }
-                onClick={ () => setCurrentPage( ( p ) => p + 1 ) }
+                onClick={ () => setPage( ( p ) => p + 1 ) }
               >
                 Next
               </Button>
@@ -105,6 +103,4 @@ const Page = () => {
       </div>
     </>
   );
-};
-
-export default Page;
+}
