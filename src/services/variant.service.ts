@@ -1,10 +1,6 @@
+// services/variant.service.ts
 import type { Product } from "@/types/product.types";
-import type {
-    ProductVariant,
-    VariantColor,
-    VariantPlanter,
-    VariantSize,
-} from "@/types/variant.types";
+import type { ProductVariant, VariantColor, VariantPlanter, VariantSize } from "@/types/variant.types";
 
 const nameKey = ( obj?: { name?: string; code?: string } | null ) => {
     if ( !obj ) return "";
@@ -36,11 +32,7 @@ export const variantService = {
         return Object.values( map );
     },
 
-    getAvailableColors(
-        product?: Product,
-        selectedSize?: VariantSize,
-        selectedPlanter?: VariantPlanter
-    ): VariantColor[] {
+    getAvailableColors( product?: Product, selectedSize?: VariantSize, selectedPlanter?: VariantPlanter ): VariantColor[] {
         if ( !product?.variants ) return [];
         const map: Record<string, VariantColor> = {};
         for ( const v of product.variants ) {
@@ -55,12 +47,7 @@ export const variantService = {
         return Object.values( map );
     },
 
-    resolveVariant(
-        product?: Product,
-        color?: VariantColor,
-        size?: VariantSize,
-        planter?: VariantPlanter
-    ): ProductVariant | undefined {
+    resolveVariant( product?: Product, color?: VariantColor, size?: VariantSize, planter?: VariantPlanter ): ProductVariant | undefined {
         if ( !product?.variants?.length ) return undefined;
         return product.variants.find( ( v ) => {
             const matchColor = !color || v.variant?.color?.name === color.name;

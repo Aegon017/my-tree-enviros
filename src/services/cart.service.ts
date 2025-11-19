@@ -1,13 +1,48 @@
-import api from "@/lib/axios";
+import { fetchJson } from "@/lib/fetch-json";
+import { authStorage } from "@/lib/auth-storage";
 
-export const cartApi = {
-  get: () => api.get( "/cart" ),
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-  add: ( payload: any ) => api.post( "/cart/items", payload ),
+function headers() {
+  const token = authStorage.getToken();
 
-  update: ( itemId: number, quantity: number ) => api.put( `/cart/items/${ itemId }`, { quantity } ),
+  return {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    ...( token ? { Authorization: `Bearer ${ token }` } : {} ),
+  };
+}
 
-  remove: ( itemId: number ) => api.delete( `/cart/items/${ itemId }` ),
+export const cartService = {
+  get: () =>
+    fetchJson( `${ API_BASE }/cart`, {
+      method: "GET",
+      headers: headers(),
+    } ),
 
-  clear: () => api.delete( "/cart" ),
+  add: ( payload: any ) =>
+    fetchJson( `${ API_BASE }/cart/items`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify( payload ),
+    } ),
+
+  update: ( itemId: number, quantity: number ) =>
+    fetchJson( `${ API_BASE }/cart/items/${ itemId }`, {
+      method: "PUT",
+      headers: headers(),
+      body: JSON.stringify( { quantity } ),
+    } ),
+
+  remove: ( itemId: number ) =>
+    fetchJson( `${ API_BASE }/cart/items/${ itemId }`, {
+      method: "DELETE",
+      headers: headers(),
+    } ),
+
+  clear: () =>
+    fetchJson( `${ API_BASE }/cart`, {
+      method: "DELETE",
+      headers: headers(),
+    } ),
 };

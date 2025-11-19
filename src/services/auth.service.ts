@@ -1,6 +1,8 @@
 import { fetchJson } from "@/lib/fetch-json";
 import { authStorage } from "@/lib/auth-storage";
 import { useAuthStore } from "@/store/auth-store";
+import { useCartStore } from "@/store/cart-store";
+import { cartService } from "./cart.service";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_API_URL || "";
 
@@ -49,6 +51,18 @@ export const authService = {
     if ( res.data?.token ) {
       authStorage.setToken( res.data.token );
       authStorage.setUser( res.data.user ?? null );
+
+      const cartStore = useCartStore.getState();
+      const guestItems = cartStore.cart.items;
+
+      if ( guestItems.length > 0 ) {
+        for ( const item of guestItems ) {
+          await cartService.add( item );
+        }
+        cartStore.resetGuestCart();
+      }
+
+      await cartStore.fetchServerCart();
 
       const s = useAuthStore.getState();
       s.setToken( res.data.token );

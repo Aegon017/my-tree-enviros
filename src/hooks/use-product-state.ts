@@ -1,13 +1,9 @@
 "use client";
-import { useCallback, useMemo, useReducer, useEffect } from "react";
-import type { Product } from "@/types/product.types";
+
+import { useCallback, useReducer, useEffect, useMemo } from "react";
 import { variantService } from "@/services/variant.service";
-import type {
-  ProductVariant,
-  VariantColor,
-  VariantPlanter,
-  VariantSize,
-} from "@/types/variant.types";
+import type { Product } from "@/types/product.types";
+import type { ProductVariant, VariantColor, VariantPlanter, VariantSize } from "@/types/variant.types";
 
 interface ProductState {
   selectedColor?: VariantColor;
@@ -31,20 +27,9 @@ function reducer( state: ProductState, action: Action ): ProductState {
     case "SET_COLOR":
       return { ...state, selectedColor: action.payload, isUserInteracting: true };
     case "SET_SIZE":
-      return {
-        ...state,
-        selectedSize: action.payload,
-        selectedPlanter: undefined,
-        selectedColor: undefined,
-        isUserInteracting: true,
-      };
+      return { ...state, selectedSize: action.payload, selectedPlanter: undefined, selectedColor: undefined, isUserInteracting: true };
     case "SET_PLANTER":
-      return {
-        ...state,
-        selectedPlanter: action.payload,
-        selectedColor: undefined,
-        isUserInteracting: true,
-      };
+      return { ...state, selectedPlanter: action.payload, selectedColor: undefined, isUserInteracting: true };
     case "SET_VARIANT":
       return { ...state, selectedVariant: action.payload };
     case "SET_QUANTITY":
@@ -57,10 +42,7 @@ function reducer( state: ProductState, action: Action ): ProductState {
 }
 
 export function useProductState( product?: Product ) {
-  const [ state, dispatch ] = useReducer( reducer, {
-    quantity: 1,
-    isUserInteracting: false,
-  } );
+  const [ state, dispatch ] = useReducer( reducer, { quantity: 1, isUserInteracting: false } );
 
   const setColor = useCallback( ( v?: VariantColor ) => dispatch( { type: "SET_COLOR", payload: v } ), [] );
   const setSize = useCallback( ( v?: VariantSize ) => dispatch( { type: "SET_SIZE", payload: v } ), [] );
@@ -71,52 +53,27 @@ export function useProductState( product?: Product ) {
 
   useEffect( () => {
     if ( !product?.variants?.length ) return;
-
     const availablePlanters = variantService.getAvailablePlanters( product, state.selectedSize );
     const availableColors = variantService.getAvailableColors( product, state.selectedSize, state.selectedPlanter );
 
     let newPlanter = state.selectedPlanter;
     let newColor = state.selectedColor;
 
-    if (
-      state.selectedSize &&
-      ( !state.selectedPlanter ||
-        !availablePlanters.some( ( p ) => p.name === state.selectedPlanter?.name ) )
-    ) {
+    if ( state.selectedSize && ( !state.selectedPlanter || !availablePlanters.some( ( p ) => p.name === state.selectedPlanter?.name ) ) ) {
       newPlanter = availablePlanters[ 0 ];
       newColor = undefined;
     }
 
-    if (
-      ( state.selectedSize || state.selectedPlanter ) &&
-      ( !state.selectedColor ||
-        !availableColors.some( ( c ) => c.name === state.selectedColor?.name ) )
-    ) {
-      newColor = variantService.getAvailableColors(
-        product,
-        state.selectedSize,
-        newPlanter
-      )[ 0 ];
+    if ( ( state.selectedSize || state.selectedPlanter ) && ( !state.selectedColor || !availableColors.some( ( c ) => c.name === state.selectedColor?.name ) ) ) {
+      newColor = variantService.getAvailableColors( product, state.selectedSize, newPlanter )[ 0 ];
     }
 
-    const variant = variantService.resolveVariant(
-      product,
-      newColor,
-      state.selectedSize,
-      newPlanter
-    );
+    const variant = variantService.resolveVariant( product, newColor, state.selectedSize, newPlanter );
 
-    dispatch( {
-      type: "SET_VARIANT",
-      payload: variant,
-    } );
+    dispatch( { type: "SET_VARIANT", payload: variant } );
 
-    if ( newPlanter !== state.selectedPlanter ) {
-      dispatch( { type: "SET_PLANTER", payload: newPlanter } );
-    }
-    if ( newColor !== state.selectedColor ) {
-      dispatch( { type: "SET_COLOR", payload: newColor } );
-    }
+    if ( newPlanter !== state.selectedPlanter ) dispatch( { type: "SET_PLANTER", payload: newPlanter } );
+    if ( newColor !== state.selectedColor ) dispatch( { type: "SET_COLOR", payload: newColor } );
   }, [ product, state.selectedSize, state.selectedPlanter ] );
 
   const maxStock = useMemo( () => state.selectedVariant?.stock_quantity ?? 0, [ state.selectedVariant ] );

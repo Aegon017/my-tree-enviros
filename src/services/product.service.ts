@@ -2,14 +2,29 @@ import { fetchJson } from "@/lib/fetch-json";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
+function url( path: string ) {
+  return `${ API_BASE }${ path }`;
+}
+
 export const productService = {
-  async list( params: Record<string, any> ) {
-    const query = new URLSearchParams( params ).toString();
-    return fetchJson( `${ API_BASE }/products?${ query }` );
+  list( params: Record<string, any> ) {
+    const q = new URLSearchParams( params ).toString();
+    return fetchJson( url( `/products?${ q }` ) );
   },
 
-  async getCategories() {
-    const res = await fetchJson( `${ API_BASE }/product-categories` );
-    return res.data.categories;
-  }
+  getCategories() {
+    return fetchJson( url( `/product-categories` ) ).then( ( r ) => r.data.categories );
+  },
+
+  getProductBySlug( slug: string ) {
+    return fetchJson( url( `/products/${ slug }` ) ).then( ( r ) => r.data.product );
+  },
+
+  getReviewsBySlug( slug: string, page = 1 ) {
+    return fetchJson( url( `/products/${ slug }/reviews?page=${ page }` ) );
+  },
+
+  canReviewBySlug( slug: string ) {
+    return fetchJson( url( `/products/${ slug }/can-review` ) );
+  },
 };

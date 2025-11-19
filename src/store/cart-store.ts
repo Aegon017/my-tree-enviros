@@ -1,54 +1,108 @@
-"use client";
-
-import { CartItem } from "@/domain/cart/cart-item";
 import { create } from "zustand";
-import { devtools, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
+import { cartService } from "@/services/cart.service";
+import { useAuthStore } from "@/store/auth-store";
 
-type GuestCartState = {
-    items: CartItem[];
-    addItem: ( item: Omit<CartItem, "clientId"> ) => CartItem;
-    updateItem: ( clientId: string, patch: Partial<CartItem> ) => void;
-    removeItem: ( clientId: string ) => void;
-    clear: () => void;
-    replaceItems: ( serverItems: CartItem[] ) => void;
+type CartState = {
+    cart: { items: any[] };
+    loading: boolean;
+    hydrate: () => void;
+    fetchServerCart: () => Promise<void>;
+    addToCart: ( payload: any ) => Promise<void>;
+    updateItem: ( itemIndex: number, quantity: number ) => Promise<void>;
+    removeItem: ( itemIndex: number ) => Promise<void>;
+    clearCart: () => Promise<void>;
+    resetGuestCart: () => void;
 };
 
-function genClientId() {
-    return "c_" + Math.random().toString( 36 ).slice( 2, 10 );
-}
+export const useCartStore = create<CartState>()(
+    persist(
+        ( set, get ) => ( {
+            cart: { items: [] },
+            loading: false,
 
-export const useGuestCartStore = create<GuestCartState>()(
-    devtools(
-        persist(
-            ( set, get ) => ( {
-                items: [],
+            hydrate: () => {
+                const token = useAuthStore.getState().token;
+                if ( token ) get().fetchServerCart();
+            },
 
-                addItem: ( item ) => {
-                    const newItem: CartItem = { ...( item as any ), clientId: genClientId() };
-                    set( { items: [ ...get().items, newItem ] } );
-                    return newItem;
-                },
+            fetchServerCart: async () => {
+                const res = await cartService.get();
+                set( { cart: res.data.cart } );
+            },
 
-                updateItem: ( clientId, patch ) => {
-                    set( {
-                        items: get().items.map( ( i ) =>
-                            i.clientId === clientId ? { ...i, ...( patch as any ) } : i
-                        ),
-                    } );
-                },
+            addToCart: async ( payload ) => {
+                const token = useAuthStore.getState().token;
 
-                removeItem: ( clientId ) => {
-                    set( { items: get().items.filter( ( i ) => i.clientId !== clientId ) } );
-                },
+                if ( token ) {
+                    const res = await cartService.add( payload );
+                    set( { cart: res.data.cart } );
+                    return;
+                }
 
-                clear: () => set( { items: [] } ),
+                const cart = get().cart;
+                cart.items.push( {
+                    ...payload,
+                    amount: payload.amount ?? 0,
+                    total_amount: ( payload.amount ?? 0 ) * payload.quantity,
+                } );
+                set( { cart } );
+            },
 
-                replaceItems: ( serverItems ) => set( { items: serverItems } ),
+            updateItem: async ( itemIndex, quantity ) => {
+                const token = useAuthStore.getState().token;
+
+                if ( token ) {
+                    const backendItem = get().cart.items[ itemIndex ];
+                    const res = await cartService.update( backendItem.id, quantity );
+                    set( { cart: res.data.cart } );
+                    return;
+                }
+
+                const cart = get().cart;
+                const item = cart.items[ itemIndex ];
+                if ( item ) {
+                    item.quantity = quantity;
+                    item.total_amount = item.amount * quantity;
+                }
+                set( { cart } );
+            },
+
+            removeItem: async ( itemIndex ) => {
+                const token = useAuthStore.getState().token;
+
+                if ( token ) {
+                    const backendItem = get().cart.items[ itemIndex ];
+                    const res = await cartService.remove( backendItem.id );
+                    set( { cart: res.data.cart } );
+                    return;
+                }
+
+                const cart = get().cart;
+                cart.items = cart.items.filter( ( _, i ) => i !== itemIndex );
+                set( { cart } );
+            },
+
+            clearCart: async () => {
+                const token = useAuthStore.getState().token;
+
+                if ( token ) {
+                    const res = await cartService.clear();
+                    set( { cart: res.data.cart } );
+                    return;
+                }
+
+                set( { cart: { items: [] } } );
+            },
+
+            resetGuestCart: () => set( { cart: { items: [] } } ),
+        } ),
+
+        {
+            name: "mte_cart",
+            partialize: ( state ) => ( {
+                cart: state.cart,
             } ),
-            {
-                name: "guest-cart",
-                partialize: ( state ) => ( { items: state.items } ),
-            }
-        )
+        }
     )
 );

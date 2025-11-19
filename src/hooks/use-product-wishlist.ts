@@ -1,14 +1,16 @@
 "use client";
+
 import { useState } from "react";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/auth-store";
 import { wishlistService } from "@/services/wishlist.service";
-import { authStorage } from "@/lib/auth-storage";
 import type { KeyedMutator } from "swr";
 
 export function useProductWishlist( productId?: number, variantId?: number, mutateProduct?: KeyedMutator<any> ) {
     const [ loginOpen, setLoginOpen ] = useState( false );
     const [ loading, setLoading ] = useState( false );
-    const isAuth = authStorage.isAuthenticated();
+    const token = useAuthStore( ( s ) => s.token );
+    const isAuth = !!token;
 
     const toggleFavorite = async ( inWishlist: boolean ) => {
         if ( !isAuth ) return setLoginOpen( true );
