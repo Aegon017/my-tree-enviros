@@ -98,9 +98,8 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
                 <div className="flex flex-col items-center text-center">
-                  <AppLogo />
                   <h1 className="text-2xl font-bold">Create Account</h1>
-                  <p className="text-muted-foreground text-balance">
+                  <p className="text-muted-foreground text-sm">
                     Sign up for your My Tree Enviros account
                   </p>
                 </div>
@@ -177,7 +176,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
           </div>
 
           <div className="bg-muted relative hidden md:grid place-content-center">
-            <Image src={image} alt="My tree enviros" priority />
+            <AppLogo className="h-60 w-60" />
           </div>
         </CardContent>
       </Card>

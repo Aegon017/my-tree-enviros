@@ -4,9 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "@/store";
-import { updateUser as updateAuthUser } from "@/store/auth-slice";
+import { useAuthStore } from "@/store/auth-store";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import {
@@ -557,7 +555,7 @@ const OrderDetailsModal = ({
                   >
                     <div className="w-16 h-16 rounded bg-muted flex items-center justify-center overflow-hidden">
                       {it.item?.image ? (
-                        
+
                         <img
                           src={it.item?.image}
                           alt={it.item?.name || "Item"}
@@ -595,14 +593,13 @@ const OrderDetailsModal = ({
 };
 
 export default function AccountPage() {
-  const dispatch = useDispatch();
-  const authUser = useSelector((s: RootState) => s.auth.user);
-  const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
+  const { user: authUser, token } = useAuthStore();
+  const isAuthenticated = !!token;
 
-  
+
   const [tab, setTab] = useState<"profile" | "orders" | "addresses">("profile");
 
-  
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [isEditing, setEditing] = useState(false);
@@ -612,13 +609,13 @@ export default function AccountPage() {
     defaultValues: { name: "", email: "" },
   });
 
-  
+
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [orders, setOrders] = useState<OrderLite[]>([]);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
 
-  
+
   const [addrLoading, setAddrLoading] = useState(false);
   const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
   const [addrModalOpen, setAddrModalOpen] = useState(false);
@@ -645,19 +642,11 @@ export default function AccountPage() {
           name: res.data.user.name || "",
           email: res.data.user.email || "",
         });
-        
-        dispatch(
-          updateAuthUser({
-            name: res.data.user.name,
-            email: res.data.user.email,
-            phone: (res.data.user as any).mobile || (authUser?.phone ?? ""),
-          }),
-        );
       }
     } finally {
       setProfileLoading(false);
     }
-  }, [dispatch, authUser?.phone, profileForm]);
+  }, [profileForm]);
 
   const loadOrders = useCallback(async () => {
     setOrdersLoading(true);
@@ -700,7 +689,7 @@ export default function AccountPage() {
       });
       setDetailsOpen(true);
     } catch {
-      
+
     }
   }, []);
 

@@ -23,6 +23,7 @@ import {
 import {
   InputOTP,
   InputOTPGroup,
+  InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { authService } from "@/services/auth.services";
@@ -131,7 +132,6 @@ export function VerifyOtpForm({ className, ...props }: React.ComponentProps<"div
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
                 <div className="flex flex-col items-center text-center">
-                  <AppLogo />
                   <h1 className="text-2xl font-bold">Verify OTP</h1>
                   <p className="text-muted-foreground text-balance">
                     Enter the 6-digit code sent to {countryCode} {phone}
@@ -145,11 +145,14 @@ export function VerifyOtpForm({ className, ...props }: React.ComponentProps<"div
                     <FormItem>
                       <FormLabel>One-Time Password</FormLabel>
                       <FormControl>
-                        <InputOTP maxLength={6} {...field}>
+                        <InputOTP maxLength={6} {...field} >
                           <InputOTPGroup>
                             <InputOTPSlot index={0} />
                             <InputOTPSlot index={1} />
                             <InputOTPSlot index={2} />
+                          </InputOTPGroup>
+                          <InputOTPSeparator />
+                          <InputOTPGroup>
                             <InputOTPSlot index={3} />
                             <InputOTPSlot index={4} />
                             <InputOTPSlot index={5} />
@@ -187,7 +190,7 @@ export function VerifyOtpForm({ className, ...props }: React.ComponentProps<"div
           </div>
 
           <div className="bg-muted relative hidden md:grid place-content-center">
-            <Image src={image} alt="My tree enviros" priority />
+            <AppLogo className="h-60 w-60"/>
           </div>
         </CardContent>
       </Card>
