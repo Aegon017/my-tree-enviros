@@ -5,12 +5,15 @@ import { Plan } from "./tree.types";
 
 export interface CartItem {
   id: number;
+  clientId?: number; // For guest cart items
   cart_id?: number;
   item_type?: string;
   quantity: number;
   price: number;
+  amount?: number; // Alias for price in some contexts
   formatted_price?: string;
   subtotal?: number;
+  total_amount?: number; // Alias for subtotal
   formatted_subtotal?: string;
 
   name: string;
@@ -76,6 +79,8 @@ export interface CartItem {
   campaign?: Campaign;
   dedication?: Dedication;
   plan?: Plan;
+  plan_id?: number;
+  plan_price_id?: number;
 }
 
 export interface Dedication {

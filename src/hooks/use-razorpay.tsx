@@ -10,7 +10,6 @@ import { paymentService } from "@/services/payment.services";
 
 type DirectExtras = {
   
-  tree_instance_id?: number;
   tree_plan_price_id?: number;
   product_variant_id?: number;
   campaign_id?: number;
@@ -122,9 +121,6 @@ export function useRazorpay() {
           
           const directPayload = {
             item_type: productType === 1 ? "tree" : "product",
-            tree_instance_id:
-              extra.tree_instance_id ??
-              (productType === 1 ? productId : undefined),
             tree_plan_price_id:
               extra.tree_plan_price_id ?? (extra as any).plan_id,
             product_id: productType === 2 ? productId : undefined,

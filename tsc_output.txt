@@ -1,0 +1,56 @@
+src/app/(pages)/blogs/[slug]/page.tsx(46,17): error TS2339: Property 'created_at' does not exist on type 'never'.
+src/app/(pages)/blogs/[slug]/page.tsx(47,27): error TS2339: Property 'created_at' does not exist on type 'never'.
+src/app/(pages)/blogs/[slug]/page.tsx(52,14): error TS2339: Property 'created_at' does not exist on type 'never'.
+src/app/(pages)/blogs/[slug]/page.tsx(77,45): error TS2339: Property 'title' does not exist on type 'never'.
+src/app/(pages)/blogs/[slug]/page.tsx(116,26): error TS2339: Property 'image_url' does not exist on type 'never'.
+src/app/(pages)/blogs/[slug]/page.tsx(117,26): error TS2339: Property 'title' does not exist on type 'never'.
+src/app/(pages)/blogs/[slug]/page.tsx(135,50): error TS2339: Property 'category' does not exist on type 'never'.
+src/app/(pages)/blogs/[slug]/page.tsx(139,22): error TS2339: Property 'title' does not exist on type 'never'.
+src/app/(pages)/blogs/[slug]/page.tsx(143,30): error TS2339: Property 'description' does not exist on type 'never'.
+src/app/(pages)/cart/page.tsx(72,20): error TS2339: Property 'dedication' does not exist on type 'CartItem'.
+  Property 'dedication' does not exist on type 'CartProductItem'.
+src/app/(pages)/cart/page.tsx(73,24): error TS2339: Property 'dedication' does not exist on type 'CartItem'.
+  Property 'dedication' does not exist on type 'CartProductItem'.
+src/app/(pages)/cart/page.tsx(74,23): error TS2339: Property 'dedication' does not exist on type 'CartItem'.
+  Property 'dedication' does not exist on type 'CartProductItem'.
+src/app/(pages)/cart/page.tsx(156,14): error TS2339: Property 'image_url' does not exist on type 'CartTreeItem'.
+src/app/(pages)/cart/page.tsx(324,17): error TS2322: Type 'import("/home/aegon/Projects/mytree/my-tree-enviros/src/types/cart.types").CartItem' is not assignable to type 'import("/home/aegon/Projects/mytree/my-tree-enviros/src/domain/cart/cart-item").CartItem'.
+  Type 'CartItem' is not assignable to type 'CartProductItem'.
+    Types of property 'clientId' are incompatible.
+      Type 'number | undefined' is not assignable to type 'string | undefined'.
+        Type 'number' is not assignable to type 'string'.
+src/app/(pages)/feed-a-tree/[id]/page.tsx(227,26): error TS2339: Property 'isAuthenticated' does not exist on type '{ getToken(): string | null; setToken(token: string): void; clearToken(): void; getUser(): any; setUser(user: any): void; clearUser(): void; setResendTime(ts: number): void; getResendTime(): number | null; clearAll(): void; }'.
+src/app/(pages)/my-account/page.tsx(7,42): error TS2307: Cannot find module 'react-redux' or its corresponding type declarations.
+src/app/(pages)/my-account/page.tsx(8,32): error TS2307: Cannot find module '@/store' or its corresponding type declarations.
+src/app/(pages)/my-account/page.tsx(9,46): error TS2307: Cannot find module '@/store/auth-slice' or its corresponding type declarations.
+src/app/(pages)/my-account/page.tsx(633,13): error TS7006: Parameter 'n' implicitly has an 'any' type.
+src/app/(pages)/wishlist/page.tsx(13,32): error TS2305: Module '"@/services/wishlist.services"' has no exported member 'WishlistItem'.
+src/app/(pages)/wishlist/page.tsx(49,12): error TS18046: 'response' is of type 'unknown'.
+src/app/(pages)/wishlist/page.tsx(52,18): error TS18046: 'response' is of type 'unknown'.
+src/app/(pages)/wishlist/page.tsx(66,12): error TS18046: 'response' is of type 'unknown'.
+src/app/(pages)/wishlist/page.tsx(87,12): error TS18046: 'response' is of type 'unknown'.
+src/components/address-form.tsx(21,10): error TS2305: Module '"@/hooks/use-location-search"' has no exported member 'useLocation'.
+src/components/location-provider.tsx(5,10): error TS2305: Module '"@/hooks/use-location-search"' has no exported member 'useLocation'.
+src/components/location-selection-modal.tsx(6,10): error TS2305: Module '"@/hooks/use-location-search"' has no exported member 'useLocation'.
+src/components/location-selector.tsx(6,10): error TS2305: Module '"@/hooks/use-location-search"' has no exported member 'useLocation'.
+src/components/location-selector.tsx(7,27): error TS2307: Cannot find module './location-modal' or its corresponding type declarations.
+src/components/login-dialog.tsx(32,25): error TS2322: Type '{ onOtpSent: ({ country_code, phone }: { country_code: any; phone: any; }) => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLDivElement> & HTMLAttributes<HTMLDivElement>'.
+  Property 'onOtpSent' does not exist on type 'IntrinsicAttributes & ClassAttributes<HTMLDivElement> & HTMLAttributes<HTMLDivElement>'.
+src/components/login-dialog.tsx(32,41): error TS7031: Binding element 'country_code' implicitly has an 'any' type.
+src/components/login-dialog.tsx(32,55): error TS7031: Binding element 'phone' implicitly has an 'any' type.
+src/components/login-dialog.tsx(40,25): error TS2322: Type '{ country_code: string | undefined; phone: string | undefined; onSuccess: () => void; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLDivElement> & HTMLAttributes<HTMLDivElement>'.
+  Property 'country_code' does not exist on type 'IntrinsicAttributes & ClassAttributes<HTMLDivElement> & HTMLAttributes<HTMLDivElement>'.
+src/hooks/use-blog-data.ts(28,23): error TS2345: Argument of type '(prev: never[]) => any[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type '(prev: never[]) => any[]' is not assignable to type '(prevState: never[]) => never[]'.
+    Type 'any[]' is not assignable to type 'never[]'.
+      Type 'any' is not assignable to type 'never'.
+src/hooks/use-products.ts(23,30): error TS2339: Property 'products' does not exist on type 'ApiResponse<{ products: any[]; meta: any; }>'.
+src/hooks/use-products.ts(24,27): error TS2339: Property 'meta' does not exist on type 'ApiResponse<{ products: any[]; meta: any; }>'.
+src/hooks/use-products.ts(45,28): error TS2345: Argument of type 'ApiResponse<{ categories: any[]; }>' is not assignable to parameter of type 'SetStateAction<any[]>'.
+src/hooks/use-trees.ts(48,33): error TS2339: Property 'meta' does not exist on type '{ trees: any[]; }'.
+src/lib/guest-cart.ts(10,11): error TS7006: Parameter 'cart' implicitly has an 'any' type.
+src/services/campaign.services.ts(17,22): error TS2339: Property 'isAuthenticated' does not exist on type '{ getToken(): string | null; setToken(token: string): void; clearToken(): void; getUser(): any; setUser(user: any): void; clearUser(): void; setResendTime(ts: number): void; getResendTime(): number | null; clearAll(): void; }'.
+src/services/campaign.services.ts(32,22): error TS2339: Property 'isAuthenticated' does not exist on type '{ getToken(): string | null; setToken(token: string): void; clearToken(): void; getUser(): any; setUser(user: any): void; clearUser(): void; setResendTime(ts: number): void; getResendTime(): number | null; clearAll(): void; }'.
+src/services/campaign.services.ts(47,22): error TS2339: Property 'isAuthenticated' does not exist on type '{ getToken(): string | null; setToken(token: string): void; clearToken(): void; getUser(): any; setUser(user: any): void; clearUser(): void; setResendTime(ts: number): void; getResendTime(): number | null; clearAll(): void; }'.
+src/services/campaign.services.ts(75,22): error TS2339: Property 'isAuthenticated' does not exist on type '{ getToken(): string | null; setToken(token: string): void; clearToken(): void; getUser(): any; setUser(user: any): void; clearUser(): void; setResendTime(ts: number): void; getResendTime(): number | null; clearAll(): void; }'.
+src/services/cart-unified.ts(3,10): error TS2724: '"@/store/cart-store"' has no exported member named 'useGuestCartStore'. Did you mean 'useCartStore'?

@@ -34,7 +34,7 @@ const buttonVariants = cva(
   },
 );
 
-function Button( {
+function Button({
   className,
   variant,
   size,
@@ -46,25 +46,17 @@ function Button( {
   VariantProps<typeof buttonVariants> & {
     loading?: boolean;
     asChild?: boolean;
-  } ) {
+  }) {
   const Comp = asChild ? Slot : "button";
 
   return (
     <Comp
       data-slot="button"
-      className={ cn( buttonVariants( { variant, size, className } ) ) }
-      disabled={ loading || props.disabled }
-      { ...props }
+      className={cn(buttonVariants({ variant, size, className }))}
+      disabled={loading || props.disabled}
+      {...props}
     >
-      { loading ? (
-        <div className="flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 bg-current rounded-full animate-bounce" />
-          <span className="h-1.5 w-1.5 bg-current rounded-full animate-bounce [animation-delay:0.15s]" />
-          <span className="h-1.5 w-1.5 bg-current rounded-full animate-bounce [animation-delay:0.3s]" />
-        </div>
-      ) : (
-        children
-      ) }
+      {children}
     </Comp>
   );
 }

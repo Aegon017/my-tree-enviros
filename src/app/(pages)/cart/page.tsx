@@ -33,21 +33,28 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CartItem } from "@/domain/cart/cart-item";
 import { useCart } from "@/hooks/use-cart";
 
-const detailsSchema = z.object( {
-  name: z.string().min( 1 ),
-  occasion: z.string().min( 1 ),
-  message: z.string().min( 1 ),
-} );
+const detailsSchema = z.object({
+  name: z.string().min(1),
+  occasion: z.string().min(1),
+  message: z.string().min(1),
+});
 
 type DetailsFormValues = z.infer<typeof detailsSchema>;
 
 const MAX_DURATION = 50;
 const MIN_QUANTITY = 1;
 
-function AddDetailModal( {
+function AddDetailModal({
   open,
   onClose,
   item,
@@ -60,71 +67,72 @@ function AddDetailModal( {
     id: number | string,
     details: { name: string; occasion: string; message: string }
   ) => Promise<void>;
-} ) {
-  const form = useForm<DetailsFormValues>( {
-    resolver: zodResolver( detailsSchema ),
+}) {
+  const form = useForm<DetailsFormValues>({
+    resolver: zodResolver(detailsSchema),
     defaultValues: { name: "", occasion: "", message: "" },
-  } );
+  });
 
-  useEffect( () => {
-    if ( open && item ) {
-      form.reset( {
-        name: item.dedication?.name ?? "",
-        occasion: item.dedication?.occasion ?? "",
-        message: item.dedication?.message ?? "",
-      } );
+  useEffect(() => {
+    if (open && item) {
+      const dedication = item.type !== "product" ? item.dedication : null;
+      form.reset({
+        name: dedication?.name ?? "",
+        occasion: dedication?.occasion ?? "",
+        message: dedication?.message ?? "",
+      });
     }
-  }, [ open, item ] );
+  }, [open, item]);
 
-  const onSubmit = async ( v: DetailsFormValues ) => {
-    if ( !item ) return;
-    await onSave( item.id ?? item.clientId!, v );
+  const onSubmit = async (v: DetailsFormValues) => {
+    if (!item) return;
+    await onSave(item.id ?? item.clientId!, v);
     onClose();
   };
 
   return (
-    <Dialog open={ open } onOpenChange={ onClose }>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Add Details</DialogTitle>
           <DialogDescription>Provide details</DialogDescription>
         </DialogHeader>
 
-        <Form { ...form }>
+        <Form {...form}>
           <form
-            onSubmit={ form.handleSubmit( onSubmit ) }
+            onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-4 grow overflow-hidden flex flex-col"
           >
             <ScrollArea className="grow pr-4">
               <div className="space-y-4">
-                { [ "name", "occasion", "message" ].map( ( field ) => (
+                {["name", "occasion", "message"].map((field) => (
                   <FormField
-                    key={ field }
-                    control={ form.control }
-                    name={ field as any }
-                    render={ ( { field: f } ) => (
+                    key={field}
+                    control={form.control}
+                    name={field as any}
+                    render={({ field: f }) => (
                       <FormItem>
-                        <FormLabel className="capitalize">{ field }</FormLabel>
+                        <FormLabel className="capitalize">{field}</FormLabel>
                         <FormControl>
-                          { field === "message" ? (
-                            <Textarea { ...f } />
+                          {field === "message" ? (
+                            <Textarea {...f} />
                           ) : (
-                            <Input { ...f } />
-                          ) }
+                            <Input {...f} />
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    ) }
+                    )}
                   />
-                ) ) }
+                ))}
               </div>
             </ScrollArea>
 
             <div className="flex space-x-3 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={ onClose } className="flex-1">
+              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1" disabled={ form.formState.isSubmitting }>
+              <Button type="submit" className="flex-1" disabled={form.formState.isSubmitting}>
                 Save Details
               </Button>
             </div>
@@ -135,7 +143,7 @@ function AddDetailModal( {
   );
 }
 
-function CartItemComponent( {
+function CartItemComponent({
   item,
   isUpdating,
   onUpdateItem,
@@ -144,27 +152,22 @@ function CartItemComponent( {
 }: {
   item: CartItem;
   isUpdating: boolean;
-  onUpdateItem: ( id: number | string, patch: any ) => void;
-  onRemoveItem: ( id: number | string ) => void;
-  onOpenDetailModal: ( item: CartItem ) => void;
-} ) {
+  onUpdateItem: (id: number | string, patch: any) => void;
+  onRemoveItem: (id: number | string) => void;
+  onOpenDetailModal: (item: CartItem) => void;
+}) {
   const itemId = item.id ?? item.clientId!;
   const displayName = item.type === "product" ? item.name : item.tree?.name ?? "Tree";
   const imageUrl =
     item.type === "product"
       ? item.image_url ?? "/placeholder-image.jpg"
       : item.image_url ?? "/default-tree.jpg";
-  const duration =
-    item.type === "product" ? null : Number( item.duration ?? item.plan?.duration );
 
-  const handleQuantity = ( q: number ) => {
-    onUpdateItem( itemId, { quantity: Math.max( MIN_QUANTITY, Math.floor( q ) ) } );
-  };
+  const duration = item.type === "product" ? null : Number(item.duration ?? item.plan?.duration);
+  const durationUnit = item.type === "product" ? null : (item as any).duration_unit ?? item.plan?.duration_unit ?? "year";
 
-  const handleDuration = ( d: number ) => {
-    onUpdateItem( itemId, {
-      duration: Math.max( MIN_QUANTITY, Math.min( MAX_DURATION, Math.floor( d ) ) ),
-    } );
+  const handleQuantity = (q: number) => {
+    onUpdateItem(itemId, { quantity: Math.max(MIN_QUANTITY, Math.floor(q)) });
   };
 
   return (
@@ -172,31 +175,31 @@ function CartItemComponent( {
       <CardContent className="p-4 md:p-6">
         <div className="flex items-start gap-4">
           <div className="relative h-20 w-20 rounded-md overflow-hidden">
-            <Image src={ imageUrl } alt={ displayName } fill className="object-cover" />
+            <Image src={imageUrl} alt={displayName} fill className="object-cover" />
           </div>
 
           <div className="flex-1 min-w-0 space-y-3">
-            <h3 className="font-semibold text-lg truncate">{ displayName }</h3>
+            <h3 className="font-semibold text-lg truncate">{displayName}</h3>
 
-            { item.type === "product" && (
+            {item.type === "product" && item.variant && (
               <p className="text-sm text-muted-foreground">
-                { [ item.variant.color, item.variant.size, item.variant.planter ]
-                  .filter( Boolean )
-                  .join( " • " ) }
+                {[item.variant.color, item.variant.size, item.variant.planter]
+                  .filter(Boolean)
+                  .join(" • ")}
               </p>
-            ) }
+            )}
 
-            { item.type !== "product" && (
-              <p className="text-sm text-muted-foreground">{ duration } month plan</p>
-            ) }
+            {item.type !== "product" && (
+              <p className="text-sm text-muted-foreground">{duration} {durationUnit}</p>
+            )}
 
             <div className="flex flex-wrap items-center gap-6">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Quantity</span>
                 <div className="flex items-center border rounded-md">
                   <Button
-                    disabled={ isUpdating || item.quantity <= MIN_QUANTITY }
-                    onClick={ () => handleQuantity( item.quantity - 1 ) }
+                    disabled={isUpdating || item.quantity <= MIN_QUANTITY}
+                    onClick={() => handleQuantity(item.quantity - 1)}
                     size="icon"
                     variant="ghost"
                   >
@@ -204,15 +207,15 @@ function CartItemComponent( {
                   </Button>
                   <Input
                     type="number"
-                    min={ 1 }
-                    value={ item.quantity }
-                    onChange={ ( e ) => handleQuantity( Number( e.target.value ) ) }
+                    min={1}
+                    value={item.quantity}
+                    onChange={(e) => handleQuantity(Number(e.target.value))}
                     className="w-12 text-center border-x-0 bg-transparent"
-                    disabled={ isUpdating }
+                    disabled={isUpdating}
                   />
                   <Button
-                    disabled={ isUpdating }
-                    onClick={ () => handleQuantity( item.quantity + 1 ) }
+                    disabled={isUpdating}
+                    onClick={() => handleQuantity(item.quantity + 1)}
                     size="icon"
                     variant="ghost"
                   >
@@ -221,64 +224,66 @@ function CartItemComponent( {
                 </div>
               </div>
 
-              { duration !== null && (
+
+              {duration !== null && item.type !== "product" && item.available_plans && (
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Duration</span>
-                  <div className="flex items-center border rounded-md">
-                    <Button
-                      disabled={ isUpdating || duration <= MIN_QUANTITY }
-                      onClick={ () => handleDuration( duration - 1 ) }
-                      size="icon"
-                      variant="ghost"
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <Input
-                      type="number"
-                      min={ 1 }
-                      max={ MAX_DURATION }
-                      value={ duration }
-                      onChange={ ( e ) => handleDuration( Number( e.target.value ) ) }
-                      className="w-12 text-center border-x-0 bg-transparent"
-                      disabled={ isUpdating }
-                    />
-                    <Button
-                      disabled={ isUpdating }
-                      onClick={ () => handleDuration( duration + 1 ) }
-                      size="icon"
-                      variant="ghost"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  <Select
+                    value={String(duration)}
+                    onValueChange={(value) => {
+                      const selectedDuration = Number(value);
+                      const plan = item.available_plans?.find(p => p.duration === selectedDuration);
+                      if (plan && plan.plan_prices.length > 0) {
+                        const planPriceId = plan.plan_prices[0].id;
+                        onUpdateItem(itemId, { plan_price_id: planPriceId });
+                      }
+                    }}
+                    disabled={isUpdating}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select duration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {item.available_plans.map((plan) => {
+                        const durationText = plan.duration > 1
+                          ? `${plan.duration} ${plan.duration_unit}s`
+                          : `${plan.duration} ${plan.duration_unit}`;
+                        return (
+                          <SelectItem key={plan.id} value={String(plan.duration)}>
+                            {durationText} - ₹{plan.plan_prices[0]?.price.toFixed(2)}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
-              ) }
+              )}
             </div>
 
-            { item.type !== "product" && (
+            {item.type !== "product" && (
               <>
-                <Button variant="outline" size="sm" onClick={ () => onOpenDetailModal( item ) }>
-                  { item.dedication?.name ? "Edit Details" : "Add Details" }
+                <Button variant="outline" size="sm" onClick={() => onOpenDetailModal(item)}>
+                  {item.dedication?.name ? "Edit Details" : "Add Details"}
                 </Button>
 
-                { item.dedication && (
+                {item.dedication && (
                   <div className="text-sm mt-2">
-                    { item.dedication.name && <p><b>Name:</b> { item.dedication.name }</p> }
-                    { item.dedication.occasion && <p><b>Occasion:</b> { item.dedication.occasion }</p> }
-                    { item.dedication.message && <p><b>Message:</b> { item.dedication.message }</p> }
+                    {item.dedication.name && <p><b>Name:</b> {item.dedication.name}</p>}
+                    {item.dedication.occasion && <p><b>Occasion:</b> {item.dedication.occasion}</p>}
+                    {item.dedication.message && <p><b>Message:</b> {item.dedication.message}</p>}
                   </div>
-                ) }
+                )}
               </>
-            ) }
+            )}
           </div>
 
           <div className="flex flex-col items-end gap-4">
-            <p className="text-xl font-bold">₹{ ( item.price * item.quantity ).toFixed( 2 ) }</p>
+            <p className="text-xl font-bold">₹{(item.price * item.quantity).toFixed(2)}</p>
             <Button
               variant="ghost"
               size="icon"
-              disabled={ isUpdating }
-              onClick={ () => onRemoveItem( itemId ) }
+              disabled={isUpdating}
+              onClick={() => onRemoveItem(itemId)}
             >
               <Trash2 className="h-5 w-5 text-red-500" />
             </Button>
@@ -291,59 +296,59 @@ function CartItemComponent( {
 
 export default function CartPage() {
   const { items, loading, update, remove, clear } = useCart
-  ();
-  const [ detailModalOpen, setDetailModalOpen ] = useState( false );
-  const [ selectedItem, setSelectedItem ] = useState<CartItem | null>( null );
+    ();
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<CartItem | null>(null);
 
   const subtotal = useMemo(
-    () => items.reduce( ( sum, i ) => sum + i.price * i.quantity, 0 ),
-    [ items ]
+    () => items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    [items]
   );
 
   const handleDetails = async (
     id: string | number,
     details: { name: string; occasion: string; message: string }
   ) => {
-    await update( id, { dedication: details } );
+    await update(id, { dedication: details });
   };
 
-  if ( loading ) return <Loading />;
+  if (loading) return <Loading />;
 
   return (
     <div className="container mx-auto py-16 px-4 max-w-6xl">
       <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
 
-      { items.length === 0 ? (
+      {items.length === 0 ? (
         <EmptyCart />
       ) : (
         <div className="grid lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8">
-            { items.map( ( item ) => (
+            {items.map((item) => (
               <CartItemComponent
-                key={ item.id ?? item.clientId }
-                item={ item }
-                isUpdating={ false }
-                onUpdateItem={ update }
-                onRemoveItem={ remove }
-                onOpenDetailModal={ ( i ) => {
-                  setSelectedItem( i );
-                  setDetailModalOpen( true );
-                } }
+                key={item.id ?? item.clientId}
+                item={item}
+                isUpdating={false}
+                onUpdateItem={update}
+                onRemoveItem={remove}
+                onOpenDetailModal={(i) => {
+                  setSelectedItem(i);
+                  setDetailModalOpen(true);
+                }}
               />
-            ) ) }
+            ))}
           </div>
 
           <div className="lg:col-span-4">
-            <OrderSummary subtotal={ subtotal } onClearCart={ clear } />
+            <OrderSummary subtotal={subtotal} onClearCart={clear} />
           </div>
         </div>
-      ) }
+      )}
 
       <AddDetailModal
-        open={ detailModalOpen }
-        onClose={ () => setDetailModalOpen( false ) }
-        item={ selectedItem }
-        onSave={ handleDetails }
+        open={detailModalOpen}
+        onClose={() => setDetailModalOpen(false)}
+        item={selectedItem}
+        onSave={handleDetails}
       />
     </div>
   );
@@ -361,25 +366,25 @@ function EmptyCart() {
   );
 }
 
-function OrderSummary( {
+function OrderSummary({
   subtotal,
   onClearCart,
 }: {
   subtotal: number;
   onClearCart: () => Promise<void> | void;
-} ) {
+}) {
   return (
     <Card>
       <CardContent className="p-6 space-y-4">
         <h2 className="text-lg font-semibold">Order Summary</h2>
         <div className="flex justify-between">
           <span>Subtotal</span>
-          <b>₹{ subtotal.toFixed( 2 ) }</b>
+          <b>₹{subtotal.toFixed(2)}</b>
         </div>
-        <Link href="/checkout">
+        <Link className="block" href="/checkout">
           <Button className="w-full mt-4">Place Order</Button>
         </Link>
-        <Button variant="outline" className="w-full" onClick={ () => onClearCart() }>
+        <Button variant="outline" className="w-full" onClick={() => onClearCart()}>
           Clear Cart
         </Button>
       </CardContent>

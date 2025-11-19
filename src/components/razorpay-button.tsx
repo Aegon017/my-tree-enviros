@@ -16,7 +16,6 @@ interface RazorpayButtonProps {
   occasion?: string;
   message?: string;
   plan_id?: number;
-  tree_instance_id?: number;
   product_variant_id?: number;
   campaign_id?: number;
   coupon_id?: number;
@@ -36,7 +35,6 @@ export default function RazorpayButton( {
   amount,
   plan_id,
   quantity,
-  tree_instance_id,
   product_variant_id,
   campaign_id,
   coupon_id,
@@ -59,7 +57,6 @@ export default function RazorpayButton( {
           productId,
           amount,
           {
-            tree_instance_id,
             tree_plan_price_id: plan_id,
             product_variant_id,
             campaign_id,

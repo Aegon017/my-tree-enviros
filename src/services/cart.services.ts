@@ -1,48 +1,26 @@
-import { fetchJson } from "@/lib/fetch-json";
-import { authStorage } from "@/lib/auth-storage";
+import api from "./http-client";
+import { BackendCartResponse } from "@/types/cart.types";
 
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
-function headers() {
-  const token = authStorage.getToken();
-
-  return {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    ...( token ? { Authorization: `Bearer ${ token }` } : {} ),
-  };
-}
+const CART_URL = "/cart";
 
 export const cartService = {
-  get: () =>
-    fetchJson( `${ API_BASE }/cart`, {
-      method: "GET",
-      headers: headers(),
-    } ),
+  async index() {
+    return await api.get<{ cart: BackendCartResponse }>(CART_URL);
+  },
 
-  add: ( payload: any ) =>
-    fetchJson( `${ API_BASE }/cart/items`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify( payload ),
-    } ),
+  async add(item: Record<string, any>) {
+    return await api.post<{ cart: BackendCartResponse }>(`${CART_URL}/items`, item);
+  },
 
-  update: ( itemId: number, quantity: number ) =>
-    fetchJson( `${ API_BASE }/cart/items/${ itemId }`, {
-      method: "PUT",
-      headers: headers(),
-      body: JSON.stringify( { quantity } ),
-    } ),
+  async update(id: number, item: Record<string, any>) {
+    return await api.put<{ cart: BackendCartResponse }>(`${CART_URL}/items/${id}`, item);
+  },
 
-  remove: ( itemId: number ) =>
-    fetchJson( `${ API_BASE }/cart/items/${ itemId }`, {
-      method: "DELETE",
-      headers: headers(),
-    } ),
+  async destroy(id: number) {
+    return await api.delete<{ cart: BackendCartResponse }>(`${CART_URL}/items/${id}`);
+  },
 
-  clear: () =>
-    fetchJson( `${ API_BASE }/cart`, {
-      method: "DELETE",
-      headers: headers(),
-    } ),
+  async clear() {
+    return await api.delete<{ cart: BackendCartResponse }>(CART_URL);
+  },
 };

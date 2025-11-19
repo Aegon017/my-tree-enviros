@@ -100,7 +100,6 @@ export interface CreateOrderPayload {
 export interface CreateDirectOrderPayload {
   
   item_type?: "tree" | "product";
-  tree_instance_id?: number;
   tree_plan_price_id?: number;
   product_id?: number;
   product_variant_id?: number;
