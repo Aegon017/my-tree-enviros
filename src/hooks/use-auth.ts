@@ -1,4 +1,4 @@
-import { authService } from "@/services/auth.service";
+import { authService } from "@/services/auth.services";
 import { useAuthStore } from "@/store/auth-store";
 
 export function useAuth() {

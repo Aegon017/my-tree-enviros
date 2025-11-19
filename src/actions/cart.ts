@@ -1,6 +1,6 @@
 "use server";
 
-import { cartApi } from "@/services/cart.service";
+import { cartApi } from "@/services/cart.services";
 import { revalidateTag } from "next/cache";
 
 export async function addToCartAction( payload: any ) {

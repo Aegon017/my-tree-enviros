@@ -3,8 +3,8 @@
 import { useState, useMemo } from "react";
 import useSWR from "swr";
 import { toast } from "sonner";
-import { productService } from "@/services/product.service";
-import { reviewService, type ReviewFormValues } from "@/services/review.service";
+import { productService } from "@/services/product.services";
+import { reviewService, type ReviewFormValues } from "@/services/review.services";
 import { useAuthStore } from "@/store/auth-store";
 
 export function useProductReviews( slug: string ) {
@@ -17,10 +17,10 @@ export function useProductReviews( slug: string ) {
   const { data: canReviewData, mutate: mutateCanReview } = useSWR( isAuth ? [ "can-review", slug ] : null, () => productService.canReviewBySlug( slug ) );
   const { data: reviewsData, mutate: mutateReviews } = useSWR( [ "reviews", slug, currentPage ], () => productService.getReviewsBySlug( slug, currentPage ) );
 
-  const reviews = reviewsData?.data?.data || [];
-  const userReview = canReviewData?.data?.review || null;
-  const canReview = canReviewData?.data?.can_review;
-  const hasReviewed = canReviewData?.data?.reviewed;
+  const reviews = reviewsData?.reviews ?? [];
+  const userReview = canReviewData?.review ?? null;
+  const canReview = canReviewData?.can_review;
+  const hasReviewed = canReviewData?.reviewed;
 
   const averageRating = useMemo( () => ( reviews.length ? reviews.reduce( ( s: number, r: any ) => s + r.rating, 0 ) / reviews.length : 0 ), [ reviews ] );
 

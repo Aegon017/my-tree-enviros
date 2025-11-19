@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth-store";
-import { wishlistService } from "@/services/wishlist.service";
+import { wishlistService } from "@/services/wishlist.services";
 import type { KeyedMutator } from "swr";
 
 export function useProductWishlist( productId?: number, variantId?: number, mutateProduct?: KeyedMutator<any> ) {

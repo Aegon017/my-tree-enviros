@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { useSearchParams } from "next/navigation";
 
 import { Suspense, useEffect, useState } from "react";
-import { orderService } from "@/services/order.service";
+import { orderService } from "@/services/order.services";
 
 export default function Page() {
   return (

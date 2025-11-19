@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
-import { notificationService } from "@/services/notification.service";
+import { notificationService } from "@/services/notification.services";
 import type { Notification, ApiResponse } from "@/types/notification.types";
 
 const fetcher = async (url: string) => {

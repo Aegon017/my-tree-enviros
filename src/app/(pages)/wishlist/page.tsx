@@ -10,7 +10,7 @@ import SectionTitle from "@/components/section-title";
 import WishlistItemCardSkeleton from "@/components/skeletons/wishlist-item-card-skeleton";
 import WishlistItemCard from "@/components/wishlist-item-card";
 import { useAuth } from "@/hooks/use-auth";
-import { wishlistService, type WishlistItem } from "@/services/wishlist.service";
+import { wishlistService, type WishlistItem } from "@/services/wishlist.services";
 
 interface WishlistState {
   items: WishlistItem[];

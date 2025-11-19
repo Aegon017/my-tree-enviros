@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { authService } from "@/services/auth.service";
+import { authService } from "@/services/auth.services";
 import type { VerifyOtpPayload } from "@/types/auth.types";
 
 export function useVerifyOtp( onSuccess?: ( user: any ) => void ) {

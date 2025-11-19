@@ -2,7 +2,7 @@ import { fetchJson } from "@/lib/fetch-json";
 import { authStorage } from "@/lib/auth-storage";
 import { useAuthStore } from "@/store/auth-store";
 import { useCartStore } from "@/store/cart-store";
-import { cartService } from "./cart.service";
+import { cartService } from "./cart.services";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_API_URL || "";
 

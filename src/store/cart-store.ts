@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { cartService } from "@/services/cart.service";
+import { cartService } from "@/services/cart.services";
 import { useAuthStore } from "@/store/auth-store";
 
 type CartState = {

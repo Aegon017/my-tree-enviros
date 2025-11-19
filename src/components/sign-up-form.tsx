@@ -23,7 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { authService } from "@/services/auth.service";
+import { authService } from "@/services/auth.services";
 import { authStorage } from "@/lib/auth-storage";
 import { cn } from "@/lib/utils";
 import image from "../../public/neem-tree.webp";

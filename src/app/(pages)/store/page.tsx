@@ -29,7 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Filter } from "lucide-react";
 
 import PaginationWrapper from "@/components/pagination-wrapper";
-import { productService } from "@/services/product.service";
+import { productService } from "@/services/product.services";
 import { ProductCategory } from "@/types/category.types";
 import { BaseMeta } from "@/types/common.types";
 import { ProductListItem } from "@/types/product.types";
@@ -111,14 +111,15 @@ export default function ProductsPage() {
     try {
       const f = cleanParams( getFilters() );
       const res = await productService.list( f );
-      if ( res.success ) {
-        setProducts( res.data.products );
-        setMeta( res.data.meta );
-      }
+
+      setProducts( res.products );
+      setMeta( res.meta );
     } finally {
       setLoading( false );
     }
   };
+
+
 
   const fetchCategories = async () => {
     const res = await fetch(

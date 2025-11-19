@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { blogService } from "@/services/blog.service";
+import { blogService } from "@/services/blog.services";
 import { BaseMeta } from "@/types/common.types";
 
 export function useBlogData( { slug, initialParams = {} }: { slug?: string; initialParams?: any } = {} ) {

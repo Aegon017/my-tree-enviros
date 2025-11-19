@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { authService } from "@/services/auth.service";
+import { authService } from "@/services/auth.services";
 import type { PhonePayload } from "@/types/auth.types";
 
 export function useResendOtp( startTimer: () => void ) {

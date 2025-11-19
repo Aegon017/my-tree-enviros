@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { treeService } from "@/services/tree.service";
+import { treeService } from "@/services/tree.services";
 import type { TreeListItem } from "@/types/tree.types";
 
 export function useLocationTrees( lat?: number, lng?: number ) {

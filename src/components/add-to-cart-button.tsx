@@ -12,15 +12,14 @@ type Props = {
   planId?: number;
   planPriceId?: number;
   quantity?: number;
-  dedication: {
+  dedication?: {
     name: string;
     occasion: string;
     message: string;
   };
   disabled?: boolean;
   className?: string;
-
-  validateDedication: () => Promise<boolean>;
+  validateDedication?: () => Promise<boolean | null>;
 };
 
 export default function AddToCartButton( {
@@ -38,25 +37,48 @@ export default function AddToCartButton( {
   const { loading, add } = useCart();
 
   const handle = async () => {
-    const isValid = await validateDedication();
-    if ( !isValid ) {
-      toast.error( "Please fill all dedication fields." );
-      return;
-    }
+    if ( dedication ) {
+      const isValid = await validateDedication?.();
+      if ( !isValid ) return;
 
-    const requiredDedication = {
-      name: dedication.name?.trim(),
-      occasion: dedication.occasion?.trim(),
-      message: dedication.message?.trim(),
-    };
+      const required = {
+        name: dedication.name.trim(),
+        occasion: dedication.occasion.trim(),
+        message: dedication.message.trim(),
+      };
 
-    if (
-      !requiredDedication.name ||
-      !requiredDedication.occasion ||
-      !requiredDedication.message
-    ) {
-      toast.error( "Dedication is required." );
-      return;
+      if ( !required.name || !required.occasion || !required.message ) {
+        toast.error( "Dedication is required" );
+        return;
+      }
+
+      if ( type === "sponsor" ) {
+        if ( !treeId || !planId || !planPriceId )
+          return toast.error( "Invalid sponsorship details" );
+
+        return add( {
+          type: "sponsor",
+          tree_id: treeId,
+          plan_id: planId,
+          plan_price_id: planPriceId,
+          quantity,
+          dedication: required,
+        } );
+      }
+
+      if ( type === "adopt" ) {
+        if ( !treeId || !planId || !planPriceId )
+          return toast.error( "Invalid adoption details" );
+
+        return add( {
+          type: "adopt",
+          tree_id: treeId,
+          plan_id: planId,
+          plan_price_id: planPriceId,
+          quantity,
+          dedication: required,
+        } );
+      }
     }
 
     if ( type === "product" ) {
@@ -66,34 +88,6 @@ export default function AddToCartButton( {
         type: "product",
         product_variant_id: variantId,
         quantity,
-      } );
-    }
-
-    if ( type === "sponsor" ) {
-      if ( !treeId || !planId || !planPriceId )
-        return toast.error( "Invalid sponsorship details" );
-
-      return add( {
-        type: "sponsor",
-        tree_id: treeId,
-        plan_id: planId,
-        plan_price_id: planPriceId,
-        quantity,
-        dedication: requiredDedication,
-      } );
-    }
-
-    if ( type === "adopt" ) {
-      if ( !treeId || !planId || !planPriceId )
-        return toast.error( "Invalid adoption details" );
-
-      return add( {
-        type: "adopt",
-        tree_id: treeId,
-        plan_id: planId,
-        plan_price_id: planPriceId,
-        quantity,
-        dedication: requiredDedication,
       } );
     }
 

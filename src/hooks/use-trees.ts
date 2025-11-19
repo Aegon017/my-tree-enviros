@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { treeService } from "@/services/tree.service";
+import { treeService } from "@/services/tree.services";
 import type { BaseMeta } from "@/types/common.types";
 
 type TreeParams = {

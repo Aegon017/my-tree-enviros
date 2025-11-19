@@ -5,7 +5,7 @@ import TreeDetailsLayout from "@/components/tree/tree-details-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trees } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { treeService } from "@/services/tree.service";
+import { treeService } from "@/services/tree.services";
 import { Tree } from "@/types/tree.types";
 
 export default function Page( { params }: {

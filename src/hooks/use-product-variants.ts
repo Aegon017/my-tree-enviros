@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useEffect } from "react";
-import { variantService } from "@/services/variant.service";
+import { variantService } from "@/services/variant.services";
 import type { Product } from "@/types/product.types";
 import type { ProductVariant, VariantColor, VariantPlanter, VariantSize } from "@/types/variant.types";
 

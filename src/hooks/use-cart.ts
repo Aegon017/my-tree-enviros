@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth-store";
 import { useCartStore } from "@/store/cart-store";
-import { cartService } from "@/services/cart.service";
+import { cartService } from "@/services/cart.services";
 
 export function useCart() {
   const token = useAuthStore( ( s ) => s.token );

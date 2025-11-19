@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { authService } from "@/services/auth.service";
+import { authService } from "@/services/auth.services";
 import { authStorage } from "@/lib/auth-storage";
 import type { PhonePayload } from "@/types/auth.types";
 

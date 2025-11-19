@@ -29,8 +29,8 @@ import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 import neemTree from "../../public/neem-tree.webp";
 
-import { productService } from "@/services/product.service";
-import { sliderService } from "@/services/slider.service";
+import { productService } from "@/services/product.services";
+import { sliderService } from "@/services/slider.services";
 
 import { useLocationStore } from "@/store/location-store";
 import { useLocationTrees } from "@/hooks/use-location-trees";

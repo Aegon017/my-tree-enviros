@@ -28,7 +28,7 @@ import {
   orderService,
   type Order,
   type OrderItem,
-} from "@/services/order.service";
+} from "@/services/order.services";
 import { toast } from "sonner";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
