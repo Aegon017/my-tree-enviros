@@ -1,16 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
-import Image from "next/image";
+import { Loader2, ArrowRight } from 'lucide-react';
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -26,12 +25,10 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { authService } from "@/services/auth.services";
 import { authStorage } from "@/lib/auth-storage";
 import { useAuthStore } from "@/store/auth-store";
 import { cn } from "@/lib/utils";
-import image from "../../public/neem-tree.webp";
-import AppLogo from "./ui/app-logo";
+import { authService } from "@/services/auth.services";
 
 const Schema = z.object({
   otp: z.string().min(6, {
@@ -125,86 +122,141 @@ export function VerifyOtpForm({ className, ...props }: React.ComponentProps<"div
   }, [countryCode, phone]);
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="overflow-hidden p-0">
-        <CardContent className="grid p-0 md:grid-cols-2">
-          <div className="p-6 md:p-8">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-                <div className="flex flex-col items-center text-center">
-                  <h1 className="text-2xl font-bold">Verify OTP</h1>
-                  <p className="text-muted-foreground text-balance">
-                    Enter the 6-digit code sent to {countryCode} {phone}
-                  </p>
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="otp"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>One-Time Password</FormLabel>
-                      <FormControl>
-                        <InputOTP maxLength={6} {...field} >
-                          <InputOTPGroup>
-                            <InputOTPSlot index={0} />
-                            <InputOTPSlot index={1} />
-                            <InputOTPSlot index={2} />
-                          </InputOTPGroup>
-                          <InputOTPSeparator />
-                          <InputOTPGroup>
-                            <InputOTPSlot index={3} />
-                            <InputOTPSlot index={4} />
-                            <InputOTPSlot index={5} />
-                          </InputOTPGroup>
-                        </InputOTP>
-                      </FormControl>
-                      <FormDescription>
-                        Please enter the one-time password sent to your phone.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button type="submit" disabled={form.formState.isSubmitting} className="w-full">
-                  {form.formState.isSubmitting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  {form.formState.isSubmitting ? "Verifying..." : "Verify"}
-                </Button>
-
-                <div className="text-center text-sm">
-                  Didn&apos;t receive the code?{" "}
-                  <button
-                    type="button"
-                    onClick={handleResendOtp}
-                    disabled={resendTimer > 0}
-                    className="underline underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
-                  </button>
-                </div>
-              </form>
-            </Form>
+    <div className={cn("flex min-h-screen bg-background", className)} {...props}>
+      {/* Left Side - Form */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 py-12 md:py-0">
+        <div className="w-full max-w-sm">
+          {/* Header */}
+          <div className="mb-8 space-y-3">
+            <h1 className="text-3xl font-bold text-foreground">
+              Verify your number
+            </h1>
+            <p className="text-base text-muted-foreground">
+              We sent a code to <span className="font-semibold text-foreground">{countryCode} {phone}</span>
+            </p>
           </div>
 
-          <div className="bg-muted relative hidden md:grid place-content-center">
-            <AppLogo className="h-60 w-60"/>
-          </div>
-        </CardContent>
-      </Card>
+          {/* Form */}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="otp"
+                render={({ field }) => (
+                  <FormItem className="space-y-4">
+                    <FormLabel className="text-sm font-semibold text-foreground">
+                      Enter the 6-digit code
+                    </FormLabel>
+                    <FormControl>
+                      <InputOTP maxLength={6} {...field}>
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold" />
+                          <InputOTPSlot index={1} className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold" />
+                          <InputOTPSlot index={2} className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold" />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          <InputOTPSlot index={3} className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold" />
+                          <InputOTPSlot index={4} className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold" />
+                          <InputOTPSlot index={5} className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold" />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </FormControl>
+                    <FormMessage className="text-sm" />
+                  </FormItem>
+                )}
+              />
 
-      <div className="text-muted-foreground text-center text-xs text-balance">
-        By clicking continue, you agree to our{" "}
-        <Link href="#" className="hover:text-primary underline underline-offset-4">
-          Terms of Service
-        </Link>{" "}
-        and{" "}
-        <Link href="#" className="hover:text-primary underline underline-offset-4">
-          Privacy Policy
-        </Link>
-        .
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                className="w-full h-11 font-semibold"
+              >
+                {form.formState.isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {form.formState.isSubmitting ? "Verifying..." : "Verify"}
+              </Button>
+
+              <div className="text-sm text-center text-muted-foreground">
+                Didn&apos;t receive the code?{" "}
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={resendTimer > 0}
+                  className="font-semibold text-foreground hover:text-foreground/80 disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors"
+                >
+                  {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend"}
+                </button>
+              </div>
+            </form>
+          </Form>
+
+          {/* Footer */}
+          <div className="mt-8 pt-6 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              By continuing, you agree to our{" "}
+              <Link href="#" className="underline hover:text-foreground transition-colors">
+                Terms
+              </Link>
+              {" "}and{" "}
+              <Link href="#" className="underline hover:text-foreground transition-colors">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Gradient Section */}
+      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-primary to-primary/80 relative overflow-hidden items-center justify-center">
+        <div className="relative z-10 w-full h-full flex items-center justify-center p-8">
+          <Card className="w-full max-w-sm bg-white/10 backdrop-blur-md border-white/20 p-8">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  Quick & Secure
+                </h2>
+                <p className="text-white/80 text-sm leading-relaxed">
+                  Your account is protected with enterprise-grade security.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white text-sm">Instant Verification</p>
+                    <p className="text-white/70 text-xs">Get verified in seconds</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white text-sm">End-to-End Encrypted</p>
+                    <p className="text-white/70 text-xs">Your data stays private</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white text-sm">24/7 Support</p>
+                    <p className="text-white/70 text-xs">Always here to help</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );
