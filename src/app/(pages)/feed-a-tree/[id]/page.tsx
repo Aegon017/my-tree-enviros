@@ -41,7 +41,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import type { FeedTree } from "@/types/feed-tree";
 import { authStorage } from "@/lib/auth-storage";
-import { campaignService } from "@/services/campaign.service";
+import { campaignService } from "@/services/campaign.services";
 import type { DirectOrderRequest } from "@/types/campaign.types";
 
 interface ApiResponse {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useLocation } from "@/hooks/use-location";
+import { useLocation } from "@/hooks/use-location-search";
 import AddressForm from "@/components/address-form";
 
 export function LocationSelectionModal() {

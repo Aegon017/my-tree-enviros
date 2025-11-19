@@ -4,8 +4,8 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { CartType, PaymentType, ProductType } from "@/types/payment.type";
-import { orderService } from "@/services/order.service";
-import { paymentService } from "@/services/payment.service";
+import { orderService } from "@/services/order.services";
+import { paymentService } from "@/services/payment.services";
 
 
 type DirectExtras = {

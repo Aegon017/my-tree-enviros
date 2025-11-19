@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { Campaign } from "@/types/campaign.types";
-import { campaignService } from "@/services/campaign.service";
+import { campaignService } from "@/services/campaign.services";
 
 const calculateProgress = ( raised: string, goal: string ) => {
   const raisedNum = parseFloat( raised );

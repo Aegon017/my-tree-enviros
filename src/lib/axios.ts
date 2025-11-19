@@ -6,8 +6,6 @@ const api = axios.create({
     Accept: "application/json",
     "Content-Type": "application/json",
   },
-  withCredentials: true,
-  withXSRFToken: true, 
 });
 
 
@@ -20,9 +18,6 @@ export async function initializeCsrf(): Promise<void> {
   try {
     await axios.get(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/sanctum/csrf-cookie`,
-      {
-        withCredentials: true,
-      },
     );
     csrfInitialized = true;
   } catch (error) {

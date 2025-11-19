@@ -40,8 +40,8 @@ import {
   type ShippingAddress,
   type CreateShippingAddressPayload,
   type User as UserProfile,
-} from "@/services/user.service";
-import { orderService } from "@/services/order.service";
+} from "@/services/user.services";
+import { orderService } from "@/services/order.services";
 import {
   Form,
   FormControl,

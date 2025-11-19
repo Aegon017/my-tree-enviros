@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { createOrder, paymentCallback } from "@/services/payment.service";
+import { createOrder, paymentCallback } from "@/services/payment.services";
 import { useRouter } from "next/navigation";
 
 declare const Razorpay: any; 

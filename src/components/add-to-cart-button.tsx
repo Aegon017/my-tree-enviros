@@ -1,99 +1,109 @@
 "use client";
 
 import { ShoppingCart } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
+import { useCart } from "@/hooks/use-cart";
+
+type Props = {
+  type: "product" | "sponsor" | "adopt";
+  variantId?: number;
+  treeId?: number;
+  planId?: number;
+  planPriceId?: number;
+  quantity?: number;
+  dedication?: {
+    name: string;
+    occasion: string;
+    message: string;
+  };
+  disabled?: boolean;
+  className?: string;
+  validateDedication?: () => Promise<boolean | null>;
+};
 
 export default function AddToCartButton( {
   type,
-  treeId,
   variantId,
+  treeId,
   planId,
   planPriceId,
-  quantity,
+  quantity = 1,
   dedication,
   disabled,
-}: any ) {
-  console.log(dedication);
-  
-  const [ showConfirm, setShowConfirm ] = useState( false );
-  const [ loading, setLoading ] = useState( false );
+  validateDedication,
+  className,
+}: Props ) {
+  const { loading, add } = useCart();
 
-  const { addProduct, addSponsor, addAdopt, clear } = useCart();
+  const handle = async () => {
+    if ( dedication ) {
+      const isValid = await validateDedication?.();
+      if ( !isValid ) return;
 
-  const handleAdd = async () => {
-    setLoading( true );
+      const required = {
+        name: dedication.name.trim(),
+        occasion: dedication.occasion.trim(),
+        message: dedication.message.trim(),
+      };
 
-    try {
-      if ( type === "product" ) {
-        await addProduct( variantId, quantity );
+      if ( !required.name || !required.occasion || !required.message ) {
+        toast.error( "Dedication is required" );
+        return;
       }
 
       if ( type === "sponsor" ) {
-        await addSponsor( treeId, planId, planPriceId, quantity, dedication );
+        if ( !treeId || !planId || !planPriceId )
+          return toast.error( "Invalid sponsorship details" );
+
+        return add( {
+          type: "sponsor",
+          tree_id: treeId,
+          plan_id: planId,
+          plan_price_id: planPriceId,
+          quantity,
+          dedication: required,
+        } );
       }
 
       if ( type === "adopt" ) {
-        await addAdopt( treeId, planId, planPriceId, quantity, dedication );
+        if ( !treeId || !planId || !planPriceId )
+          return toast.error( "Invalid adoption details" );
+
+        return add( {
+          type: "adopt",
+          tree_id: treeId,
+          plan_id: planId,
+          plan_price_id: planPriceId,
+          quantity,
+          dedication: required,
+        } );
       }
-
-    } catch ( error: any ) {
-      const msg = error?.response?.data?.message || "Error";
-
-      if ( msg.includes( "same type" ) ) {
-        setShowConfirm( true );
-      } else {
-        toast.error( msg );
-      }
-    } finally {
-      setLoading( false );
     }
-  };
 
-  const handleClearAndAdd = async () => {
-    setLoading( true );
+    if ( type === "product" ) {
+      if ( !variantId ) return toast.error( "Invalid product variant" );
 
-    try {
-      await clear();
-      await handleAdd();
-      toast.success( "Cart cleared & item added" );
-    } catch {
-      toast.error( "Unable to clear cart" );
-    } finally {
-      setShowConfirm( false );
-      setLoading( false );
+      return add( {
+        type: "product",
+        product_variant_id: variantId,
+        quantity,
+      } );
     }
+
+    toast.error( "Invalid item type" );
   };
 
   return (
-    <>
-      <Button disabled={ disabled || loading } onClick={ handleAdd } className="w-full flex gap-2">
-        <ShoppingCart className="w-4 h-4" />
-        Add To Cart
-      </Button>
-
-      <Dialog open={ showConfirm } onOpenChange={ setShowConfirm }>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Clear Cart?</DialogTitle>
-            <DialogDescription>
-              You can only add one type of item at a time. Clear cart to continue?
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter className="flex gap-2 mt-4">
-            <Button variant="outline" onClick={ () => setShowConfirm( false ) }>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={ handleClearAndAdd } disabled={ loading }>
-              Clear & Add
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    <Button
+      type="button"
+      onClick={ handle }
+      disabled={ disabled || loading }
+      loading={ loading }
+      className={ className ?? "flex gap-2" }
+    >
+      <ShoppingCart className="w-4 h-4" />
+      Add To Cart
+    </Button>
   );
 }

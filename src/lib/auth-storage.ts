@@ -1,50 +1,58 @@
-import { cookies } from "./cookies";
-import type { User } from "@/types/auth.types";
+const TOKEN_KEY = "mte_auth_token";
+const USER_KEY = "mte_auth_user";
+const RESEND_KEY = "mte_resend_time";
 
+function setCookie( name: string, value: string, days = 30 ) {
+  const expires = new Date( Date.now() + days * 86400_000 ).toUTCString();
+  document.cookie = `${ name }=${ encodeURIComponent( value ) }; expires=${ expires }; path=/; SameSite=Strict; Secure`;
+}
+
+function getCookie( name: string ): string | null {
+  const match = document.cookie.match( new RegExp( "(^| )" + name + "=([^;]+)" ) );
+  return match ? decodeURIComponent( match[ 2 ] ) : null;
+}
 
 export const authStorage = {
-  
-  isAuthenticated: (): boolean => {
-    if (typeof window === "undefined") return false;
-    return !!localStorage.getItem("user");
+  getToken() {
+    if ( typeof window === "undefined" ) return null;
+    return getCookie( TOKEN_KEY );
   },
-
-  
-  getUser: (): User | null => {
-    if (typeof window === "undefined") return null;
-    const userStr = localStorage.getItem("user");
-    return userStr ? JSON.parse(userStr) : null;
-  },
-
-  setUser: (user: User) => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("user", JSON.stringify(user));
+  setToken( token: string ) {
+    if ( typeof window !== "undefined" ) {
+      setCookie( TOKEN_KEY, token, 30 );
     }
   },
-
-  clearUser: () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("user");
+  clearToken() {
+    if ( typeof window !== "undefined" ) {
+      document.cookie = `${ TOKEN_KEY }=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
     }
   },
-
-  
-  getResendTime: (): number | null => {
-    const val = cookies.get("otpResendTime");
-    return val ? parseInt(val, 10) : null;
+  getUser() {
+    if ( typeof window === "undefined" ) return null;
+    const raw = localStorage.getItem( USER_KEY );
+    return raw ? JSON.parse( raw ) : null;
   },
-
-  setResendTime: (time: number) => {
-    cookies.set("otpResendTime", time.toString(), 1 / 24 / 30); 
+  setUser( user: any ) {
+    if ( typeof window !== "undefined" ) {
+      localStorage.setItem( USER_KEY, JSON.stringify( user ) );
+    }
   },
-
-  clearResendTime: () => {
-    cookies.remove("otpResendTime");
+  clearUser() {
+    if ( typeof window !== "undefined" ) {
+      localStorage.removeItem( USER_KEY );
+    }
   },
-
-  
-  clearAll: () => {
-    authStorage.clearUser();
-    authStorage.clearResendTime();
+  setResendTime( ts: number ) {
+    if ( typeof window !== "undefined" ) localStorage.setItem( "mte_resend_time", String( ts ) );
+  },
+  getResendTime() {
+    if ( typeof window === "undefined" ) return null;
+    const v = localStorage.getItem( "mte_resend_time" );
+    return v ? Number( v ) : null;
+  },
+  clearAll() {
+    this.clearToken();
+    this.clearUser();
+    if ( typeof window !== "undefined" ) localStorage.removeItem( RESEND_KEY );
   },
 };

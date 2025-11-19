@@ -12,18 +12,18 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, use } from "react";
-import useSWR from "swr";
+import { use, useMemo, useState } from "react";
+
 import BreadcrumbNav from "@/components/breadcrumb-nav";
 import BlogDetailsSkeleton from "@/components/skeletons/blog-details-skeleton";
 import { Button } from "@/components/ui/button";
+
 import type { BreadcrumbItemType } from "@/types/home";
-import { getBlog } from "@/services/blog.service";
-import { Blog } from "@/types/blog.types";
+import { useBlogData } from "@/hooks/use-blog-data";
 
 const breadcrumbItems: BreadcrumbItemType[] = [
   { title: "Home", href: "/" },
-  { title: "Blogs", href: "" },
+  { title: "Blogs", href: "/blogs" },
 ];
 
 export default function Page( {
@@ -31,17 +31,13 @@ export default function Page( {
 }: {
   params: Promise<{ slug: string }>;
 } ) {
-  const { slug } = use( params ); // ✅ Correct Next.js 15 usage
+  const { slug } = use( params );
   const router = useRouter();
+
+  const { blog, loading, error } = useBlogData( { slug } );
 
   const [ copied, setCopied ] = useState( false );
   const [ showShareTooltip, setShowShareTooltip ] = useState( false );
-
-  const { data, error, isLoading, mutate } = useSWR( [ "blog", slug ], () =>
-    getBlog( slug )
-  );
-
-  const blog: Blog | undefined = data?.blog;
 
   const shareUrl =
     typeof window !== "undefined" ? window.location.href : "";
@@ -61,18 +57,17 @@ export default function Page( {
       setCopied( true );
       setTimeout( () => setCopied( false ), 2000 );
     } catch ( err ) {
-      console.error( "Failed to copy:", err );
+      console.error( "Copy failed:", err );
     }
   };
 
-  const shareButtons = [
+  const socialLinks = [
     {
       name: "Facebook",
       icon: Facebook,
       url: `https://facebook.com/sharer/sharer.php?u=${ encodeURIComponent(
         shareUrl
       ) }`,
-      color: "hover:bg-blue-500 hover:text-white",
     },
     {
       name: "Twitter",
@@ -80,7 +75,6 @@ export default function Page( {
       url: `https://twitter.com/intent/tweet?url=${ encodeURIComponent(
         shareUrl
       ) }&text=${ encodeURIComponent( blog?.title || "" ) }`,
-      color: "hover:bg-blue-400 hover:text-white",
     },
     {
       name: "LinkedIn",
@@ -88,31 +82,25 @@ export default function Page( {
       url: `https://linkedin.com/sharing/share-offsite/?url=${ encodeURIComponent(
         shareUrl
       ) }`,
-      color: "hover:bg-blue-600 hover:text-white",
     },
   ];
 
-  if ( error )
+  if ( error ) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold text-destructive mb-4">
-            Error Loading Blog
+            Failed to load blog
           </h1>
           <p className="text-muted-foreground mb-6">
-            Sorry, we couldn't load the blog post. Please try again.
+            Please try again or go back.
           </p>
-          <div className="flex gap-3 justify-center">
-            <Button onClick={ () => mutate() }>Try Again</Button>
-            <Button variant="outline" onClick={ () => router.back() }>
-              Go Back
-            </Button>
-          </div>
         </div>
       </div>
     );
+  }
 
-  if ( isLoading || !blog ) return <BlogDetailsSkeleton />;
+  if ( loading || !blog ) return <BlogDetailsSkeleton />;
 
   return (
     <>
@@ -122,37 +110,41 @@ export default function Page( {
 
       <div className="container max-w-6xl mx-auto px-4 pb-8">
         <article className="bg-card rounded-xl border overflow-hidden">
+          {/* Image */ }
           <div className="relative h-64 sm:h-80 md:h-96">
             <Image
               src={ blog.image_url ?? "/placeholder.svg" }
               alt={ blog.title }
               fill
-              className="object-cover"
               priority
+              className="object-cover"
             />
           </div>
 
+          {/* Content */ }
           <div className="p-6">
+            {/* Meta Info */ }
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
               <div className="flex items-center">
                 <Calendar className="mr-2 h-4 w-4" />
-                <span>{ formattedDate }</span>
+                { formattedDate }
               </div>
 
-              <div className="h-1 w-1 rounded-full bg-muted-foreground/50"></div>
+              <div className="h-1 w-1 rounded-full bg-muted-foreground/50" />
 
               <div className="capitalize">{ blog.category?.name }</div>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6 leading-tight">
+            <h1 className="text-3xl md:text-4xl font-bold mb-6 leading-tight">
               { blog.title }
             </h1>
 
             <Markup
-              className="max-w-none text-foreground mb-8"
               content={ blog.description ?? "" }
+              className="prose max-w-none dark:prose-invert"
             />
 
+            {/* Share Section */ }
             <div className="border-t pt-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <h3 className="text-lg font-medium flex items-center">
@@ -161,25 +153,21 @@ export default function Page( {
                 </h3>
 
                 <div className="flex items-center gap-2">
-                  { shareButtons.map( ( social ) => (
+                  { socialLinks.map( ( s ) => (
                     <Button
-                      key={ social.name }
+                      key={ s.name }
                       variant="outline"
                       size="icon"
-                      className={ `rounded-full ${ social.color } transition-colors` }
                       asChild
+                      className="rounded-full hover:bg-primary hover:text-primary-foreground"
                     >
-                      <a
-                        href={ social.url }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={ `Share on ${ social.name }` }
-                      >
-                        <social.icon className="h-4 w-4" />
+                      <a href={ s.url } target="_blank" rel="noopener noreferrer">
+                        <s.icon className="h-4 w-4" />
                       </a>
                     </Button>
                   ) ) }
 
+                  {/* Copy Link */ }
                   <div className="relative">
                     <Button
                       variant={ copied ? "default" : "outline" }
@@ -196,9 +184,10 @@ export default function Page( {
                       ) }
                     </Button>
 
-                    { showShareTooltip && (
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-primary text-primary-foreground rounded shadow-lg">
-                        Copy link
+                    {/* Tooltip */ }
+                    { showShareTooltip && !copied && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-primary text-white rounded shadow">
+                        Copy Link
                       </div>
                     ) }
                   </div>

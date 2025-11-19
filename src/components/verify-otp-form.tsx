@@ -1,12 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AxiosError } from "axios";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -15,7 +13,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -27,26 +24,24 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { useAuth } from "@/hooks/use-auth";
-import { authService } from "@/services/auth.service";
-import { authStorage } from "@/lib/auth-storage";
-import { cn } from "@/lib/utils";
+import AppLogo from "@/components/ui/app-logo";
 import image from "../../public/neem-tree.webp";
-import AppLogo from "./ui/app-logo";
+import { cn } from "@/lib/utils";
+import { useOtpTimer } from "@/hooks/use-otp-timer";
+import { useVerifyOtp } from "@/hooks/use-verify-otp";
+import { useResendOtp } from "@/hooks/use-resend-otp";
+import type { VerifyOtpPayload, PhonePayload } from "@/types/auth.types";
 
-const OtpSchema = z.object( {
-  otp: z
-    .string()
-    .length( 6, "OTP must be 6 digits" )
-    .regex( /^\d+$/, "OTP must contain only numbers" ),
+const Schema = z.object( {
+  otp: z.string().length( 6 ).regex( /^\d+$/ ),
 } );
 
-type OtpFormData = z.infer<typeof OtpSchema>;
+type FormData = z.infer<typeof Schema>;
 
 export function VerifyOtpForm( {
   className,
-  country_code: propCountryCode,
-  phone: propPhone,
+  country_code: ccProp,
+  phone: phoneProp,
   onSuccess,
   ...props
 }: React.ComponentProps<"div"> & {
@@ -55,148 +50,50 @@ export function VerifyOtpForm( {
   onSuccess?: ( user: any ) => void;
 } ) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const country_code = propCountryCode ?? searchParams.get( "country_code" );
-  const phone = propPhone ?? searchParams.get( "phone" );
-  const { login } = useAuth();
+  const params = useSearchParams();
 
-  const [ resendTimer, setResendTimer ] = useState( 0 );
-  const [ isResending, setIsResending ] = useState( false );
+  const country_code = ccProp ?? params.get( "country_code" ) ?? "";
+  const phone = phoneProp ?? params.get( "phone" ) ?? "";
 
-  const form = useForm<OtpFormData>( {
-    resolver: zodResolver( OtpSchema ),
+  const { remaining, start } = useOtpTimer( 60 );
+  const { verify } = useVerifyOtp( onSuccess );
+  const { resend } = useResendOtp( start );
+
+  const form = useForm<FormData>( {
+    resolver: zodResolver( Schema ),
     defaultValues: { otp: "" },
   } );
 
+  async function onSubmit( data: FormData ) {
+    if ( !country_code || !phone ) return toast.error( "Missing phone information" );
 
-  useEffect( () => {
-    const savedTime = authStorage.getResendTime();
-    if ( savedTime ) {
-      const timeLeft = Math.max( 0, Math.ceil( ( savedTime - Date.now() ) / 1000 ) );
-      setResendTimer( timeLeft );
-    }
-  }, [] );
+    const payload: VerifyOtpPayload = {
+      country_code: country_code.startsWith( "+" ) ? country_code : `+${ country_code }`,
+      phone,
+      otp: data.otp,
+    };
 
+    const user = await verify( payload );
+    if ( user ) router.push( "/" );
+  }
 
-  useEffect( () => {
-    if ( resendTimer <= 0 ) return;
-    const timer = setTimeout( () => setResendTimer( resendTimer - 1 ), 1000 );
-    return () => clearTimeout( timer );
-  }, [ resendTimer ] );
+  async function handleResend() {
+    if ( remaining > 0 ) return;
 
-  const onSubmit = useCallback(
-    async ( data: OtpFormData ) => {
-      if ( !phone || !country_code ) {
-        toast.error( "Phone number or country code is missing" );
-        return;
-      }
+    const payload: PhonePayload = {
+      country_code: country_code.startsWith( "+" ) ? country_code : `+${ country_code }`,
+      phone,
+    };
 
-      const formattedCountryCode = country_code.startsWith( "+" )
-        ? country_code
-        : `+${ country_code }`;
+    await resend( payload );
+  }
 
-      try {
-        const result = await authService.verifyOtp( {
-          country_code: formattedCountryCode,
-          phone,
-          otp: data.otp,
-        } );
-
-        if ( result.success && result.data?.user ) {
-
-          login( result.data.user );
-
-
-          authStorage.clearResendTime();
-
-          toast.success( "OTP verified successfully" );
-
-
-          if ( onSuccess ) {
-            onSuccess( result.data.user );
-          } else {
-            router.push( "/" );
-          }
-        } else {
-          toast.error( result.message || "OTP verification failed" );
-        }
-      } catch ( error ) {
-        if ( error instanceof AxiosError ) {
-          const serverError = error.response?.data;
-
-          if ( serverError?.errors ) {
-            form.clearErrors();
-
-            Object.keys( serverError.errors ).forEach( ( field ) => {
-              if ( field in form.getValues() ) {
-                form.setError( field as keyof OtpFormData, {
-                  type: "server",
-                  message: Array.isArray( serverError.errors[ field ] )
-                    ? serverError.errors[ field ].join( ", " )
-                    : serverError.errors[ field ],
-                } );
-              }
-            } );
-
-            if (
-              serverError.message &&
-              Object.keys( serverError.errors ).length === 0
-            ) {
-              toast.error( serverError.message );
-            }
-          } else {
-            toast.error( serverError?.message || "OTP verification failed" );
-          }
-        } else {
-          toast.error( "An unexpected error occurred" );
-        }
-      }
-    },
-    [ country_code, phone, router, login, form ],
-  );
-
-  const handleResendOtp = useCallback( async () => {
-    if ( !phone || !country_code || resendTimer > 0 || isResending ) return;
-
-    const formattedCountryCode = country_code.startsWith( "+" )
-      ? country_code
-      : `+${ country_code }`;
-
-    setIsResending( true );
-
-    try {
-      const result = await authService.resendOtp( {
-        country_code: formattedCountryCode,
-        phone,
-      } );
-
-      if ( result.success ) {
-        const resetTime = Date.now() + 60000;
-        authStorage.setResendTime( resetTime );
-        setResendTimer( 60 );
-        toast.success( "OTP resent successfully" );
-      } else {
-        toast.error( result.message || "Failed to resend OTP" );
-      }
-    } catch ( error ) {
-      if ( error instanceof AxiosError ) {
-        const serverError = error.response?.data;
-        toast.error( serverError?.message || "Failed to resend OTP" );
-      } else {
-        toast.error( "Failed to resend OTP" );
-      }
-    } finally {
-      setIsResending( false );
-    }
-  }, [ country_code, phone, resendTimer, isResending ] );
-
-  const displayPhoneNumber =
+  const display =
     country_code && phone
       ? `${ country_code.startsWith( "+" ) ? country_code : `+${ country_code }` } ${ phone }`
       : "";
 
-
-  if ( !phone || !country_code ) {
+  if ( !country_code || !phone ) {
     return (
       <div className={ cn( "flex flex-col gap-6", className ) } { ...props }>
         <Card className="overflow-hidden p-0">
@@ -205,17 +102,9 @@ export function VerifyOtpForm( {
               <AppLogo />
               <h1 className="text-2xl font-bold">Verification Error</h1>
               <p className="text-muted-foreground text-balance">
-                { !phone && !country_code
-                  ? "Phone number and country code are missing."
-                  : !phone
-                    ? "Phone number is missing."
-                    : "Country code is missing." }{ " " }
-                Please try again.
+                Missing phone number or country code. Please try again.
               </p>
-              <Button
-                onClick={ () => router.push( "/sign-in" ) }
-                className="w-full max-w-xs"
-              >
+              <Button onClick={ () => router.push( "/sign-in" ) } className="w-full max-w-xs">
                 Back to Sign In
               </Button>
             </div>
@@ -234,22 +123,20 @@ export function VerifyOtpForm( {
         <CardContent className="grid p-0 md:grid-cols-2">
           <div className="p-6 md:p-8">
             <Form { ...form }>
-              <form
-                onSubmit={ form.handleSubmit( onSubmit ) }
-                className="flex flex-col gap-6"
-              >
+              <form onSubmit={ form.handleSubmit( onSubmit ) } className="flex flex-col gap-6">
                 <div className="flex flex-col items-center text-center">
                   <AppLogo />
                   <h1 className="text-2xl font-bold">Verify OTP</h1>
                   <p className="text-muted-foreground text-balance">
-                    Enter the verification code sent to { displayPhoneNumber }
+                    Enter the verification code sent to { display }
                   </p>
+
                   <Button
                     variant="link"
                     size="sm"
                     onClick={ () => router.back() }
-                    className="w-fit h-auto p-0 text-primary mt-2"
                     type="button"
+                    className="w-fit h-auto p-0 text-primary mt-2"
                   >
                     Edit phone number
                   </Button>
@@ -259,16 +146,11 @@ export function VerifyOtpForm( {
                   control={ form.control }
                   name="otp"
                   render={ ( { field } ) => (
-                    <FormItem className="space-y-4">
-                      <FormLabel className="text-center w-full block">
-                        Verification Code
-                      </FormLabel>
+                    <FormItem>
+                      <FormLabel className="text-center w-full block">Verification Code</FormLabel>
                       <FormControl>
                         <div className="flex justify-center">
-                          <InputOTP
-                            maxLength={ 6 }
-                            { ...field }
-                          >
+                          <InputOTP maxLength={ 6 } { ...field }>
                             <InputOTPGroup>
                               <InputOTPSlot index={ 0 } />
                               <InputOTPSlot index={ 1 } />
@@ -283,9 +165,6 @@ export function VerifyOtpForm( {
                           </InputOTP>
                         </div>
                       </FormControl>
-                      <FormDescription className="text-center">
-                        Please enter the 6-digit code sent to your phone
-                      </FormDescription>
                       <FormMessage className="text-center" />
                     </FormItem>
                   ) }
@@ -307,44 +186,30 @@ export function VerifyOtpForm( {
                   Didn&apos;t receive the code?{ " " }
                   <button
                     type="button"
-                    onClick={ handleResendOtp }
-                    disabled={ resendTimer > 0 || isResending }
+                    onClick={ handleResend }
+                    disabled={ remaining > 0 }
                     className="text-primary hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
                   >
-                    { isResending
-                      ? "Resending..."
-                      : resendTimer > 0
-                        ? `Resend in ${ resendTimer }s`
-                        : "Resend OTP" }
+                    { remaining > 0 ? `Resend in ${ remaining }s` : "Resend OTP" }
                   </button>
                 </div>
               </form>
             </Form>
           </div>
+
           <div className="bg-muted relative hidden md:grid place-content-center">
-            <Image
-              src={ image }
-              alt="My tree enviros"
-              priority
-              className="object-cover w-full h-full"
-            />
+            <Image src={ image } alt="My tree enviros" priority className="object-cover w-full h-full" />
           </div>
         </CardContent>
       </Card>
 
       <div className="text-muted-foreground text-center text-xs text-balance">
         By clicking continue, you agree to our{ " " }
-        <Link
-          href="#"
-          className="hover:text-primary underline underline-offset-4"
-        >
+        <Link href="#" className="hover:text-primary underline underline-offset-4">
           Terms of Service
         </Link>{ " " }
         and{ " " }
-        <Link
-          href="#"
-          className="hover:text-primary underline underline-offset-4"
-        >
+        <Link href="#" className="hover:text-primary underline underline-offset-4">
           Privacy Policy
         </Link>
         .

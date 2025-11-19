@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useLocation } from "@/hooks/use-location";
+import { useLocation } from "@/hooks/use-location-search";
 import LocationModal from "./location-modal";
 
 export default function LocationSelector() {

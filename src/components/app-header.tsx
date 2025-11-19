@@ -2,7 +2,6 @@
 
 import {
   Bell,
-  ChevronDown,
   Heart,
   MapPin,
   Menu,
@@ -14,14 +13,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -31,20 +23,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useAuth } from "@/hooks/use-auth";
-import { useLocation } from "@/hooks/use-location";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import type { RootState } from "@/store";
 import AppLogo from "./ui/app-logo";
+import { useAuth } from "@/hooks/use-auth";
+import { LocationButton } from "./location/location-button";
 
 const NOTICE_TEXT = "Get Up to 20% OFF On First Time Purchase";
 const PHONE_NUMBER = "+91 89777 30566";
 const TOP_BAR_LINKS = [
   { name: "My Account", href: "/my-account" },
   { name: "Blogs", href: "/blogs" },
-  { name: "Sign In", href: "/sign-in", isAuth: true },
-  { name: "Sign Up", href: "/sign-up", isAuth: true, highlight: true },
+  { name: "Sign In", href: "/sign-in", isAuth: true, highlight: true }
 ];
 const MAIN_NAV_ITEMS = [
   { href: "/", label: "Home" },
@@ -63,7 +53,7 @@ const ICON_LINKS = [
 export default function Header() {
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, signOut } = useAuth();
   const [ isClient, setIsClient ] = useState( false );
 
   useEffect( () => {
@@ -74,7 +64,7 @@ export default function Header() {
     <>
       <TopNotice />
       <div className={ cn( "bg-background z-50", isMobile && "sticky top-0" ) }>
-        { isClient && <TopBar user={ isAuthenticated } logout={ logout } /> }
+        { isClient && <TopBar user={ isAuthenticated } signOut={ signOut } /> }
         { isClient && <HeaderMiddle user={ isAuthenticated } /> }
       </div>
       { !isMobile && isClient && <HeaderBottom pathname={ pathname } /> }
@@ -106,32 +96,11 @@ function TopNotice() {
   );
 }
 
-function TopBar( { user, logout }: { user: boolean; logout: () => void } ) {
-  const { selectedLocation, syncFromStorage } = useLocation();
-
-  useEffect( () => {
-    syncFromStorage();
-  }, [ syncFromStorage ] );
-
+function TopBar( { user, signOut }: { user: boolean; signOut: () => void } ) {
   return (
     <div className="bg-muted text-muted-foreground text-xs">
       <div className="container mx-auto max-w-6xl py-1.5 sm:py-2 flex justify-between items-center px-2">
-
-        <Button
-          variant="ghost"
-          className="p-0 h-auto font-normal text-muted-foreground hover:bg-muted/80 text-xs flex items-center"
-          onClick={ () => {
-            window.dispatchEvent( new CustomEvent( "open-location-modal" ) );
-          } }
-        >
-          <MapPin className="w-3 h-3 mr-1 shrink-0" />
-          <span>
-            { selectedLocation
-              ? `${ selectedLocation.area }, ${ selectedLocation.city }`
-              : "Select Location" }
-          </span>
-        </Button>
-
+        <LocationButton />
         <div className="hidden md:flex items-center">
           { TOP_BAR_LINKS.map( ( item, index ) => {
             if ( user && item.isAuth ) return null;
@@ -162,7 +131,7 @@ function TopBar( { user, logout }: { user: boolean; logout: () => void } ) {
           { user && (
             <Button
               variant="ghost"
-              onClick={ logout }
+              onClick={ signOut }
               className="text-xs text-muted-foreground hover:text-primary transition-colors px-2 h-6"
             >
               Sign Out
@@ -174,7 +143,7 @@ function TopBar( { user, logout }: { user: boolean; logout: () => void } ) {
           { user ? (
             <Button
               variant="ghost"
-              onClick={ logout }
+              onClick={ signOut }
               className="text-xs text-muted-foreground hover:text-primary transition-colors"
             >
               Sign Out
@@ -298,7 +267,7 @@ function HeaderBottom( { pathname }: { pathname: string } ) {
 
 function MobileNavigation( { user }: { user: boolean } ) {
   const [ open, setOpen ] = useState( false );
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
   const pathname = usePathname();
 
   return (
@@ -365,7 +334,7 @@ function MobileNavigation( { user }: { user: boolean } ) {
             { user && (
               <Button
                 variant="ghost"
-                onClick={ logout }
+                onClick={ signOut }
                 className="justify-start text-sm text-muted-foreground hover:text-primary px-2 py-2 h-auto"
               >
                 Sign Out
