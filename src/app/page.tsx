@@ -35,6 +35,7 @@ import { sliderService } from "@/services/slider.services";
 import { useLocationStore } from "@/store/location-store";
 import { useLocationTrees } from "@/hooks/use-location-trees";
 import { useBlogData } from "@/hooks/use-blog-data";
+import InteractiveHero from "@/components/interactive-hero";
 
 export default function Home() {
   const { selected } = useLocationStore();
@@ -141,31 +142,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      <Carousel
-        plugins={sliderPlugins}
-        opts={{ loop: true }}
-        onMouseEnter={onMouseEnterSlider}
-        onMouseLeave={onMouseLeaveSlider}
-        className="w-full relative"
-      >
-        <CarouselContent>
-          {(loadingSliders ? [null] : sliders).map((slider, idx) => (
-            <CarouselItem key={slider?.id ?? idx}>
-              <div className="relative h-dvh">
-                <Image
-                  src={slider?.main_image_url ?? neemTree}
-                  alt={slider?.title ?? "Slider"}
-                  fill
-                  priority
-                  className="object-cover"
-                />
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2" />
-        <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2" />
-      </Carousel>
+      <InteractiveHero sliders={sliders} loading={loadingSliders} />
 
       <Section>
         <SectionTitle

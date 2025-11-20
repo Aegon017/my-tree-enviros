@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     motion,
     AnimatePresence,
     useMotionValue,
     useTransform,
-    PanInfo,
     useScroll,
     useSpring,
 } from "motion/react";
@@ -24,74 +23,43 @@ interface Slider {
     button_link?: string;
 }
 
-interface InteractiveHeroProps {
-    sliders: Slider[];
-    loading?: boolean;
-}
+const FilmGrain = () => (
+    <motion.div
+        className="absolute inset-0 pointer-events-none z-6 opacity-[0.08] mix-blend-overlay"
+        style={{
+            backgroundImage: "linear-gradient(transparent 0%, rgba(255,255,255,0.02) 50%, transparent 100%)",
+            backgroundSize: "3px 3px",
+        }}
+    />
+);
 
-// --- Helper Component: Kinetic Text Reveal ---
-const AnimatedText = ({
-    text,
-    className,
-    delay = 0,
-}: {
-    text: string;
-    className?: string;
-    delay?: number;
-}) => {
-    // Split text into words
-    const words = text.split(" ");
-
-    const container = {
-        hidden: { opacity: 0 },
-        visible: (i = 1) => ({
-            opacity: 1,
-            transition: { staggerChildren: 0.12, delayChildren: delay * i },
-        }),
-    };
-
-    const child = {
-        visible: {
-            y: 0,
-            transition: {
-                type: "spring" as const,
-                damping: 12,
-                stiffness: 100,
-            },
-        },
-        hidden: {
-            y: "100%",
-        },
-    };
+const TextRevealVertical = ({ text, className = "" }: { text: string; className?: string }) => {
+    const words = useMemo(() => text.split(" "), [text]);
 
     return (
-        <motion.div
-            style={{ overflow: "hidden", display: "flex", flexWrap: "wrap" }}
-            variants={container}
-            initial="hidden"
-            animate="visible"
-            className={className}
-        >
-            {words.map((word, index) => (
-                <div
-                    key={index}
-                    style={{ overflow: "hidden", display: "inline-block" }}
-                    className="mr-[0.25em] pb-1" // Padding bottom to prevent clipping descenders
-                >
-                    <motion.span
-                        variants={child}
-                        style={{ display: "inline-block" }}
-                        className="origin-bottom-left"
-                    >
-                        {word}
-                    </motion.span>
-                </div>
-            ))}
-        </motion.div>
+        <div className={`inline-block overflow-hidden ${className}`}>
+            <div className="flex flex-wrap justify-center gap-3">
+                {words.map((word, wIndex) => (
+                    <div key={wIndex} className="inline-flex">
+                        {word.split("").map((letter, i) => (
+                            <motion.span
+                                key={i}
+                                className="inline-block"
+                                initial={{ y: "120%", opacity: 0 }}
+                                animate={{ y: "0%", opacity: 1 }}
+                                transition={{ duration: 0.6, delay: (wIndex * 0.2) + i * 0.04 }}
+                            >
+                                {letter}
+                            </motion.span>
+                        ))}
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 };
 
-// --- Helper Component: Magnetic Button ---
+
 const MagneticButton = ({
     children,
     className,
@@ -104,319 +72,232 @@ const MagneticButton = ({
     const ref = useRef<HTMLButtonElement>(null);
     const x = useMotionValue(0);
     const y = useMotionValue(0);
+    const xs = useSpring(x, { stiffness: 160, damping: 20 });
+    const ys = useSpring(y, { stiffness: 160, damping: 20 });
 
-    const mouseXSpring = useSpring(x, { stiffness: 150, damping: 15 });
-    const mouseYSpring = useSpring(y, { stiffness: 150, damping: 15 });
+    const handleMove = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        const rect = ref.current?.getBoundingClientRect();
+        if (!rect) return;
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        x.set((e.clientX - centerX) * 0.12);
+        y.set((e.clientY - centerY) * 0.12);
+    }, [x, y]);
 
-    const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
-        const { clientX, clientY } = e;
-        const { left, top, width, height } =
-            ref.current?.getBoundingClientRect() || {
-                left: 0,
-                top: 0,
-                width: 0,
-                height: 0,
-            };
-        const centerX = left + width / 2;
-        const centerY = top + height / 2;
-        x.set((clientX - centerX) * 0.2); // Magnetic pull strength
-        y.set((clientY - centerY) * 0.2);
-    };
-
-    const handleMouseLeave = () => {
+    const handleReset = useCallback(() => {
         x.set(0);
         y.set(0);
-    };
+    }, [x, y]);
 
     return (
         <motion.button
             ref={ref}
-            onClick={onClick}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={{ x: mouseXSpring, y: mouseYSpring }}
+            onMouseMove={handleMove}
+            onMouseLeave={handleReset}
+            style={{ x: xs, y: ys }}
             className={className}
+            onClick={onClick}
         >
             {children}
         </motion.button>
     );
 };
 
-export default function InteractiveHero({
-    sliders,
-    loading,
-}: InteractiveHeroProps) {
+export default function InteractiveHero({ sliders = [] }: { sliders: Slider[]; loading?: boolean }) {
     const containerRef = useRef<HTMLDivElement>(null);
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start start", "end start"],
-    });
+    const [isReady, setIsReady] = useState(false);
 
-    // Scroll-linked animations
-    const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.92]); // Less shrinkage for grander feel
-    const borderRadius = useTransform(scrollYProgress, [0, 0.5], [0, 24]);
-    const y = useTransform(scrollYProgress, [0, 0.5], [0, 40]);
-    const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-    const textY = useTransform(scrollYProgress, [0, 0.5], [0, -80]); // Stronger parallax for text
+    useEffect(() => {
+        setIsReady(true);
+    }, []);
 
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [direction, setDirection] = useState(0);
-    const [isDragging, setIsDragging] = useState(false);
-    const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-
-    // Mouse tracking for 3D tilt
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
-    const rotateX = useTransform(mouseY, [-0.5, 0.5], [3, -3]); // Very subtle tilt
-    const rotateY = useTransform(mouseX, [-0.5, 0.5], [-3, 3]);
-    const glareX = useTransform(mouseX, [-0.5, 0.5], ["0%", "100%"]);
-    const glareY = useTransform(mouseY, [-0.5, 0.5], ["0%", "100%"]);
-    const glareBackground = useTransform(
-        [glareX, glareY],
-        ([x, y]) =>
-            `radial-gradient(circle at ${x} ${y}, rgba(255,255,255,0.2), transparent 60%)`
+    const { scrollYProgress } = useScroll(
+        isReady
+            ? { target: containerRef, offset: ["start start", "end start"] }
+            : undefined
     );
 
-    const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-        const rect = event.currentTarget.getBoundingClientRect();
-        const width = rect.width;
-        const height = rect.height;
-        const mX = event.clientX - rect.left;
-        const mY = event.clientY - rect.top;
-        const xPct = mX / width - 0.5;
-        const yPct = mY / height - 0.5;
-        mouseX.set(xPct);
-        mouseY.set(yPct);
-    };
+    const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.94]);
+    const borderRadius = useTransform(scrollYProgress, [0, 0.5], [0, 24]);
+    const translateY = useTransform(scrollYProgress, [0, 0.5], [0, 48]);
+    const fade = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+    const textY = useTransform(scrollYProgress, [0, 0.5], [0, -60]);
 
-    const handleMouseLeave = () => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+    const [isMounted, setIsMounted] = useState(false);
+
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
+    const smoothX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+    const smoothY = useSpring(mouseY, { stiffness: 40, damping: 20 });
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    const totalSlides = sliders.length;
+
+    const nextSlide = useCallback(() => {
+        setCurrentIndex(prev => (prev + 1) % totalSlides);
+    }, [totalSlides]);
+
+    const prevSlide = useCallback(() => {
+        setCurrentIndex(prev => (prev - 1 + totalSlides) % totalSlides);
+    }, [totalSlides]);
+
+    const goToSlide = useCallback((index: number) => {
+        setCurrentIndex(index);
+    }, []);
+
+    useEffect(() => {
+        if (!isAutoPlaying || totalSlides === 0) return;
+        const interval = setInterval(nextSlide, 6000);
+        return () => clearInterval(interval);
+    }, [isAutoPlaying, totalSlides, nextSlide]);
+
+    const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
+        mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
+        setIsAutoPlaying(false);
+    }, [mouseX, mouseY]);
+
+    const handleMouseLeave = useCallback(() => {
         mouseX.set(0);
         mouseY.set(0);
         setIsAutoPlaying(true);
-    };
+    }, [mouseX, mouseY]);
 
-    // Auto-play logic
-    useEffect(() => {
-        if (!isAutoPlaying || loading || sliders.length === 0 || isDragging) return;
+    const currentSlide = sliders[currentIndex];
 
-        const timer = setInterval(() => {
-            setDirection(1);
-            setCurrentIndex((prev) => (prev + 1) % sliders.length);
-        }, 7000); // Slower for editorial feel
+    if (!isMounted) {
+        return (
+            <div className="h-[calc(100dvh-240px)] bg-black flex items-center justify-center">
+                <div className="text-muted-foreground">Loading...</div>
+            </div>
+        );
+    }
 
-        return () => clearInterval(timer);
-    }, [isAutoPlaying, loading, sliders.length, isDragging]);
-
-    const handleDragEnd = (
-        event: MouseEvent | TouchEvent | PointerEvent,
-        info: PanInfo
-    ) => {
-        setIsDragging(false);
-        const threshold = 50;
-        if (info.offset.x < -threshold) {
-            nextSlide();
-        } else if (info.offset.x > threshold) {
-            prevSlide();
-        }
-    };
-
-    const nextSlide = useCallback(() => {
-        setDirection(1);
-        setCurrentIndex((prev) => (prev + 1) % sliders.length);
-    }, [sliders.length]);
-
-    const prevSlide = useCallback(() => {
-        setDirection(-1);
-        setCurrentIndex((prev) => (prev - 1 + sliders.length) % sliders.length);
-    }, [sliders.length]);
-
-    // Entrance animation state
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        // Trigger entrance animation after a delay to coordinate with header
-        const timer = setTimeout(() => {
-            setMounted(true);
-        }, 300); // 300ms delay after header starts
-        return () => clearTimeout(timer);
-    }, []);
-
-    const currentSlide = sliders?.[currentIndex];
+    if (!currentSlide) {
+        return (
+            <div className="h-[calc(100dvh-240px)] bg-black flex items-center justify-center">
+                <div className="text-muted-foreground">No slides available</div>
+            </div>
+        );
+    }
 
     return (
         <motion.div
             ref={containerRef}
-            className="relative min-h-screen bg-background"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: mounted ? 1 : 0, scale: mounted ? 1 : 0.95 }}
-            transition={{
-                duration: 1.2,
-                ease: [0.16, 1, 0.3, 1],
-                delay: 0
-            }}
+            className="relative h-[calc(100dvh-240px)] bg-black"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
         >
-            {loading ? (
-                <div className="h-screen w-full bg-muted animate-pulse flex items-center justify-center">
-                    <div className="text-muted-foreground">Loading experience...</div>
-                </div>
-            ) : !sliders || sliders.length === 0 ? (
-                <div className="h-screen w-full flex items-center justify-center text-muted-foreground">
-                    No slides available.
-                </div>
-            ) : (
-                <div className="relative h-[200vh]">
-                    <div className="sticky top-0 h-screen overflow-hidden flex items-center justify-center perspective-1000">
-                        <motion.div
-                            style={{
-                                scale,
-                                borderRadius,
-                                y,
-                                rotateX,
-                                rotateY,
-                            }}
-                            className="relative w-full h-full overflow-hidden shadow-2xl transform-style-3d bg-black"
-                            onMouseEnter={() => setIsAutoPlaying(false)}
-                            onMouseLeave={handleMouseLeave}
-                            onMouseMove={handleMouseMove}
-                        >
-                            {/* Background Image Layer with Parallax */}
-                            <AnimatePresence mode="wait" custom={direction}>
-                                <motion.div
-                                    key={currentIndex}
-                                    custom={direction}
-                                    initial={{ opacity: 0, scale: 1.15 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }} // Custom bezier for "luxury" ease
-                                    className="absolute inset-0"
-                                >
-                                    {currentSlide && (
-                                        <Image
-                                            src={currentSlide.main_image_url}
-                                            alt={currentSlide.title}
-                                            fill
-                                            className="object-cover"
-                                            priority
-                                        />
-                                    )}
-                                    {/* Cinematic Dark Gradient Overlay */}
-                                    <div className="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-black/90" />
-                                    <div className="absolute inset-0 bg-black/10" />{" "}
-                                    {/* Overall dim for text pop */}
-                                </motion.div>
-                            </AnimatePresence>
+            <div className="relative h-[200vh]">
+                <div className="sticky top-0 h-[calc(100dvh-240px)] overflow-hidden flex items-center justify-center">
+                    <motion.div
+                        style={{ scale, borderRadius, y: translateY, opacity: fade }}
+                        className="relative w-full h-full overflow-hidden bg-black"
+                        onMouseMove={handleMouseMove}
+                        onMouseLeave={handleMouseLeave}
+                    >
+                        <FilmGrain />
 
-                            {/* Dynamic Glare Overlay */}
+                        <AnimatePresence mode="wait">
                             <motion.div
-                                className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent z-10 pointer-events-none mix-blend-overlay"
-                                style={{
-                                    background: glareBackground,
-                                }}
-                            />
+                                key={currentIndex}
+                                initial={{ opacity: 0, scale: 1.06 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 1.05, ease: [0.16, 1, 0.3, 1] }}
+                                className="absolute inset-0"
+                            >
+                                <Image
+                                    src={currentSlide.main_image_url}
+                                    alt={currentSlide.title}
+                                    fill
+                                    className="object-cover"
+                                    priority
+                                    sizes="100vw"
+                                />
+                                <div className="absolute inset-0 bg-linear-to-b from-black/80 via-black/40 to-black/90" />
+                            </motion.div>
+                        </AnimatePresence>
 
-                            {/* Content Overlay */}
-                            <div className="absolute inset-0 z-20 flex flex-col justify-center items-center text-center p-8 md:p-16 pb-32">
-                                <motion.div
-                                    style={{ y: textY, opacity }}
-                                    className="max-w-5xl space-y-8"
-                                >
-                                    {/* Kinetic Title */}
-                                    <div className="overflow-hidden">
-                                        <AnimatePresence mode="wait">
-                                            <div key={`title-${currentIndex}`}>
-                                                {currentSlide && (
-                                                    <AnimatedText
-                                                        text={currentSlide.title}
-                                                        className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-white drop-shadow-2xl justify-center"
-                                                        delay={0.2}
-                                                    />
-                                                )}
-                                            </div>
-                                        </AnimatePresence>
-                                    </div>
+                        <div className="absolute inset-0 z-20 flex flex-col justify-center items-center text-center p-8 md:p-16">
+                            <motion.div style={{ y: textY, opacity: fade }} className="max-w-5xl space-y-8">
+                                <TextRevealVertical
+                                    text={currentSlide.title}
+                                    className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-white drop-shadow-2xl"
+                                />
 
-                                    {/* Kinetic Description */}
-                                    <div className="overflow-hidden">
-                                        <AnimatePresence mode="wait">
-                                            {currentSlide?.description && (
-                                                <div key={`desc-${currentIndex}`}>
-                                                    <motion.p
-                                                        initial={{ y: 20, opacity: 0 }}
-                                                        animate={{ y: 0, opacity: 1 }}
-                                                        exit={{ y: -20, opacity: 0 }}
-                                                        transition={{ duration: 0.8, delay: 0.4 }}
-                                                        className="text-lg md:text-2xl text-white/80 max-w-3xl mx-auto font-light leading-relaxed drop-shadow-lg"
-                                                    >
-                                                        {currentSlide.description}
-                                                    </motion.p>
-                                                </div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
+                                {currentSlide.description && (
+                                    <motion.p
+                                        initial={{ opacity: 0, y: 18 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.8, delay: 0.45 }}
+                                        className="text-lg md:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed"
+                                    >
+                                        {currentSlide.description}
+                                    </motion.p>
+                                )}
 
-                                    {/* Magnetic Button */}
-                                    <AnimatePresence mode="wait">
-                                        {currentSlide?.button_text && (
-                                            <motion.div
-                                                key={`btn-${currentIndex}`}
-                                                initial={{ scale: 0.9, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                exit={{ scale: 0.9, opacity: 0 }}
-                                                transition={{ duration: 0.5, delay: 0.6 }}
-                                                className="pt-8"
-                                            >
-                                                <MagneticButton className="group relative inline-flex items-center justify-center rounded-full bg-white px-10 py-4 text-lg font-semibold text-black transition-colors hover:bg-white/90">
-                                                    {currentSlide.button_text}
-                                                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                                                </MagneticButton>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </motion.div>
-                            </div>
+                                {currentSlide.button_text && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.98 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.8 }}
+                                        className="pt-8"
+                                    >
+                                        <MagneticButton
+                                            className="group relative inline-flex items-center justify-center rounded-full bg-white px-10 py-4 text-lg font-semibold text-black transition-all hover:bg-white/95 hover:scale-105"
+                                            onClick={() => currentSlide.button_link && (window.location.href = currentSlide.button_link)}
+                                        >
+                                            {currentSlide.button_text}
+                                            <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                        </MagneticButton>
+                                    </motion.div>
+                                )}
+                            </motion.div>
+                        </div>
 
-                            {/* Navigation Controls */}
-                            <div className="absolute bottom-12 right-12 z-30 gap-4 hidden md:flex">
-                                <Button
-                                    size="icon"
-                                    variant="outline"
-                                    onClick={prevSlide}
-                                    className="rounded-full w-14 h-14 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white backdrop-blur-md transition-all duration-300 hover:scale-110"
-                                >
-                                    <ChevronLeft className="w-6 h-6" />
-                                </Button>
-                                <Button
-                                    size="icon"
-                                    variant="outline"
-                                    onClick={nextSlide}
-                                    className="rounded-full w-14 h-14 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white backdrop-blur-md transition-all duration-300 hover:scale-110"
-                                >
-                                    <ChevronRight className="w-6 h-6" />
-                                </Button>
-                            </div>
+                        <div className="absolute bottom-10 right-10 z-30 gap-4 hidden md:flex">
+                            <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={prevSlide}
+                                className="rounded-full w-12 h-12 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </Button>
+                            <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={nextSlide}
+                                className="rounded-full w-12 h-12 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </Button>
+                        </div>
 
-                            {/* Pagination Indicators */}
-                            <div className="absolute bottom-12 left-12 z-30 flex gap-3">
-                                {sliders.map((_, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => {
-                                            setDirection(idx > currentIndex ? 1 : -1);
-                                            setCurrentIndex(idx);
-                                        }}
-                                        className={cn(
-                                            "h-1.5 rounded-full transition-all duration-500 shadow-lg backdrop-blur-sm",
-                                            idx === currentIndex
-                                                ? "w-12 bg-white"
-                                                : "w-3 bg-white/30 hover:bg-white/50 hover:w-6"
-                                        )}
-                                    />
-                                ))}
-                            </div>
-                        </motion.div>
-                    </div>
+                        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-30 flex gap-3">
+                            {sliders.map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => goToSlide(idx)}
+                                    className={cn(
+                                        "h-1.5 rounded-full transition-all duration-300 hover:bg-white/80",
+                                        idx === currentIndex ? "w-12 bg-white" : "w-3 bg-white/30"
+                                    )}
+                                    aria-label={`Go to slide ${idx + 1}`}
+                                />
+                            ))}
+                        </div>
+                    </motion.div>
                 </div>
-            )}
+            </div>
         </motion.div>
     );
 }
