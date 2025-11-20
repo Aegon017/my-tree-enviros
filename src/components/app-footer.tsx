@@ -1,119 +1,107 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { GooglePlayIcon, AppleAppStoreIcon } from "./store-icons";
+import { ArrowUpRight } from "lucide-react";
 
 const footerData = {
-  tagline: "Grow your green future",
-  productLinks: [
-    { name: "Download", href: "/download" },
-    { name: "Product", href: "/product" },
-    { name: "Docs", href: "/docs" },
-    { name: "Changelog", href: "/changelog" },
+  tagline: "Grow your green future.",
+  quickLinks: [
+    { name: "About Us", href: "/about" },
+    { name: "Order Tracking", href: "/track-order" },
+    { name: "Shipping & Delivery", href: "/shipping" },
+    { name: "Orders History", href: "/orders" },
+    { name: "My Account", href: "/account" },
   ],
-  resourceLinks: [
-    { name: "Blog", href: "/blog" },
-    { name: "Pricing", href: "/pricing" },
-    { name: "Use Cases", href: "/use-cases" },
+  policyLinks: [
+    { name: "Terms & Conditions", href: "/terms" },
+    { name: "Privacy Policy", href: "/privacy" },
+    { name: "Refund Policy", href: "/refund" },
   ],
-  bottomLinks: [
-    { name: "About", href: "/about" },
-    { name: "Privacy", href: "/privacy" },
-    { name: "Terms", href: "/terms" },
+  appStores: [
+    {
+      name: "Google Play",
+      href: "https://play.google.com/store/apps/details?id=mytree.app",
+      description: "Get it on",
+      icon: GooglePlayIcon,
+    },
+    {
+      name: "App Store",
+      href: "https://apps.apple.com/app/mytree/id123456789",
+      description: "Get it on",
+      icon: AppleAppStoreIcon,
+    },
   ],
 };
 
-const Footer = () => {
+export default function Footer() {
   return (
-    <footer className="bg-white text-black">
-      {/* Top Section - Tagline and Links */}
-      <div className="border-b border-gray-200">
-        <div className="container max-w-7xl mx-auto px-16 py-20">
-          <div className="flex justify-between items-start gap-16">
-            {/* Left - Tagline */}
-            <div className="flex-1">
-              <p className="text-3xl font-bold tracking-tight leading-tight max-w-sm">
-                {footerData.tagline}
-              </p>
-            </div>
-
-            {/* Right - Two column links */}
-            <div className="flex gap-32">
-              {/* Product Links */}
-              <div>
-                <h3 className="text-lg font-bold mb-8 uppercase tracking-wider text-gray-900">
-                  Product
-                </h3>
-                <ul className="space-y-5">
-                  {footerData.productLinks.map((link) => (
-                    <li key={link.name}>
-                      <Link
-                        href={link.href}
-                        className="text-base font-medium text-gray-700 hover:text-black transition-colors duration-300"
-                      >
-                        {link.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Resources Links */}
-              <div>
-                <h3 className="text-lg font-bold mb-8 uppercase tracking-wider text-gray-900">
-                  Resources
-                </h3>
-                <ul className="space-y-5">
-                  {footerData.resourceLinks.map((link) => (
-                    <li key={link.name}>
-                      <Link
-                        href={link.href}
-                        className="text-base font-medium text-gray-700 hover:text-black transition-colors duration-300"
-                      >
-                        {link.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Center Section - Large Brand Display */}
-      <div className="border-b border-gray-200">
-        <div className="container max-w-7xl mx-auto px-16 py-32">
-          <div className="text-center">
-            <h2 className="text-9xl md:text-10xl font-black tracking-tighter mb-2 leading-none text-black">
-              My Tree
+    <footer className="bg-background text-foreground relative overflow-hidden border-t border-border/40">
+      <div className="container mx-auto px-6 md:px-12 pt-24 pb-40 relative z-10">
+        <div className="flex flex-col lg:flex-row justify-between items-start gap-12 mb-32">
+          <div className="max-w-3xl">
+            <h2 className="text-5xl md:text-7xl lg:text-8xl font-medium tracking-tighter leading-[0.9] text-primary mb-8">
+              {footerData.tagline}
             </h2>
-            <p className="text-5xl font-bold tracking-tight text-gray-900">Enviros</p>
+            <p className="text-xl text-muted-foreground font-light max-w-lg leading-relaxed">
+              Join the movement towards a sustainable planet. Download the app and start your journey today.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-8">
+              Navigation
+            </h3>
+            <ul className="space-y-4">
+              {footerData.quickLinks.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="group flex items-center justify-between text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+                  >
+                    {link.name}
+                    <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-8">
+              Legal
+            </h3>
+            <ul className="space-y-4">
+              {footerData.policyLinks.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
 
-      {/* Bottom Section - Minimal footer */}
-      <div className="container max-w-7xl mx-auto px-16 py-10">
-        <div className="flex justify-between items-center">
-          {/* Left - Brand */}
-          <div className="text-base font-bold text-gray-900">My Tree Enviros</div>
-
-          {/* Center - Links */}
-          <div className="flex gap-12">
-            {footerData.bottomLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className="text-sm font-medium text-gray-700 hover:text-black transition-colors duration-300"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </div>
-        </div>
+      <div className="absolute bottom-0 left-0 w-full overflow-hidden pointer-events-none select-none leading-none">
+        <h1
+          className="
+          text-[clamp(4rem,18vw,24rem)] 
+          font-black 
+          tracking-tighter 
+          text-foreground/5
+          flex justify-center w-full 
+          translate-y-[16%]
+        "
+        >
+          <span>MY TREE</span>
+        </h1>
       </div>
     </footer>
   );
-};
-
-export default Footer;
+}

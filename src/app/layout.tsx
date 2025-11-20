@@ -5,6 +5,7 @@ import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";
 import Footer from "@/components/app-footer";
 import Header from "@/components/app-header";
+import AppDownloadSection from "@/components/app-download-section";
 
 export const metadata: Metadata = {
   title: "My Tree Enviros",
@@ -27,6 +28,7 @@ export default function RootLayout( { children }: { children: React.ReactNode } 
         <NextTopLoader color="#715130" showSpinner={ false } />
         <Header />
         { children }
+        <AppDownloadSection/>
         <Footer />
         <Toaster richColors position="top-center" closeButton={ true } />
       </body>
