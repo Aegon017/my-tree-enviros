@@ -9,24 +9,21 @@ interface RazorpayButtonProps {
   type: PaymentType;
   productType: ProductType;
   cartType: CartType;
-  duration?: number;
-  quantity?: number;
-  area_id?: number;
-  name?: string;
-  occasion?: string;
-  message?: string;
-  plan_id?: number;
-  tree_instance_id?: number;
-  product_variant_id?: number;
-  campaign_id?: number;
-  coupon_id?: number;
-  shippingAddressId?: number;
+  shippingAddressId?: number | null;
   label: string;
   productId?: number;
   amount?: number;
+  plan_id?: number;
+  quantity?: number;
+  campaign_id?: number;
+  coupon_id?: number;
+  name?: string;
+  occasion?: string;
+  message?: string;
+  area_id?: number;
 }
 
-export default function RazorpayButton( {
+export default function RazorpayButton({
   type,
   productType,
   cartType,
@@ -36,21 +33,18 @@ export default function RazorpayButton( {
   amount,
   plan_id,
   quantity,
-  tree_instance_id,
-  product_variant_id,
   campaign_id,
   coupon_id,
-  
   name,
   occasion,
   message,
   area_id,
-}: RazorpayButtonProps ) {
+}: RazorpayButtonProps) {
   const { initiatePayment, loading } = useRazorpay();
 
   return (
     <Button
-      onClick={ () =>
+      onClick={() =>
         initiatePayment(
           type,
           productType,
@@ -59,14 +53,10 @@ export default function RazorpayButton( {
           productId,
           amount,
           {
-            tree_instance_id,
             tree_plan_price_id: plan_id,
-            product_variant_id,
             campaign_id,
             coupon_id,
             quantity,
-            shipping_address_id: shippingAddressId,
-            
             name,
             occasion,
             message,
@@ -74,11 +64,11 @@ export default function RazorpayButton( {
           },
         )
       }
-      disabled={ loading }
+      disabled={loading}
       className="w-full"
     >
       <Leaf />
-      { loading ? "Processing..." : label }
+      {loading ? "Processing..." : label}
     </Button>
   );
 }

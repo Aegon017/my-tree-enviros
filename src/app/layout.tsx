@@ -5,6 +5,7 @@ import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";
 import Footer from "@/components/app-footer";
 import Header from "@/components/app-header";
+import AppDownloadSection from "@/components/app-download-section";
 
 export const metadata: Metadata = {
   title: "My Tree Enviros",
@@ -12,7 +13,11 @@ export const metadata: Metadata = {
     "From vibrant flowering plants to lush tropical greens, we offer an incredible variety to turn your space into a living paradise.",
 };
 
-export default function RootLayout( { children }: { children: React.ReactNode } ) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <head>
@@ -24,11 +29,11 @@ export default function RootLayout( { children }: { children: React.ReactNode } 
       </head>
 
       <body>
-        <NextTopLoader color="#715130" showSpinner={ false } />
+        <NextTopLoader color="#715130" showSpinner={false} />
         <Header />
-        { children }
+        {children}
         <Footer />
-        <Toaster richColors position="top-center" closeButton={ true } />
+        <Toaster richColors position="top-center" closeButton={true} />
       </body>
     </html>
   );

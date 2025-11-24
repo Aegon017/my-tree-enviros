@@ -1,51 +1,30 @@
-import { fetchJson } from "@/lib/fetch-json";
-
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
-function url( path: string ) {
-  return `${ API_BASE }${ path }`;
-}
+import api from "./http-client";
 
 export const productService = {
-  async list( params: Record<string, any> ) {
-    const q = new URLSearchParams( params ).toString();
-    const res = await fetchJson( url( `/products?${ q }` ) );
-    return res.data;
+  async list(params: Record<string, any>) {
+    return api.get<{ products: any[]; meta: any }>("/products", { params });
   },
 
-  async getCategories() {
-    const res = await fetchJson( url( `/product-categories` ) );
-    return res.data?.categories ?? [];
-  },
+  getCategories: () => api.get<{ categories: any[] }>("/categories"),
 
-  async getProductBySlug( slug: string ) {
-    const res = await fetchJson( url( `/products/${ slug }` ) );
-    return res.data?.product ?? null;
-  },
+  getProductBySlug: (slug: string) =>
+    api.get<{ product: any }>(`/products/${slug}`),
 
-  async getReviewsBySlug( slug: string, page = 1 ) {
-    const res = await fetchJson( url( `/products/${ slug }/reviews?page=${ page }` ) );
-    return res.data;
-  },
+  getReviewsBySlug: (slug: string, page = 1) =>
+    api.get<any>(`/products/${slug}/reviews`, { params: { page } }),
 
-  async canReviewBySlug( slug: string ) {
-    const res = await fetchJson( url( `/products/${ slug }/can-review` ) );
-    return res.data;
-  },
+  canReviewBySlug: (slug: string) =>
+    api.get<any>(`/products/${slug}/can-review`),
 
-  async variants( productId: string ) {
-    const res = await fetchJson( url( `/products/${ productId }/variants` ) );
-    return res.data;
-  },
+  variants: (productId: string) =>
+    api.get<any>(`/products/${productId}/variants`),
 
-  async featured( limit = 10 ) {
-    const res = await fetchJson( url( `/products/featured?limit=${ limit }` ) );
-    return res.data;
-  },
+  featured: (limit = 10) =>
+    api.get<any>("/products/featured", { params: { limit } }),
 
-  async byCategory( categoryId: string, params: Record<string, any> = {} ) {
-    const q = new URLSearchParams( params ).toString();
-    const res = await fetchJson( url( `/products/by-category/${ categoryId }?${ q }` ) );
-    return res.data;
-  },
+  byCategory: (categoryId: string, params: Record<string, any> = {}) =>
+    api.get<any>(`/products/by-category/${categoryId}`, { params }),
+
+  search: (query: string) =>
+    api.get<any>("/products/search", { params: { query } }),
 };

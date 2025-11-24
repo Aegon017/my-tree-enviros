@@ -1,11 +1,12 @@
 import { ApiResponse, BaseMeta } from "./common.types";
 
-export interface TreeResponse extends ApiResponse<{ tree: Tree }> { }
+export interface TreeResponse extends ApiResponse<{ tree: Tree }> {}
 
-export interface TreeCollectionResponse extends ApiResponse<{
-  trees: TreeListItem[];
-  meta: BaseMeta;
-}> { }
+export interface TreeCollectionResponse
+  extends ApiResponse<{
+    trees: TreeListItem[];
+    meta: BaseMeta;
+  }> {}
 
 export interface TreeListItem {
   id: number;

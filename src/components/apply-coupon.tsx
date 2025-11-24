@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
-import useSWRMutation from "swr/mutation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,62 +11,53 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import api from "@/lib/axios";
+import { orderService } from "@/services/order.services";
+import { toast } from "sonner";
 
 interface ApplyCouponProps {
-  onCouponApplied: (discount: number, newTotal: number) => void;
+  onCouponApplied: (discount: number, couponId: number) => void;
   onCouponRemoved: () => void;
   currentTotal: number;
-}
-
-async function applyCouponFetcher(
-  url: string,
-  { arg }: { arg: { coupon_code: string } },
-) {
-  const response = await api.post(url, arg);
-  return response.data;
+  disabled?: boolean;
 }
 
 export function ApplyCoupon({
   onCouponApplied,
   onCouponRemoved,
   currentTotal,
+  disabled,
 }: ApplyCouponProps) {
   const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
-  const [discountAmount, setDiscountAmount] = useState(0);
-
-  const { trigger, isMutating } = useSWRMutation(
-    `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/cart/apply-coupon-all`,
-    applyCouponFetcher,
-  );
+  const [isApplied, setIsApplied] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
-
+    setLoading(true);
     try {
-      const data = await trigger({ coupon_code: couponCode });
-
-      setAppliedCoupon(couponCode);
-      setDiscountAmount(data.data.total_discount_amount);
-
-      const newTotal = currentTotal - data.data.total_discount_amount;
-      onCouponApplied(data.data.total_discount_amount, newTotal);
-
-      toast.success(`Successfully applied ${couponCode} coupon`);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to apply coupon",
+      const response = await orderService.validateCoupon(
+        couponCode,
+        currentTotal,
       );
+      if (response.success && response.data) {
+        setIsApplied(true);
+        onCouponApplied(response.data.discount, response.data.coupon_id);
+        toast.success("Coupon applied successfully");
+      } else {
+        toast.error(response.message || "Invalid coupon");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to apply coupon");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleChangeCoupon = () => {
-    setAppliedCoupon(null);
-    setDiscountAmount(0);
+  const handleRemoveCoupon = () => {
     setCouponCode("");
+    setIsApplied(false);
     onCouponRemoved();
-    toast.info("You can now enter a new coupon code");
+    toast.info("Coupon removed");
   };
 
   return (
@@ -87,39 +76,36 @@ export function ApplyCoupon({
               placeholder="ENTER COUPON CODE"
               value={couponCode.toUpperCase()}
               onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-              disabled={isMutating || !!appliedCoupon}
+              disabled={disabled || isApplied || loading}
             />
-            {appliedCoupon ? (
+            {isApplied ? (
               <Button
-                onClick={handleChangeCoupon}
-                disabled={isMutating}
+                onClick={handleRemoveCoupon}
+                disabled={disabled || loading}
                 variant="outline"
               >
-                CHANGE
+                REMOVE
               </Button>
             ) : (
               <Button
                 onClick={handleApplyCoupon}
-                disabled={isMutating || !couponCode.trim()}
+                disabled={disabled || !couponCode.trim() || loading}
               >
-                {isMutating ? "APPLYING..." : "APPLY"}
+                {loading ? "APPLYING..." : "APPLY"}
               </Button>
             )}
           </div>
 
-          {appliedCoupon && (
+          {isApplied && (
             <div className="p-3 bg-muted rounded-md">
               <div className="flex justify-between items-center">
                 <div>
                   <Label className="text-sm font-medium">Applied Coupon</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {appliedCoupon}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{couponCode}</p>
                 </div>
                 <div className="text-right">
-                  <Label className="text-sm font-medium">Discount</Label>
-                  <p className="text-sm text-green-600">
-                    -${discountAmount.toFixed(2)}
+                  <p className="text-xs text-muted-foreground">
+                    Discount applied
                   </p>
                 </div>
               </div>

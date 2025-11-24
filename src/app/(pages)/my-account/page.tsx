@@ -4,9 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "@/store";
-import { updateUser as updateAuthUser } from "@/store/auth-slice";
+import { useAuthStore } from "@/store/auth-store";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import {
@@ -37,10 +35,12 @@ import {
 } from "lucide-react";
 import {
   userService,
-  type ShippingAddress,
-  type CreateShippingAddressPayload,
   type User as UserProfile,
 } from "@/services/user.services";
+import {
+  type ShippingAddress,
+  type CreateShippingAddressPayload,
+} from "@/services/shipping-address.services";
 import { orderService } from "@/services/order.services";
 import {
   Form,
@@ -61,16 +61,17 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 const addressSchema = z.object({
   name: z.string().min(1, "Full name is required."),
   phone: z.string().min(1, "Phone number is required."),
-  address_line1: z.string().min(1, "Address line 1 is required."),
-  address_line2: z.string().optional(),
+  address: z.string().min(1, "Address is required."),
+  area: z.string().min(1, "Area is required."),
   city: z.string().min(1, "City is required."),
-  state: z.string().min(1, "State is required."),
-  pincode: z.string().min(1, "PIN code is required."),
-  country: z.string().min(1, "Country is required."),
+  postal_code: z.string().min(1, "Postal code is required."),
+  latitude: z.number().default(0),
+  longitude: z.number().default(0),
+  post_office_name: z.string().optional(),
+  post_office_branch_type: z.string().optional(),
   is_default: z.boolean().default(false),
 });
 type AddressFormValues = z.infer<typeof addressSchema>;
-
 
 type OrderLite = {
   id: number;
@@ -232,13 +233,9 @@ const AddressCard = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
-        <p className="break-words">
-          {[address.address_line1, address.address_line2]
-            .filter(Boolean)
-            .join(", ")}
-        </p>
+        <p className="break-words">{address.address}</p>
         <p>
-          {address.city}, {address.state} - {address.pincode}, {address.country}
+          {address.area}, {address.city} - {address.postal_code}
         </p>
         <p>Phone: {address.phone}</p>
       </CardContent>
@@ -262,12 +259,14 @@ const AddressModal = ({
     defaultValues: {
       name: "",
       phone: "",
-      address_line1: "",
-      address_line2: "",
+      address: "",
+      area: "",
       city: "",
-      state: "",
-      pincode: "",
-      country: "India",
+      postal_code: "",
+      latitude: 0,
+      longitude: 0,
+      post_office_name: "",
+      post_office_branch_type: "",
       is_default: false,
     },
   });
@@ -277,24 +276,28 @@ const AddressModal = ({
       form.reset({
         name: initial.name,
         phone: initial.phone,
-        address_line1: initial.address_line1,
-        address_line2: initial.address_line2 ?? "",
+        address: initial.address,
+        area: initial.area,
         city: initial.city,
-        state: initial.state,
-        pincode: initial.pincode,
-        country: initial.country,
+        postal_code: initial.postal_code,
+        latitude: initial.latitude,
+        longitude: initial.longitude,
+        post_office_name: initial.post_office_name ?? "",
+        post_office_branch_type: initial.post_office_branch_type ?? "",
         is_default: initial.is_default,
       });
     } else {
       form.reset({
         name: "",
         phone: "",
-        address_line1: "",
-        address_line2: "",
+        address: "",
+        area: "",
         city: "",
-        state: "",
-        pincode: "",
-        country: "India",
+        postal_code: "",
+        latitude: 0,
+        longitude: 0,
+        post_office_name: "",
+        post_office_branch_type: "",
         is_default: false,
       });
     }
@@ -363,10 +366,10 @@ const AddressModal = ({
                   />
                   <FormField
                     control={form.control}
-                    name="address_line1"
+                    name="address"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
-                        <FormLabel>Address Line 1</FormLabel>
+                        <FormLabel>Address</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -376,10 +379,10 @@ const AddressModal = ({
                   />
                   <FormField
                     control={form.control}
-                    name="address_line2"
+                    name="area"
                     render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Address Line 2 (optional)</FormLabel>
+                      <FormItem>
+                        <FormLabel>Area</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -402,36 +405,10 @@ const AddressModal = ({
                   />
                   <FormField
                     control={form.control}
-                    name="state"
+                    name="postal_code"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>State</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="pincode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>PIN Code</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Country</FormLabel>
+                        <FormLabel>Postal Code</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -557,7 +534,6 @@ const OrderDetailsModal = ({
                   >
                     <div className="w-16 h-16 rounded bg-muted flex items-center justify-center overflow-hidden">
                       {it.item?.image ? (
-                        
                         <img
                           src={it.item?.image}
                           alt={it.item?.name || "Item"}
@@ -595,14 +571,11 @@ const OrderDetailsModal = ({
 };
 
 export default function AccountPage() {
-  const dispatch = useDispatch();
-  const authUser = useSelector((s: RootState) => s.auth.user);
-  const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
+  const { user: authUser, token } = useAuthStore();
+  const isAuthenticated = !!token;
 
-  
   const [tab, setTab] = useState<"profile" | "orders" | "addresses">("profile");
 
-  
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [isEditing, setEditing] = useState(false);
@@ -612,13 +585,11 @@ export default function AccountPage() {
     defaultValues: { name: "", email: "" },
   });
 
-  
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [orders, setOrders] = useState<OrderLite[]>([]);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
 
-  
   const [addrLoading, setAddrLoading] = useState(false);
   const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
   const [addrModalOpen, setAddrModalOpen] = useState(false);
@@ -630,7 +601,7 @@ export default function AccountPage() {
     const sourceName = profile?.name || authUser?.name || "User";
     return sourceName
       .split(" ")
-      .map((n) => n[0])
+      .map((n: string) => n[0])
       .join("")
       .toUpperCase();
   }, [profile?.name, authUser?.name]);
@@ -645,19 +616,11 @@ export default function AccountPage() {
           name: res.data.user.name || "",
           email: res.data.user.email || "",
         });
-        
-        dispatch(
-          updateAuthUser({
-            name: res.data.user.name,
-            email: res.data.user.email,
-            phone: (res.data.user as any).mobile || (authUser?.phone ?? ""),
-          }),
-        );
       }
     } finally {
       setProfileLoading(false);
     }
-  }, [dispatch, authUser?.phone, profileForm]);
+  }, [profileForm]);
 
   const loadOrders = useCallback(async () => {
     setOrdersLoading(true);
@@ -699,9 +662,7 @@ export default function AccountPage() {
         coupon: o.coupon ?? null,
       });
       setDetailsOpen(true);
-    } catch {
-      
-    }
+    } catch {}
   }, []);
 
   const closeOrderDetails = useCallback(() => {
@@ -713,7 +674,7 @@ export default function AccountPage() {
     setAddrLoading(true);
     try {
       const res = await userService.getShippingAddresses();
-      setAddresses(res.data ?? []);
+      setAddresses(res.data?.addresses ?? []);
     } finally {
       setAddrLoading(false);
     }
@@ -878,7 +839,7 @@ export default function AccountPage() {
                           <Avatar className="h-20 w-20">
                             <AvatarImage
                               src={(profile as any)?.avatar_url || ""}
-                              alt={profile?.name}
+                              alt={profile?.name ?? "User"}
                             />
                             <AvatarFallback>{initials}</AvatarFallback>
                           </Avatar>

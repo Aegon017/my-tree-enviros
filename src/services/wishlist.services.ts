@@ -1,48 +1,46 @@
-import { fetchJson } from "@/lib/fetch-json";
-import { authStorage } from "@/lib/auth-storage";
+import api, { ApiResponse } from "./http-client";
+import { WishlistItem } from "@/types/wishlist";
 
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
-function headers() {
-  const token = authStorage.getToken();
-  return {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    ...( token ? { Authorization: `Bearer ${ token }` } : {} ),
-  };
-}
+const WISHLIST_URL = "/wishlist";
 
 export const wishlistService = {
-  getWishlist() {
-    return fetchJson( `${ API_BASE }/wishlist`, { method: "GET", headers: headers() } ).then( ( r ) => r.data );
+  async getWishlist(): Promise<
+    ApiResponse<{ wishlist: { items: WishlistItem[] } }>
+  > {
+    return api.get(WISHLIST_URL);
   },
 
-  addToWishlist( payload: { product_id: number; product_variant_id?: number } ) {
-    return fetchJson( `${ API_BASE }/wishlist/items`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify( payload ),
-    } ).then( ( r ) => r.data );
+  async addToWishlist(payload: {
+    product_id: number;
+    product_variant_id?: number;
+  }): Promise<ApiResponse> {
+    return api.post(`${WISHLIST_URL}/items`, payload);
   },
 
-  removeFromWishlist( itemId: number ) {
-    return fetchJson( `${ API_BASE }/wishlist/items/${ itemId }`, { method: "DELETE", headers: headers() } ).then( ( r ) => r.data );
+  async removeFromWishlist(itemId: number): Promise<ApiResponse> {
+    return api.delete(`${WISHLIST_URL}/items/${itemId}`);
   },
 
-  removeFromWishlistByVariant( productId: number, variantId: number ) {
-    return fetchJson( `${ API_BASE }/wishlist/items/variant/${ variantId }`, { method: "DELETE", headers: headers() } ).then( ( r ) => r.data );
+  async removeFromWishlistByVariant(
+    productId: number,
+    variantId: number,
+  ): Promise<ApiResponse> {
+    return api.delete(`${WISHLIST_URL}/items/variant/${variantId}`);
   },
 
-  checkInWishlist( productId: number, variantId?: number ) {
-    const url = variantId ? `${ API_BASE }/wishlist/check/${ productId }?variant_id=${ variantId }` : `${ API_BASE }/wishlist/check/${ productId }`;
-    return fetchJson( url, { method: "GET", headers: headers() } ).then( ( r ) => r.data );
+  async checkInWishlist(
+    productId: number,
+    variantId?: number,
+  ): Promise<ApiResponse<boolean>> {
+    const url = variantId
+      ? `${WISHLIST_URL}/check/${productId}?variant_id=${variantId}`
+      : `${WISHLIST_URL}/check/${productId}`;
+    return api.get(url);
   },
 
-  moveToCart( itemId: number, quantity = 1 ) {
-    return fetchJson( `${ API_BASE }/wishlist/items/${ itemId }/move-to-cart`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify( { quantity } ),
-    } ).then( ( r ) => r.data );
+  async moveToCart(itemId: number, quantity = 1): Promise<ApiResponse> {
+    return api.post(`${WISHLIST_URL}/items/${itemId}/move-to-cart`, {
+      quantity,
+    });
   },
 };

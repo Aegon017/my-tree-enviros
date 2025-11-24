@@ -7,22 +7,12 @@ import type { CartType, PaymentType, ProductType } from "@/types/payment.type";
 import { orderService } from "@/services/order.services";
 import { paymentService } from "@/services/payment.services";
 
-
 type DirectExtras = {
-  
-  tree_instance_id?: number;
   tree_plan_price_id?: number;
   product_variant_id?: number;
   campaign_id?: number;
   quantity?: number;
   coupon_id?: number;
-  shipping_address_id?: number;
-
-  
-  product_type?: number; 
-  type?: number; 
-  duration?: number;
-  coupon_code?: string;
   name?: string;
   occasion?: string;
   message?: string;
@@ -33,12 +23,11 @@ type InitiateArgs = [
   type: PaymentType,
   productType: ProductType,
   cartType: CartType,
-  shippingAddressId?: number,
+  shippingAddressId?: number | null,
   productId?: number,
   amountInRupees?: number,
   extras?: DirectExtras,
 ];
-
 
 export function useRazorpay() {
   const router = useRouter();
@@ -59,7 +48,6 @@ export function useRazorpay() {
       if (typeof internalOrderId === "number") {
         params.set("internal_order_id", String(internalOrderId));
       }
-
       router.push(`/payment/success?${params.toString()}`);
     },
     [router],
@@ -71,17 +59,13 @@ export function useRazorpay() {
         typeof amountPaise === "number"
           ? paymentService.paiseToRupees(amountPaise)
           : 0;
-
       router.push(
-        `/payment/failure?error=${encodeURIComponent(
-          errorMessage || "Payment failed",
-        )}&amount=${encodeURIComponent(amountRupees.toFixed(2))}`,
+        `/payment/failure?error=${encodeURIComponent(errorMessage || "Payment failed")}&amount=${encodeURIComponent(amountRupees.toFixed(2))}`,
       );
     },
     [router],
   );
 
-  
   const initiatePayment = useCallback(
     async (...args: InitiateArgs) => {
       const [
@@ -91,62 +75,50 @@ export function useRazorpay() {
         shippingAddressId,
         productId,
         ,
-        
-        
         extras,
       ] = args;
 
       setLoading(true);
 
       try {
-        
         let orderId: number | null = null;
 
         if (cartType === 1) {
-          
-          const orderRes = await orderService.createOrder({
-            shipping_address_id: shippingAddressId,
-            cart_type: 1,
-          });
-
-          orderId = orderRes?.data?.order?.id ?? null;
-        } else if (cartType === 2) {
-          
-          if (!productId && productType === 2) {
-            throw new Error("Missing product ID for direct purchase.");
+          const payload: any = {};
+          if (shippingAddressId && shippingAddressId > 0) {
+            payload.shipping_address_id = shippingAddressId;
           }
 
-          
+          const orderRes = await orderService.createOrder(payload);
+          orderId = orderRes?.data?.order?.id ?? null;
+        } else if (cartType === 2) {
           const extra: DirectExtras = (extras as DirectExtras) || {};
 
-          
-          const directPayload = {
-            item_type: productType === 1 ? "tree" : "product",
-            tree_instance_id:
-              extra.tree_instance_id ??
-              (productType === 1 ? productId : undefined),
-            tree_plan_price_id:
-              extra.tree_plan_price_id ?? (extra as any).plan_id,
-            product_id: productType === 2 ? productId : undefined,
-            product_variant_id: extra.product_variant_id,
-            campaign_id: extra.campaign_id,
-            quantity: typeof extra.quantity === "number" ? extra.quantity : 1,
-            coupon_id: extra.coupon_id,
-            shipping_address_id: shippingAddressId ?? extra.shipping_address_id,
+          const directPayload: any = {
+            item_type: productType === 1 ? "tree" : "campaign",
+          };
 
-            
-            product_type: extra.product_type,
-            type: extra.type,
-            duration: extra.duration,
-            coupon_code: extra.coupon_code,
-            name: extra.name,
-            occasion: extra.occasion,
-            message: extra.message,
-            location_id: extra.location_id,
-          } as any;
+          if (productType === 1) {
+            directPayload.tree_plan_price_id = extra.tree_plan_price_id;
+            directPayload.name = extra.name;
+            directPayload.occasion = extra.occasion;
+            directPayload.message = extra.message;
+            directPayload.location_id = extra.location_id;
+          } else {
+            directPayload.campaign_id = extra.campaign_id;
+            directPayload.quantity =
+              typeof extra.quantity === "number" ? extra.quantity : 1;
+          }
+
+          if (shippingAddressId && shippingAddressId > 0) {
+            directPayload.shipping_address_id = shippingAddressId;
+          }
+
+          if (extra.coupon_id) {
+            directPayload.coupon_id = extra.coupon_id;
+          }
 
           const directRes = await orderService.createDirectOrder(directPayload);
-
           orderId = directRes?.data?.order?.id ?? null;
         } else {
           throw new Error("Invalid cart type.");
@@ -156,14 +128,19 @@ export function useRazorpay() {
           throw new Error("Failed to create order.");
         }
 
-        
         const init = await paymentService.initiatePayment(orderId);
         const {
           razorpay_order_id,
           amount: amountPaise,
           currency,
           key,
+          is_free,
         } = init?.data || {};
+
+        if (is_free) {
+          redirectToSuccess("FREE", "FREE", 0, orderId);
+          return;
+        }
 
         if (!razorpay_order_id || !amountPaise || !currency) {
           throw new Error("Invalid payment initiation response.");
@@ -177,7 +154,6 @@ export function useRazorpay() {
           );
         }
 
-        
         await paymentService.openRazorpayCheckout(
           {
             key: razorpayKey,
@@ -186,12 +162,9 @@ export function useRazorpay() {
             order_id: razorpay_order_id,
             name: "My Tree Enviros",
             description: "Secure payment via Razorpay",
-            prefill: {
-              
-            },
+            prefill: {},
             theme: { color: "#0f766e" },
           },
-          
           async (response) => {
             try {
               const verifyRes = await paymentService.verifyPayment(orderId!, {
@@ -219,7 +192,6 @@ export function useRazorpay() {
               redirectToFailure(msg, amountPaise);
             }
           },
-          
           (error) => {
             const message =
               error?.description ||

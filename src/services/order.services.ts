@@ -1,282 +1,208 @@
 "use client";
 
-import api from "@/lib/axios";
+import api from "@/services/http-client";
+import { ApiResponse } from "@/services/http-client";
 
 export interface OrderItem {
   id: number;
   order_id: number;
-  product_id: number;
-  product_type: number; 
-  type: number; 
+  type: string;
+  tree_id?: number;
+  plan_id?: number;
+  plan_price_id?: number;
+  tree_instance_id?: number;
+  product_variant_id?: number;
   quantity: number;
-  duration?: number;
-  price: number;
-  name?: string;
-  occasion?: string;
-  message?: string;
-  location_id?: number;
-  ecom_product?: {
+  amount: number;
+  total_amount: number;
+  tree_instance?: {
     id: number;
-    name: string;
+    tree: {
+      id: number;
+      name: string;
+      common_name?: string;
+      image_url?: string;
+    };
+    location?: {
+      id: number;
+      name: string;
+    };
+  };
+  plan_price?: {
+    id: number;
     price: number;
-    main_image_url?: string;
+    plan: {
+      id: number;
+      name: string;
+      type: string;
+    };
   };
-  product?: {
-    id: number;
-    name: string;
-    main_image_url?: string;
-    price: Array<{
-      duration: number;
-      price: string;
-    }>;
-  };
-}
-
-export interface ShippingAddress {
-  id: number;
-  user_id: number;
-  name: string;
-  phone: string;
-  address_line1: string;
-  address_line2?: string;
-  city: string;
-  state: string;
-  pincode: string;
-  country: string;
-  is_default: boolean;
 }
 
 export interface Order {
   id: number;
+  reference_number: string;
   user_id: number;
-  order_number: string;
-  total_amount: number;
-  discount_amount: number;
-  final_amount: number;
-  payment_status: string; 
-  order_status: string; 
+  status: string;
   payment_method?: string;
-  transaction_id?: string;
+  subtotal: number;
+  discount: number;
+  gst_amount: number;
+  cgst_amount: number;
+  sgst_amount: number;
+  total: number;
+  currency: string;
+  coupon_id?: number;
   shipping_address_id?: number;
-  shipping_address?: ShippingAddress;
-  coupon_code?: string;
-  notes?: string;
+  paid_at?: string;
   created_at: string;
   updated_at: string;
   items: OrderItem[];
+  shipping_address?: any; // Define strictly if needed
+  coupon?: any; // Define strictly if needed
 }
 
-export interface OrdersResponse {
-  success: boolean;
-  message: string;
-  data: {
+export interface OrdersResponse
+  extends ApiResponse<{
     orders: Order[];
-    meta?: {
+    meta: {
       current_page: number;
       last_page: number;
       per_page: number;
       total: number;
-      from: number;
-      to: number;
     };
-  };
-}
+  }> {}
 
-export interface OrderResponse {
-  success: boolean;
-  message: string;
-  data: {
+export interface OrderResponse
+  extends ApiResponse<{
     order: Order;
-  };
-}
+  }> {}
 
 export interface CreateOrderPayload {
+  coupon_id?: number;
   shipping_address_id?: number;
-  coupon_code?: string;
-  notes?: string;
-  cart_type?: number; 
 }
 
 export interface CreateDirectOrderPayload {
-  
-  item_type?: "tree" | "product";
+  item_type: "tree" | "campaign";
+  // Tree specific
   tree_instance_id?: number;
   tree_plan_price_id?: number;
-  product_id?: number;
-  product_variant_id?: number;
+  // Campaign specific
   campaign_id?: number;
+  amount?: number;
+  // Common
   quantity?: number;
   coupon_id?: number;
   shipping_address_id?: number;
-
-  
-  product_type?: number; 
-  type?: number; 
-  duration?: number;
-  coupon_code?: string;
-  name?: string;
-  occasion?: string;
-  message?: string;
-  location_id?: number;
 }
 
-export interface MyTreesResponse {
-  success: boolean;
-  message: string;
-  data: {
-    sponsored: Order[];
-    adopted: Order[];
-  };
-}
+export interface MyTreesResponse
+  extends ApiResponse<{
+    trees: OrderItem[]; // Reusing OrderItem as it contains tree details
+    meta: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  }> {}
 
 export interface OrderParams {
   status?: string;
-  payment_status?: string;
-  from_date?: string;
-  to_date?: string;
+  type?: string;
   per_page?: number;
   page?: number;
 }
 
-
 export const orderService = {
-  
   getOrders: async (params?: OrderParams): Promise<OrdersResponse> => {
-    const response = await api.get<OrdersResponse>("/orders", { params });
-    return response.data;
+    const response = await api.get<OrdersResponse["data"]>("/orders", {
+      params,
+    });
+    return response as OrdersResponse;
   },
 
-  
   getOrderById: async (orderId: number): Promise<OrderResponse> => {
-    const response = await api.get<OrderResponse>(`/orders/${orderId}`);
-    return response.data;
+    const response = await api.get<OrderResponse["data"]>(`/orders/${orderId}`);
+    return response as OrderResponse;
   },
 
-  
   createOrder: async (payload: CreateOrderPayload): Promise<OrderResponse> => {
-    const response = await api.post<OrderResponse>("/orders", payload);
-    return response.data;
+    const response = await api.post<OrderResponse["data"]>("/orders", payload);
+    return response as OrderResponse;
   },
 
-  
   createDirectOrder: async (
     payload: CreateDirectOrderPayload,
   ): Promise<OrderResponse> => {
-    const response = await api.post<OrderResponse>("/orders/direct", payload);
-    return response.data;
-  },
-
-  
-  cancelOrder: async (orderId: number): Promise<OrderResponse> => {
-    const response = await api.post<OrderResponse>(`/orders/${orderId}/cancel`);
-    return response.data;
-  },
-
-  
-  getMyTrees: async (): Promise<MyTreesResponse> => {
-    const response = await api.get<MyTreesResponse>("/my-trees");
-    return response.data;
-  },
-
-  
-  initiatePayment: async (orderId: number) => {
-    const response = await api.post(`/orders/${orderId}/payment/initiate`, {
-      payment_method: "razorpay",
-    });
-    return response.data;
-  },
-
-  
-  verifyPayment: async (
-    orderId: number,
-    paymentData: {
-      razorpay_order_id: string;
-      razorpay_payment_id: string;
-      razorpay_signature: string;
-    },
-  ) => {
-    const response = await api.post(
-      `/orders/${orderId}/payment/verify`,
-      paymentData,
+    const response = await api.post<OrderResponse["data"]>(
+      "/orders/direct",
+      payload,
     );
-    return response.data;
+    return response as OrderResponse;
   },
 
-  
-  getPaymentStatus: async (orderId: number) => {
-    const response = await api.get(`/orders/${orderId}/payment/status`);
-    return response.data;
+  cancelOrder: async (orderId: number): Promise<OrderResponse> => {
+    const response = await api.post<OrderResponse["data"]>(
+      `/orders/${orderId}/cancel`,
+    );
+    return response as OrderResponse;
   },
 
-  
-  calculateTotal: (items: OrderItem[]): number => {
-    return items.reduce((sum, item) => {
-      return sum + item.price * item.quantity;
-    }, 0);
-  },
-
-  
-  getOrderStatusText: (status: string): string => {
-    const statusMap: Record<string, string> = {
-      pending: "Pending",
-      processing: "Processing",
-      completed: "Completed",
-      cancelled: "Cancelled",
-      shipped: "Shipped",
-      delivered: "Delivered",
-    };
-
-    return statusMap[status.toLowerCase()] || status;
-  },
-
-  
-  getPaymentStatusText: (status: string): string => {
-    const statusMap: Record<string, string> = {
-      pending: "Pending",
-      completed: "Completed",
-      failed: "Failed",
-      refunded: "Refunded",
-    };
-
-    return statusMap[status.toLowerCase()] || status;
-  },
-
-  
-  getOrderStatusColor: (status: string): string => {
-    const colorMap: Record<string, string> = {
-      pending: "orange",
-      processing: "blue",
-      completed: "green",
-      cancelled: "red",
-      shipped: "purple",
-      delivered: "green",
-    };
-
-    return colorMap[status.toLowerCase()] || "gray";
-  },
-
-  
-  canBeCancelled: (order: Order): boolean => {
-    const cancellableStatuses = ["pending", "processing"];
-    return cancellableStatuses.includes(order.order_status.toLowerCase());
-  },
-
-  
-  formatDate: (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+  getMyTrees: async (params?: OrderParams): Promise<MyTreesResponse> => {
+    const response = await api.get<MyTreesResponse["data"]>("/my-trees", {
+      params,
     });
+    return response as MyTreesResponse;
   },
 
-  
-  formatTime: (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
+  validateCoupon: async (
+    code: string,
+    amount: number,
+  ): Promise<
+    ApiResponse<{ coupon_id: number; code: string; discount: number }>
+  > => {
+    const response = await api.post("/orders/validate-coupon", {
+      code,
+      amount,
     });
+    return response as ApiResponse<{
+      coupon_id: number;
+      code: string;
+      discount: number;
+    }>;
+  },
+
+  // Helper: format ISO date strings into a readable date
+  formatDate: (date?: string) => {
+    if (!date) return "";
+    try {
+      return new Date(date).toLocaleDateString();
+    } catch {
+      return date;
+    }
+  },
+
+  // Helper: map order status to a readable label
+  getOrderStatusText: (status?: string) => {
+    if (!status) return "Unknown";
+    return String(status)
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  },
+
+  // Helper: derive payment status label from order data
+  getPaymentStatusText: (paymentStatus?: string, paidAt?: string | null) => {
+    if (paymentStatus)
+      return String(paymentStatus).replace(/\b\w/g, (c) => c.toUpperCase());
+    if (paidAt) return "Completed";
+    return "Pending";
+  },
+
+  // Helper: determine if an order can be cancelled (basic rule: pending)
+  canBeCancelled: (order: any) => {
+    const status = order?.status || order?.order_status;
+    return String(status || "").toLowerCase() === "pending";
   },
 };

@@ -21,55 +21,55 @@ import { Progress } from "@/components/ui/progress";
 import type { Campaign } from "@/types/campaign.types";
 import { campaignService } from "@/services/campaign.services";
 
-const calculateProgress = ( raised: string, goal: string ) => {
-  const raisedNum = parseFloat( raised );
-  const goalNum = parseFloat( goal );
-  if ( !goalNum || isNaN( goalNum ) || goalNum <= 0 ) return 0;
-  return Math.round( ( raisedNum / goalNum ) * 100 );
+const calculateProgress = (raised: string, goal: string) => {
+  const raisedNum = parseFloat(raised);
+  const goalNum = parseFloat(goal);
+  if (!goalNum || isNaN(goalNum) || goalNum <= 0) return 0;
+  return Math.round((raisedNum / goalNum) * 100);
 };
 
-const formatCurrency = ( amount: string ) => {
-  return new Intl.NumberFormat( "en-IN", {
+const formatCurrency = (amount: string) => {
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  } ).format( parseFloat( amount ) );
+  }).format(parseFloat(amount));
 };
 
-const formatDate = ( dateString: string ) => {
-  return new Date( dateString ).toLocaleDateString( "en-US", {
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  } );
+  });
 };
 
-const isExpired = ( expirationDate: string ) => {
-  return new Date( expirationDate ) < new Date();
+const isExpired = (expirationDate: string) => {
+  return new Date(expirationDate) < new Date();
 };
 
 const Page = () => {
-  const [ feedTrees, setFeedTrees ] = useState<Campaign[]>( [] );
-  const [ loading, setLoading ] = useState( true );
-  const [ error, setError ] = useState<string | null>( null );
+  const [feedTrees, setFeedTrees] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect( () => {
+  useEffect(() => {
     const fetchFeedTrees = async () => {
       try {
-        const response = await campaignService.getAll( { per_page: 10 } );
-        setFeedTrees( response.data.campaigns || [] );
-      } catch ( err ) {
-        console.error( "Error fetching feed trees:", err );
-        setError( "Failed to load feed trees" );
+        const response = await campaignService.getAll({ per_page: 10 });
+        setFeedTrees(response.data.campaigns || []);
+      } catch (err) {
+        console.error("Error fetching feed trees:", err);
+        setError("Failed to load feed trees");
       } finally {
-        setLoading( false );
+        setLoading(false);
       }
     };
 
     fetchFeedTrees();
-  }, [] );
+  }, []);
 
-  if ( loading ) {
+  if (loading) {
     return (
       <Section>
         <SectionTitle
@@ -78,15 +78,15 @@ const Page = () => {
           subtitle="Support our campaign to nourish and sustain trees for a greener future."
         />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-8">
-          { [ ...Array( 3 ) ].map( ( _, i ) => (
-            <FeedTreeCardSkeleton key={ i } />
-          ) ) }
+          {[...Array(3)].map((_, i) => (
+            <FeedTreeCardSkeleton key={i} />
+          ))}
         </div>
       </Section>
     );
   }
 
-  if ( error ) {
+  if (error) {
     return (
       <Section>
         <SectionTitle
@@ -95,7 +95,7 @@ const Page = () => {
           subtitle="Support our campaign to nourish and sustain trees for a greener future."
         />
         <div className="flex justify-center items-center py-12">
-          <p className="text-destructive">{ error }</p>
+          <p className="text-destructive">{error}</p>
         </div>
       </Section>
     );
@@ -110,52 +110,52 @@ const Page = () => {
       />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-8">
-        { feedTrees.length === 0 ? (
+        {feedTrees.length === 0 ? (
           <div className="col-span-full text-center py-12">
             <p className="text-muted-foreground">
               No feed trees available at the moment.
             </p>
           </div>
         ) : (
-          feedTrees.map( ( tree ) => {
-            const progress = calculateProgress( String( tree.raised_amount ?? "0" ), String( tree.target_amount ?? "0" ) );
+          feedTrees.map((tree) => {
+            const progress = calculateProgress(
+              String(tree.raised_amount ?? "0"),
+              String(tree.target_amount ?? "0"),
+            );
             const expired = isExpired(
               tree.end_date ?? new Date().toISOString(),
             );
 
             return (
               <Card
-                key={ tree.id }
+                key={tree.id}
                 className="overflow-hidden hover:shadow-lg transition-shadow pt-0"
               >
                 <div className="relative h-48">
                   <Image
-                    src={
-                      tree.thumbnail_url ??
-                      "/placeholder.svg"
-                    }
-                    alt={ tree.name }
+                    src={tree.thumbnail_url ?? "/placeholder.svg"}
+                    alt={tree.name}
                     fill
                     className="object-cover"
                     sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
                     priority
                   />
-                  { expired && (
+                  {expired && (
                     <Badge
                       variant="destructive"
                       className="absolute top-2 right-2"
                     >
                       Expired
                     </Badge>
-                  ) }
+                  )}
                 </div>
 
                 <CardHeader>
-                  <CardTitle className="line-clamp-2">{ tree.name }</CardTitle>
+                  <CardTitle className="line-clamp-2">{tree.name}</CardTitle>
                   <CardDescription>
                     <Markup
                       className="line-clamp-3"
-                      content={ tree.description }
+                      content={tree.description}
                     />
                   </CardDescription>
                 </CardHeader>
@@ -164,14 +164,14 @@ const Page = () => {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
-                      <span>{ tree.location?.name ?? "—" }</span>
+                      <span>{tree.location?.name ?? "—"}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
                       <span>
-                        { tree.end_date
-                          ? formatDate( tree.end_date )
-                          : "No end date" }
+                        {tree.end_date
+                          ? formatDate(tree.end_date)
+                          : "No end date"}
                       </span>
                     </div>
                   </div>
@@ -180,34 +180,36 @@ const Page = () => {
                     <div className="flex justify-between text-sm">
                       <span className="flex items-center gap-1">
                         <Target className="h-4 w-4" />
-                        Goal: { formatCurrency( String( tree.target_amount ?? "0" ) ) }
+                        Goal:{" "}
+                        {formatCurrency(String(tree.target_amount ?? "0"))}
                       </span>
                       <span className="flex items-center gap-1 text-green-600">
                         <Heart className="h-4 w-4" />
-                        Raised: { formatCurrency( String( tree.raised_amount ?? "0" ) ) }
+                        Raised:{" "}
+                        {formatCurrency(String(tree.raised_amount ?? "0"))}
                       </span>
                     </div>
 
-                    <Progress value={ progress } className="w-full" />
+                    <Progress value={progress} className="w-full" />
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{ progress }% funded</span>
+                      <span>{progress}% funded</span>
                       <span>
-                        { formatCurrency( String( tree.raised_amount ?? "0" ) ) } of{ " " }
-                        { formatCurrency( String( tree.target_amount ?? "0" ) ) }
+                        {formatCurrency(String(tree.raised_amount ?? "0"))} of{" "}
+                        {formatCurrency(String(tree.target_amount ?? "0"))}
                       </span>
                     </div>
                   </div>
 
-                  <Link href={ `feed-a-tree/${ tree.id }` }>
-                    <Button className="w-full" disabled={ expired }>
-                      { expired ? "Campaign Ended" : "Support This Tree" }
+                  <Link href={`feed-a-tree/${tree.id}`}>
+                    <Button className="w-full" disabled={expired}>
+                      {expired ? "Campaign Ended" : "Support This Tree"}
                     </Button>
                   </Link>
                 </CardContent>
               </Card>
             );
-          } )
-        ) }
+          })
+        )}
       </div>
     </Section>
   );

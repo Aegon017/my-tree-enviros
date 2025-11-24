@@ -1,18 +1,20 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
-import Image from "next/image";
+import { Loader2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { isValidPhoneNumber, parsePhoneNumberFromString } from "libphonenumber-js/mobile";
+import {
+  isValidPhoneNumber,
+  parsePhoneNumberFromString,
+} from "libphonenumber-js/mobile";
 import { PhoneInput } from "@/components/phone-input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -26,172 +28,264 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { authService } from "@/services/auth.services";
 import { authStorage } from "@/lib/auth-storage";
 import { cn } from "@/lib/utils";
-import image from "../../public/neem-tree.webp";
-import AppLogo from "./ui/app-logo";
 
-const accountTypes = [ "individual", "organization" ] as const;
+const accountTypes = ["individual", "organization"] as const;
 
-const Schema = z.object( {
+const Schema = z.object({
   phone: z
     .string()
-    .min( 1, "Phone number is required" )
-    .refine( ( value ) => isValidPhoneNumber( value ), "Please enter a valid phone number" ),
-
-  type: z.enum( accountTypes ),
-} );
+    .min(1, "Phone number is required")
+    .refine(
+      (value) => isValidPhoneNumber(value),
+      "Please enter a valid phone number",
+    ),
+  type: z.enum(accountTypes),
+});
 
 type FormData = z.infer<typeof Schema>;
 
-export function SignupForm( { className, ...props }: React.ComponentProps<"div"> ) {
+export function SignupForm({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
   const router = useRouter();
 
-  const form = useForm<FormData>( {
-    resolver: zodResolver( Schema ),
+  const form = useForm<FormData>({
+    resolver: zodResolver(Schema),
     defaultValues: {
       phone: "",
       type: "individual",
     },
-  } );
+  });
 
   const onSubmit = useCallback(
-    async ( data: FormData ) => {
-      const parsed = parsePhoneNumberFromString( data.phone );
+    async (data: FormData) => {
+      const parsed = parsePhoneNumberFromString(data.phone);
 
-      if ( !parsed ) {
-        toast.error( "Invalid phone number format" );
+      if (!parsed) {
+        toast.error("Invalid phone number format");
         return;
       }
 
       const payload = {
-        country_code: `+${ parsed.countryCallingCode }`,
+        country_code: `+${parsed.countryCallingCode}`,
         phone: parsed.nationalNumber,
         type: data.type,
       } as const;
 
       try {
-        const res = await authService.signUp( payload );
+        const res = await authService.signUp(payload);
 
-        if ( res.success ) {
-          authStorage.setResendTime( Date.now() + 60000 );
-
-          toast.success( res.message ?? "Verification code sent successfully" );
-
+        if (res.success) {
+          authStorage.setResendTime(Date.now() + 60000);
+          toast.success(res.message ?? "Verification code sent successfully");
           router.push(
-            `/verify-otp?country_code=${ encodeURIComponent( parsed.countryCallingCode ) }&phone=${ encodeURIComponent( parsed.nationalNumber ) }`
+            `/verify-otp?country_code=${encodeURIComponent(parsed.countryCallingCode)}&phone=${encodeURIComponent(parsed.nationalNumber)}`,
           );
         } else {
-          toast.error( res.message ?? "Failed to send verification code" );
+          toast.error(res.message ?? "Failed to send verification code");
         }
-      } catch ( err: any ) {
-        const msg = err?.body?.message ?? "Failed to send verification code";
-        toast.error( msg );
+      } catch (err: any) {
+        const msg = err?.data?.message ?? "Failed to send verification code";
+        toast.error(msg);
       }
     },
-    [ router ]
+    [router],
   );
 
   return (
-    <div className={ cn( "flex flex-col gap-6", className ) } { ...props }>
-      <Card className="overflow-hidden p-0">
-        <CardContent className="grid p-0 md:grid-cols-2">
-          <div className="p-6 md:p-8">
-            <Form { ...form }>
-              <form onSubmit={ form.handleSubmit( onSubmit ) } className="flex flex-col gap-6">
-                <div className="flex flex-col items-center text-center">
-                  <AppLogo />
-                  <h1 className="text-2xl font-bold">Create Account</h1>
-                  <p className="text-muted-foreground text-balance">
-                    Sign up for your My Tree Enviros account
-                  </p>
-                </div>
-
-                <FormField
-                  control={ form.control }
-                  name="type"
-                  render={ ( { field } ) => (
-                    <FormItem>
-                      <FormLabel>Account Type</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={ field.onChange }
-                          defaultValue={ field.value }
-                          className="flex gap-6"
-                        >
-                          <FormItem className="flex items-center gap-2">
-                            <FormControl>
-                              <RadioGroupItem value="individual" />
-                            </FormControl>
-                            <FormLabel className="font-normal">Individual</FormLabel>
-                          </FormItem>
-
-                          <FormItem className="flex items-center gap-2">
-                            <FormControl>
-                              <RadioGroupItem value="organization" />
-                            </FormControl>
-                            <FormLabel className="font-normal">Organization</FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  ) }
-                />
-
-                <FormField
-                  control={ form.control }
-                  name="phone"
-                  render={ ( { field } ) => (
-                    <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
-                      <FormControl>
-                        <PhoneInput
-                          value={ field.value }
-                          onChange={ field.onChange }
-                          defaultCountry="IN"
-                          international
-                          placeholder="Enter your phone number"
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormDescription>We’ll send a verification code to this number</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  ) }
-                />
-
-                <Button type="submit" disabled={ form.formState.isSubmitting } className="w-full">
-                  { form.formState.isSubmitting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) }
-                  { form.formState.isSubmitting ? "Creating Account..." : "Create Account" }
-                </Button>
-
-                <div className="text-center text-sm">
-                  Already have an account?{ " " }
-                  <Link href="/sign-in" className="underline underline-offset-4">
-                    Sign in
-                  </Link>
-                </div>
-              </form>
-            </Form>
+    <div
+      className={cn("flex min-h-screen bg-background", className)}
+      {...props}
+    >
+      {/* Left Side - Form */}
+      <div className="w-full lg:w-1/2 flex col justify-center px-6 sm:px-12 py-12 md:py-0">
+        <div className="w-full max-w-sm">
+          {/* Header */}
+          <div className="mb-8 space-y-3">
+            <h1 className="text-3xl font-bold text-foreground">
+              Create account
+            </h1>
+            <p className="text-base text-muted-foreground">
+              Join My Tree Enviros and start making an impact
+            </p>
           </div>
 
-          <div className="bg-muted relative hidden md:grid place-content-center">
-            <Image src={ image } alt="My tree enviros" priority />
-          </div>
-        </CardContent>
-      </Card>
+          {/* Form */}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold text-foreground">
+                      Account Type
+                    </FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex gap-6"
+                      >
+                        <FormItem className="flex items-center gap-2">
+                          <FormControl>
+                            <RadioGroupItem value="individual" />
+                          </FormControl>
+                          <FormLabel className="font-normal text-sm">
+                            Individual
+                          </FormLabel>
+                        </FormItem>
 
-      <div className="text-muted-foreground text-center text-xs text-balance">
-        By clicking continue, you agree to our{ " " }
-        <Link href="#" className="hover:text-primary underline underline-offset-4">
-          Terms of Service
-        </Link>{ " " }
-        and{ " " }
-        <Link href="#" className="hover:text-primary underline underline-offset-4">
-          Privacy Policy
-        </Link>
-        .
+                        <FormItem className="flex items-center gap-2">
+                          <FormControl>
+                            <RadioGroupItem value="organization" />
+                          </FormControl>
+                          <FormLabel className="font-normal text-sm">
+                            Organization
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-sm font-semibold text-foreground">
+                      Phone Number
+                    </FormLabel>
+                    <FormControl>
+                      <PhoneInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        defaultCountry="IN"
+                        international
+                        placeholder="Enter your phone number"
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      We'll send a verification code to this number
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                className="w-full h-11 font-semibold"
+              >
+                {form.formState.isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {form.formState.isSubmitting
+                  ? "Creating Account..."
+                  : "Create Account"}
+              </Button>
+
+              <div className="text-sm text-center text-muted-foreground">
+                Already have an account?{" "}
+                <Link
+                  href="/sign-in"
+                  className="font-semibold text-foreground hover:text-foreground/80 transition-colors"
+                >
+                  Sign in
+                </Link>
+              </div>
+            </form>
+          </Form>
+
+          {/* Footer */}
+          <div className="mt-8 pt-6 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              By continuing, you agree to our{" "}
+              <Link
+                href="#"
+                className="underline hover:text-foreground transition-colors"
+              >
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="#"
+                className="underline hover:text-foreground transition-colors"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Gradient Section */}
+      <div className="hidden lg:flex w-1/2 bg-linear-to-br from-primary to-primary/80 relative overflow-hidden items-center justify-center">
+        <div className="relative z-10 w-full h-full flex items-center justify-center p-8">
+          <Card className="w-full max-w-sm bg-white/10 backdrop-blur-md border-white/20 p-8">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  Make an Impact
+                </h2>
+                <p className="text-white/80 text-sm leading-relaxed">
+                  Join a community dedicated to environmental change.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white text-sm">
+                      Easy Setup
+                    </p>
+                    <p className="text-white/70 text-xs">
+                      Get started in seconds
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white text-sm">
+                      Track Progress
+                    </p>
+                    <p className="text-white/70 text-xs">
+                      Monitor your environmental impact
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white text-sm">
+                      Community Driven
+                    </p>
+                    <p className="text-white/70 text-xs">
+                      Connect with like-minded people
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );

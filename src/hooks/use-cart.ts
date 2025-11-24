@@ -1,79 +1,64 @@
-"use client";
-
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth-store";
 import { useCartStore } from "@/store/cart-store";
-import { cartService } from "@/services/cart.services";
+import { CartItem } from "@/domain/cart/cart-item";
 
 export function useCart() {
-  const token = useAuthStore( ( s ) => s.token );
+  const token = useAuthStore((s) => s.token);
 
   const {
     cart,
+    loading,
     addToCart,
     updateItem,
     removeItem,
     clearCart,
     fetchServerCart,
-    resetGuestCart,
   } = useCartStore();
 
-  const [ loading, setLoading ] = useState( false );
   const authenticated = !!token;
 
-  useEffect( () => {
-    if ( authenticated ) {
-      setLoading( true );
-      fetchServerCart().finally( () => setLoading( false ) );
+  useEffect(() => {
+    if (authenticated) {
+      fetchServerCart();
     }
-  }, [ authenticated ] );
+  }, [authenticated, fetchServerCart]);
 
-  const items = useMemo( () => cart.items, [ cart.items ] );
+  const items = useMemo(() => cart.items as CartItem[], [cart.items]);
 
-  const add = async ( payload: any ) => {
-    setLoading( true );
+  const add = async (payload: any) => {
     try {
-      await addToCart( payload );
-
-      if ( authenticated ) {
-        const res = await cartService.get();
-        useCartStore.getState().cart = res.data.cart;
-      }
-
-      toast.success( "Added to cart" );
-    } catch ( e: any ) {
-      toast.error( e?.body?.message ?? "Something went wrong" );
-    }
-    setLoading( false );
-  };
-
-  const update = async ( indexOrId: number, patch: any ) => {
-    setLoading( true );
-    try {
-      await updateItem( indexOrId, patch.quantity );
-    } finally {
-      setLoading( false );
+      await addToCart(payload);
+      toast.success("Added to cart");
+    } catch (e: any) {
+      toast.error(e?.data?.message ?? "Something went wrong");
     }
   };
 
-  const remove = async ( indexOrId: number ) => {
-    setLoading( true );
+  const update = async (id: number | string, patch: any) => {
     try {
-      await removeItem( indexOrId );
-      toast.success( "Removed" );
-    } finally {
-      setLoading( false );
+      await updateItem(id, patch);
+    } catch (e: any) {
+      toast.error(e?.data?.message ?? "Failed to update item");
+    }
+  };
+
+  const remove = async (id: number | string) => {
+    try {
+      await removeItem(id);
+      toast.success("Removed from cart");
+    } catch (e: any) {
+      toast.error(e?.data?.message ?? "Failed to remove item");
     }
   };
 
   const clear = async () => {
-    setLoading( true );
     try {
       await clearCart();
-      toast.success( "Cart cleared" );
-    } finally {
-      setLoading( false );
+      toast.success("Cart cleared");
+    } catch (e: any) {
+      toast.error(e?.data?.message ?? "Failed to clear cart");
     }
   };
 

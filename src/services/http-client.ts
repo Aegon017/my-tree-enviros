@@ -1,55 +1,83 @@
-import axios from "axios";
+import { authStorage } from "@/lib/auth-storage";
 
-const api = axios.create( {
-    baseURL: process.env.NEXT_PUBLIC_BACKEND_API_URL,
-    headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-    },
-    withCredentials: true,
-    withXSRFToken: true,
-} );
+export type ApiResponse<T = any> = {
+  success: boolean;
+  message?: string;
+  data?: T;
+};
 
-let csrfInitialized = false;
+export class ApiError extends Error {
+  status: number;
+  data: any;
 
-export async function initializeCsrf(): Promise<void> {
-    if ( csrfInitialized ) return;
-    await axios.get( `${ process.env.NEXT_PUBLIC_BACKEND_URL }/sanctum/csrf-cookie`, {
-        withCredentials: true,
-    } );
-    csrfInitialized = true;
+  constructor(message: string, status: number, data: any) {
+    super(message);
+    this.status = status;
+    this.data = data;
+  }
 }
 
-api.interceptors.request.use(
-    async ( config ) => {
-        const methodsRequiringCsrf = [ "post", "put", "patch", "delete" ];
-        if ( config.method && methodsRequiringCsrf.includes( config.method.toLowerCase() ) ) {
-            await initializeCsrf();
-        }
-        config.headers = config.headers ?? {};
-        ( config.headers as any )[ "X-Platform" ] = "web";
-        return config;
-    },
-    ( error ) => Promise.reject( error )
-);
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "";
 
-api.interceptors.response.use(
-    ( response ) => response,
-    ( error ) => {
-        if ( error.response?.status === 401 ) {
-            csrfInitialized = false;
-            if ( typeof window !== "undefined" ) {
-                const p = window.location.pathname;
-                if ( !p.startsWith( "/sign-in" ) && !p.startsWith( "/sign-up" ) && !p.startsWith( "/verify-otp" ) ) {
-                    window.location.href = "/sign-in";
-                }
-            }
-        }
-        if ( error.response?.status === 419 ) {
-            csrfInitialized = false;
-        }
-        return Promise.reject( error );
-    }
-);
+export type RequestConfig = RequestInit & {
+  params?: Record<string, any>;
+};
+
+async function request<T>(
+  endpoint: string,
+  config: RequestConfig = {},
+): Promise<ApiResponse<T>> {
+  const token = authStorage.getToken();
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    "X-Platform": "web",
+    ...(config.headers as any),
+  };
+
+  if (token) {
+    (headers as any)["Authorization"] = `Bearer ${token}`;
+  }
+
+  let url = `${BASE_URL}${endpoint}`;
+  if (config.params) {
+    const params = new URLSearchParams();
+    Object.entries(config.params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        params.append(key, String(value));
+      }
+    });
+    url += `?${params.toString()}`;
+  }
+
+  const { params, ...fetchConfig } = config;
+
+  const response = await fetch(url, {
+    ...fetchConfig,
+    headers,
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new ApiError(data.message || "Request failed", response.status, data);
+  }
+
+  return data as ApiResponse<T>;
+}
+
+export const api = {
+  get: <T>(url: string, config?: RequestConfig) =>
+    request<T>(url, { ...config, method: "GET" }),
+  post: <T>(url: string, body?: any, config?: RequestConfig) =>
+    request<T>(url, { ...config, method: "POST", body: JSON.stringify(body) }),
+  put: <T>(url: string, body?: any, config?: RequestConfig) =>
+    request<T>(url, { ...config, method: "PUT", body: JSON.stringify(body) }),
+  patch: <T>(url: string, body?: any, config?: RequestConfig) =>
+    request<T>(url, { ...config, method: "PATCH", body: JSON.stringify(body) }),
+  delete: <T>(url: string, config?: RequestConfig) =>
+    request<T>(url, { ...config, method: "DELETE" }),
+};
 
 export default api;

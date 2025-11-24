@@ -1,5 +1,5 @@
-import api from '@/lib/axios';
-import { authStorage } from '@/lib/auth-storage';
+import api from "@/services/http-client";
+import { authStorage } from "@/lib/auth-storage";
 import type {
   Campaign,
   CampaignsResponse,
@@ -10,28 +10,35 @@ import type {
   OrderResponse,
   PaymentInitiateResponse,
   PaymentVerifyResponse,
-} from '@/types/campaign.types';
+} from "@/types/campaign.types";
 
 class CampaignService {
-  async createDirectOrder(request: DirectOrderRequest): Promise<{ order: OrderResponse }> {
+  async createDirectOrder(
+    request: DirectOrderRequest,
+  ): Promise<{ order: OrderResponse }> {
     if (!authStorage.isAuthenticated()) {
-      window.location.href = '/sign-in';
-      throw new Error('Authentication required');
+      window.location.href = "/sign-in";
+      throw new Error("Authentication required");
     }
 
     const response = await api.post<{
       success: boolean;
       message: string;
-      data: { order: OrderResponse }
-    }>('/orders/direct', request);
+      data: { order: OrderResponse };
+    }>("/orders/direct", request);
 
-    return { order: response.data.data.order };
+    const order = response?.data?.data?.order;
+    if (!order) throw new Error("Invalid create direct order response");
+    return { order };
   }
 
-  async initiatePayment(orderId: string, request: PaymentInitiateRequest): Promise<PaymentInitiateResponse> {
+  async initiatePayment(
+    orderId: string,
+    request: PaymentInitiateRequest,
+  ): Promise<PaymentInitiateResponse> {
     if (!authStorage.isAuthenticated()) {
-      window.location.href = '/sign-in';
-      throw new Error('Authentication required');
+      window.location.href = "/sign-in";
+      throw new Error("Authentication required");
     }
 
     const response = await api.post<{
@@ -40,13 +47,18 @@ class CampaignService {
       data: PaymentInitiateResponse;
     }>(`/orders/${orderId}/payment/initiate`, request);
 
-    return response.data.data;
+    const data = response?.data?.data;
+    if (!data) throw new Error("Invalid initiate payment response");
+    return data;
   }
 
-  async verifyPayment(orderId: string, request: PaymentVerifyRequest): Promise<PaymentVerifyResponse> {
+  async verifyPayment(
+    orderId: string,
+    request: PaymentVerifyRequest,
+  ): Promise<PaymentVerifyResponse> {
     if (!authStorage.isAuthenticated()) {
-      window.location.href = '/sign-in';
-      throw new Error('Authentication required');
+      window.location.href = "/sign-in";
+      throw new Error("Authentication required");
     }
 
     const response = await api.post<{
@@ -55,7 +67,9 @@ class CampaignService {
       data: PaymentVerifyResponse;
     }>(`/orders/${orderId}/payment/verify`, request);
 
-    return response.data.data;
+    const data = response?.data?.data;
+    if (!data) throw new Error("Invalid verify payment response");
+    return data;
   }
 
   async getPaymentStatus(orderId: string): Promise<{
@@ -73,8 +87,8 @@ class CampaignService {
     };
   }> {
     if (!authStorage.isAuthenticated()) {
-      window.location.href = '/sign-in';
-      throw new Error('Authentication required');
+      window.location.href = "/sign-in";
+      throw new Error("Authentication required");
     }
 
     const response = await api.get<{
@@ -83,7 +97,9 @@ class CampaignService {
       data: any;
     }>(`/orders/${orderId}/payment/status`);
 
-    return response.data.data;
+    const data = response?.data?.data;
+    if (!data) throw new Error("Invalid payment status response");
+    return data;
   }
 
   async getAll(params?: {
@@ -92,11 +108,13 @@ class CampaignService {
     page?: number;
   }): Promise<CampaignsResponse> {
     const response = await api.get<CampaignsResponse>("/campaigns", { params });
+    if (!response?.data) throw new Error("Invalid campaigns response");
     return response.data;
   }
 
   async getById(id: number): Promise<CampaignResponse> {
     const response = await api.get<CampaignResponse>(`/campaigns/${id}`);
+    if (!response?.data) throw new Error("Invalid campaign response");
     return response.data;
   }
 
@@ -104,6 +122,7 @@ class CampaignService {
     const response = await api.get<CampaignsResponse>("/campaigns/featured", {
       params: { per_page: limit },
     });
+    if (!response?.data) throw new Error("Invalid featured campaigns response");
     return response.data;
   }
 
@@ -118,6 +137,7 @@ class CampaignService {
     const response = await api.get<CampaignsResponse>("/campaigns/search", {
       params: { q: query, ...params },
     });
+    if (!response?.data) throw new Error("Invalid campaign search response");
     return response.data;
   }
 
@@ -139,6 +159,7 @@ class CampaignService {
         days_remaining?: number;
       };
     }>(`/campaigns/${id}/stats`);
+    if (!response?.data) throw new Error("Invalid campaign stats response");
     return response.data;
   }
 }

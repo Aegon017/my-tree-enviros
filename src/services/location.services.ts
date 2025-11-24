@@ -1,4 +1,4 @@
-import api from "@/lib/axios";
+import api from "@/services/http-client";
 import type {
   Location,
   LocationResponse,
@@ -6,9 +6,7 @@ import type {
   TreeCountResponse,
 } from "@/types/location.types";
 
-
 export const locationService = {
-  
   getAll: async (params?: {
     parent_id?: number | null;
     with_children?: boolean;
@@ -21,13 +19,11 @@ export const locationService = {
     return response.data;
   },
 
-  
   getRoot: async () => {
     const response = await api.get<LocationsResponse>("/locations/root");
     return response.data;
   },
 
-  
   getById: async (
     id: number,
     params?: {
@@ -41,7 +37,6 @@ export const locationService = {
     return response.data;
   },
 
-  
   getChildren: async (id: number) => {
     const response = await api.get<LocationsResponse>(
       `/locations/${id}/children`,
@@ -49,7 +44,6 @@ export const locationService = {
     return response.data;
   },
 
-  
   getTreeCount: async (id: number) => {
     const response = await api.get<TreeCountResponse>(
       `/locations/${id}/tree-count`,
@@ -57,7 +51,6 @@ export const locationService = {
     return response.data;
   },
 
-  
   getHierarchy: async () => {
     const response = await api.get<LocationsResponse>("/locations", {
       params: {
@@ -68,14 +61,12 @@ export const locationService = {
     return response.data;
   },
 
-  
   findByName: (name: string, locations: Location[]): Location | undefined => {
     return locations.find(
       (loc) => loc.name.toLowerCase() === name.toLowerCase(),
     );
   },
 
-  
   getBreadcrumb: (location: Location): string[] => {
     const breadcrumb: string[] = [location.name];
     let current = location.parent;
@@ -88,7 +79,6 @@ export const locationService = {
     return breadcrumb;
   },
 
-  
   flatten: (locations: Location[]): Location[] => {
     const result: Location[] = [];
 
@@ -105,7 +95,6 @@ export const locationService = {
     return result;
   },
 
-  
   getTreeLocationStates: async () => {
     const response = await api.get<{
       success: boolean;
@@ -115,7 +104,6 @@ export const locationService = {
     return response.data;
   },
 
-  
   getTreeLocationAreas: async (stateId: number) => {
     const response = await api.get<{
       success: boolean;
@@ -125,7 +113,6 @@ export const locationService = {
     return response.data;
   },
 
-  
   getTreeLocationCities: async (areaId: number) => {
     const response = await api.get<{
       success: boolean;
@@ -135,7 +122,6 @@ export const locationService = {
     return response.data;
   },
 
-  
   getTreeLocationHierarchy: async () => {
     const response = await api.get<{
       success: boolean;

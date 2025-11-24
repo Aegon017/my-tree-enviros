@@ -10,7 +10,8 @@ import SectionTitle from "@/components/section-title";
 import WishlistItemCardSkeleton from "@/components/skeletons/wishlist-item-card-skeleton";
 import WishlistItemCard from "@/components/wishlist-item-card";
 import { useAuth } from "@/hooks/use-auth";
-import { wishlistService, type WishlistItem } from "@/services/wishlist.services";
+import { wishlistService } from "@/services/wishlist.services";
+import { WishlistItem } from "@/types/wishlist";
 
 interface WishlistState {
   items: WishlistItem[];
@@ -27,83 +28,86 @@ const TOAST_MESSAGES = {
 } as const;
 
 const useWishlist = () => {
-  const [ state, setState ] = useState<WishlistState>( {
+  const [state, setState] = useState<WishlistState>({
     items: [],
     isLoading: true,
     removingIds: [],
     addingToCartIds: [],
-  } );
+  });
 
   const { isAuthenticated } = useAuth();
 
-  const fetchWishlist = useCallback( async () => {
-    if ( !isAuthenticated ) {
-      setState( prev => ( { ...prev, isLoading: false } ) );
+  const fetchWishlist = useCallback(async () => {
+    if (!isAuthenticated) {
+      setState((prev) => ({ ...prev, isLoading: false }));
       return;
     }
 
-    setState( prev => ( { ...prev, isLoading: true } ) );
+    setState((prev) => ({ ...prev, isLoading: true }));
 
     try {
       const response = await wishlistService.getWishlist();
-      if ( response.success ) {
-        setState( prev => ( {
+      if (response.success && response.data) {
+        setState((prev) => ({
           ...prev,
-          items: response.data.wishlist.items || [],
-        } ) );
+          items: response.data!.wishlist.items || [],
+        }));
       }
     } catch {
-      toast.error( TOAST_MESSAGES.ERROR );
+      toast.error(TOAST_MESSAGES.ERROR);
     } finally {
-      setState( prev => ( { ...prev, isLoading: false } ) );
+      setState((prev) => ({ ...prev, isLoading: false }));
     }
-  }, [ isAuthenticated ] );
+  }, [isAuthenticated]);
 
-  const removeItem = useCallback( async ( id: number ) => {
-    setState( prev => ( { ...prev, removingIds: [ ...prev.removingIds, id ] } ) );
+  const removeItem = useCallback(async (id: number) => {
+    setState((prev) => ({ ...prev, removingIds: [...prev.removingIds, id] }));
     try {
-      const response = await wishlistService.removeFromWishlist( id );
-      if ( response.success ) {
-        setState( prev => ( {
+      const response = await wishlistService.removeFromWishlist(id);
+      if (response.success) {
+        setState((prev) => ({
           ...prev,
-          items: prev.items.filter( item => item.id !== id ),
-        } ) );
-        toast.success( TOAST_MESSAGES.REMOVED );
+          items: prev.items.filter((item) => item.id !== id),
+        }));
+        toast.success(TOAST_MESSAGES.REMOVED);
       }
     } catch {
-      toast.error( TOAST_MESSAGES.ERROR );
+      toast.error(TOAST_MESSAGES.ERROR);
     } finally {
-      setState( prev => ( {
+      setState((prev) => ({
         ...prev,
-        removingIds: prev.removingIds.filter( itemId => itemId !== id ),
-      } ) );
+        removingIds: prev.removingIds.filter((itemId) => itemId !== id),
+      }));
     }
-  }, [] );
+  }, []);
 
-  const moveToCart = useCallback( async ( id: number ) => {
-    setState( prev => ( { ...prev, addingToCartIds: [ ...prev.addingToCartIds, id ] } ) );
+  const moveToCart = useCallback(async (id: number) => {
+    setState((prev) => ({
+      ...prev,
+      addingToCartIds: [...prev.addingToCartIds, id],
+    }));
     try {
-      const response = await wishlistService.moveToCart( id );
-      if ( response.success ) {
-        setState( prev => ( {
+      const response = await wishlistService.moveToCart(id);
+      if (response.success) {
+        setState((prev) => ({
           ...prev,
-          items: prev.items.filter( item => item.id !== id ),
-        } ) );
-        toast.success( TOAST_MESSAGES.MOVED_TO_CART );
+          items: prev.items.filter((item) => item.id !== id),
+        }));
+        toast.success(TOAST_MESSAGES.MOVED_TO_CART);
       }
     } catch {
-      toast.error( TOAST_MESSAGES.ERROR );
+      toast.error(TOAST_MESSAGES.ERROR);
     } finally {
-      setState( prev => ( {
+      setState((prev) => ({
         ...prev,
-        addingToCartIds: prev.addingToCartIds.filter( itemId => itemId !== id ),
-      } ) );
+        addingToCartIds: prev.addingToCartIds.filter((itemId) => itemId !== id),
+      }));
     }
-  }, [] );
+  }, []);
 
-  useEffect( () => {
+  useEffect(() => {
     fetchWishlist();
-  }, [ fetchWishlist ] );
+  }, [fetchWishlist]);
 
   return { ...state, removeItem, moveToCart };
 };
@@ -129,41 +133,41 @@ const WishlistPage: React.FC = () => {
     moveToCart,
   } = useWishlist();
 
-  const itemCountText = useMemo( () => {
+  const itemCountText = useMemo(() => {
     const count = wishlistItems.length;
-    return `You have ${ count } item${ count !== 1 ? "s" : "" }`;
-  }, [ wishlistItems.length ] );
+    return `You have ${count} item${count !== 1 ? "s" : ""}`;
+  }, [wishlistItems.length]);
 
   return (
     <Section>
       <SectionTitle
         align="center"
         title="Wishlist"
-        subtitle={ isLoading ? "Loading..." : itemCountText }
+        subtitle={isLoading ? "Loading..." : itemCountText}
       />
-      { isLoading ? (
+      {isLoading ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          { Array.from( { length: 8 } ).map( ( _, index ) => (
-            <WishlistItemCardSkeleton key={ index } />
-          ) ) }
+          {Array.from({ length: 8 }).map((_, index) => (
+            <WishlistItemCardSkeleton key={index} />
+          ))}
         </div>
       ) : wishlistItems.length === 0 ? (
         <EmptyWishlistState />
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          { wishlistItems.map( item => (
+          {wishlistItems.map((item) => (
             <WishlistItemCard
-              key={ item.id }
-              item={ item }
-              isAuthenticated={ isAuthenticated }
-              onRemove={ removeItem }
-              onMoveToCart={ moveToCart }
-              removingIds={ removingIds }
-              addingToCartIds={ addingToCartIds }
+              key={item.id}
+              item={item}
+              isAuthenticated={isAuthenticated}
+              onRemove={removeItem}
+              onMoveToCart={moveToCart}
+              removingIds={removingIds}
+              addingToCartIds={addingToCartIds}
             />
-          ) ) }
+          ))}
         </div>
-      ) }
+      )}
     </Section>
   );
 };

@@ -1,14 +1,11 @@
-import { fetchJson } from "@/lib/fetch-json";
-
-const API = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+import api from "./http-client";
 
 export const treeService = {
-  async list( params: Record<string, any> ) {
-    const query = new URLSearchParams( params ).toString();
-    return fetchJson( `${ API }/trees?${ query }` );
+  async list(params: Record<string, any>) {
+    return api.get<{ trees: any[]; meta?: any }>("/trees", { params });
   },
 
-  async get( slug: string, type: string ) {
-    return fetchJson( `${ API }/trees/${ slug }?type=${ type }` );
-  }
+  async get(slug: string, type: string) {
+    return api.get<{ tree: any }>(`/trees/${slug}`, { params: { type } });
+  },
 };
