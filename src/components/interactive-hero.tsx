@@ -254,12 +254,12 @@ export default function InteractiveHero({
                 style={{ y: textY, opacity: fade }}
                 className="max-w-5xl space-y-8"
               >
-                <TextRevealVertical
+                {/* <TextRevealVertical
                   text={currentSlide.title}
                   className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-white drop-shadow-2xl"
-                />
+                /> */}
 
-                {currentSlide.description && (
+                {/* {currentSlide.description && (
                   <motion.p
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -268,7 +268,7 @@ export default function InteractiveHero({
                   >
                     {currentSlide.description}
                   </motion.p>
-                )}
+                )} */}
 
                 {currentSlide.button_text && (
                   <motion.div
