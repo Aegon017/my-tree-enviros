@@ -112,7 +112,7 @@ export default function InteractiveHero({ sliders = [] }: { sliders: Slider[]; l
     }, []);
 
     const { scrollYProgress } = useScroll(
-        isReady
+        isReady && sliders.length > 0
             ? { target: containerRef, offset: ["start start", "end start"] }
             : undefined
     );

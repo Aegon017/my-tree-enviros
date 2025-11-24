@@ -122,6 +122,7 @@ export interface BackendCartResponse {
   formatted_price?: string;
   subtotal?: number;
   formatted_subtotal?: string;
+  items?: CartItem[]; // Add items array
   item?: {
     type?: string;
     name?: string;

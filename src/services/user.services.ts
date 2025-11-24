@@ -1,6 +1,6 @@
 "use client";
 
-import api from "@/lib/axios";
+import api from "@/services/http-client";
 
 export interface User {
   id: number;
@@ -94,13 +94,13 @@ export interface CreateShippingAddressPayload {
 
 
 export const userService = {
-  
+
   getCurrentUser: async (): Promise<UserResponse> => {
     const response = await api.get<UserResponse>("/me");
     return response.data;
   },
 
-  
+
   getUsers: async (params?: {
     page?: number;
     per_page?: number;
@@ -110,13 +110,13 @@ export const userService = {
     return response.data;
   },
 
-  
+
   getUserById: async (userId: number): Promise<UserResponse> => {
     const response = await api.get<UserResponse>(`/users/${userId}`);
     return response.data;
   },
 
-  
+
   updateUser: async (
     userId: number,
     payload: UpdateUserPayload,
@@ -125,28 +125,28 @@ export const userService = {
     return response.data;
   },
 
-  
+
   updateCurrentUser: async (
     payload: UpdateUserPayload,
   ): Promise<UserResponse> => {
-    
+
     const currentUser = await userService.getCurrentUser();
     return userService.updateUser(currentUser.data.user.id, payload);
   },
 
-  
+
   deleteUser: async (userId: number): Promise<{ success: boolean }> => {
     const response = await api.delete(`/users/${userId}`);
     return response.data;
   },
 
-  
+
   createUser: async (payload: CreateUserPayload): Promise<UserResponse> => {
     const response = await api.post<UserResponse>("/users", payload);
     return response.data;
   },
 
-  
+
   getShippingAddresses: async (): Promise<ShippingAddressesResponse> => {
     const response = await api.get<ShippingAddressesResponse>(
       "/shipping-addresses",
@@ -154,7 +154,7 @@ export const userService = {
     return response.data;
   },
 
-  
+
   getShippingAddress: async (
     addressId: number,
   ): Promise<ShippingAddressResponse> => {
@@ -164,7 +164,7 @@ export const userService = {
     return response.data;
   },
 
-  
+
   createShippingAddress: async (
     payload: CreateShippingAddressPayload,
   ): Promise<ShippingAddressResponse> => {
@@ -175,7 +175,7 @@ export const userService = {
     return response.data;
   },
 
-  
+
   updateShippingAddress: async (
     addressId: number,
     payload: Partial<CreateShippingAddressPayload>,
@@ -187,7 +187,7 @@ export const userService = {
     return response.data;
   },
 
-  
+
   deleteShippingAddress: async (
     addressId: number,
   ): Promise<{ success: boolean }> => {
@@ -195,7 +195,7 @@ export const userService = {
     return response.data;
   },
 
-  
+
   setDefaultAddress: async (
     addressId: number,
   ): Promise<ShippingAddressResponse> => {
@@ -205,22 +205,22 @@ export const userService = {
     return response.data;
   },
 
-  
+
   getFullName: (user: User): string => {
     return user.name || "User";
   },
 
-  
+
   isEmailVerified: (user: User): boolean => {
     return !!user.email_verified_at;
   },
 
-  
+
   isMobileVerified: (user: User): boolean => {
     return !!user.mobile_verified_at;
   },
 
-  
+
   getJoinDate: (user: User): string => {
     const date = new Date(user.created_at);
     return date.toLocaleDateString("en-IN", {
@@ -230,7 +230,7 @@ export const userService = {
     });
   },
 
-  
+
   maskEmail: (email: string): string => {
     const [local, domain] = email.split("@");
     if (local.length <= 3) {
@@ -239,7 +239,7 @@ export const userService = {
     return `${local.substring(0, 3)}***@${domain}`;
   },
 
-  
+
   maskMobile: (mobile: string): string => {
     if (mobile.length <= 4) {
       return `***${mobile.slice(-2)}`;
@@ -247,19 +247,19 @@ export const userService = {
     return `******${mobile.slice(-4)}`;
   },
 
-  
+
   isValidMobile: (mobile: string): boolean => {
     const mobileRegex = /^[6-9]\d{9}$/;
     return mobileRegex.test(mobile);
   },
 
-  
+
   isValidEmail: (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   },
 
-  
+
   formatAddress: (address: ShippingAddress): string => {
     const parts = [
       address.address_line1,
@@ -273,7 +273,7 @@ export const userService = {
     return parts.join(", ");
   },
 
-  
+
   getAddressLabel: (address: ShippingAddress): string => {
     return `${address.name} - ${address.city}${address.is_default ? " (Default)" : ""}`;
   },

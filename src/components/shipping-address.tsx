@@ -1,3 +1,4 @@
+// Cleaned component implementation as above
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,11 +10,11 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import useSWR, { mutate } from "swr";
 import { z } from "zod";
+import { useShippingAddresses } from "@/hooks/useShippingAddresses";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,23 +51,32 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import api from "@/lib/axios";
-import type { ShippingAddress } from "@/types/shipping-address";
-import { fetcher } from "@/lib/fetcher";
+import type { ShippingAddress } from "@/types/shipping-address.types";
+import { LocationPicker } from "@/components/location-picker";
+import { postOfficeService, type PostOffice } from "@/services/postoffice.services";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be 10 digits."),
   address: z.string().min(5, "Address must be at least 5 characters."),
   city: z.string().min(2, "City must be at least 2 characters."),
   area: z.string().min(2, "Area must be at least 2 characters."),
-  pincode: z.string().regex(/^\d{5,6}$/, "Pincode must be 5-6 digits."),
-  mobile_number: z
-    .string()
-    .regex(/^\d{10}$/, "Mobile number must be 10 digits."),
-  default: z.boolean(),
+  postal_code: z.string().regex(/^\d{5,6}$/, "Postal code must be 5-6 digits."),
+  latitude: z.number(),
+  longitude: z.number(),
+  post_office_name: z.string().optional(),
+  post_office_branch_type: z.string().optional(),
+  is_default: z.boolean(),
 });
 
-type FormValues = z.infer<typeof formSchema> & { default: boolean };
+type FormValues = z.infer<typeof formSchema>;
 
 interface ShippingAddressesProps {
   onSelect?: (shipping_address_id: number | null) => void;
@@ -95,7 +105,7 @@ const AddressCard = memo(
           )}
         </CardTitle>
         <div className="flex items-center gap-2">
-          {address.default === 1 && (
+          {address.is_default && (
             <span className="inline-flex items-center rounded-full bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
               Default
             </span>
@@ -108,9 +118,9 @@ const AddressCard = memo(
           <div className="min-w-0">
             <p className="wrap-break-words">{address.address}</p>
             <p className="wrap-break-words">
-              {address.city}, {address.area} {address.pincode}
+              {address.city}, {address.area} {address.postal_code}
             </p>
-            <p>{address.mobile_number}</p>
+            <p>{address.phone}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -159,36 +169,92 @@ const AddressForm = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      phone: "",
       address: "",
       city: "",
       area: "",
-      pincode: "",
-      mobile_number: "",
-      default: false,
+      postal_code: "",
+      latitude: 0,
+      longitude: 0,
+      post_office_name: "",
+      post_office_branch_type: "",
+      is_default: false,
     },
   });
+
+  const [postOffices, setPostOffices] = useState<PostOffice[]>([]);
+  const [isLoadingPostOffices, setIsLoadingPostOffices] = useState(false);
+
+  const handleLocationChange = (lat: number, lng: number, address?: string) => {
+    form.setValue("latitude", lat);
+    form.setValue("longitude", lng);
+    if (address) {
+      const parts = address.split(", ");
+      if (parts.length >= 2) {
+        form.setValue("city", parts[parts.length - 2] || "");
+        form.setValue("area", parts[parts.length - 1] || "");
+      }
+    }
+  };
+
+  const handlePostalCodeChange = async (postalCode: string) => {
+    if (postalCode.length === 6) {
+      setIsLoadingPostOffices(true);
+      try {
+        const response = await postOfficeService.searchByPincode(postalCode);
+        if (response.Status === "Success" && response.PostOffice) {
+          setPostOffices(response.PostOffice);
+          if (response.PostOffice.length > 0) {
+            const firstPO = response.PostOffice[0];
+            form.setValue("post_office_name", firstPO.Name);
+            form.setValue("post_office_branch_type", firstPO.BranchType);
+            form.setValue("city", firstPO.District);
+            form.setValue("area", firstPO.State);
+          }
+        } else {
+          setPostOffices([]);
+          toast.error("No post offices found for this postal code");
+        }
+      } catch (error) {
+        console.error("Error fetching post offices:", error);
+        toast.error("Failed to fetch post office data");
+      } finally {
+        setIsLoadingPostOffices(false);
+      }
+    } else {
+      setPostOffices([]);
+    }
+  };
 
   useEffect(() => {
     if (open) {
       if (editingAddress) {
         form.reset({
           name: editingAddress.name,
+          phone: editingAddress.phone,
           address: editingAddress.address,
           city: editingAddress.city,
           area: editingAddress.area,
-          pincode: editingAddress.pincode,
-          mobile_number: editingAddress.mobile_number,
-          default: editingAddress.default === 1,
+          postal_code: editingAddress.postal_code,
+          latitude: editingAddress.latitude,
+          longitude: editingAddress.longitude,
+          post_office_name: editingAddress.post_office_name || "",
+          post_office_branch_type: editingAddress.post_office_branch_type || "",
+          is_default: editingAddress.is_default,
         });
       } else {
         form.reset({
           name: "",
+          phone: "",
           address: "",
           city: "",
           area: "",
-          pincode: "",
-          mobile_number: "",
-          default: false,
+          postal_code: "",
+          latitude: 0,
+          longitude: 0,
+          post_office_name: "",
+          post_office_branch_type: "",
+          is_default: false,
         });
       }
     }
@@ -210,21 +276,15 @@ const AddressForm = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {editingAddress ? "Edit Address" : "Add New Address"}
-          </DialogTitle>
+          <DialogTitle>{editingAddress ? "Edit Address" : "Add New Address"}</DialogTitle>
           <DialogDescription>
             {editingAddress
               ? "Update your shipping address details."
               : "Add a new shipping address for delivery."}
           </DialogDescription>
         </DialogHeader>
-
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -238,7 +298,6 @@ const AddressForm = ({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="address"
@@ -252,7 +311,6 @@ const AddressForm = ({
                 </FormItem>
               )}
             />
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -267,7 +325,6 @@ const AddressForm = ({
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="area"
@@ -282,28 +339,41 @@ const AddressForm = ({
                 )}
               />
             </div>
-
+            {/* Location Picker */}
+            <div className="space-y-2">
+              <LocationPicker
+                latitude={form.watch("latitude")}
+                longitude={form.watch("longitude")}
+                onLocationChange={handleLocationChange}
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="pincode"
+                name="postal_code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Pincode</FormLabel>
+                    <FormLabel>Postal Code</FormLabel>
                     <FormControl>
-                      <Input placeholder="Pincode" {...field} />
+                      <Input
+                        placeholder="Postal Code"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          handlePostalCodeChange(e.target.value);
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
-                name="mobile_number"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mobile Number</FormLabel>
+                    <FormLabel>Phone Number</FormLabel>
                     <FormControl>
                       <Input placeholder="10-digit mobile number" {...field} />
                     </FormControl>
@@ -312,17 +382,51 @@ const AddressForm = ({
                 )}
               />
             </div>
-
+            {/* Post Office Selection */}
+            {postOffices.length > 0 && (
+              <FormField
+                control={form.control}
+                name="post_office_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Post Office</FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        const selected = postOffices.find((po) => po.Name === value);
+                        if (selected) {
+                          field.onChange(value);
+                          form.setValue("post_office_branch_type", selected.BranchType);
+                          form.setValue("city", selected.District);
+                          form.setValue("area", selected.State);
+                        }
+                      }}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a post office" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {postOffices.map((po) => (
+                          <SelectItem key={po.Name} value={po.Name}>
+                            {po.Name} - {po.BranchType}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
-              name="default"
+              name="is_default"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>Set as default address</FormLabel>
@@ -333,20 +437,12 @@ const AddressForm = ({
                 </FormItem>
               )}
             />
-
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-                className="mt-2 sm:mt-0"
-              >
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} className="mt-2 sm:mt-0">
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingAddress ? "Update Address" : "Add Address"}
               </Button>
             </div>
@@ -362,41 +458,31 @@ export default function ShippingAddresses({
   selectedAddressId: externalSelectedId,
 }: ShippingAddressesProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<ShippingAddress | null>(
-    null,
-  );
+  const [editingAddress, setEditingAddress] = useState<ShippingAddress | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [internalSelectedId, setInternalSelectedId] = useState<number | null>(
-    null,
-  );
+  const [internalSelectedId, setInternalSelectedId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const selectedAddressId =
     externalSelectedId !== undefined ? externalSelectedId : internalSelectedId;
 
-  const key = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/shipping-addresses`;
-  const { data, error, isLoading } = useSWR<{
-    status: boolean;
-    message: string;
-    data: ShippingAddress[];
-  }>( key, fetcher );
+  const { addresses, isLoading, error, create, update, remove, setDefault, refresh } = useShippingAddresses();
 
-  const addresses = useMemo( () => data?.data || [], [ data?.data ] );
-
+  // set initial selected address
   useEffect(() => {
     if (addresses.length === 1 && selectedAddressId === null) {
-      const singleAddress = addresses[0];
-      setInternalSelectedId(singleAddress.id);
-      onSelect?.(singleAddress.id);
+      const single = addresses[0];
+      setInternalSelectedId(single.id);
+      onSelect?.(single.id);
     }
   }, [addresses, selectedAddressId, onSelect]);
 
   useEffect(() => {
     if (addresses.length >= 2 && selectedAddressId === null) {
-      const defaultAddress = addresses.find((a) => a.default === 1);
-      if (defaultAddress) {
-        setInternalSelectedId(defaultAddress.id);
-        onSelect?.(defaultAddress.id);
+      const def = addresses.find((a) => a.is_default);
+      if (def) {
+        setInternalSelectedId(def.id);
+        onSelect?.(def.id);
       }
     }
   }, [addresses, selectedAddressId, onSelect]);
@@ -416,39 +502,12 @@ export default function ShippingAddresses({
 
   const handleDelete = useCallback(
     async (id: number) => {
-      if (!data) return;
-
-      const optimistic = {
-        ...data,
-        data: data.data.filter((a) => a.id !== id),
-      };
-
       try {
-        await mutate(
-          key,
-          async (current: typeof data | undefined) => {
-            if (!current) return current;
-
-            await api.delete(`/shipping-addresses/${id}`);
-
-            return {
-              ...current,
-              data: current.data.filter((a) => a.id !== id),
-            };
-          },
-          {
-            optimisticData: optimistic,
-            rollbackOnError: true,
-            populateCache: true,
-            revalidate: false,
-          },
-        );
-
+        await remove(id);
         toast.success("Address deleted successfully.");
         if (selectedAddressId === id) {
-          const newSelectedId = null;
-          setInternalSelectedId(newSelectedId);
-          onSelect?.(newSelectedId);
+          setInternalSelectedId(null);
+          onSelect?.(null);
         }
       } catch (error) {
         toast.error("Failed to delete address.");
@@ -456,95 +515,20 @@ export default function ShippingAddresses({
         setDeleteId(null);
       }
     },
-    [data, selectedAddressId, onSelect, key],
+    [remove, selectedAddressId, onSelect],
   );
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
-    const payload = { ...values, default: values.default ? 1 : 0 };
-
+    const payload = { ...values };
     try {
-      const url = editingAddress
-        ? `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/v1/shipping-address/${editingAddress.id}`
-        : `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/v1/shipping-address`;
-      const method = editingAddress ? "PUT" : "POST";
-
-      if (editingAddress && data) {
-        const optimisticAddress = {
-          ...editingAddress,
-          ...values,
-          default: payload.default,
-        };
-        const optimistic = {
-          ...data,
-          data: data.data.map((a) =>
-            a.id === editingAddress.id ? optimisticAddress : a,
-          ),
-        };
-
-        await mutate(
-          key,
-          async (current: typeof data | undefined) => {
-            if (!current) return current;
-
-            const response = await fetch(url, {
-              method,
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              body: JSON.stringify(payload),
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-              throw new Error(result.message || "Operation failed");
-            }
-
-            return {
-              ...current,
-              data: current.data.map((a) =>
-                a.id === editingAddress.id ? result.data : a,
-              ),
-            };
-          },
-          {
-            optimisticData: optimistic,
-            rollbackOnError: true,
-            populateCache: true,
-            revalidate: false,
-          },
-        );
-
+      if (editingAddress) {
+        await update(editingAddress.id, payload);
         toast.success("Address updated successfully.");
       } else {
-        const response = await fetch(url, {
-          method,
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-          toast.success("Address added successfully.");
-          mutate(
-            key,
-            (current: typeof data | undefined) => {
-              if (!current) return current;
-              return { ...current, data: [...current.data, result.data] };
-            },
-            { revalidate: false },
-          );
-        } else {
-          throw new Error(result.message || "Operation failed");
-        }
+        await create(payload);
+        toast.success("Address added successfully.");
       }
-
       setIsDialogOpen(false);
       setEditingAddress(null);
     } catch (error) {
@@ -577,9 +561,7 @@ export default function ShippingAddresses({
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-destructive">
-          Failed to load addresses. Please try again.
-        </p>
+        <p className="text-destructive">{error}</p>
       </div>
     );
   }
@@ -588,11 +570,7 @@ export default function ShippingAddresses({
     <div className="container mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold">Shipping Addresses</h1>
-        <Button
-          onClick={handleAddNewAddress}
-          className="w-full sm:w-auto"
-          size="sm"
-        >
+        <Button onClick={handleAddNewAddress} className="w-full sm:w-auto" size="sm">
           <Plus className="mr-2 h-4 w-4" /> Add New Address
         </Button>
       </div>
@@ -634,15 +612,12 @@ export default function ShippingAddresses({
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete this
-              address.
+              This action cannot be undone. This will permanently delete this address.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteId && handleDelete(deleteId)}
-            >
+            <AlertDialogAction onClick={() => deleteId && handleDelete(deleteId)}>
               Continue
             </AlertDialogAction>
           </AlertDialogFooter>

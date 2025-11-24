@@ -34,7 +34,11 @@ const Schema = z.object({
 
 type FormData = z.infer<typeof Schema>;
 
-export function SigninForm({ className, ...props }: React.ComponentProps<"div">) {
+interface SigninFormProps extends React.ComponentProps<"div"> {
+  onOtpSent?: (data: { country_code: string; phone: string }) => void;
+}
+
+export function SigninForm({ className, onOtpSent, ...props }: SigninFormProps) {
   const router = useRouter();
 
   const form = useForm<FormData>({
@@ -64,9 +68,17 @@ export function SigninForm({ className, ...props }: React.ComponentProps<"div">)
         if (res.success) {
           authStorage.setResendTime(Date.now() + 60000);
           toast.success(res.message ?? "Verification code sent successfully");
-          router.push(
-            `/verify-otp?country_code=${encodeURIComponent(parsed.countryCallingCode)}&phone=${encodeURIComponent(parsed.nationalNumber)}`
-          );
+
+          if (onOtpSent) {
+            onOtpSent({
+              country_code: `+${parsed.countryCallingCode}`,
+              phone: parsed.nationalNumber,
+            });
+          } else {
+            router.push(
+              `/verify-otp?country_code=${encodeURIComponent(parsed.countryCallingCode)}&phone=${encodeURIComponent(parsed.nationalNumber)}`
+            );
+          }
         } else {
           toast.error(res.message ?? "Failed to send verification code");
         }
@@ -75,7 +87,7 @@ export function SigninForm({ className, ...props }: React.ComponentProps<"div">)
         toast.error(msg);
       }
     },
-    [router]
+    [router, onOtpSent]
   );
 
   return (

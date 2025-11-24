@@ -1,13 +1,13 @@
 "use client";
 
-import api from "@/lib/axios";
+import api from "@/services/http-client";
 
 export interface OrderItem {
   id: number;
   order_id: number;
   product_id: number;
-  product_type: number; 
-  type: number; 
+  product_type: number;
+  type: number;
   quantity: number;
   duration?: number;
   price: number;
@@ -53,8 +53,8 @@ export interface Order {
   total_amount: number;
   discount_amount: number;
   final_amount: number;
-  payment_status: string; 
-  order_status: string; 
+  payment_status: string;
+  order_status: string;
   payment_method?: string;
   transaction_id?: string;
   shipping_address_id?: number;
@@ -94,11 +94,11 @@ export interface CreateOrderPayload {
   shipping_address_id?: number;
   coupon_code?: string;
   notes?: string;
-  cart_type?: number; 
+  cart_type?: number;
 }
 
 export interface CreateDirectOrderPayload {
-  
+
   item_type?: "tree" | "product";
   tree_plan_price_id?: number;
   product_id?: number;
@@ -108,9 +108,9 @@ export interface CreateDirectOrderPayload {
   coupon_id?: number;
   shipping_address_id?: number;
 
-  
-  product_type?: number; 
-  type?: number; 
+
+  product_type?: number;
+  type?: number;
   duration?: number;
   coupon_code?: string;
   name?: string;
@@ -139,25 +139,25 @@ export interface OrderParams {
 
 
 export const orderService = {
-  
+
   getOrders: async (params?: OrderParams): Promise<OrdersResponse> => {
     const response = await api.get<OrdersResponse>("/orders", { params });
     return response.data;
   },
 
-  
+
   getOrderById: async (orderId: number): Promise<OrderResponse> => {
     const response = await api.get<OrderResponse>(`/orders/${orderId}`);
     return response.data;
   },
 
-  
+
   createOrder: async (payload: CreateOrderPayload): Promise<OrderResponse> => {
     const response = await api.post<OrderResponse>("/orders", payload);
     return response.data;
   },
 
-  
+
   createDirectOrder: async (
     payload: CreateDirectOrderPayload,
   ): Promise<OrderResponse> => {
@@ -165,19 +165,19 @@ export const orderService = {
     return response.data;
   },
 
-  
+
   cancelOrder: async (orderId: number): Promise<OrderResponse> => {
     const response = await api.post<OrderResponse>(`/orders/${orderId}/cancel`);
     return response.data;
   },
 
-  
+
   getMyTrees: async (): Promise<MyTreesResponse> => {
     const response = await api.get<MyTreesResponse>("/my-trees");
     return response.data;
   },
 
-  
+
   initiatePayment: async (orderId: number) => {
     const response = await api.post(`/orders/${orderId}/payment/initiate`, {
       payment_method: "razorpay",
@@ -185,7 +185,7 @@ export const orderService = {
     return response.data;
   },
 
-  
+
   verifyPayment: async (
     orderId: number,
     paymentData: {
@@ -201,20 +201,20 @@ export const orderService = {
     return response.data;
   },
 
-  
+
   getPaymentStatus: async (orderId: number) => {
     const response = await api.get(`/orders/${orderId}/payment/status`);
     return response.data;
   },
 
-  
+
   calculateTotal: (items: OrderItem[]): number => {
     return items.reduce((sum, item) => {
       return sum + item.price * item.quantity;
     }, 0);
   },
 
-  
+
   getOrderStatusText: (status: string): string => {
     const statusMap: Record<string, string> = {
       pending: "Pending",
@@ -228,7 +228,7 @@ export const orderService = {
     return statusMap[status.toLowerCase()] || status;
   },
 
-  
+
   getPaymentStatusText: (status: string): string => {
     const statusMap: Record<string, string> = {
       pending: "Pending",
@@ -240,7 +240,7 @@ export const orderService = {
     return statusMap[status.toLowerCase()] || status;
   },
 
-  
+
   getOrderStatusColor: (status: string): string => {
     const colorMap: Record<string, string> = {
       pending: "orange",
@@ -254,13 +254,13 @@ export const orderService = {
     return colorMap[status.toLowerCase()] || "gray";
   },
 
-  
+
   canBeCancelled: (order: Order): boolean => {
     const cancellableStatuses = ["pending", "processing"];
     return cancellableStatuses.includes(order.order_status.toLowerCase());
   },
 
-  
+
   formatDate: (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-IN", {
@@ -270,7 +270,7 @@ export const orderService = {
     });
   },
 
-  
+
   formatTime: (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleTimeString("en-IN", {

@@ -1,6 +1,6 @@
 "use client";
 
-import api from "@/lib/axios";
+import api from "@/services/http-client";
 
 export interface RazorpayOrderResponse {
   success: boolean;
@@ -43,7 +43,7 @@ export interface PaymentStatusResponse {
 
 
 export const paymentService = {
-  
+
   initiatePayment: async (orderId: number): Promise<RazorpayOrderResponse> => {
     const response = await api.post<RazorpayOrderResponse>(
       `/orders/${orderId}/payment/initiate`,
@@ -52,7 +52,7 @@ export const paymentService = {
     return response.data;
   },
 
-  
+
   verifyPayment: async (
     orderId: number,
     payload: PaymentVerificationPayload,
@@ -64,7 +64,7 @@ export const paymentService = {
     return response.data;
   },
 
-  
+
   getPaymentStatus: async (orderId: number): Promise<PaymentStatusResponse> => {
     const response = await api.get<PaymentStatusResponse>(
       `/orders/${orderId}/payment/status`,
@@ -72,7 +72,7 @@ export const paymentService = {
     return response.data;
   },
 
-  
+
   loadRazorpayScript: (): Promise<boolean> => {
     return new Promise((resolve) => {
       if (typeof window === "undefined") {
@@ -80,7 +80,7 @@ export const paymentService = {
         return;
       }
 
-      
+
       if ((window as any).Razorpay) {
         resolve(true);
         return;
@@ -95,7 +95,7 @@ export const paymentService = {
     });
   },
 
-  
+
   openRazorpayCheckout: async (
     options: {
       key: string;
@@ -148,9 +148,9 @@ export const paymentService = {
     }
   },
 
-  
+
   formatAmount: (amount: number, currency = "INR"): string => {
-    const value = amount / 100; 
+    const value = amount / 100;
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: currency,
@@ -158,17 +158,17 @@ export const paymentService = {
     }).format(value);
   },
 
-  
+
   rupeesToPaise: (rupees: number): number => {
     return Math.round(rupees * 100);
   },
 
-  
+
   paiseToRupees: (paise: number): number => {
     return paise / 100;
   },
 
-  
+
   getPaymentStatusColor: (status: string): string => {
     const colorMap: Record<string, string> = {
       pending: "orange",
@@ -181,7 +181,7 @@ export const paymentService = {
     return colorMap[status.toLowerCase()] || "gray";
   },
 
-  
+
   getPaymentStatusText: (status: string): string => {
     const textMap: Record<string, string> = {
       pending: "Pending",
@@ -194,17 +194,17 @@ export const paymentService = {
     return textMap[status.toLowerCase()] || status;
   },
 
-  
+
   isPaymentSuccessful: (status: string): boolean => {
     return status.toLowerCase() === "completed";
   },
 
-  
+
   isPaymentPending: (status: string): boolean => {
     return ["pending", "processing"].includes(status.toLowerCase());
   },
 
-  
+
   isPaymentFailed: (status: string): boolean => {
     return status.toLowerCase() === "failed";
   },
@@ -218,8 +218,8 @@ export async function createOrder(payload: {
   cart_type: "1" | "2";
   shipping_address_id?: number;
 }) {
-  
-  
+
+
   console.warn(
     "createOrder is deprecated. Use orderService.createOrder instead.",
   );
@@ -233,11 +233,11 @@ export async function paymentCallback(payload: {
   razorpay_signature: string;
   type: "1" | "2" | "3" | "4";
 }) {
-  
+
   console.warn(
     "paymentCallback is deprecated. Use paymentService.verifyPayment instead.",
   );
-  
-  
+
+
   return payload;
 }

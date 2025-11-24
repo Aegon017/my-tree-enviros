@@ -1,4 +1,4 @@
-import api from '@/lib/axios';
+import api from '@/services/http-client';
 import { authStorage } from '@/lib/auth-storage';
 import type {
   Campaign,

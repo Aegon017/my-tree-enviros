@@ -38,11 +38,19 @@ const Schema = z.object({
 
 type FormData = z.infer<typeof Schema>;
 
-export function VerifyOtpForm({ className, ...props }: React.ComponentProps<"div">) {
+interface VerifyOtpFormProps extends React.ComponentProps<"div"> {
+  country_code?: string;
+  phone?: string;
+  onSuccess?: () => void;
+}
+
+export function VerifyOtpForm({ className, country_code, phone: propPhone, onSuccess, ...props }: VerifyOtpFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const countryCode = "+" + searchParams.get("country_code");
-  const phone = searchParams.get("phone");
+
+  // Use props if available, otherwise fallback to search params
+  const countryCode = country_code || ("+" + searchParams.get("country_code"));
+  const phone = propPhone || searchParams.get("phone");
 
   const [resendTimer, setResendTimer] = useState(0);
 
@@ -55,8 +63,11 @@ export function VerifyOtpForm({ className, ...props }: React.ComponentProps<"div
 
   useEffect(() => {
     if (!countryCode || !phone) {
-      toast.error("Missing phone number information");
-      router.push("/sign-in");
+      // Only redirect if we are relying on search params and they are missing
+      if (!country_code && !propPhone) {
+        toast.error("Missing phone number information");
+        router.push("/sign-in");
+      }
     }
 
     const updateTimer = () => {
@@ -69,7 +80,7 @@ export function VerifyOtpForm({ className, ...props }: React.ComponentProps<"div
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [countryCode, phone, router]);
+  }, [countryCode, phone, router, country_code, propPhone]);
 
   const onSubmit = useCallback(
     async (data: FormData) => {
@@ -87,7 +98,11 @@ export function VerifyOtpForm({ className, ...props }: React.ComponentProps<"div
 
         if (res.success) {
           toast.success("Logged in successfully");
-          router.push("/");
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            router.push("/");
+          }
         } else {
           toast.error(res.message ?? "Invalid OTP");
         }
@@ -96,7 +111,7 @@ export function VerifyOtpForm({ className, ...props }: React.ComponentProps<"div
         toast.error(msg);
       }
     },
-    [countryCode, phone, router]
+    [countryCode, phone, router, onSuccess]
   );
 
   const handleResendOtp = useCallback(async () => {

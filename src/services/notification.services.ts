@@ -1,4 +1,4 @@
-import api from "@/lib/axios";
+import api from "@/services/http-client";
 import type { Notification, NotificationResponse, ApiResponse } from "@/types/notification.types";
 
 export const notificationService = {

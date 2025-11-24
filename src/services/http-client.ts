@@ -18,7 +18,6 @@ export class ApiError extends Error {
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "";
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
 
 export type RequestConfig = RequestInit & {
     params?: Record<string, any>;
@@ -55,16 +54,6 @@ async function request<T>(endpoint: string, config: RequestConfig = {}): Promise
         ...fetchConfig,
         headers,
     });
-
-    if (response.status === 401) {
-        authStorage.clearAll();
-        if (typeof window !== "undefined") {
-            const p = window.location.pathname;
-            if (!p.startsWith("/sign-in") && !p.startsWith("/sign-up") && !p.startsWith("/verify-otp")) {
-                window.location.href = "/sign-in";
-            }
-        }
-    }
 
     const data = await response.json().catch(() => ({}));
 
