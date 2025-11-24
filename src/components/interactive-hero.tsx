@@ -245,7 +245,8 @@ export default function InteractiveHero({
                   priority
                   sizes="100vw"
                 />
-                <div className="absolute inset-0 bg-linear-to-b from-black/80 via-black/40 to-black/90" />
+                <div className="absolute inset-0 bg-linear-to-b" />
+                {/* <div className="absolute inset-0 bg-linear-to-b from-black/80 via-black/40 to-black/90" /> */}
               </motion.div>
             </AnimatePresence>
 
