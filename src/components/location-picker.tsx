@@ -1,20 +1,10 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
 import { MapPin, Navigation } from "lucide-react";
 import { toast } from "sonner";
-
-// Fix for default marker icon in react-leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-    iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
 
 interface LocationPickerProps {
     latitude?: number;
@@ -22,32 +12,34 @@ interface LocationPickerProps {
     onLocationChange: (lat: number, lng: number, address?: string) => void;
 }
 
-function LocationMarker({ position, onPositionChange }: {
-    position: [number, number];
-    onPositionChange: (lat: number, lng: number) => void;
-}) {
-    const map = useMapEvents({
-        click(e) {
-            onPositionChange(e.latlng.lat, e.latlng.lng);
-        },
-    });
-
-    useEffect(() => {
-        map.flyTo(position, map.getZoom());
-    }, [position, map]);
-
-    return <Marker position={position} draggable eventHandlers={{
-        dragend: (e) => {
-            const marker = e.target;
-            const position = marker.getLatLng();
-            onPositionChange(position.lat, position.lng);
-        },
-    }} />;
-}
-
 export function LocationPicker({ latitude = 28.6139, longitude = 77.2090, onLocationChange }: LocationPickerProps) {
     const [position, setPosition] = useState<[number, number]>([latitude, longitude]);
     const [isClient, setIsClient] = useState(false);
+
+    function InlineMap({ position, onPositionChange }: { position: [number, number]; onPositionChange: (lat: number, lng: number) => void }) {
+        const handleClick = (e: any) => {
+            const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const lng = position[1] + (x / rect.width - 0.5) * 0.1;
+            const lat = position[0] - (y / rect.height - 0.5) * 0.1;
+            onPositionChange(lat, lng);
+        };
+
+        return (
+            <div
+                className="h-full w-full bg-linear-to-br from-slate-100 to-white flex items-center justify-center text-sm text-muted-foreground cursor-pointer"
+                onClick={handleClick}
+            >
+                <div className="text-center">
+                    <div>Click anywhere to set location</div>
+                    <div className="mt-2">Lat: {position[0].toFixed(6)}, Lng: {position[1].toFixed(6)}</div>
+                </div>
+            </div>
+        );
+    }
+
+    const ClientMap = dynamic(() => Promise.resolve({ default: InlineMap }), { ssr: false });
 
     useEffect(() => {
         setIsClient(true);
@@ -62,7 +54,6 @@ export function LocationPicker({ latitude = 28.6139, longitude = 77.2090, onLoca
     const handlePositionChange = async (lat: number, lng: number) => {
         setPosition([lat, lng]);
 
-        // Reverse geocoding to get address
         try {
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
@@ -122,18 +113,7 @@ export function LocationPicker({ latitude = 28.6139, longitude = 77.2090, onLoca
             </div>
 
             <div className="h-[400px] rounded-lg overflow-hidden border">
-                <MapContainer
-                    center={position}
-                    zoom={13}
-                    style={{ height: "100%", width: "100%" }}
-                    scrollWheelZoom={true}
-                >
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <LocationMarker position={position} onPositionChange={handlePositionChange} />
-                </MapContainer>
+                <ClientMap position={position} onPositionChange={handlePositionChange} />
             </div>
 
             <div className="text-xs text-muted-foreground">

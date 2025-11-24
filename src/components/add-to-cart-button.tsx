@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useCart } from "@/hooks/use-cart";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { useAuthStore } from "@/store/auth-store";
 
 type Props = {
   type: "product" | "sponsor" | "adopt";
@@ -49,6 +50,7 @@ export default function AddToCartButton({
   className,
 }: Props) {
   const { loading, add, items } = useCart();
+  const token = useAuthStore((s) => s.token);
   const router = useRouter();
 
   const isInCart = useMemo(() => {
@@ -89,30 +91,15 @@ export default function AddToCartButton({
         return;
       }
 
-      if (type === "sponsor") {
+      if (type === "sponsor" || type === "adopt") {
         if (!treeId || !planId || !planPriceId)
-          return toast.error("Invalid sponsorship details");
+          return toast.error("Invalid sponsorship/adoption details");
+
+        // Backend expects `type: 'tree'` for tree items. For guests, keep original type
+        const payloadType = token ? "tree" : type;
 
         await add({
-          type: "sponsor",
-          tree_id: treeId,
-          plan_id: planId,
-          plan_price_id: planPriceId,
-          quantity,
-          dedication: required,
-          tree: treeData,
-          planPrice: planPriceData,
-        });
-        onSuccess?.();
-        return;
-      }
-
-      if (type === "adopt") {
-        if (!treeId || !planId || !planPriceId)
-          return toast.error("Invalid adoption details");
-
-        await add({
-          type: "adopt",
+          type: payloadType,
           tree_id: treeId,
           plan_id: planId,
           plan_price_id: planPriceId,

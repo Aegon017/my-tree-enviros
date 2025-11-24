@@ -1,81 +1,98 @@
-import { useEffect, useState, useCallback } from "react";
-import api from "@/services/http-client";
-import type { ShippingAddress } from "@/types/shipping-address.types";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { shippingAddressService, ShippingAddress, CreateShippingAddressPayload, UpdateShippingAddressPayload } from "@/services/shipping-address.services";
 
-interface UseShippingAddressesResult {
-    addresses: ShippingAddress[];
-    isLoading: boolean;
-    error: string | null;
-    refresh: () => void;
-    create: (payload: Omit<ShippingAddress, "id" | "created_at" | "updated_at" | "user_id">) => Promise<void>;
-    update: (id: number, payload: Partial<ShippingAddress>) => Promise<void>;
-    remove: (id: number) => Promise<void>;
-    setDefault: (id: number) => Promise<void>;
-}
-
-export function useShippingAddresses(): UseShippingAddressesResult {
+export function useShippingAddresses() {
     const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
-    const [isLoading, setLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchAll = useCallback(async () => {
-        setLoading(true);
+    const fetch = useCallback(async () => {
+        setIsLoading(true);
         setError(null);
         try {
-            const res = await api.get<{ data: ShippingAddress[] }>("/shipping-addresses");
-            setAddresses(res.data ?? []);
+            const response = await shippingAddressService.index();
+            setAddresses(response.data?.addresses ?? []);
         } catch (e: any) {
-            setError(e.message || "Failed to load addresses");
+            setError(e?.message ?? "Failed to fetch addresses");
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     }, []);
 
-    const create = useCallback(async (payload: Omit<ShippingAddress, "id" | "created_at" | "updated_at" | "user_id">) => {
+    const create = useCallback(async (payload: CreateShippingAddressPayload) => {
         try {
-            const response = await api.post<{ data: ShippingAddress }>("/shipping-addresses", payload as any);
-            if (response.data) {
-                setAddresses((prev) => [...prev, response.data!]);
+            const response = await shippingAddressService.store(payload);
+            const address = response.data?.address;
+            if (address) {
+                setAddresses((prev) => [...prev, address]);
             }
+            return response;
         } catch (e: any) {
-            setError(e.message || "Failed to create address");
+            const validationErrors = e?.data?.errors || e?.data?.validation_errors;
+            if (validationErrors) {
+                throw { message: e.message ?? "Validation failed", errors: validationErrors };
+            }
+            toast.error(e?.message ?? "Failed to create address");
             throw e;
         }
     }, []);
 
-    const update = useCallback(async (id: number, payload: Partial<ShippingAddress>) => {
+    const update = useCallback(async (id: number, payload: UpdateShippingAddressPayload) => {
         try {
-            const response = await api.put<{ data: ShippingAddress }>(`/shipping-addresses/${id}`, payload);
-            if (response.data) {
-                setAddresses((prev) => prev.map((a) => (a.id === id ? response.data! : a)));
+            const response = await shippingAddressService.update(id, payload);
+            const updated = response.data?.address;
+            if (updated) {
+                setAddresses((prev) => prev.map((a) => (a.id === id ? updated : a)));
             }
+            return response;
+        } catch (e: any) {
+            const validationErrors = e?.data?.errors || e?.data?.validation_errors;
+            if (validationErrors) {
+                throw { message: e.message ?? "Validation failed", errors: validationErrors };
+            }
+            toast.error(e?.message ?? "Failed to update address");
+            throw e;
         }
-    }, []); \n\n    const remove = useCallback(async (id: number) => {
-        \n        try { \n            await api.delete(`/shipping-addresses/${id}`); \n            setAddresses((prev) => prev.filter((a) => a.id !== id)); \n } catch (e: any) {
-        \n            setError(e.message || \"Failed to delete address\");\n            throw e;\n        }\n    }, []);
+    }, []);
+
+    const remove = useCallback(async (id: number) => {
+        try {
+            await shippingAddressService.destroy(id);
+            setAddresses((prev) => prev.filter((a) => a.id !== id));
+        } catch (e: any) {
+            toast.error(e?.message ?? "Failed to delete address");
+            throw e;
+        }
+    }, []);
 
     const setDefault = useCallback(async (id: number) => {
-            try {
-                await api.post(`/shipping-addresses/${id}/set-default`);
-                await fetchAll();
-            } catch (e: any) {
-                setError(e.message || "Failed to set default address");
-                throw e;
+        try {
+            const response = await shippingAddressService.setDefault(id);
+            const updated = response.data?.address;
+            if (updated) {
+                setAddresses((prev) => prev.map((a) => ({ ...a, is_default: a.id === id })));
+            } else {
+                await fetch();
             }
-        }, [fetchAll]);
-
-            useEffect(() => {
-                fetchAll();
-            }, [fetchAll]);
-
-            return {
-                addresses,
-                isLoading,
-                error,
-                refresh: fetchAll,
-                create,
-                update,
-                remove,
-                setDefault,
-            };
+        } catch (e: any) {
+            toast.error(e?.message ?? "Failed to set default address");
+            throw e;
         }
+    }, [fetch]);
+
+    useEffect(() => {
+        fetch();
+    }, [fetch]);
+
+    return {
+        addresses,
+        isLoading,
+        error,
+        refresh: fetch,
+        create,
+        update,
+        remove,
+        setDefault,
+    } as const;
+}
