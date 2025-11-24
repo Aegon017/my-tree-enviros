@@ -42,13 +42,13 @@ function PaymentSuccessPage() {
         orderService
           .getOrderById(id)
           .then((res) => {
-            if (mounted && res?.data?.order?.total_amount) {
-              setDisplayAmount(res.data.order.total_amount);
+            const order = res?.data?.order as any;
+            const apiTotal = order?.total ?? order?.total_amount;
+            if (mounted && typeof apiTotal === "number") {
+              setDisplayAmount(apiTotal);
             }
           })
-          .catch(() => {
-            
-          });
+          .catch(() => {});
       }
     }
 

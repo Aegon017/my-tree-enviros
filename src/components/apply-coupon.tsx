@@ -21,7 +21,12 @@ interface ApplyCouponProps {
   disabled?: boolean;
 }
 
-export function ApplyCoupon({ onCouponApplied, onCouponRemoved, currentTotal, disabled }: ApplyCouponProps) {
+export function ApplyCoupon({
+  onCouponApplied,
+  onCouponRemoved,
+  currentTotal,
+  disabled,
+}: ApplyCouponProps) {
   const [couponCode, setCouponCode] = useState("");
   const [isApplied, setIsApplied] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -30,7 +35,10 @@ export function ApplyCoupon({ onCouponApplied, onCouponRemoved, currentTotal, di
     if (!couponCode.trim()) return;
     setLoading(true);
     try {
-      const response = await orderService.validateCoupon(couponCode, currentTotal);
+      const response = await orderService.validateCoupon(
+        couponCode,
+        currentTotal,
+      );
       if (response.success && response.data) {
         setIsApplied(true);
         onCouponApplied(response.data.discount, response.data.coupon_id);
@@ -93,9 +101,7 @@ export function ApplyCoupon({ onCouponApplied, onCouponRemoved, currentTotal, di
               <div className="flex justify-between items-center">
                 <div>
                   <Label className="text-sm font-medium">Applied Coupon</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {couponCode}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{couponCode}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">

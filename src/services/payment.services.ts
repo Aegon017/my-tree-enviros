@@ -20,25 +20,27 @@ export interface PaymentVerificationPayload {
   razorpay_signature: string;
 }
 
-export interface PaymentVerificationResponse extends ApiResponse<{
-  order: Order;
-  payment_id: string;
-}> { }
+export interface PaymentVerificationResponse
+  extends ApiResponse<{
+    order: Order;
+    payment_id: string;
+  }> {}
 
-export interface PaymentStatusResponse extends ApiResponse<{
-  order_id: number;
-  order_number: string;
-  order_status: string;
-  order_status_label: string;
-  payment: {
-    id: number;
-    amount: number;
-    payment_method: string;
-    transaction_id: string;
-    status: string;
-    paid_at: string;
-  } | null;
-}> { }
+export interface PaymentStatusResponse
+  extends ApiResponse<{
+    order_id: number;
+    order_number: string;
+    order_status: string;
+    order_status_label: string;
+    payment: {
+      id: number;
+      amount: number;
+      payment_method: string;
+      transaction_id: string;
+      status: string;
+      paid_at: string;
+    } | null;
+  }> {}
 
 export const paymentService = {
   loadRazorpayScript: () => {
@@ -56,25 +58,25 @@ export const paymentService = {
       `/orders/${orderId}/payment/initiate`,
       {
         payment_method: "razorpay",
-      }
+      },
     );
     return response as ApiResponse<RazorpayOrderResponse>;
   },
 
   verifyPayment: async (
     orderId: number,
-    paymentData: PaymentVerificationPayload
+    paymentData: PaymentVerificationPayload,
   ) => {
     const response = await api.post<PaymentVerificationResponse["data"]>(
       `/orders/${orderId}/payment/verify`,
-      paymentData
+      paymentData,
     );
     return response as PaymentVerificationResponse;
   },
 
   getPaymentStatus: async (orderId: number) => {
     const response = await api.get<PaymentStatusResponse["data"]>(
-      `/orders/${orderId}/payment/status`
+      `/orders/${orderId}/payment/status`,
     );
     return response as PaymentStatusResponse;
   },
@@ -86,7 +88,7 @@ export const paymentService = {
   openRazorpayCheckout: async (
     options: any,
     onSuccess: (response: any) => void,
-    onFailure: (error: any) => void
+    onFailure: (error: any) => void,
   ) => {
     const Razorpay = (window as any).Razorpay;
     if (!Razorpay) {

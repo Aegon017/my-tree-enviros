@@ -24,15 +24,15 @@ const breadcrumbItems = [
 export default function Page() {
   const { selected } = useLocationStore();
 
-  const { trees, meta, loading, error, loadList } = useTrees( {
+  const { trees, meta, loading, error, loadList } = useTrees({
     type: "adopt",
     lat: selected?.lat,
     lng: selected?.lng,
     page: 1,
     per_page: 20,
-  } );
+  });
 
-  const handlePageChange = ( page: number ) => {
+  const handlePageChange = (page: number) => {
     loadList(
       {
         type: "adopt",
@@ -41,14 +41,14 @@ export default function Page() {
         page,
         per_page: 20,
       },
-      true
+      true,
     );
   };
 
-  if ( error ) {
+  if (error) {
     return (
       <div className="container max-w-6xl mx-auto">
-        <BreadcrumbNav items={ breadcrumbItems } className="mb-6 py-4 px-4" />
+        <BreadcrumbNav items={breadcrumbItems} className="mb-6 py-4 px-4" />
         <Section className="bg-background py-12">
           <Alert variant="destructive">
             <AlertDescription>Failed to load trees.</AlertDescription>
@@ -60,7 +60,7 @@ export default function Page() {
 
   return (
     <div className="container max-w-6xl mx-auto">
-      <BreadcrumbNav items={ breadcrumbItems } className="mb-6 py-4 px-4" />
+      <BreadcrumbNav items={breadcrumbItems} className="mb-6 py-4 px-4" />
 
       <Section className="bg-background py-12">
         <SectionTitle
@@ -69,15 +69,15 @@ export default function Page() {
           align="center"
         />
 
-        { selected && (
+        {selected && (
           <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4" />
-            Showing trees near <strong>{ selected.area }</strong>,{ " " }
-            <strong>{ selected.city }</strong>
+            Showing trees near <strong>{selected.area}</strong>,{" "}
+            <strong>{selected.city}</strong>
           </div>
-        ) }
+        )}
 
-        { !selected?.lat ? (
+        {!selected?.lat ? (
           <div className="text-center py-12 text-muted-foreground">
             <MapPin className="h-12 w-12 mx-auto mb-4" />
             Please select your location to view available trees.
@@ -85,38 +85,41 @@ export default function Page() {
         ) : (
           <>
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 justify-center">
-              { loading && trees.length === 0
-                ? Array.from( { length: 10 } ).map( ( _, i ) => (
-                  <BasicTreeCardSkeleton key={ i } />
-                ) )
-                : trees.map( ( tree ) => (
-                  <Link
-                    key={ tree.id }
-                    href={ `/adopt-a-tree/${ tree.slug }` }
-                    className="transition-transform hover:scale-105"
-                  >
-                    <BasicTreeCard
-                      name={ tree.name }
-                      image={ tree.thumbnail_url }
-                    />
-                  </Link>
-                ) ) }
+              {loading && trees.length === 0
+                ? Array.from({ length: 10 }).map((_, i) => (
+                    <BasicTreeCardSkeleton key={i} />
+                  ))
+                : trees.map((tree) => (
+                    <Link
+                      key={tree.id}
+                      href={`/adopt-a-tree/${tree.slug}`}
+                      className="transition-transform hover:scale-105"
+                    >
+                      <BasicTreeCard
+                        name={tree.name}
+                        image={tree.thumbnail_url}
+                      />
+                    </Link>
+                  ))}
             </div>
 
-            { !loading && trees.length === 0 && (
+            {!loading && trees.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
-                No adoptable trees available near { selected.area },{ " " }
-                { selected.city }
+                No adoptable trees available near {selected.area},{" "}
+                {selected.city}
               </div>
-            ) }
+            )}
 
-            { meta && meta.last_page > 1 && (
+            {meta && meta.last_page > 1 && (
               <div className="flex justify-center mt-10">
-                <PaginationWrapper meta={ meta } onPageChange={ handlePageChange } />
+                <PaginationWrapper
+                  meta={meta}
+                  onPageChange={handlePageChange}
+                />
               </div>
-            ) }
+            )}
           </>
-        ) }
+        )}
       </Section>
     </div>
   );

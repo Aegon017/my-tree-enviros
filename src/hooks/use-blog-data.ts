@@ -5,82 +5,88 @@ import { blogService } from "@/services/blog.services";
 import { BaseMeta } from "@/types/common.types";
 import { Blog, BlogListItem } from "@/types/blog.types";
 
-export function useBlogData({ slug, initialParams = {} }: { slug?: string; initialParams?: any } = {}) {
-    const [blog, setBlog] = useState<Blog | null>(null);
-    const [blogs, setBlogs] = useState<BlogListItem[]>([]);
-    const [meta, setMeta] = useState<BaseMeta | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+export function useBlogData({
+  slug,
+  initialParams = {},
+}: {
+  slug?: string;
+  initialParams?: any;
+} = {}) {
+  const [blog, setBlog] = useState<Blog | null>(null);
+  const [blogs, setBlogs] = useState<BlogListItem[]>([]);
+  const [meta, setMeta] = useState<BaseMeta | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const paramsRef = useRef(initialParams);
-    const initializedRef = useRef(false);
+  const paramsRef = useRef(initialParams);
+  const initializedRef = useRef(false);
 
-    const loadList = useCallback(async (overrideParams?: any, reset = false) => {
-        setLoading(true);
-        setError(null);
+  const loadList = useCallback(async (overrideParams?: any, reset = false) => {
+    setLoading(true);
+    setError(null);
 
-        try {
-            const params = overrideParams || paramsRef.current;
-            const res = await blogService.list(params);
+    try {
+      const params = overrideParams || paramsRef.current;
+      const res = await blogService.list(params);
 
-            const list = res.data?.blogs ?? [];
-            const m = res.data?.meta ?? null;
+      const list = res.data?.blogs ?? [];
+      const m = res.data?.meta ?? null;
 
-            setBlogs(prev => (reset ? list : [...prev, ...list]));
-            setMeta(m);
+      setBlogs((prev) => (reset ? list : [...prev, ...list]));
+      setMeta(m);
 
-            if (overrideParams) {
-                paramsRef.current = overrideParams;
-            }
-        } catch (err: any) {
-            setError(err.message || "Failed to load blogs");
-        } finally {
-            setLoading(false);
+      if (overrideParams) {
+        paramsRef.current = overrideParams;
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to load blogs");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadMore = () => {
+    if (!meta || loading) return;
+    if (meta.current_page >= meta.last_page) return;
+
+    const nextParams = {
+      ...paramsRef.current,
+      page: meta.current_page + 1,
+    };
+
+    loadList(nextParams);
+  };
+
+  useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    (async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        if (slug) {
+          const res = await blogService.get(slug);
+          setBlog(res.data?.blog ?? null);
         }
-    }, []);
 
-    const loadMore = () => {
-        if (!meta || loading) return;
-        if (meta.current_page >= meta.last_page) return;
+        await loadList(paramsRef.current, true);
+      } catch (err: any) {
+        setError(err.message || "Failed to load blog data");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
-        const nextParams = {
-            ...paramsRef.current,
-            page: meta.current_page + 1,
-        };
-
-        loadList(nextParams);
-    };
-
-    useEffect(() => {
-        if (initializedRef.current) return;
-        initializedRef.current = true;
-
-        (async () => {
-            setLoading(true);
-            setError(null);
-
-            try {
-                if (slug) {
-                    const res = await blogService.get(slug);
-                    setBlog(res.data?.blog ?? null);
-                }
-
-                await loadList(paramsRef.current, true);
-            } catch (err: any) {
-                setError(err.message || "Failed to load blog data");
-            } finally {
-                setLoading(false);
-            }
-        })();
-    }, []);
-
-    return {
-        blog,
-        blogs,
-        meta,
-        loading,
-        error,
-        loadList,
-        loadMore,
-    };
+  return {
+    blog,
+    blogs,
+    meta,
+    loading,
+    error,
+    loadList,
+    loadMore,
+  };
 }

@@ -16,7 +16,10 @@ export const authService = {
   },
 
   async verifyOtp(payload: VerifyPayload) {
-    return await api.post<{ user: any; token?: string }>(`${AUTH_URL}verify-otp`, payload);
+    return await api.post<{ user: any; token?: string }>(
+      `${AUTH_URL}verify-otp`,
+      payload,
+    );
   },
 
   async resendOtp(payload: { country_code: string; phone: string }) {
@@ -28,6 +31,9 @@ export const authService = {
   },
 
   async signOut(all = false) {
-    return await api.post(`${AUTH_URL}sign-out`, all ? { all: true } : undefined);
+    return await api.post(
+      `${AUTH_URL}sign-out`,
+      all ? { all: true } : undefined,
+    );
   },
 };

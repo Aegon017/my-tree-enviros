@@ -10,7 +10,11 @@ export const authStorage = {
   },
 
   setToken(token: string) {
-    Cookies.set(TOKEN_KEY, token, { expires: 30, sameSite: 'Strict', secure: true });
+    Cookies.set(TOKEN_KEY, token, {
+      expires: 30,
+      sameSite: "Strict",
+      secure: true,
+    });
   },
 
   clearToken() {
@@ -40,7 +44,8 @@ export const authStorage = {
   },
 
   setResendTime(ts: number) {
-    if (typeof window !== "undefined") localStorage.setItem(RESEND_KEY, String(ts));
+    if (typeof window !== "undefined")
+      localStorage.setItem(RESEND_KEY, String(ts));
   },
 
   getResendTime() {

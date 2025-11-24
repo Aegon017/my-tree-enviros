@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useState } from "react";
 import { createOrder, paymentCallback } from "@/services/payment.services";
 import { useRouter } from "next/navigation";
 
-declare const Razorpay: any; 
+declare const Razorpay: any;
 
 export function usePayment() {
   const [loading, setLoading] = useState(false);

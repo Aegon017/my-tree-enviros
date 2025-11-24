@@ -1,15 +1,18 @@
 import api from "@/services/http-client";
-import type { Notification, NotificationResponse, ApiResponse } from "@/types/notification.types";
+import type {
+  Notification,
+  NotificationResponse,
+  ApiResponse,
+} from "@/types/notification.types";
 
 export const notificationService = {
   getAll: async (params?: {
     per_page?: number;
     page?: number;
   }): Promise<NotificationResponse> => {
-    const response = await api.get<NotificationResponse>(
-      "/notifications",
-      { params },
-    );
+    const response = await api.get<NotificationResponse>("/notifications", {
+      params,
+    });
     return response.data;
   },
 

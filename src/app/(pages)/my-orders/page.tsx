@@ -57,7 +57,7 @@ const MyOrdersPage = () => {
 
       try {
         const response = await orderService.getOrders();
-        if (response.success) {
+        if (response.success && response.data) {
           setOrders(response.data.orders);
         }
       } catch (err) {
@@ -88,9 +88,7 @@ const MyOrdersPage = () => {
       if (response.success) {
         setOrders((prev) =>
           prev.map((order) =>
-            order.id === orderId
-              ? { ...order, order_status: "cancelled" }
-              : order,
+            order.id === orderId ? { ...order, status: "cancelled" } : order,
           ),
         );
         toast.success("Order cancelled successfully");
@@ -222,7 +220,7 @@ const MyOrdersPage = () => {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <CardTitle className="text-lg">
-                    Order #{order.order_number}
+                    Order #{order.reference_number}
                   </CardTitle>
                   <CardDescription className="flex items-center gap-1 mt-1">
                     <Calendar className="h-3 w-3" />
@@ -230,11 +228,18 @@ const MyOrdersPage = () => {
                   </CardDescription>
                 </div>
                 <div className="flex flex-col gap-1 items-end">
-                  <Badge variant={getStatusColor(order.order_status)}>
-                    {orderService.getOrderStatusText(order.order_status)}
+                  <Badge variant={getStatusColor(order.status)}>
+                    {orderService.getOrderStatusText(order.status)}
                   </Badge>
-                  <Badge variant={getPaymentStatusColor(order.payment_status)}>
-                    {orderService.getPaymentStatusText(order.payment_status)}
+                  <Badge
+                    variant={getPaymentStatusColor(
+                      order.paid_at ? "completed" : "pending",
+                    )}
+                  >
+                    {orderService.getPaymentStatusText(
+                      undefined,
+                      order.paid_at,
+                    )}
                   </Badge>
                 </div>
               </div>
@@ -247,21 +252,19 @@ const MyOrdersPage = () => {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Total Amount</span>
-                  <span className="font-medium">
-                    ₹{order.total_amount.toFixed(2)}
-                  </span>
+                  <span className="font-medium">₹{order.total.toFixed(2)}</span>
                 </div>
-                {order.discount_amount > 0 && (
+                {order.discount > 0 && (
                   <div className="flex items-center justify-between text-sm text-green-600">
                     <span>Discount</span>
-                    <span>-₹{order.discount_amount.toFixed(2)}</span>
+                    <span>-₹{order.discount.toFixed(2)}</span>
                   </div>
                 )}
                 <Separator />
                 <div className="flex items-center justify-between">
                   <span className="font-semibold">Final Amount</span>
                   <span className="font-bold text-lg text-primary">
-                    ₹{order.final_amount.toFixed(2)}
+                    ₹{order.total.toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -296,7 +299,7 @@ const MyOrdersPage = () => {
           <DialogHeader>
             <DialogTitle>Order Details</DialogTitle>
             <DialogDescription>
-              Order #{selectedOrder?.order_number}
+              Order #{selectedOrder?.reference_number}
             </DialogDescription>
           </DialogHeader>
 
@@ -307,9 +310,7 @@ const MyOrdersPage = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Order Status</p>
                   <p className="font-semibold">
-                    {orderService.getOrderStatusText(
-                      selectedOrder.order_status,
-                    )}
+                    {orderService.getOrderStatusText(selectedOrder.status)}
                   </p>
                 </div>
                 <div>
@@ -318,7 +319,8 @@ const MyOrdersPage = () => {
                   </p>
                   <p className="font-semibold">
                     {orderService.getPaymentStatusText(
-                      selectedOrder.payment_status,
+                      undefined,
+                      selectedOrder.paid_at,
                     )}
                   </p>
                 </div>
@@ -336,19 +338,30 @@ const MyOrdersPage = () => {
                 <div className="space-y-3">
                   {selectedOrder.items.map((item: OrderItem) => {
                     const productName =
-                      item.product_type === 1
-                        ? item.product?.name
-                        : item.ecom_product?.name;
+                      item.tree_instance?.tree?.name ||
+                      item.plan_price?.plan?.name ||
+                      (item as any).item?.name ||
+                      "Item";
+
                     const productImage =
-                      item.product_type === 1
-                        ? item.product?.main_image_url
-                        : item.ecom_product?.main_image_url;
+                      item.tree_instance?.tree?.image_url ||
+                      (item as any).item?.image ||
+                      null;
+
+                    const isTree =
+                      item.type === "sponsor" ||
+                      item.type === "adopt" ||
+                      item.type === "tree";
+                    const isProduct = item.type === "product";
+
+                    const displayPrice = (item.total_amount ??
+                      item.amount * item.quantity) as number;
 
                     return (
                       <Card key={item.id}>
                         <CardContent className="p-4">
                           <div className="flex gap-4">
-                            <div className="relative w-20 h-20 flex-shrink-0">
+                            <div className="relative w-20 h-20 shrink-0">
                               {productImage ? (
                                 <Image
                                   src={productImage}
@@ -366,35 +379,27 @@ const MyOrdersPage = () => {
                               <h4 className="font-semibold">{productName}</h4>
                               <div className="flex items-center gap-2 mt-1">
                                 <Badge variant="outline">
-                                  {item.product_type === 1 ? "Tree" : "Product"}
+                                  {isTree
+                                    ? "Tree"
+                                    : isProduct
+                                      ? "Product"
+                                      : "Other"}
                                 </Badge>
-                                {item.type === 1 && (
+                                {item.type === "sponsor" && (
                                   <Badge variant="secondary">Sponsor</Badge>
                                 )}
-                                {item.type === 2 && (
+                                {item.type === "adopt" && (
                                   <Badge variant="secondary">Adopt</Badge>
                                 )}
                               </div>
                               <div className="flex items-center justify-between mt-2">
                                 <span className="text-sm text-muted-foreground">
                                   Qty: {item.quantity}
-                                  {item.duration &&
-                                    ` × ${item.duration} months`}
                                 </span>
                                 <span className="font-semibold">
-                                  ₹{(item.price * item.quantity).toFixed(2)}
+                                  ₹{displayPrice.toFixed(2)}
                                 </span>
                               </div>
-                              {item.name && (
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  For: {item.name}
-                                </p>
-                              )}
-                              {item.occasion && (
-                                <p className="text-sm text-muted-foreground">
-                                  Occasion: {item.occasion}
-                                </p>
-                              )}
                             </div>
                           </div>
                         </CardContent>
@@ -451,21 +456,19 @@ const MyOrdersPage = () => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">Subtotal</span>
-                        <span>₹{selectedOrder.total_amount.toFixed(2)}</span>
+                        <span>₹{selectedOrder.total.toFixed(2)}</span>
                       </div>
-                      {selectedOrder.discount_amount > 0 && (
+                      {selectedOrder.discount > 0 && (
                         <div className="flex items-center justify-between text-green-600">
                           <span>Discount</span>
-                          <span>
-                            -₹{selectedOrder.discount_amount.toFixed(2)}
-                          </span>
+                          <span>-₹{selectedOrder.discount.toFixed(2)}</span>
                         </div>
                       )}
-                      {selectedOrder.coupon_code && (
+                      {selectedOrder.coupon?.code && (
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">Coupon</span>
                           <Badge variant="secondary">
-                            {selectedOrder.coupon_code}
+                            {selectedOrder.coupon.code}
                           </Badge>
                         </div>
                       )}
@@ -473,16 +476,16 @@ const MyOrdersPage = () => {
                       <div className="flex items-center justify-between font-bold text-lg">
                         <span>Total Paid</span>
                         <span className="text-primary">
-                          ₹{selectedOrder.final_amount.toFixed(2)}
+                          ₹{selectedOrder.total.toFixed(2)}
                         </span>
                       </div>
-                      {selectedOrder.transaction_id && (
+                      {(selectedOrder as any).transaction_id && (
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">
                             Transaction ID
                           </span>
                           <span className="font-mono text-xs">
-                            {selectedOrder.transaction_id}
+                            {(selectedOrder as any).transaction_id}
                           </span>
                         </div>
                       )}

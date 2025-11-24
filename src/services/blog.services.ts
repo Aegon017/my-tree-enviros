@@ -7,5 +7,5 @@ export const blogService = {
 
   async list(params: Record<string, any>) {
     return api.get<{ blogs: any[]; meta: any }>("/blogs", { params });
-  }
+  },
 };

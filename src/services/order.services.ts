@@ -62,19 +62,21 @@ export interface Order {
   coupon?: any; // Define strictly if needed
 }
 
-export interface OrdersResponse extends ApiResponse<{
-  orders: Order[];
-  meta: {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-  };
-}> { }
+export interface OrdersResponse
+  extends ApiResponse<{
+    orders: Order[];
+    meta: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  }> {}
 
-export interface OrderResponse extends ApiResponse<{
-  order: Order;
-}> { }
+export interface OrderResponse
+  extends ApiResponse<{
+    order: Order;
+  }> {}
 
 export interface CreateOrderPayload {
   coupon_id?: number;
@@ -95,15 +97,16 @@ export interface CreateDirectOrderPayload {
   shipping_address_id?: number;
 }
 
-export interface MyTreesResponse extends ApiResponse<{
-  trees: OrderItem[]; // Reusing OrderItem as it contains tree details
-  meta: {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-  };
-}> { }
+export interface MyTreesResponse
+  extends ApiResponse<{
+    trees: OrderItem[]; // Reusing OrderItem as it contains tree details
+    meta: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
+  }> {}
 
 export interface OrderParams {
   status?: string;
@@ -114,7 +117,9 @@ export interface OrderParams {
 
 export const orderService = {
   getOrders: async (params?: OrderParams): Promise<OrdersResponse> => {
-    const response = await api.get<OrdersResponse["data"]>("/orders", { params });
+    const response = await api.get<OrdersResponse["data"]>("/orders", {
+      params,
+    });
     return response as OrdersResponse;
   },
 
@@ -128,23 +133,76 @@ export const orderService = {
     return response as OrderResponse;
   },
 
-  createDirectOrder: async (payload: CreateDirectOrderPayload): Promise<OrderResponse> => {
-    const response = await api.post<OrderResponse["data"]>("/orders/direct", payload);
+  createDirectOrder: async (
+    payload: CreateDirectOrderPayload,
+  ): Promise<OrderResponse> => {
+    const response = await api.post<OrderResponse["data"]>(
+      "/orders/direct",
+      payload,
+    );
     return response as OrderResponse;
   },
 
   cancelOrder: async (orderId: number): Promise<OrderResponse> => {
-    const response = await api.post<OrderResponse["data"]>(`/orders/${orderId}/cancel`);
+    const response = await api.post<OrderResponse["data"]>(
+      `/orders/${orderId}/cancel`,
+    );
     return response as OrderResponse;
   },
 
   getMyTrees: async (params?: OrderParams): Promise<MyTreesResponse> => {
-    const response = await api.get<MyTreesResponse["data"]>("/my-trees", { params });
+    const response = await api.get<MyTreesResponse["data"]>("/my-trees", {
+      params,
+    });
     return response as MyTreesResponse;
   },
 
-  validateCoupon: async (code: string, amount: number): Promise<ApiResponse<{ coupon_id: number; code: string; discount: number }>> => {
-    const response = await api.post("/orders/validate-coupon", { code, amount });
-    return response as ApiResponse<{ coupon_id: number; code: string; discount: number }>;
+  validateCoupon: async (
+    code: string,
+    amount: number,
+  ): Promise<
+    ApiResponse<{ coupon_id: number; code: string; discount: number }>
+  > => {
+    const response = await api.post("/orders/validate-coupon", {
+      code,
+      amount,
+    });
+    return response as ApiResponse<{
+      coupon_id: number;
+      code: string;
+      discount: number;
+    }>;
+  },
+
+  // Helper: format ISO date strings into a readable date
+  formatDate: (date?: string) => {
+    if (!date) return "";
+    try {
+      return new Date(date).toLocaleDateString();
+    } catch {
+      return date;
+    }
+  },
+
+  // Helper: map order status to a readable label
+  getOrderStatusText: (status?: string) => {
+    if (!status) return "Unknown";
+    return String(status)
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  },
+
+  // Helper: derive payment status label from order data
+  getPaymentStatusText: (paymentStatus?: string, paidAt?: string | null) => {
+    if (paymentStatus)
+      return String(paymentStatus).replace(/\b\w/g, (c) => c.toUpperCase());
+    if (paidAt) return "Completed";
+    return "Pending";
+  },
+
+  // Helper: determine if an order can be cancelled (basic rule: pending)
+  canBeCancelled: (order: any) => {
+    const status = order?.status || order?.order_status;
+    return String(status || "").toLowerCase() === "pending";
   },
 };

@@ -31,7 +31,7 @@ type Props = {
   productImages?: any[];
 };
 
-export default function AddToCartButton( {
+export default function AddToCartButton({
   type,
   variantId,
   treeId,
@@ -48,37 +48,38 @@ export default function AddToCartButton( {
   variantData,
   productImages,
   className,
-}: Props ) {
+}: Props) {
   const { loading, add, items } = useCart();
-  const token = useAuthStore( ( s ) => s.token );
+  const token = useAuthStore((s) => s.token);
   const router = useRouter();
 
-  const isInCart = useMemo( () => {
-    if ( type === "product" && variantId ) {
+  const isInCart = useMemo(() => {
+    if (type === "product" && variantId) {
       return items.some(
-        ( item ) => item.type === "product" && item.product_variant_id === variantId
+        (item) =>
+          item.type === "product" && item.product_variant_id === variantId,
       );
     }
-    if ( ( type === "sponsor" || type === "adopt" ) && treeId && planPriceId ) {
+    if ((type === "sponsor" || type === "adopt") && treeId && planPriceId) {
       return items.some(
-        ( item ) =>
+        (item) =>
           item.type !== "product" &&
           item.tree?.id === treeId &&
-          item.plan_price_id === planPriceId
+          item.plan_price_id === planPriceId,
       );
     }
     return false;
-  }, [ items, type, variantId, treeId, planPriceId ] );
+  }, [items, type, variantId, treeId, planPriceId]);
 
   const handle = async () => {
-    if ( isInCart ) {
-      router.push( "/cart" );
+    if (isInCart) {
+      router.push("/cart");
       return;
     }
 
-    if ( dedication ) {
+    if (dedication) {
       const isValid = await validateDedication?.();
-      if ( !isValid ) return;
+      if (!isValid) return;
 
       const required = {
         name: dedication.name.trim(),
@@ -86,16 +87,16 @@ export default function AddToCartButton( {
         message: dedication.message.trim(),
       };
 
-      if ( !required.name || !required.occasion || !required.message ) {
-        toast.error( "Dedication is required" );
+      if (!required.name || !required.occasion || !required.message) {
+        toast.error("Dedication is required");
         return;
       }
 
-      if ( type === "sponsor" || type === "adopt" ) {
-        if ( !treeId || !planId || !planPriceId )
-          return toast.error( "Invalid sponsorship/adoption details" );
+      if (type === "sponsor" || type === "adopt") {
+        if (!treeId || !planId || !planPriceId)
+          return toast.error("Invalid sponsorship/adoption details");
 
-        await add( {
+        await add({
           type: type,
           tree_id: treeId,
           plan_id: planId,
@@ -104,37 +105,37 @@ export default function AddToCartButton( {
           dedication: required,
           tree: treeData,
           planPrice: planPriceData,
-        } );
+        });
         onSuccess?.();
         return;
       }
     }
 
-    if ( type === "product" ) {
-      if ( !variantId ) return toast.error( "Invalid product variant" );
+    if (type === "product") {
+      if (!variantId) return toast.error("Invalid product variant");
 
-      return add( {
+      return add({
         type: "product",
         product_variant_id: variantId,
         quantity,
         product: productData,
         variant: variantData,
         images: productImages,
-      } );
+      });
     }
 
-    toast.error( "Invalid item type" );
+    toast.error("Invalid item type");
   };
 
   return (
     <Button
       type="button"
-      onClick={ handle }
-      disabled={ disabled || loading }
-      loading={ loading }
-      className={ className ?? "flex gap-2" }
+      onClick={handle}
+      disabled={disabled || loading}
+      loading={loading}
+      className={className ?? "flex gap-2"}
     >
-      { isInCart ? (
+      {isInCart ? (
         <>
           <ArrowRight className="w-4 h-4" />
           Go to Cart
@@ -144,7 +145,7 @@ export default function AddToCartButton( {
           <ShoppingCart className="w-4 h-4" />
           Add To Cart
         </>
-      ) }
+      )}
     </Button>
   );
 }

@@ -39,16 +39,16 @@ const useWishlist = () => {
 
   const fetchWishlist = useCallback(async () => {
     if (!isAuthenticated) {
-      setState(prev => ({ ...prev, isLoading: false }));
+      setState((prev) => ({ ...prev, isLoading: false }));
       return;
     }
 
-    setState(prev => ({ ...prev, isLoading: true }));
+    setState((prev) => ({ ...prev, isLoading: true }));
 
     try {
       const response = await wishlistService.getWishlist();
       if (response.success && response.data) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           items: response.data!.wishlist.items || [],
         }));
@@ -56,48 +56,51 @@ const useWishlist = () => {
     } catch {
       toast.error(TOAST_MESSAGES.ERROR);
     } finally {
-      setState(prev => ({ ...prev, isLoading: false }));
+      setState((prev) => ({ ...prev, isLoading: false }));
     }
   }, [isAuthenticated]);
 
   const removeItem = useCallback(async (id: number) => {
-    setState(prev => ({ ...prev, removingIds: [...prev.removingIds, id] }));
+    setState((prev) => ({ ...prev, removingIds: [...prev.removingIds, id] }));
     try {
       const response = await wishlistService.removeFromWishlist(id);
       if (response.success) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
-          items: prev.items.filter(item => item.id !== id),
+          items: prev.items.filter((item) => item.id !== id),
         }));
         toast.success(TOAST_MESSAGES.REMOVED);
       }
     } catch {
       toast.error(TOAST_MESSAGES.ERROR);
     } finally {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        removingIds: prev.removingIds.filter(itemId => itemId !== id),
+        removingIds: prev.removingIds.filter((itemId) => itemId !== id),
       }));
     }
   }, []);
 
   const moveToCart = useCallback(async (id: number) => {
-    setState(prev => ({ ...prev, addingToCartIds: [...prev.addingToCartIds, id] }));
+    setState((prev) => ({
+      ...prev,
+      addingToCartIds: [...prev.addingToCartIds, id],
+    }));
     try {
       const response = await wishlistService.moveToCart(id);
       if (response.success) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
-          items: prev.items.filter(item => item.id !== id),
+          items: prev.items.filter((item) => item.id !== id),
         }));
         toast.success(TOAST_MESSAGES.MOVED_TO_CART);
       }
     } catch {
       toast.error(TOAST_MESSAGES.ERROR);
     } finally {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        addingToCartIds: prev.addingToCartIds.filter(itemId => itemId !== id),
+        addingToCartIds: prev.addingToCartIds.filter((itemId) => itemId !== id),
       }));
     }
   }, []);
@@ -152,7 +155,7 @@ const WishlistPage: React.FC = () => {
         <EmptyWishlistState />
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {wishlistItems.map(item => (
+          {wishlistItems.map((item) => (
             <WishlistItemCard
               key={item.id}
               item={item}

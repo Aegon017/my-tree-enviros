@@ -9,15 +9,23 @@ export const cartService = {
   },
 
   async add(item: Record<string, any>) {
-    return await api.post<{ cart: BackendCartResponse }>(`${CART_URL}/items`, item);
+    return await api.post<{ cart: BackendCartResponse }>(
+      `${CART_URL}/items`,
+      item,
+    );
   },
 
   async update(id: number, item: Record<string, any>) {
-    return await api.put<{ cart: BackendCartResponse }>(`${CART_URL}/items/${id}`, item);
+    return await api.put<{ cart: BackendCartResponse }>(
+      `${CART_URL}/items/${id}`,
+      item,
+    );
   },
 
   async destroy(id: number) {
-    return await api.delete<{ cart: BackendCartResponse }>(`${CART_URL}/items/${id}`);
+    return await api.delete<{ cart: BackendCartResponse }>(
+      `${CART_URL}/items/${id}`,
+    );
   },
 
   async clear() {

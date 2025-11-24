@@ -226,18 +226,15 @@ const PaymentDialog = ({
   const processDirectPayment = useCallback(
     async (amount: number) => {
       try {
-
         if (!isAuthenticated) {
           window.location.href = "/sign-in";
           return;
         }
 
-
         await loadRazorpayScript();
 
-
         const orderRequest: DirectOrderRequest = {
-          item_type: 'campaign',
+          item_type: "campaign",
           campaign_id: Number(campaignId),
           amount,
           quantity: 1,
@@ -245,12 +242,10 @@ const PaymentDialog = ({
 
         const { order } = await campaignService.createDirectOrder(orderRequest);
 
-
         const paymentResponse = await campaignService.initiatePayment(
           order.id.toString(),
-          { payment_method: 'razorpay' }
+          { payment_method: "razorpay" },
         );
-
 
         const options = {
           key: paymentResponse.key,
@@ -261,18 +256,18 @@ const PaymentDialog = ({
           order_id: paymentResponse.razorpay_order_id,
           handler: async (response: any) => {
             try {
-
               await campaignService.verifyPayment(order.id.toString(), {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
               });
 
-              alert(`Thank you for your support! Payment of ${formatCurrency(amount)} has been processed successfully.`);
+              alert(
+                `Thank you for your support! Payment of ${formatCurrency(amount)} has been processed successfully.`,
+              );
               onOpenChange(false);
               setSelectedAmount("500");
               setCustomAmount("");
-
 
               window.location.href = `/payment/success?order_id=${order.id}`;
             } catch (error) {
@@ -292,7 +287,6 @@ const PaymentDialog = ({
 
         const rzp = new window.Razorpay(options);
         rzp.open();
-
       } catch (error) {
         console.error("Direct payment error:", error);
         throw error;
@@ -466,12 +460,10 @@ const Page = () => {
   useEffect(() => {
     const fetchFeedTree = async () => {
       try {
-
         const response = await campaignService.getById(Number(id));
 
         if (response.success && response.data.campaign) {
           const c = response.data.campaign;
-
 
           const mapped: ApiResponse["data"] = {
             campaign_id: c.id,
@@ -527,7 +519,9 @@ const Page = () => {
               donations: [],
             },
             raised_amount: Number(c.raised_amount ?? 0),
-            pending_amount: c.target_amount ? Number(c.target_amount) - Number(c.raised_amount ?? 0) : 0,
+            pending_amount: c.target_amount
+              ? Number(c.target_amount) - Number(c.raised_amount ?? 0)
+              : 0,
             target_amount: c.target_amount || null,
             donors: [],
           };
@@ -567,10 +561,10 @@ const Page = () => {
     const daysLeft = isExpired
       ? 0
       : Math.ceil(
-        (new Date(campaignData.campaign_details.expiration_date).getTime() -
-          Date.now()) /
-        (1000 * 60 * 60 * 24),
-      );
+          (new Date(campaignData.campaign_details.expiration_date).getTime() -
+            Date.now()) /
+            (1000 * 60 * 60 * 24),
+        );
 
     const topDonors = [...campaignData.donors]
       .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount))

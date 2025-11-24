@@ -8,30 +8,30 @@ import AddressForm from "@/components/address-form";
 
 export function LocationSelectionModal() {
   const { selectedLocation, syncFromStorage } = useLocation();
-  const [ open, setOpen ] = useState( false );
+  const [open, setOpen] = useState(false);
 
-  useEffect( () => {
+  useEffect(() => {
     syncFromStorage();
-  }, [ syncFromStorage ] );
+  }, [syncFromStorage]);
 
-  useEffect( () => {
-    if ( !selectedLocation ) {
-      setOpen( true );
+  useEffect(() => {
+    if (!selectedLocation) {
+      setOpen(true);
     }
-  }, [ selectedLocation ] );
+  }, [selectedLocation]);
 
-  useEffect( () => {
-    const handler = () => setOpen( true );
-    window.addEventListener( "open-location-modal", handler );
-    return () => window.removeEventListener( "open-location-modal", handler );
-  }, [] );
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("open-location-modal", handler);
+    return () => window.removeEventListener("open-location-modal", handler);
+  }, []);
 
   const handleSaved = () => {
-    setOpen( false );
+    setOpen(false);
   };
 
   return (
-    <Dialog open={ open } onOpenChange={ () => { } }>
+    <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
         className="
           max-w-lg 
@@ -43,11 +43,11 @@ export function LocationSelectionModal() {
           max-h-[90vh]
           overflow-hidden
         "
-        onPointerDownOutside={ ( e ) => e.preventDefault() }
-        onEscapeKeyDown={ ( e ) => e.preventDefault() }
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <ScrollArea className="w-full h-dvh overflow-hidden p-4">
-          <AddressForm onSaved={ handleSaved } />
+          <AddressForm onSaved={handleSaved} />
         </ScrollArea>
       </DialogContent>
     </Dialog>

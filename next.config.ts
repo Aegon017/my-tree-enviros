@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
         hostname: "api.mytree.care",
       },
     ],
-    unoptimized:true 
+    unoptimized: true,
   },
 };
 

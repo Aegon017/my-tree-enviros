@@ -1,4 +1,9 @@
 import api from "./http-client";
+import type {
+  ShippingAddress,
+  CreateShippingAddressPayload,
+  UpdateShippingAddressPayload,
+} from "./shipping-address.services";
 
 export type UserType = "individual" | "organization";
 
@@ -37,5 +42,48 @@ export const userService = {
 
   async deleteUser(id: number) {
     return await api.delete(`/users/${id}`);
+  },
+
+  // Current user methods
+  async getCurrentUser() {
+    return await api.get<{ user: User }>("/me");
+  },
+
+  async updateCurrentUser(payload: UpdateUserPayload) {
+    return await api.put<{ user: User }>("/me", payload);
+  },
+
+  // Shipping address methods (delegating to shipping address service)
+  async getShippingAddresses() {
+    return await api.get<{ addresses: ShippingAddress[] }>(
+      "/shipping-addresses",
+    );
+  },
+
+  async createShippingAddress(payload: CreateShippingAddressPayload) {
+    return await api.post<{ address: ShippingAddress }>(
+      "/shipping-addresses",
+      payload,
+    );
+  },
+
+  async updateShippingAddress(
+    id: number,
+    payload: UpdateShippingAddressPayload,
+  ) {
+    return await api.put<{ address: ShippingAddress }>(
+      `/shipping-addresses/${id}`,
+      payload,
+    );
+  },
+
+  async deleteShippingAddress(id: number) {
+    return await api.delete(`/shipping-addresses/${id}`);
+  },
+
+  async setDefaultAddress(id: number) {
+    return await api.post<{ address: ShippingAddress }>(
+      `/shipping-addresses/${id}/set-default`,
+    );
   },
 };

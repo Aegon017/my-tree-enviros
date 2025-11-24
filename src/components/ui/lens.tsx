@@ -4,30 +4,28 @@ import { AnimatePresence, motion, useMotionTemplate } from "motion/react";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 
 interface Position {
-  
   x: number;
-  
+
   y: number;
 }
 
 interface LensProps {
-  
   children: React.ReactNode;
-  
+
   zoomFactor?: number;
-  
+
   lensSize?: number;
-  
+
   position?: Position;
-  
+
   defaultPosition?: Position;
-  
+
   isStatic?: boolean;
-  
+
   duration?: number;
-  
+
   lensColor?: string;
-  
+
   ariaLabel?: string;
 }
 

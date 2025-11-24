@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -44,12 +44,18 @@ interface VerifyOtpFormProps extends React.ComponentProps<"div"> {
   onSuccess?: () => void;
 }
 
-export function VerifyOtpForm({ className, country_code, phone: propPhone, onSuccess, ...props }: VerifyOtpFormProps) {
+export function VerifyOtpForm({
+  className,
+  country_code,
+  phone: propPhone,
+  onSuccess,
+  ...props
+}: VerifyOtpFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   // Use props if available, otherwise fallback to search params
-  const countryCode = country_code || ("+" + searchParams.get("country_code"));
+  const countryCode = country_code || "+" + searchParams.get("country_code");
   const phone = propPhone || searchParams.get("phone");
 
   const [resendTimer, setResendTimer] = useState(0);
@@ -72,7 +78,10 @@ export function VerifyOtpForm({ className, country_code, phone: propPhone, onSuc
 
     const updateTimer = () => {
       const resendTime = authStorage.getResendTime() ?? 0;
-      const remaining = Math.max(0, Math.ceil((resendTime - Date.now()) / 1000));
+      const remaining = Math.max(
+        0,
+        Math.ceil((resendTime - Date.now()) / 1000),
+      );
       setResendTimer(remaining);
     };
 
@@ -111,7 +120,7 @@ export function VerifyOtpForm({ className, country_code, phone: propPhone, onSuc
         toast.error(msg);
       }
     },
-    [countryCode, phone, router, onSuccess]
+    [countryCode, phone, router, onSuccess],
   );
 
   const handleResendOtp = useCallback(async () => {
@@ -137,7 +146,10 @@ export function VerifyOtpForm({ className, country_code, phone: propPhone, onSuc
   }, [countryCode, phone]);
 
   return (
-    <div className={cn("flex min-h-screen bg-background", className)} {...props}>
+    <div
+      className={cn("flex min-h-screen bg-background", className)}
+      {...props}
+    >
       {/* Left Side - Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 py-12 md:py-0">
         <div className="w-full max-w-sm">
@@ -147,7 +159,10 @@ export function VerifyOtpForm({ className, country_code, phone: propPhone, onSuc
               Verify your number
             </h1>
             <p className="text-base text-muted-foreground">
-              We sent a code to <span className="font-semibold text-foreground">{countryCode} {phone}</span>
+              We sent a code to{" "}
+              <span className="font-semibold text-foreground">
+                {countryCode} {phone}
+              </span>
             </p>
           </div>
 
@@ -165,15 +180,33 @@ export function VerifyOtpForm({ className, country_code, phone: propPhone, onSuc
                     <FormControl>
                       <InputOTP maxLength={6} {...field}>
                         <InputOTPGroup>
-                          <InputOTPSlot index={0} className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold" />
-                          <InputOTPSlot index={1} className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold" />
-                          <InputOTPSlot index={2} className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold" />
+                          <InputOTPSlot
+                            index={0}
+                            className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold"
+                          />
+                          <InputOTPSlot
+                            index={1}
+                            className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold"
+                          />
+                          <InputOTPSlot
+                            index={2}
+                            className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold"
+                          />
                         </InputOTPGroup>
                         <InputOTPSeparator />
                         <InputOTPGroup>
-                          <InputOTPSlot index={3} className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold" />
-                          <InputOTPSlot index={4} className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold" />
-                          <InputOTPSlot index={5} className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold" />
+                          <InputOTPSlot
+                            index={3}
+                            className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold"
+                          />
+                          <InputOTPSlot
+                            index={4}
+                            className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold"
+                          />
+                          <InputOTPSlot
+                            index={5}
+                            className="h-12 w-10 rounded-md border border-input bg-background text-lg font-semibold"
+                          />
                         </InputOTPGroup>
                       </InputOTP>
                     </FormControl>
@@ -211,11 +244,17 @@ export function VerifyOtpForm({ className, country_code, phone: propPhone, onSuc
           <div className="mt-8 pt-6 border-t border-border">
             <p className="text-xs text-muted-foreground">
               By continuing, you agree to our{" "}
-              <Link href="#" className="underline hover:text-foreground transition-colors">
+              <Link
+                href="#"
+                className="underline hover:text-foreground transition-colors"
+              >
                 Terms
-              </Link>
-              {" "}and{" "}
-              <Link href="#" className="underline hover:text-foreground transition-colors">
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="#"
+                className="underline hover:text-foreground transition-colors"
+              >
                 Privacy Policy
               </Link>
               .
@@ -244,8 +283,12 @@ export function VerifyOtpForm({ className, country_code, phone: propPhone, onSuc
                     <ArrowRight className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white text-sm">Instant Verification</p>
-                    <p className="text-white/70 text-xs">Get verified in seconds</p>
+                    <p className="font-semibold text-white text-sm">
+                      Instant Verification
+                    </p>
+                    <p className="text-white/70 text-xs">
+                      Get verified in seconds
+                    </p>
                   </div>
                 </div>
 
@@ -254,8 +297,12 @@ export function VerifyOtpForm({ className, country_code, phone: propPhone, onSuc
                     <ArrowRight className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white text-sm">End-to-End Encrypted</p>
-                    <p className="text-white/70 text-xs">Your data stays private</p>
+                    <p className="font-semibold text-white text-sm">
+                      End-to-End Encrypted
+                    </p>
+                    <p className="text-white/70 text-xs">
+                      Your data stays private
+                    </p>
                   </div>
                 </div>
 
@@ -264,7 +311,9 @@ export function VerifyOtpForm({ className, country_code, phone: propPhone, onSuc
                     <ArrowRight className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white text-sm">24/7 Support</p>
+                    <p className="font-semibold text-white text-sm">
+                      24/7 Support
+                    </p>
                     <p className="text-white/70 text-xs">Always here to help</p>
                   </div>
                 </div>

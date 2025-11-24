@@ -1,4 +1,3 @@
-
 export interface Campaign {
   id: number;
   name: string;
@@ -42,9 +41,8 @@ export interface CampaignResponse {
   };
 }
 
-
 export interface DirectOrderRequest {
-  item_type: 'campaign';
+  item_type: "campaign";
   campaign_id: number;
   amount: number;
   quantity?: number;
@@ -57,7 +55,7 @@ export interface DirectOrderRequest {
 }
 
 export interface PaymentInitiateRequest {
-  payment_method: 'razorpay';
+  payment_method: "razorpay";
 }
 
 export interface PaymentVerifyRequest {
@@ -89,14 +87,12 @@ export interface PaymentVerifyResponse {
   payment_id: string;
 }
 
-
 export interface CampaignStats {
   total_donations: number;
   donor_count: number;
   progress_percentage: number;
   days_remaining?: number;
 }
-
 
 export type CampaignType = "feed" | "protect" | "plant";
 

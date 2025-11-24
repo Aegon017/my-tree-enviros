@@ -3,13 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
-import {
-  Loader2,
-  Minus,
-  Plus,
-  ShoppingBag,
-  Trash2,
-} from "lucide-react";
+import { Loader2, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -65,7 +59,7 @@ function AddDetailModal({
   item: CartItem | null;
   onSave: (
     id: number | string,
-    details: { name: string; occasion: string; message: string }
+    details: { name: string; occasion: string; message: string },
   ) => Promise<void>;
 }) {
   const form = useForm<DetailsFormValues>({
@@ -129,10 +123,19 @@ function AddDetailModal({
             </ScrollArea>
 
             <div className="flex space-x-3 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="flex-1"
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1" disabled={form.formState.isSubmitting}>
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={form.formState.isSubmitting}
+              >
                 Save Details
               </Button>
             </div>
@@ -157,14 +160,21 @@ function CartItemComponent({
   onOpenDetailModal: (item: CartItem) => void;
 }) {
   const itemId = item.id ?? item.clientId!;
-  const displayName = item.type === "product" ? item.name : item.tree?.name ?? "Tree";
+  const displayName =
+    item.type === "product" ? item.name : (item.tree?.name ?? "Tree");
   const imageUrl =
     item.type === "product"
-      ? item.image_url ?? "/placeholder-image.jpg"
-      : item.image_url ?? "/default-tree.jpg";
+      ? (item.image_url ?? "/placeholder-image.jpg")
+      : (item.image_url ?? "/default-tree.jpg");
 
-  const duration = item.type === "product" ? null : Number(item.duration ?? item.plan?.duration);
-  const durationUnit = item.type === "product" ? null : (item as any).duration_unit ?? item.plan?.duration_unit ?? "year";
+  const duration =
+    item.type === "product"
+      ? null
+      : Number(item.duration ?? item.plan?.duration);
+  const durationUnit =
+    item.type === "product"
+      ? null
+      : ((item as any).duration_unit ?? item.plan?.duration_unit ?? "year");
 
   const handleQuantity = (q: number) => {
     onUpdateItem(itemId, { quantity: Math.max(MIN_QUANTITY, Math.floor(q)) });
@@ -175,7 +185,12 @@ function CartItemComponent({
       <CardContent className="p-4 md:p-6">
         <div className="flex items-start gap-4">
           <div className="relative h-20 w-20 rounded-md overflow-hidden">
-            <Image src={imageUrl} alt={displayName} fill className="object-cover" />
+            <Image
+              src={imageUrl}
+              alt={displayName}
+              fill
+              className="object-cover"
+            />
           </div>
 
           <div className="flex-1 min-w-0 space-y-3">
@@ -190,7 +205,9 @@ function CartItemComponent({
             )}
 
             {item.type !== "product" && (
-              <p className="text-sm text-muted-foreground">{duration} {durationUnit}</p>
+              <p className="text-sm text-muted-foreground">
+                {duration} {durationUnit}
+              </p>
             )}
 
             <div className="flex flex-wrap items-center gap-6">
@@ -224,53 +241,77 @@ function CartItemComponent({
                 </div>
               </div>
 
-
-              {duration !== null && item.type !== "product" && item.available_plans && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Duration</span>
-                  <Select
-                    value={String(duration)}
-                    onValueChange={(value) => {
-                      const selectedDuration = Number(value);
-                      const plan = item.available_plans?.find(p => p.duration === selectedDuration);
-                      if (plan && plan.plan_prices.length > 0) {
-                        const planPriceId = plan.plan_prices[0].id;
-                        onUpdateItem(itemId, { plan_price_id: planPriceId });
-                      }
-                    }}
-                    disabled={isUpdating}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select duration" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {item.available_plans.map((plan) => {
-                        const durationText = plan.duration > 1
-                          ? `${plan.duration} ${plan.duration_unit}s`
-                          : `${plan.duration} ${plan.duration_unit}`;
-                        return (
-                          <SelectItem key={plan.id} value={String(plan.duration)}>
-                            {durationText} - ₹{plan.plan_prices[0]?.price.toFixed(2)}
-                          </SelectItem>
+              {duration !== null &&
+                item.type !== "product" &&
+                item.available_plans && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Duration</span>
+                    <Select
+                      value={String(duration)}
+                      onValueChange={(value) => {
+                        const selectedDuration = Number(value);
+                        const plan = item.available_plans?.find(
+                          (p) => p.duration === selectedDuration,
                         );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+                        if (plan && plan.plan_prices.length > 0) {
+                          const planPriceId = plan.plan_prices[0].id;
+                          onUpdateItem(itemId, { plan_price_id: planPriceId });
+                        }
+                      }}
+                      disabled={isUpdating}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {item.available_plans.map((plan) => {
+                          const durationText =
+                            plan.duration > 1
+                              ? `${plan.duration} ${plan.duration_unit}s`
+                              : `${plan.duration} ${plan.duration_unit}`;
+                          return (
+                            <SelectItem
+                              key={plan.id}
+                              value={String(plan.duration)}
+                            >
+                              {durationText} - ₹
+                              {plan.plan_prices[0]?.price.toFixed(2)}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
             </div>
 
             {item.type !== "product" && (
               <>
-                <Button variant="outline" size="sm" onClick={() => onOpenDetailModal(item)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onOpenDetailModal(item)}
+                >
                   {item.dedication?.name ? "Edit Details" : "Add Details"}
                 </Button>
 
                 {item.dedication && (
                   <div className="text-sm mt-2">
-                    {item.dedication.name && <p><b>Name:</b> {item.dedication.name}</p>}
-                    {item.dedication.occasion && <p><b>Occasion:</b> {item.dedication.occasion}</p>}
-                    {item.dedication.message && <p><b>Message:</b> {item.dedication.message}</p>}
+                    {item.dedication.name && (
+                      <p>
+                        <b>Name:</b> {item.dedication.name}
+                      </p>
+                    )}
+                    {item.dedication.occasion && (
+                      <p>
+                        <b>Occasion:</b> {item.dedication.occasion}
+                      </p>
+                    )}
+                    {item.dedication.message && (
+                      <p>
+                        <b>Message:</b> {item.dedication.message}
+                      </p>
+                    )}
                   </div>
                 )}
               </>
@@ -278,7 +319,9 @@ function CartItemComponent({
           </div>
 
           <div className="flex flex-col items-end gap-4">
-            <p className="text-xl font-bold">₹{(item.price * item.quantity).toFixed(2)}</p>
+            <p className="text-xl font-bold">
+              ₹{(item.price * item.quantity).toFixed(2)}
+            </p>
             <Button
               variant="ghost"
               size="icon"
@@ -295,19 +338,18 @@ function CartItemComponent({
 }
 
 export default function CartPage() {
-  const { items, loading, update, remove, clear } = useCart
-    ();
+  const { items, loading, update, remove, clear } = useCart();
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<CartItem | null>(null);
 
   const subtotal = useMemo(
     () => items.reduce((sum, i) => sum + i.price * i.quantity, 0),
-    [items]
+    [items],
   );
 
   const handleDetails = async (
     id: string | number,
-    details: { name: string; occasion: string; message: string }
+    details: { name: string; occasion: string; message: string },
   ) => {
     await update(id, { dedication: details });
   };
@@ -384,7 +426,11 @@ function OrderSummary({
         <Link className="block" href="/checkout">
           <Button className="w-full mt-4">Place Order</Button>
         </Link>
-        <Button variant="outline" className="w-full" onClick={() => onClearCart()}>
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => onClearCart()}
+        >
           Clear Cart
         </Button>
       </CardContent>

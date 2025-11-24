@@ -40,10 +40,10 @@ export default function Home() {
   const { selected } = useLocationStore();
 
   const sliderAutoplayRef = useRef(
-    Autoplay({ delay: 2500, stopOnInteraction: true })
+    Autoplay({ delay: 2500, stopOnInteraction: true }),
   );
   const blogAutoplayRef = useRef(
-    Autoplay({ delay: 4000, stopOnInteraction: true })
+    Autoplay({ delay: 4000, stopOnInteraction: true }),
   );
 
   const [products, setProducts] = useState<any[]>([]);
@@ -51,15 +51,13 @@ export default function Home() {
   const [loadingProducts, setLoadingProducts] = useState<boolean>(true);
   const [loadingSliders, setLoadingSliders] = useState<boolean>(true);
 
-  const { sponsorTrees, adoptTrees, loading: treesLoading } = useLocationTrees(
-    selected?.lat,
-    selected?.lng
-  );
-
   const {
-    blogs,
-    loading: loadingBlogs,
-  } = useBlogData({
+    sponsorTrees,
+    adoptTrees,
+    loading: treesLoading,
+  } = useLocationTrees(selected?.lat, selected?.lng);
+
+  const { blogs, loading: loadingBlogs } = useBlogData({
     initialParams: {
       page: 1,
       per_page: 12,
@@ -236,16 +234,24 @@ export default function Home() {
           </Link>
         </div>
       </Section>
-      
+
       <AppDownloadSection />
 
       <Section>
-        <SectionTitle title="Natural Products" subtitle="From nature's bounty." align="center" />
+        <SectionTitle
+          title="Natural Products"
+          subtitle="From nature's bounty."
+          align="center"
+        />
 
         <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {loadingProducts
-            ? Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)
-            : products.map((product: any) => <ProductCard key={product.slug} product={product} />)}
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))
+            : products.map((product: any) => (
+                <ProductCard key={product.slug} product={product} />
+              ))}
         </div>
 
         <div className="text-center mt-8">
@@ -256,11 +262,17 @@ export default function Home() {
       </Section>
 
       <Section className="bg-muted">
-        <SectionTitle title="Insights From Nature" subtitle="Learn and explore." align="center" />
+        <SectionTitle
+          title="Insights From Nature"
+          subtitle="Learn and explore."
+          align="center"
+        />
 
         {loadingBlogs ? (
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 3 }).map((_, i) => <BlogCardSkeleton key={i} />)}
+            {Array.from({ length: 3 }).map((_, i) => (
+              <BlogCardSkeleton key={i} />
+            ))}
           </div>
         ) : (
           <Carousel

@@ -45,16 +45,24 @@ export default function RazorpayButton({
   return (
     <Button
       onClick={() =>
-        initiatePayment(type, productType, cartType, shippingAddressId, productId, amount, {
-          tree_plan_price_id: plan_id,
-          campaign_id,
-          coupon_id,
-          quantity,
-          name,
-          occasion,
-          message,
-          location_id: area_id,
-        })
+        initiatePayment(
+          type,
+          productType,
+          cartType,
+          shippingAddressId,
+          productId,
+          amount,
+          {
+            tree_plan_price_id: plan_id,
+            campaign_id,
+            coupon_id,
+            quantity,
+            name,
+            occasion,
+            message,
+            location_id: area_id,
+          },
+        )
       }
       disabled={loading}
       className="w-full"

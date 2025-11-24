@@ -34,7 +34,12 @@ export function useRazorpay() {
   const [loading, setLoading] = useState(false);
 
   const redirectToSuccess = useCallback(
-    (razorpayOrderId: string, razorpayPaymentId: string, amountPaise: number, internalOrderId?: number) => {
+    (
+      razorpayOrderId: string,
+      razorpayPaymentId: string,
+      amountPaise: number,
+      internalOrderId?: number,
+    ) => {
       const amount = paymentService.paiseToRupees(amountPaise);
       const params = new URLSearchParams();
       params.set("order_id", razorpayOrderId);
@@ -50,15 +55,28 @@ export function useRazorpay() {
 
   const redirectToFailure = useCallback(
     (errorMessage: string, amountPaise?: number) => {
-      const amountRupees = typeof amountPaise === "number" ? paymentService.paiseToRupees(amountPaise) : 0;
-      router.push(`/payment/failure?error=${encodeURIComponent(errorMessage || "Payment failed")}&amount=${encodeURIComponent(amountRupees.toFixed(2))}`);
+      const amountRupees =
+        typeof amountPaise === "number"
+          ? paymentService.paiseToRupees(amountPaise)
+          : 0;
+      router.push(
+        `/payment/failure?error=${encodeURIComponent(errorMessage || "Payment failed")}&amount=${encodeURIComponent(amountRupees.toFixed(2))}`,
+      );
     },
     [router],
   );
 
   const initiatePayment = useCallback(
     async (...args: InitiateArgs) => {
-      const [type, productType, cartType, shippingAddressId, productId, , extras] = args;
+      const [
+        type,
+        productType,
+        cartType,
+        shippingAddressId,
+        productId,
+        ,
+        extras,
+      ] = args;
 
       setLoading(true);
 
@@ -88,7 +106,8 @@ export function useRazorpay() {
             directPayload.location_id = extra.location_id;
           } else {
             directPayload.campaign_id = extra.campaign_id;
-            directPayload.quantity = typeof extra.quantity === "number" ? extra.quantity : 1;
+            directPayload.quantity =
+              typeof extra.quantity === "number" ? extra.quantity : 1;
           }
 
           if (shippingAddressId && shippingAddressId > 0) {
@@ -110,7 +129,13 @@ export function useRazorpay() {
         }
 
         const init = await paymentService.initiatePayment(orderId);
-        const { razorpay_order_id, amount: amountPaise, currency, key, is_free } = init?.data || {};
+        const {
+          razorpay_order_id,
+          amount: amountPaise,
+          currency,
+          key,
+          is_free,
+        } = init?.data || {};
 
         if (is_free) {
           redirectToSuccess("FREE", "FREE", 0, orderId);
@@ -124,7 +149,9 @@ export function useRazorpay() {
         const razorpayKey = key || process.env.NEXT_PUBLIC_RAZORPAY_KEY || "";
 
         if (!razorpayKey) {
-          throw new Error("Razorpay key missing. Configure NEXT_PUBLIC_RAZORPAY_KEY or return a key from backend.");
+          throw new Error(
+            "Razorpay key missing. Configure NEXT_PUBLIC_RAZORPAY_KEY or return a key from backend.",
+          );
         }
 
         await paymentService.openRazorpayCheckout(
@@ -147,23 +174,36 @@ export function useRazorpay() {
               });
 
               if (verifyRes?.success) {
-                redirectToSuccess(response.razorpay_order_id, response.razorpay_payment_id, amountPaise, orderId ?? undefined);
+                redirectToSuccess(
+                  response.razorpay_order_id,
+                  response.razorpay_payment_id,
+                  amountPaise,
+                  orderId ?? undefined,
+                );
                 return;
               }
 
               redirectToFailure("Payment verification failed.", amountPaise);
             } catch (err: any) {
-              const msg = err?.response?.data?.message || err?.message || "Payment verification error.";
+              const msg =
+                err?.response?.data?.message ||
+                err?.message ||
+                "Payment verification error.";
               redirectToFailure(msg, amountPaise);
             }
           },
           (error) => {
-            const message = error?.description || error?.reason || error?.message || "Payment failed.";
+            const message =
+              error?.description ||
+              error?.reason ||
+              error?.message ||
+              "Payment failed.";
             redirectToFailure(message, amountPaise);
           },
         );
       } catch (error: any) {
-        const message = error?.response?.data?.message || error?.message || "Payment failed.";
+        const message =
+          error?.response?.data?.message || error?.message || "Payment failed.";
         toast.error(message);
         redirectToFailure(message);
       } finally {

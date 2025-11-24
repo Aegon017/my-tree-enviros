@@ -1,5 +1,5 @@
-import api from '@/services/http-client';
-import { authStorage } from '@/lib/auth-storage';
+import api from "@/services/http-client";
+import { authStorage } from "@/lib/auth-storage";
 import type {
   Campaign,
   CampaignsResponse,
@@ -10,28 +10,33 @@ import type {
   OrderResponse,
   PaymentInitiateResponse,
   PaymentVerifyResponse,
-} from '@/types/campaign.types';
+} from "@/types/campaign.types";
 
 class CampaignService {
-  async createDirectOrder(request: DirectOrderRequest): Promise<{ order: OrderResponse }> {
+  async createDirectOrder(
+    request: DirectOrderRequest,
+  ): Promise<{ order: OrderResponse }> {
     if (!authStorage.isAuthenticated()) {
-      window.location.href = '/sign-in';
-      throw new Error('Authentication required');
+      window.location.href = "/sign-in";
+      throw new Error("Authentication required");
     }
 
     const response = await api.post<{
       success: boolean;
       message: string;
-      data: { order: OrderResponse }
-    }>('/orders/direct', request);
+      data: { order: OrderResponse };
+    }>("/orders/direct", request);
 
     return { order: response.data.data.order };
   }
 
-  async initiatePayment(orderId: string, request: PaymentInitiateRequest): Promise<PaymentInitiateResponse> {
+  async initiatePayment(
+    orderId: string,
+    request: PaymentInitiateRequest,
+  ): Promise<PaymentInitiateResponse> {
     if (!authStorage.isAuthenticated()) {
-      window.location.href = '/sign-in';
-      throw new Error('Authentication required');
+      window.location.href = "/sign-in";
+      throw new Error("Authentication required");
     }
 
     const response = await api.post<{
@@ -43,10 +48,13 @@ class CampaignService {
     return response.data.data;
   }
 
-  async verifyPayment(orderId: string, request: PaymentVerifyRequest): Promise<PaymentVerifyResponse> {
+  async verifyPayment(
+    orderId: string,
+    request: PaymentVerifyRequest,
+  ): Promise<PaymentVerifyResponse> {
     if (!authStorage.isAuthenticated()) {
-      window.location.href = '/sign-in';
-      throw new Error('Authentication required');
+      window.location.href = "/sign-in";
+      throw new Error("Authentication required");
     }
 
     const response = await api.post<{
@@ -73,8 +81,8 @@ class CampaignService {
     };
   }> {
     if (!authStorage.isAuthenticated()) {
-      window.location.href = '/sign-in';
-      throw new Error('Authentication required');
+      window.location.href = "/sign-in";
+      throw new Error("Authentication required");
     }
 
     const response = await api.get<{

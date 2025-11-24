@@ -1,14 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { isValidPhoneNumber, parsePhoneNumberFromString } from "libphonenumber-js/mobile";
+import {
+  isValidPhoneNumber,
+  parsePhoneNumberFromString,
+} from "libphonenumber-js/mobile";
 import { PhoneInput } from "@/components/phone-input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,7 +32,10 @@ const Schema = z.object({
   phone: z
     .string()
     .min(1, "Phone number is required")
-    .refine((value) => isValidPhoneNumber(value), "Please enter a valid phone number"),
+    .refine(
+      (value) => isValidPhoneNumber(value),
+      "Please enter a valid phone number",
+    ),
 });
 
 type FormData = z.infer<typeof Schema>;
@@ -38,7 +44,11 @@ interface SigninFormProps extends React.ComponentProps<"div"> {
   onOtpSent?: (data: { country_code: string; phone: string }) => void;
 }
 
-export function SigninForm({ className, onOtpSent, ...props }: SigninFormProps) {
+export function SigninForm({
+  className,
+  onOtpSent,
+  ...props
+}: SigninFormProps) {
   const router = useRouter();
 
   const form = useForm<FormData>({
@@ -76,7 +86,7 @@ export function SigninForm({ className, onOtpSent, ...props }: SigninFormProps) 
             });
           } else {
             router.push(
-              `/verify-otp?country_code=${encodeURIComponent(parsed.countryCallingCode)}&phone=${encodeURIComponent(parsed.nationalNumber)}`
+              `/verify-otp?country_code=${encodeURIComponent(parsed.countryCallingCode)}&phone=${encodeURIComponent(parsed.nationalNumber)}`,
             );
           }
         } else {
@@ -87,19 +97,20 @@ export function SigninForm({ className, onOtpSent, ...props }: SigninFormProps) 
         toast.error(msg);
       }
     },
-    [router, onOtpSent]
+    [router, onOtpSent],
   );
 
   return (
-    <div className={cn("flex min-h-screen bg-background", className)} {...props}>
+    <div
+      className={cn("flex min-h-screen bg-background", className)}
+      {...props}
+    >
       {/* Left Side - Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 py-12 md:py-0">
         <div className="w-full max-w-sm">
           {/* Header */}
           <div className="mb-8 space-y-3">
-            <h1 className="text-3xl font-bold text-foreground">
-              Welcome back
-            </h1>
+            <h1 className="text-3xl font-bold text-foreground">Welcome back</h1>
             <p className="text-base text-muted-foreground">
               Sign in to your My Tree Enviros account
             </p>
@@ -113,7 +124,9 @@ export function SigninForm({ className, onOtpSent, ...props }: SigninFormProps) 
                 name="phone"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-sm font-semibold text-foreground">Phone Number</FormLabel>
+                    <FormLabel className="text-sm font-semibold text-foreground">
+                      Phone Number
+                    </FormLabel>
                     <FormControl>
                       <PhoneInput
                         value={field.value}
@@ -124,7 +137,9 @@ export function SigninForm({ className, onOtpSent, ...props }: SigninFormProps) 
                         className="w-full"
                       />
                     </FormControl>
-                    <FormDescription className="text-xs">We'll send a verification code to this number</FormDescription>
+                    <FormDescription className="text-xs">
+                      We'll send a verification code to this number
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -143,7 +158,10 @@ export function SigninForm({ className, onOtpSent, ...props }: SigninFormProps) 
 
               <div className="text-sm text-center text-muted-foreground">
                 Don&apos;t have an account?{" "}
-                <Link href="/sign-up" className="font-semibold text-foreground hover:text-foreground/80 transition-colors">
+                <Link
+                  href="/sign-up"
+                  className="font-semibold text-foreground hover:text-foreground/80 transition-colors"
+                >
                   Sign up
                 </Link>
               </div>
@@ -154,11 +172,17 @@ export function SigninForm({ className, onOtpSent, ...props }: SigninFormProps) 
           <div className="mt-8 pt-6 border-t border-border">
             <p className="text-xs text-muted-foreground">
               By continuing, you agree to our{" "}
-              <Link href="#" className="underline hover:text-foreground transition-colors">
+              <Link
+                href="#"
+                className="underline hover:text-foreground transition-colors"
+              >
                 Terms
-              </Link>
-              {" "}and{" "}
-              <Link href="#" className="underline hover:text-foreground transition-colors">
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="#"
+                className="underline hover:text-foreground transition-colors"
+              >
                 Privacy Policy
               </Link>
               .
@@ -187,8 +211,12 @@ export function SigninForm({ className, onOtpSent, ...props }: SigninFormProps) 
                     <ArrowRight className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white text-sm">Secure Access</p>
-                    <p className="text-white/70 text-xs">Your account is fully protected</p>
+                    <p className="font-semibold text-white text-sm">
+                      Secure Access
+                    </p>
+                    <p className="text-white/70 text-xs">
+                      Your account is fully protected
+                    </p>
                   </div>
                 </div>
 
@@ -197,8 +225,12 @@ export function SigninForm({ className, onOtpSent, ...props }: SigninFormProps) 
                     <ArrowRight className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white text-sm">Your Progress</p>
-                    <p className="text-white/70 text-xs">View all your achievements</p>
+                    <p className="font-semibold text-white text-sm">
+                      Your Progress
+                    </p>
+                    <p className="text-white/70 text-xs">
+                      View all your achievements
+                    </p>
                   </div>
                 </div>
 
@@ -207,8 +239,12 @@ export function SigninForm({ className, onOtpSent, ...props }: SigninFormProps) 
                     <ArrowRight className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white text-sm">Stay Connected</p>
-                    <p className="text-white/70 text-xs">Engage with the community</p>
+                    <p className="font-semibold text-white text-sm">
+                      Stay Connected
+                    </p>
+                    <p className="text-white/70 text-xs">
+                      Engage with the community
+                    </p>
                   </div>
                 </div>
               </div>

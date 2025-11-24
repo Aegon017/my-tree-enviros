@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
   SelectContent,
-  SelectItem
+  SelectItem,
 } from "@/components/ui/select";
 
 import {
@@ -22,7 +22,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger
+  SheetTrigger,
 } from "@/components/ui/sheet";
 
 import { Checkbox } from "@/components/ui/checkbox";
@@ -63,15 +63,12 @@ export default function ProductsPage() {
       sort_by: sortByRaw || "name",
       sort_order: sortOrderRaw || "asc",
       category_id:
-        categoryRaw && categoryRaw !== "undefined" ? Number(categoryRaw) : undefined,
-      search:
-        searchRaw && searchRaw !== "undefined" ? searchRaw : undefined,
+        categoryRaw && categoryRaw !== "undefined"
+          ? Number(categoryRaw)
+          : undefined,
+      search: searchRaw && searchRaw !== "undefined" ? searchRaw : undefined,
       in_stock:
-        stockRaw === "true"
-          ? true
-          : stockRaw === "false"
-            ? false
-            : undefined
+        stockRaw === "true" ? true : stockRaw === "false" ? false : undefined,
     };
   };
 
@@ -83,8 +80,8 @@ export default function ProductsPage() {
           v !== null &&
           v !== "" &&
           v !== "all" &&
-          v !== "undefined"
-      )
+          v !== "undefined",
+      ),
     );
 
   const updateURL = (updates: Record<string, any>) => {
@@ -146,7 +143,7 @@ export default function ProductsPage() {
 
   const breadcrumbItems = [
     { title: "Home", href: "/" },
-    { title: "Products", href: "" }
+    { title: "Products", href: "" },
   ];
 
   return (
@@ -186,7 +183,7 @@ export default function ProductsPage() {
                   onValueChange={(val) =>
                     updateURL({
                       category_id: val === "all" ? undefined : val,
-                      page: 1
+                      page: 1,
                     })
                   }
                 >
@@ -219,8 +216,12 @@ export default function ProductsPage() {
                   <SelectContent>
                     <SelectItem value="name-asc">Name (A → Z)</SelectItem>
                     <SelectItem value="name-desc">Name (Z → A)</SelectItem>
-                    <SelectItem value="selling_price-asc">Price (Low → High)</SelectItem>
-                    <SelectItem value="selling_price-desc">Price (High → Low)</SelectItem>
+                    <SelectItem value="selling_price-asc">
+                      Price (Low → High)
+                    </SelectItem>
+                    <SelectItem value="selling_price-desc">
+                      Price (High → Low)
+                    </SelectItem>
                     <SelectItem value="created_at-desc">Newest</SelectItem>
                   </SelectContent>
                 </Select>
@@ -246,7 +247,7 @@ export default function ProductsPage() {
                     sort_by: undefined,
                     sort_order: undefined,
                     in_stock: undefined,
-                    page: 1
+                    page: 1,
                   });
                   setSearch("");
                 }}
@@ -261,8 +262,8 @@ export default function ProductsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {loading && products.length === 0
           ? Array.from({ length: 12 }).map((_, i) => (
-            <ProductCardSkeleton key={i} />
-          ))
+              <ProductCardSkeleton key={i} />
+            ))
           : products.map((p) => <ProductCard key={p.id} product={p} />)}
       </div>
 

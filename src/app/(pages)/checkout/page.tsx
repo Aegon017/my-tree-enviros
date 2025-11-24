@@ -10,7 +10,13 @@ import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import ShippingAddresses from "@/components/shipping-address";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
@@ -19,7 +25,7 @@ import { CartItem } from "@/domain/cart/cart-item";
 
 function CheckoutItemCard({ item }: { item: CartItem }) {
   const isProduct = item.type === "product";
-  const displayName = isProduct ? item.name : item.tree?.name ?? "Tree";
+  const displayName = isProduct ? item.name : (item.tree?.name ?? "Tree");
   const imageUrl = item.image_url ?? "/placeholder-image.jpg";
 
   return (
@@ -27,7 +33,12 @@ function CheckoutItemCard({ item }: { item: CartItem }) {
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
           <div className="relative h-20 w-20 rounded-md overflow-hidden shrink-0">
-            <Image src={imageUrl} alt={displayName} fill className="object-cover" />
+            <Image
+              src={imageUrl}
+              alt={displayName}
+              fill
+              className="object-cover"
+            />
           </div>
 
           <div className="flex-1 min-w-0">
@@ -44,13 +55,29 @@ function CheckoutItemCard({ item }: { item: CartItem }) {
             {!isProduct && (
               <>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {item.duration} {item.duration_unit ?? item.plan?.duration_unit ?? "year"}
+                  {item.duration}{" "}
+                  {item.duration_unit ?? item.plan?.duration_unit ?? "year"}
                 </p>
                 {item.dedication && (
                   <div className="text-sm mt-2 space-y-1">
-                    {item.dedication.name && <p><span className="font-medium">Name:</span> {item.dedication.name}</p>}
-                    {item.dedication.occasion && <p><span className="font-medium">Occasion:</span> {item.dedication.occasion}</p>}
-                    {item.dedication.message && <p><span className="font-medium">Message:</span> {item.dedication.message}</p>}
+                    {item.dedication.name && (
+                      <p>
+                        <span className="font-medium">Name:</span>{" "}
+                        {item.dedication.name}
+                      </p>
+                    )}
+                    {item.dedication.occasion && (
+                      <p>
+                        <span className="font-medium">Occasion:</span>{" "}
+                        {item.dedication.occasion}
+                      </p>
+                    )}
+                    {item.dedication.message && (
+                      <p>
+                        <span className="font-medium">Message:</span>{" "}
+                        {item.dedication.message}
+                      </p>
+                    )}
                   </div>
                 )}
               </>
@@ -58,7 +85,9 @@ function CheckoutItemCard({ item }: { item: CartItem }) {
 
             <div className="flex justify-between items-center mt-2">
               <p className="text-sm font-medium">Qty: {item.quantity}</p>
-              <p className="font-bold">₹{(item.price * item.quantity).toFixed(2)}</p>
+              <p className="font-bold">
+                ₹{(item.price * item.quantity).toFixed(2)}
+              </p>
             </div>
           </div>
         </div>
@@ -71,7 +100,9 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { items, loading } = useCart();
-  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
+    null,
+  );
   const [discountAmount, setDiscountAmount] = useState(0);
   const [couponId, setCouponId] = useState<number | null>(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -89,7 +120,10 @@ export default function CheckoutPage() {
   }, [items]);
 
   const { baseTotal, totalItems } = useMemo(() => {
-    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const total = items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
     return {
       baseTotal: total,
       totalItems: items.length,
@@ -130,11 +164,14 @@ export default function CheckoutPage() {
     };
   }, [orderTotal]);
 
-  const isPaymentDisabled = (hasProductItems && !selectedAddressId) || orderTotal <= 0 || loading;
+  const isPaymentDisabled =
+    (hasProductItems && !selectedAddressId) || orderTotal <= 0 || loading;
 
   const productType = useMemo(() => {
     const hasProducts = items.some((item) => item.type === "product");
-    const hasTrees = items.some((item) => item.type === "sponsor" || item.type === "adopt");
+    const hasTrees = items.some(
+      (item) => item.type === "sponsor" || item.type === "adopt",
+    );
     if (hasProducts && hasTrees) return 2;
     if (hasProducts) return 2;
     return 1;
@@ -149,7 +186,13 @@ export default function CheckoutPage() {
             Please login to view your cart and proceed to checkout.
           </p>
           <Button onClick={() => setIsLoginOpen(true)}>Login</Button>
-          <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} onSuccess={() => { setIsLoginOpen(false); }} />
+          <LoginDialog
+            open={isLoginOpen}
+            onOpenChange={setIsLoginOpen}
+            onSuccess={() => {
+              setIsLoginOpen(false);
+            }}
+          />
         </div>
       </Section>
     );
@@ -197,7 +240,7 @@ export default function CheckoutPage() {
       <SectionTitle
         title="Checkout"
         align="center"
-        subtitle={`Review your order (${totalItems} item${totalItems !== 1 ? 's' : ''}), apply coupons, and complete your purchase`}
+        subtitle={`Review your order (${totalItems} item${totalItems !== 1 ? "s" : ""}), apply coupons, and complete your purchase`}
       />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
         <div className="space-y-6">
@@ -205,10 +248,15 @@ export default function CheckoutPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Shipping Information</CardTitle>
-                <CardDescription>Select your shipping address for product delivery</CardDescription>
+                <CardDescription>
+                  Select your shipping address for product delivery
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <ShippingAddresses onSelect={handleAddressSelect} selectedAddressId={selectedAddressId} />
+                <ShippingAddresses
+                  onSelect={handleAddressSelect}
+                  selectedAddressId={selectedAddressId}
+                />
                 {!selectedAddressId && (
                   <p className="text-destructive text-sm mt-4 text-center font-medium">
                     Please select a shipping address to proceed.
@@ -221,12 +269,17 @@ export default function CheckoutPage() {
           <Card>
             <CardHeader>
               <CardTitle>Order Items</CardTitle>
-              <CardDescription>{totalItems} item{totalItems !== 1 ? 's' : ''} in your cart</CardDescription>
+              <CardDescription>
+                {totalItems} item{totalItems !== 1 ? "s" : ""} in your cart
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {items.map((item) => (
-                  <CheckoutItemCard key={item.id ?? item.clientId} item={item} />
+                  <CheckoutItemCard
+                    key={item.id ?? item.clientId}
+                    item={item}
+                  />
                 ))}
               </div>
             </CardContent>
@@ -234,7 +287,11 @@ export default function CheckoutPage() {
         </div>
 
         <div className="space-y-6">
-          <ApplyCoupon onCouponApplied={handleCouponApplied} onCouponRemoved={handleCouponRemoved} currentTotal={baseTotal} />
+          <ApplyCoupon
+            onCouponApplied={handleCouponApplied}
+            onCouponRemoved={handleCouponRemoved}
+            currentTotal={baseTotal}
+          />
 
           <Card className="sticky top-24">
             <CardHeader>
@@ -295,7 +352,8 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="text-xs text-center text-muted-foreground mt-4">
-                  By proceeding, you agree to our Terms of Service and Privacy Policy.
+                  By proceeding, you agree to our Terms of Service and Privacy
+                  Policy.
                 </div>
               </div>
             </CardContent>

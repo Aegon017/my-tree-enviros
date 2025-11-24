@@ -24,7 +24,8 @@ export default function AppDownloadSection() {
           </h2>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-md leading-relaxed">
-            Experience smoother ordering and a greener journey with the MyTree mobile app.
+            Experience smoother ordering and a greener journey with the MyTree
+            mobile app.
           </p>
 
           <div className="flex items-center gap-6">

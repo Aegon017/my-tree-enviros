@@ -10,23 +10,23 @@ export type LocationData = {
 
 type LocationState = {
   selected: LocationData | null;
-  setLocation: ( loc: LocationData ) => void;
+  setLocation: (loc: LocationData) => void;
   clear: () => void;
   sync: () => void;
 };
 
-export const useLocationStore = create<LocationState>( ( set ) => ( {
+export const useLocationStore = create<LocationState>((set) => ({
   selected: null,
-  setLocation: ( loc ) => {
-    localStorage.setItem( "mte_location", JSON.stringify( loc ) );
-    set( { selected: loc } );
+  setLocation: (loc) => {
+    localStorage.setItem("mte_location", JSON.stringify(loc));
+    set({ selected: loc });
   },
   clear: () => {
-    localStorage.removeItem( "mte_location" );
-    set( { selected: null } );
+    localStorage.removeItem("mte_location");
+    set({ selected: null });
   },
   sync: () => {
-    const raw = localStorage.getItem( "mte_location" );
-    if ( raw ) set( { selected: JSON.parse( raw ) } );
+    const raw = localStorage.getItem("mte_location");
+    if (raw) set({ selected: JSON.parse(raw) });
   },
-} ) );
+}));

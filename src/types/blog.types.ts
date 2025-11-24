@@ -13,7 +13,7 @@ export interface Blog {
   id: number;
   slug: string;
   title: string;
-  category: BlogCategory
+  category: BlogCategory;
   short_description: string;
   description?: string;
   thumbnail_url: string;
@@ -23,13 +23,13 @@ export interface Blog {
 }
 
 export interface BlogListItem {
-  id: number
-  title: string
-  slug: string
-  thumbnail_url: string
-  short_description: string
-  category: BlogCategory
-  created_at: string
+  id: number;
+  title: string;
+  slug: string;
+  thumbnail_url: string;
+  short_description: string;
+  category: BlogCategory;
+  created_at: string;
 }
 
 export interface BlogCategory {
@@ -38,13 +38,13 @@ export interface BlogCategory {
 }
 
 export type BlogCollectionData = {
-  blogs: BlogListItem[]
-  meta: BaseMeta
-}
+  blogs: BlogListItem[];
+  meta: BaseMeta;
+};
 
 export type BlogSingleData = {
-  blog: Blog
-}
+  blog: Blog;
+};
 
-export type BlogCollectionResponse = ApiResponse<BlogCollectionData>
-export type BlogResponse = ApiResponse<BlogSingleData>
+export type BlogCollectionResponse = ApiResponse<BlogCollectionData>;
+export type BlogResponse = ApiResponse<BlogSingleData>;

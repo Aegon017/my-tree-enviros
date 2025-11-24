@@ -43,7 +43,8 @@ export default function Footer() {
               Grow your <span className="text-primary">green future.</span>
             </h2>
             <p className="text-xl text-muted-foreground font-light max-w-lg leading-relaxed">
-              Join the movement towards a sustainable planet. Download the app and start your journey today.
+              Join the movement towards a sustainable planet. Download the app
+              and start your journey today.
             </p>
           </div>
 

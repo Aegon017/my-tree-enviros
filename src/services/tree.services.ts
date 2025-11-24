@@ -7,5 +7,5 @@ export const treeService = {
 
   async get(slug: string, type: string) {
     return api.get<{ tree: any }>(`/trees/${slug}`, { params: { type } });
-  }
+  },
 };
