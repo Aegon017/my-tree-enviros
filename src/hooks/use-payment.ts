@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createOrder, paymentCallback } from "@/services/payment.services";
+import { orderService } from "@/services/order.services";
+import { paymentService } from "@/services/payment.services";
 import { useRouter } from "next/navigation";
 
 declare const Razorpay: any;
@@ -18,32 +19,35 @@ export function usePayment() {
   }) {
     setLoading(true);
     try {
-      const orderData = await createOrder(payload);
+      // Create order (legacy behavior: create an order record first)
+      const created = await orderService.createOrder({} as any);
+      const orderId = created?.data?.order?.id;
+      if (!orderId) throw new Error("Failed to create order");
+
+      // Initiate payment for the created order
+      const initRes = await paymentService.initiatePayment(orderId);
+      const initData = (initRes as any)?.data;
+      if (!initData) throw new Error("Failed to initiate payment");
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "Your Ecommerce",
-        order_id: orderData.id,
+        amount: initData.amount,
+        currency: initData.currency,
+        name: "My Tree Enviros",
+        order_id: initData.razorpay_order_id,
         handler: async function (response: any) {
           try {
-            await paymentCallback({
+            await paymentService.verifyPayment(orderId, {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              type: payload.type,
             });
             router.push("/payment/success");
           } catch (error) {
             router.push("/payment/failure");
           }
         },
-        prefill: {
-          name: orderData.customer_name,
-          email: orderData.customer_email,
-          contact: orderData.customer_phone,
-        },
+        prefill: {},
         theme: { color: "#3399cc" },
       };
 

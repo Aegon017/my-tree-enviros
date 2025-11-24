@@ -2,7 +2,7 @@ import api from "./http-client";
 
 export const treeService = {
   async list(params: Record<string, any>) {
-    return api.get<{ trees: any[] }>("/trees", { params });
+    return api.get<{ trees: any[]; meta?: any }>("/trees", { params });
   },
 
   async get(slug: string, type: string) {

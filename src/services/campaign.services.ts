@@ -27,7 +27,9 @@ class CampaignService {
       data: { order: OrderResponse };
     }>("/orders/direct", request);
 
-    return { order: response.data.data.order };
+    const order = response?.data?.data?.order;
+    if (!order) throw new Error("Invalid create direct order response");
+    return { order };
   }
 
   async initiatePayment(
@@ -45,7 +47,9 @@ class CampaignService {
       data: PaymentInitiateResponse;
     }>(`/orders/${orderId}/payment/initiate`, request);
 
-    return response.data.data;
+    const data = response?.data?.data;
+    if (!data) throw new Error("Invalid initiate payment response");
+    return data;
   }
 
   async verifyPayment(
@@ -63,7 +67,9 @@ class CampaignService {
       data: PaymentVerifyResponse;
     }>(`/orders/${orderId}/payment/verify`, request);
 
-    return response.data.data;
+    const data = response?.data?.data;
+    if (!data) throw new Error("Invalid verify payment response");
+    return data;
   }
 
   async getPaymentStatus(orderId: string): Promise<{
@@ -91,7 +97,9 @@ class CampaignService {
       data: any;
     }>(`/orders/${orderId}/payment/status`);
 
-    return response.data.data;
+    const data = response?.data?.data;
+    if (!data) throw new Error("Invalid payment status response");
+    return data;
   }
 
   async getAll(params?: {
@@ -100,11 +108,13 @@ class CampaignService {
     page?: number;
   }): Promise<CampaignsResponse> {
     const response = await api.get<CampaignsResponse>("/campaigns", { params });
+    if (!response?.data) throw new Error("Invalid campaigns response");
     return response.data;
   }
 
   async getById(id: number): Promise<CampaignResponse> {
     const response = await api.get<CampaignResponse>(`/campaigns/${id}`);
+    if (!response?.data) throw new Error("Invalid campaign response");
     return response.data;
   }
 
@@ -112,6 +122,7 @@ class CampaignService {
     const response = await api.get<CampaignsResponse>("/campaigns/featured", {
       params: { per_page: limit },
     });
+    if (!response?.data) throw new Error("Invalid featured campaigns response");
     return response.data;
   }
 
@@ -126,6 +137,7 @@ class CampaignService {
     const response = await api.get<CampaignsResponse>("/campaigns/search", {
       params: { q: query, ...params },
     });
+    if (!response?.data) throw new Error("Invalid campaign search response");
     return response.data;
   }
 
@@ -147,6 +159,7 @@ class CampaignService {
         days_remaining?: number;
       };
     }>(`/campaigns/${id}/stats`);
+    if (!response?.data) throw new Error("Invalid campaign stats response");
     return response.data;
   }
 }

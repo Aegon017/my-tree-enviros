@@ -9,6 +9,10 @@ export const authStorage = {
     return Cookies.get(TOKEN_KEY) || null;
   },
 
+  isAuthenticated() {
+    return !!this.getToken();
+  },
+
   setToken(token: string) {
     Cookies.set(TOKEN_KEY, token, {
       expires: 30,

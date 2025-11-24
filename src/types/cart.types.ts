@@ -81,6 +81,7 @@ export interface CartItem {
   plan?: Plan;
   plan_id?: number;
   plan_price_id?: number;
+  available_plans?: any[];
 }
 
 export interface Dedication {

@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-
 import BreadcrumbNav from "@/components/breadcrumb-nav";
 import ProductCard from "@/components/product-card";
 import ProductCardSkeleton from "@/components/skeletons/product-card-skeleton";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -34,9 +34,13 @@ import { ProductCategory } from "@/types/category.types";
 import { BaseMeta } from "@/types/common.types";
 import { ProductListItem } from "@/types/product.types";
 
+const getSearchParams = () =>
+  typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search)
+    : new URLSearchParams();
+
 export default function ProductsPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [meta, setMeta] = useState<BaseMeta | null>(null);
@@ -44,18 +48,19 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(false);
 
   const [search, setSearch] = useState(() => {
-    const v = searchParams.get("search");
+    const v = getSearchParams().get("search");
     return v && v !== "undefined" ? v : "";
   });
 
   const getFilters = () => {
-    const pageRaw = searchParams.get("page");
-    const sortByRaw = searchParams.get("sort_by");
-    const sortOrderRaw = searchParams.get("sort_order");
+    const params = getSearchParams();
+    const pageRaw = params.get("page");
+    const sortByRaw = params.get("sort_by");
+    const sortOrderRaw = params.get("sort_order");
 
-    const categoryRaw = searchParams.get("category_id");
-    const searchRaw = searchParams.get("search");
-    const stockRaw = searchParams.get("in_stock");
+    const categoryRaw = params.get("category_id");
+    const searchRaw = params.get("search");
+    const stockRaw = params.get("in_stock");
 
     return {
       page: pageRaw ? Number(pageRaw) : 1,
@@ -84,8 +89,8 @@ export default function ProductsPage() {
       ),
     );
 
-  const updateURL = (updates: Record<string, any>) => {
-    const params = new URLSearchParams(searchParams.toString());
+  const updateURL = async (updates: Record<string, any>) => {
+    const params = getSearchParams();
     Object.entries(updates).forEach(([key, value]) => {
       if (
         value === undefined ||
@@ -100,7 +105,9 @@ export default function ProductsPage() {
     });
 
     const qs = params.toString();
-    router.push(qs ? `?${qs}` : "/store", { scroll: false });
+    await router.push(qs ? `?${qs}` : "/store", { scroll: false });
+    // Immediately refresh products after updating URL
+    fetchProducts();
   };
 
   const fetchProducts = async () => {
@@ -133,11 +140,13 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchCategories();
+    fetchProducts();
   }, []);
 
   useEffect(() => {
+    // re-fetch when `search` changes locally
     fetchProducts();
-  }, [searchParams]);
+  }, [search]);
 
   const changePage = (p: number) => updateURL({ page: p });
 

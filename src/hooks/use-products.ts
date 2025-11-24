@@ -20,8 +20,9 @@ export function useProducts(initialParams: Record<string, any>) {
     try {
       const params = overrideParams || paramsRef.current;
       const res = await productService.list(params);
-      const list = res.products ?? [];
-      const m = res.meta ?? null;
+      const data = (res as any).data ?? res;
+      const list = data.products ?? [];
+      const m = data.meta ?? null;
       setProducts((prev) => (reset ? list : [...prev, ...list]));
       setMeta(m);
       if (overrideParams) paramsRef.current = overrideParams;
@@ -42,7 +43,7 @@ export function useProducts(initialParams: Record<string, any>) {
   const loadCategories = async () => {
     try {
       const c = await productService.getCategories();
-      setCategories(c);
+      setCategories((c as any).data ?? c);
     } catch {}
   };
 

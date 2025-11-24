@@ -2,14 +2,6 @@
 
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-
-const defaultIcon = L.icon({
-  iconUrl: "/marker-icon.png",
-  shadowUrl: "/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
 
 export default function MapPicker({
   position,
@@ -26,6 +18,13 @@ export default function MapPicker({
     (async () => {
       const RL = await import("react-leaflet");
       const { MapContainer, TileLayer, Marker, useMapEvents } = RL;
+      const L = await import("leaflet");
+      const defaultIcon = L.icon({
+        iconUrl: "/marker-icon.png",
+        shadowUrl: "/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+      });
 
       function ClickHandler({ onChangeProp }: { onChangeProp: any }) {
         useMapEvents({
