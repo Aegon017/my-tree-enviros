@@ -117,11 +117,6 @@ export default function InteractiveHero({ sliders = [] }: { sliders: Slider[]; l
             : undefined
     );
 
-    const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.94]);
-    const borderRadius = useTransform(scrollYProgress, [0, 0.5], [0, 24]);
-    const translateY = useTransform(scrollYProgress, [0, 0.5], [0, 48]);
-    const fade = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-    const textY = useTransform(scrollYProgress, [0, 0.5], [0, -60]);
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -170,6 +165,18 @@ export default function InteractiveHero({ sliders = [] }: { sliders: Slider[]; l
     }, [mouseX, mouseY]);
 
     const currentSlide = sliders[currentIndex];
+
+    const { scrollYProgress } = useScroll(
+        isReady && isMounted && currentSlide
+            ? { target: containerRef, offset: ["start start", "end start"] }
+            : undefined
+    );
+
+    const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.94]);
+    const borderRadius = useTransform(scrollYProgress, [0, 0.5], [0, 24]);
+    const translateY = useTransform(scrollYProgress, [0, 0.5], [0, 48]);
+    const fade = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+    const textY = useTransform(scrollYProgress, [0, 0.5], [0, -60]);
 
     if (!isMounted) {
         return (

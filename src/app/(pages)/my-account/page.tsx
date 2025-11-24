@@ -627,7 +627,7 @@ export default function AccountPage() {
     const sourceName = profile?.name || authUser?.name || "User";
     return sourceName
       .split(" ")
-      .map((n) => n[0])
+      .map((n: string) => n[0])
       .join("")
       .toUpperCase();
   }, [profile?.name, authUser?.name]);

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -27,7 +26,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
-import neemTree from "../../public/neem-tree.webp";
 
 import { productService } from "@/services/product.services";
 import { sliderService } from "@/services/slider.services";
@@ -36,6 +34,7 @@ import { useLocationStore } from "@/store/location-store";
 import { useLocationTrees } from "@/hooks/use-location-trees";
 import { useBlogData } from "@/hooks/use-blog-data";
 import InteractiveHero from "@/components/interactive-hero";
+import AppDownloadSection from "@/components/app-download-section";
 
 export default function Home() {
   const { selected } = useLocationStore();
@@ -237,6 +236,8 @@ export default function Home() {
           </Link>
         </div>
       </Section>
+      
+      <AppDownloadSection />
 
       <Section>
         <SectionTitle title="Natural Products" subtitle="From nature's bounty." align="center" />

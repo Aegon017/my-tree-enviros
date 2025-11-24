@@ -28,7 +28,6 @@ export default function RootLayout( { children }: { children: React.ReactNode } 
         <NextTopLoader color="#715130" showSpinner={ false } />
         <Header />
         { children }
-        <AppDownloadSection/>
         <Footer />
         <Toaster richColors position="top-center" closeButton={ true } />
       </body>

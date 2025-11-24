@@ -10,7 +10,7 @@ export function useBlogData({ slug, initialParams = {} }: { slug?: string; initi
     const [blogs, setBlogs] = useState<BlogListItem[]>([]);
     const [meta, setMeta] = useState<BaseMeta | null>(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
 
     const paramsRef = useRef(initialParams);
     const initializedRef = useRef(false);

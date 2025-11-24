@@ -43,6 +43,7 @@ import type { FeedTree } from "@/types/feed-tree";
 import { authStorage } from "@/lib/auth-storage";
 import { campaignService } from "@/services/campaign.services";
 import type { DirectOrderRequest } from "@/types/campaign.types";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ApiResponse {
   status: boolean;
@@ -206,6 +207,8 @@ const PaymentDialog = ({
   const [customAmount, setCustomAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const { isAuthenticated } = useAuth();
+
   const finalAmount = useMemo(() => {
     if (selectedAmount === "custom") {
       return parseFloat(customAmount) || 0;
@@ -223,16 +226,16 @@ const PaymentDialog = ({
   const processDirectPayment = useCallback(
     async (amount: number) => {
       try {
-        
-        if (!authStorage.isAuthenticated()) {
+
+        if (!isAuthenticated) {
           window.location.href = "/sign-in";
           return;
         }
 
-        
+
         await loadRazorpayScript();
 
-        
+
         const orderRequest: DirectOrderRequest = {
           item_type: 'campaign',
           campaign_id: Number(campaignId),
@@ -242,13 +245,13 @@ const PaymentDialog = ({
 
         const { order } = await campaignService.createDirectOrder(orderRequest);
 
-        
+
         const paymentResponse = await campaignService.initiatePayment(
           order.id.toString(),
           { payment_method: 'razorpay' }
         );
 
-        
+
         const options = {
           key: paymentResponse.key,
           amount: paymentResponse.amount,
@@ -258,7 +261,7 @@ const PaymentDialog = ({
           order_id: paymentResponse.razorpay_order_id,
           handler: async (response: any) => {
             try {
-              
+
               await campaignService.verifyPayment(order.id.toString(), {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -269,8 +272,8 @@ const PaymentDialog = ({
               onOpenChange(false);
               setSelectedAmount("500");
               setCustomAmount("");
-              
-              
+
+
               window.location.href = `/payment/success?order_id=${order.id}`;
             } catch (error) {
               console.error("Payment verification failed:", error);
@@ -463,13 +466,13 @@ const Page = () => {
   useEffect(() => {
     const fetchFeedTree = async () => {
       try {
-        
+
         const response = await campaignService.getById(Number(id));
-        
+
         if (response.success && response.data.campaign) {
           const c = response.data.campaign;
-          
-          
+
+
           const mapped: ApiResponse["data"] = {
             campaign_id: c.id,
             title: c.name,
@@ -564,10 +567,10 @@ const Page = () => {
     const daysLeft = isExpired
       ? 0
       : Math.ceil(
-          (new Date(campaignData.campaign_details.expiration_date).getTime() -
-            Date.now()) /
-            (1000 * 60 * 60 * 24),
-        );
+        (new Date(campaignData.campaign_details.expiration_date).getTime() -
+          Date.now()) /
+        (1000 * 60 * 60 * 24),
+      );
 
     const topDonors = [...campaignData.donors]
       .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount))
