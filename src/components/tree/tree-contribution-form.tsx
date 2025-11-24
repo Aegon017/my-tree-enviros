@@ -162,7 +162,6 @@ export default function TreeContributionForm({ tree, pageType }: { tree: Tree; p
                         label={`${pageType === "sponsor" ? "Sponsor" : "Adopt"} Now`}
                         productId={tree.id}
                         amount={Number(totalPrice)}
-                        duration={selectedYears}
                         quantity={quantity}
                         name={watchName}
                         occasion={watchOccasion}

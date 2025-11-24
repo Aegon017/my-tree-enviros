@@ -9,23 +9,21 @@ interface RazorpayButtonProps {
   type: PaymentType;
   productType: ProductType;
   cartType: CartType;
-  duration?: number;
-  quantity?: number;
-  area_id?: number;
-  name?: string;
-  occasion?: string;
-  message?: string;
-  plan_id?: number;
-  product_variant_id?: number;
-  campaign_id?: number;
-  coupon_id?: number;
-  shippingAddressId?: number;
+  shippingAddressId?: number | null;
   label: string;
   productId?: number;
   amount?: number;
+  plan_id?: number;
+  quantity?: number;
+  campaign_id?: number;
+  coupon_id?: number;
+  name?: string;
+  occasion?: string;
+  message?: string;
+  area_id?: number;
 }
 
-export default function RazorpayButton( {
+export default function RazorpayButton({
   type,
   productType,
   cartType,
@@ -35,47 +33,34 @@ export default function RazorpayButton( {
   amount,
   plan_id,
   quantity,
-  product_variant_id,
   campaign_id,
   coupon_id,
-  
   name,
   occasion,
   message,
   area_id,
-}: RazorpayButtonProps ) {
+}: RazorpayButtonProps) {
   const { initiatePayment, loading } = useRazorpay();
 
   return (
     <Button
-      onClick={ () =>
-        initiatePayment(
-          type,
-          productType,
-          cartType,
-          shippingAddressId,
-          productId,
-          amount,
-          {
-            tree_plan_price_id: plan_id,
-            product_variant_id,
-            campaign_id,
-            coupon_id,
-            quantity,
-            shipping_address_id: shippingAddressId,
-            
-            name,
-            occasion,
-            message,
-            location_id: area_id,
-          },
-        )
+      onClick={() =>
+        initiatePayment(type, productType, cartType, shippingAddressId, productId, amount, {
+          tree_plan_price_id: plan_id,
+          campaign_id,
+          coupon_id,
+          quantity,
+          name,
+          occasion,
+          message,
+          location_id: area_id,
+        })
       }
-      disabled={ loading }
+      disabled={loading}
       className="w-full"
     >
       <Leaf />
-      { loading ? "Processing..." : label }
+      {loading ? "Processing..." : label}
     </Button>
   );
 }

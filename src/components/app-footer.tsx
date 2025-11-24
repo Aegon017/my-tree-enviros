@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { GooglePlayIcon, AppleAppStoreIcon } from "./store-icons";
 import { ArrowUpRight } from "lucide-react";
 
 const footerData = {
-  tagline: "Grow your green future.",
   quickLinks: [
     { name: "About Us", href: "/about" },
     { name: "Order Tracking", href: "/track-order" },
@@ -41,8 +39,8 @@ export default function Footer() {
       <div className="container mx-auto px-6 md:px-12 pt-24 pb-40 relative z-10">
         <div className="flex flex-col lg:flex-row justify-between items-start gap-12 mb-32">
           <div className="max-w-3xl">
-            <h2 className="text-5xl md:text-7xl lg:text-8xl font-medium tracking-tighter leading-[0.9] text-primary mb-8">
-              {footerData.tagline}
+            <h2 className="text-5xl md:text-7xl lg:text-8xl font-medium tracking-tighter leading-[0.9] text-secondary/40 mb-8">
+              Grow your <span className="text-primary">green future.</span>
             </h2>
             <p className="text-xl text-muted-foreground font-light max-w-lg leading-relaxed">
               Join the movement towards a sustainable planet. Download the app and start your journey today.
@@ -92,9 +90,8 @@ export default function Footer() {
         <h1
           className="
           text-[clamp(4rem,18vw,24rem)] 
-          font-black 
+          text-primary/40
           tracking-tighter 
-          text-foreground/5
           flex justify-center w-full 
           translate-y-[16%]
         "
