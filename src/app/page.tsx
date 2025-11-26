@@ -35,6 +35,7 @@ import { useLocationTrees } from "@/hooks/use-location-trees";
 import { useBlogData } from "@/hooks/use-blog-data";
 import InteractiveHero from "@/components/interactive-hero";
 import AppDownloadSection from "@/components/app-download-section";
+import { HeroParallax } from "@/components/ui/hero-parallax";
 
 export default function Home() {
   const { selected } = useLocationStore();
@@ -136,105 +137,44 @@ export default function Home() {
     blogAutoplayRef.current && blogAutoplayRef.current.stop();
   const onMouseLeaveBlog = () =>
     blogAutoplayRef.current && blogAutoplayRef.current.reset();
+  const heroCategories = [
+    {
+      title: "Sponsor a Tree",
+      description: "Support long-term environmental care.",
+      image: "/images/hero/sponsor.png",
+      actionLabel: "Learn More",
+      actionLink: "/sponsor",
+      ctaLabel: "Sponsor Now",
+      ctaLink: "/checkout/sponsor"
+    },
+    {
+      title: "Adopt a Tree",
+      description: "Adopt and track a tree with full updates.",
+      image: "/images/hero/sponsor.png",
+      actionLabel: "View Details",
+      actionLink: "/adopt",
+      ctaLabel: "Adopt",
+      ctaLink: "/checkout/adopt"
+    },
+    {
+      title: "Feed a Tree",
+      description: "Provide nutrients and care for growing trees.",
+      image: "/images/hero/sponsor.png",
+      actionLabel: "How It Works",
+      actionLink: "/feed",
+      ctaLabel: "Feed",
+      ctaLink: "/checkout/feed"
+    }
+  ];
+
+
+  const heros = Array(15)
+    .fill(null)
+    .map((_, i) => heroCategories[i % heroCategories.length]);
 
   return (
-    <div className="min-h-screen">
-      <InteractiveHero sliders={sliders} loading={loadingSliders} />
-
-      <Section>
-        <SectionTitle
-          title="Sponsor A Tree"
-          subtitle="Sponsoring a tree helps create a sustainable future."
-          align="center"
-        />
-
-        {selected && (
-          <div className="mt-3 flex justify-center text-sm text-muted-foreground">
-            <MapPin className="w-4 h-4 mr-1" />
-            Showing trees near {selected.area}, {selected.city}
-          </div>
-        )}
-
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {treesLoading ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <BasicTreeCardSkeleton key={i} />
-            ))
-          ) : !selected ? (
-            <p className="col-span-5 text-center text-muted-foreground py-10">
-              Please select a location.
-            </p>
-          ) : sponsorTrees.length === 0 ? (
-            <p className="col-span-5 text-center text-muted-foreground py-10">
-              No trees available near {selected.area}.
-            </p>
-          ) : (
-            sponsorTrees.map((tree: any) => (
-              <Link
-                key={tree.id}
-                href={`/sponsor-a-tree/${tree.slug}`}
-                className="transition-transform hover:scale-105"
-              >
-                <BasicTreeCard name={tree.name} image={tree.thumbnail_url} />
-              </Link>
-            ))
-          )}
-        </div>
-
-        <div className="text-center mt-8">
-          <Link href="/sponsor-a-tree">
-            <Button>View All Trees</Button>
-          </Link>
-        </div>
-      </Section>
-
-      <Section className="bg-muted">
-        <SectionTitle
-          title="Adopt A Tree"
-          subtitle="Adopting a tree supports long-term care."
-          align="center"
-        />
-
-        {selected && (
-          <div className="mt-3 flex justify-center text-sm text-muted-foreground">
-            <MapPin className="w-4 h-4 mr-1" />
-            Showing trees near {selected.area}, {selected.city}
-          </div>
-        )}
-
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {treesLoading ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <BasicTreeCardSkeleton key={i} />
-            ))
-          ) : !selected ? (
-            <p className="col-span-5 text-center text-muted-foreground py-10">
-              Please select a location.
-            </p>
-          ) : adoptTrees.length === 0 ? (
-            <p className="col-span-5 text-center text-muted-foreground py-10">
-              No trees available near {selected.area}.
-            </p>
-          ) : (
-            adoptTrees.map((tree: any) => (
-              <Link
-                key={tree.id}
-                href={`/adopt-a-tree/${tree.slug}`}
-                className="transition-transform hover:scale-105"
-              >
-                <BasicTreeCard name={tree.name} image={tree.thumbnail_url} />
-              </Link>
-            ))
-          )}
-        </div>
-
-        <div className="text-center mt-8">
-          <Link href="/adopt-a-tree">
-            <Button>View All Trees</Button>
-          </Link>
-        </div>
-      </Section>
-
+    <div>
+      <HeroParallax products={heros} />
       <AppDownloadSection />
 
       <Section>
@@ -247,11 +187,11 @@ export default function Home() {
         <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {loadingProducts
             ? Array.from({ length: 4 }).map((_, i) => (
-                <ProductCardSkeleton key={i} />
-              ))
+              <ProductCardSkeleton key={i} />
+            ))
             : products.map((product: any) => (
-                <ProductCard key={product.slug} product={product} />
-              ))}
+              <ProductCard key={product.slug} product={product} />
+            ))}
         </div>
 
         <div className="text-center mt-8">

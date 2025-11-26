@@ -42,6 +42,8 @@ import { Separator } from "@/components/ui/separator";
 import type { FeedTree } from "@/types/feed-tree";
 import { authStorage } from "@/lib/auth-storage";
 import { campaignService } from "@/services/campaign.services";
+import { orderService } from "@/services/order.services";
+import { paymentService } from "@/services/payment.services";
 import type { DirectOrderRequest } from "@/types/campaign.types";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -233,30 +235,30 @@ const PaymentDialog = ({
 
         await loadRazorpayScript();
 
-        const orderRequest: DirectOrderRequest = {
-          item_type: "campaign",
-          campaign_id: Number(campaignId),
-          amount,
+        const orderRequest = {
+          item_type: "campaign" as const,
+          campaign_id: campaignDetails.campaign_id,
+          amount: amount,
           quantity: 1,
         };
 
-        const { order } = await campaignService.createDirectOrder(orderRequest);
+        const orderResponse = await orderService.createDirectOrder(orderRequest);
+        const order = orderResponse.data?.order;
+        if (!order) throw new Error("Failed to create order");
 
-        const paymentResponse = await campaignService.initiatePayment(
-          order.id.toString(),
-          { payment_method: "razorpay" },
-        );
+        const paymentResponse = await paymentService.initiatePayment(order.id);
+        const paymentData = paymentResponse.data;
 
         const options = {
-          key: paymentResponse.key,
-          amount: paymentResponse.amount,
-          currency: paymentResponse.currency,
+          key: paymentData?.key,
+          amount: paymentData?.amount,
+          currency: paymentData?.currency,
           name: "MyTree Enviros",
           description: `Support: ${campaignDetails.name}`,
-          order_id: paymentResponse.razorpay_order_id,
+          order_id: paymentData?.razorpay_order_id,
           handler: async (response: any) => {
             try {
-              await campaignService.verifyPayment(order.id.toString(), {
+              await paymentService.verifyPayment(order.id, {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
@@ -462,8 +464,8 @@ const Page = () => {
       try {
         const response = await campaignService.getById(Number(id));
 
-        if (response.success && response.data.campaign) {
-          const c = response.data.campaign;
+        if (response.campaign) {
+          const c = response.campaign;
 
           const mapped: ApiResponse["data"] = {
             campaign_id: c.id,
@@ -487,8 +489,8 @@ const Page = () => {
               created_by: 0,
               updated_by: 0,
               trash: 0,
-              status: c.status,
-              main_image_url: c.thumbnail_url || c.image_urls || "",
+              status: 1,
+              main_image_url: c.thumbnail_url || (Array.isArray(c.image_urls) ? c.image_urls[0] : "") || "",
               city: {
                 id: 0,
                 name: c.location?.name || "",
@@ -561,10 +563,10 @@ const Page = () => {
     const daysLeft = isExpired
       ? 0
       : Math.ceil(
-          (new Date(campaignData.campaign_details.expiration_date).getTime() -
-            Date.now()) /
-            (1000 * 60 * 60 * 24),
-        );
+        (new Date(campaignData.campaign_details.expiration_date).getTime() -
+          Date.now()) /
+        (1000 * 60 * 60 * 24),
+      );
 
     const topDonors = [...campaignData.donors]
       .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount))
