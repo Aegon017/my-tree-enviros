@@ -48,11 +48,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (res.data?.token) {
       const { token, user } = res.data;
 
-      // Update Local State & Storage
       get().setToken(token);
       get().setUser(user);
 
-      // Handle Cart Merge
       const cartStore = useCartStore.getState();
       const guestItems = cartStore.cart.items;
 
@@ -77,7 +75,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await authService.signOut();
     } finally {
       get().clearAuth();
-      useCartStore.getState().clearCart(); // Clear cart on logout
+      useCartStore.getState().clearCart();
     }
   },
 

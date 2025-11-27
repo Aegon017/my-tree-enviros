@@ -35,7 +35,8 @@ import { useLocationTrees } from "@/hooks/use-location-trees";
 import { useBlogData } from "@/hooks/use-blog-data";
 import InteractiveHero from "@/components/interactive-hero";
 import AppDownloadSection from "@/components/app-download-section";
-import { HeroParallax } from "@/components/ui/hero-parallax";
+import { HeroScrollMomentum, HeroScrollParallax, HeroScrollSnap, HeroScrollStep, HeroScrollTreeShowcase, HeroScrollVerticalStory } from "@/components/ui/hero-parallax";
+import HeroSection from "@/components/hero-section";
 
 export default function Home() {
   const { selected } = useLocationStore();
@@ -174,7 +175,7 @@ export default function Home() {
 
   return (
     <div>
-      <HeroParallax products={heros} />
+      <HeroSection   />
       <AppDownloadSection />
 
       <Section>
