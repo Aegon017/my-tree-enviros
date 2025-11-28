@@ -1,45 +1,74 @@
+// ─────────────────────────────────────────────
+// ✅ Campaign Types
+// ─────────────────────────────────────────────
+
+export type CampaignType = "feed" | "protect" | "plant";
+
 export interface Campaign {
   id: number;
+  location_id: number;
   name: string;
-  description: string;
-  type: string;
-  target_amount?: number;
-  raised_amount?: number;
-  thumbnail_url?: string;
-  image_urls?: string;
-  status: number;
-  start_date?: string;
-  end_date?: string;
-  created_at: string;
-  updated_at: string;
   slug: string;
+  description?: string | null;
+  target_amount: number | null;
+  raised_amount: number;
+  start_date: string | null;
+  end_date: string | null;
+  is_active: boolean;
+  thumbnail_url?: string | null;
+  image_urls?: string[] | null;
   location?: {
     id: number;
     name: string;
-  };
+    parent_id: number | null;
+    is_active: boolean;
+  } | null;
+
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface CampaignsResponse {
-  success: boolean;
-  message: string;
-  data: {
-    campaigns: Campaign[];
-    meta: {
-      current_page: number;
-      last_page: number;
-      per_page: number;
-      total: number;
-    };
+  campaigns: Campaign[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from?: number | null;
+    to?: number | null;
   };
 }
 
 export interface CampaignResponse {
-  success: boolean;
-  message: string;
-  data: {
-    campaign: Campaign;
-  };
+  campaign: Campaign;
 }
+
+// ─────────────────────────────────────────────
+// ✅ Orders & Payment Types
+// ─────────────────────────────────────────────
+
+export interface OrderItem {
+  id: number;
+  type: string;
+  amount: number;
+  quantity: number;
+  total_amount: number;
+  [key: string]: any; // fallback for tree/campaign specific fields
+}
+
+export interface OrderResponse {
+  id: number;
+  reference_number: string;
+  total: number;
+  status: string;
+  payment_method?: string;
+  items: OrderItem[];
+}
+
+// ─────────────────────────────────────────────
+// ✅ Direct Campaign Order Request
+// ─────────────────────────────────────────────
 
 export interface DirectOrderRequest {
   item_type: "campaign";
@@ -54,9 +83,26 @@ export interface DirectOrderRequest {
   shipping_address_id?: number;
 }
 
+// ─────────────────────────────────────────────
+// ✅ Payment Initiation
+// ─────────────────────────────────────────────
+
 export interface PaymentInitiateRequest {
   payment_method: "razorpay";
 }
+
+export interface PaymentInitiateResponse {
+  razorpay_order_id: string;
+  amount: number; // paise
+  amount_rupees: number; // rupees
+  currency: string;
+  key: string;
+  order_number: string; // backend maps to reference_number
+}
+
+// ─────────────────────────────────────────────
+// ✅ Payment Verification
+// ─────────────────────────────────────────────
 
 export interface PaymentVerifyRequest {
   razorpay_order_id: string;
@@ -64,83 +110,7 @@ export interface PaymentVerifyRequest {
   razorpay_signature: string;
 }
 
-export interface OrderResponse {
-  id: number;
-  order_number: string;
-  total_amount: number;
-  status: string;
-  type: string;
-  items: any[];
-}
-
-export interface PaymentInitiateResponse {
-  razorpay_order_id: string;
-  amount: number;
-  amount_rupees: number;
-  currency: string;
-  order_number: string;
-  key: string;
-}
-
 export interface PaymentVerifyResponse {
   order: OrderResponse;
   payment_id: string;
-}
-
-export interface CampaignStats {
-  total_donations: number;
-  donor_count: number;
-  progress_percentage: number;
-  days_remaining?: number;
-}
-
-export type CampaignType = "feed" | "protect" | "plant";
-
-export interface CampaignLocation {
-  id: number;
-  name: string;
-}
-
-export interface CampaignListItem {
-  id: number;
-  name: string;
-  description: string;
-  amount: number;
-  raised_amount: number;
-  end_date?: string;
-  image?: string;
-  status: number;
-  location?: CampaignLocation;
-}
-
-export interface PaginationMeta {
-  current_page: number;
-  last_page: number;
-  per_page: number;
-  total: number;
-}
-
-export interface CampaignListPayload {
-  campaigns: CampaignListItem[];
-}
-
-export interface CampaignListResponse {
-  success: boolean;
-  message: string;
-  data: CampaignListPayload;
-}
-
-export interface CampaignDonor {
-  donor_name: string;
-  amount: string;
-}
-
-export interface CampaignDetailPayload {
-  campaign: CampaignListItem;
-}
-
-export interface CampaignDetailResponse {
-  success: boolean;
-  message: string;
-  data: CampaignDetailPayload;
 }

@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { authStorage } from "@/lib/auth-storage";
 import { authService } from "@/services/auth.services";
-import { cartService } from "@/services/cart.services";
-import { useCartStore } from "./cart-store";
+import { useCartStore } from "@/modules/cart/store/cart.store";
+import { cartService } from "@/modules/cart/services/cart.service";
 
 type User = any;
 
@@ -48,11 +48,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (res.data?.token) {
       const { token, user } = res.data;
 
-      // Update Local State & Storage
       get().setToken(token);
       get().setUser(user);
 
-      // Handle Cart Merge
       const cartStore = useCartStore.getState();
       const guestItems = cartStore.cart.items;
 
@@ -77,7 +75,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await authService.signOut();
     } finally {
       get().clearAuth();
-      useCartStore.getState().clearCart(); // Clear cart on logout
+      useCartStore.getState().clearCart();
     }
   },
 

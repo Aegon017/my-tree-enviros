@@ -1,166 +1,25 @@
 import api from "@/services/http-client";
-import { authStorage } from "@/lib/auth-storage";
 import type {
-  Campaign,
   CampaignsResponse,
   CampaignResponse,
-  DirectOrderRequest,
-  PaymentInitiateRequest,
-  PaymentVerifyRequest,
-  OrderResponse,
-  PaymentInitiateResponse,
-  PaymentVerifyResponse,
 } from "@/types/campaign.types";
 
 class CampaignService {
-  async createDirectOrder(
-    request: DirectOrderRequest,
-  ): Promise<{ order: OrderResponse }> {
-    if (!authStorage.isAuthenticated()) {
-      window.location.href = "/sign-in";
-      throw new Error("Authentication required");
-    }
-
-    const response = await api.post<{
-      success: boolean;
-      message: string;
-      data: { order: OrderResponse };
-    }>("/orders/direct", request);
-
-    const order = response?.data?.data?.order;
-    if (!order) throw new Error("Invalid create direct order response");
-    return { order };
-  }
-
-  async initiatePayment(
-    orderId: string,
-    request: PaymentInitiateRequest,
-  ): Promise<PaymentInitiateResponse> {
-    if (!authStorage.isAuthenticated()) {
-      window.location.href = "/sign-in";
-      throw new Error("Authentication required");
-    }
-
-    const response = await api.post<{
-      success: boolean;
-      message: string;
-      data: PaymentInitiateResponse;
-    }>(`/orders/${orderId}/payment/initiate`, request);
-
-    const data = response?.data?.data;
-    if (!data) throw new Error("Invalid initiate payment response");
-    return data;
-  }
-
-  async verifyPayment(
-    orderId: string,
-    request: PaymentVerifyRequest,
-  ): Promise<PaymentVerifyResponse> {
-    if (!authStorage.isAuthenticated()) {
-      window.location.href = "/sign-in";
-      throw new Error("Authentication required");
-    }
-
-    const response = await api.post<{
-      success: boolean;
-      message: string;
-      data: PaymentVerifyResponse;
-    }>(`/orders/${orderId}/payment/verify`, request);
-
-    const data = response?.data?.data;
-    if (!data) throw new Error("Invalid verify payment response");
-    return data;
-  }
-
-  async getPaymentStatus(orderId: string): Promise<{
-    order_id: number;
-    order_number: string;
-    order_status: string;
-    order_status_label: string;
-    payment?: {
-      id: number;
-      amount: number;
-      payment_method: string;
-      transaction_id: string;
-      status: string;
-      paid_at: string;
-    };
-  }> {
-    if (!authStorage.isAuthenticated()) {
-      window.location.href = "/sign-in";
-      throw new Error("Authentication required");
-    }
-
-    const response = await api.get<{
-      success: boolean;
-      message: string;
-      data: any;
-    }>(`/orders/${orderId}/payment/status`);
-
-    const data = response?.data?.data;
-    if (!data) throw new Error("Invalid payment status response");
-    return data;
-  }
-
   async getAll(params?: {
-    status?: number;
+    location_id?: number;
+    search?: string;
+    sort_by?: string;
+    sort_order?: string;
     per_page?: number;
     page?: number;
   }): Promise<CampaignsResponse> {
     const response = await api.get<CampaignsResponse>("/campaigns", { params });
-    if (!response?.data) throw new Error("Invalid campaigns response");
-    return response.data;
+    return response.data || { campaigns: [], meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 } };
   }
 
-  async getById(id: number): Promise<CampaignResponse> {
+  async getById(id: string | number): Promise<CampaignResponse> {
     const response = await api.get<CampaignResponse>(`/campaigns/${id}`);
-    if (!response?.data) throw new Error("Invalid campaign response");
-    return response.data;
-  }
-
-  async getFeatured(limit: number = 10): Promise<CampaignsResponse> {
-    const response = await api.get<CampaignsResponse>("/campaigns/featured", {
-      params: { per_page: limit },
-    });
-    if (!response?.data) throw new Error("Invalid featured campaigns response");
-    return response.data;
-  }
-
-  async search(
-    query: string,
-    params?: {
-      type?: string;
-      per_page?: number;
-      page?: number;
-    },
-  ): Promise<CampaignsResponse> {
-    const response = await api.get<CampaignsResponse>("/campaigns/search", {
-      params: { q: query, ...params },
-    });
-    if (!response?.data) throw new Error("Invalid campaign search response");
-    return response.data;
-  }
-
-  async getStats(id: number): Promise<{
-    success: boolean;
-    data: {
-      total_donations: number;
-      donor_count: number;
-      progress_percentage: number;
-      days_remaining?: number;
-    };
-  }> {
-    const response = await api.get<{
-      success: boolean;
-      data: {
-        total_donations: number;
-        donor_count: number;
-        progress_percentage: number;
-        days_remaining?: number;
-      };
-    }>(`/campaigns/${id}/stats`);
-    if (!response?.data) throw new Error("Invalid campaign stats response");
-    return response.data;
+    return response.data || { campaign: {} as any };
   }
 }
 

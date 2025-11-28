@@ -3,7 +3,7 @@
 import { ShoppingCart, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useCart } from "@/hooks/use-cart";
+import { useCart } from "@/modules/cart/hooks/use-cart";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { useAuthStore } from "@/store/auth-store";
