@@ -2,6 +2,8 @@
 // ✅ Campaign Types
 // ─────────────────────────────────────────────
 
+export type CampaignType = "feed" | "protect" | "plant";
+
 export interface Campaign {
   id: number;
   location_id: number;

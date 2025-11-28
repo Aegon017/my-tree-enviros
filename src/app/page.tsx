@@ -7,9 +7,6 @@ import Autoplay from "embla-carousel-autoplay";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 
-import BasicTreeCard from "@/components/basic-tree-card";
-import BasicTreeCardSkeleton from "@/components/skeletons/basic-tree-card-skeleton";
-
 import ProductCard from "@/components/product-card";
 import ProductCardSkeleton from "@/components/skeletons/product-card-skeleton";
 
@@ -33,16 +30,7 @@ import { sliderService } from "@/services/slider.services";
 import { useLocationStore } from "@/store/location-store";
 import { useLocationTrees } from "@/hooks/use-location-trees";
 import { useBlogData } from "@/hooks/use-blog-data";
-import InteractiveHero from "@/components/interactive-hero";
 import AppDownloadSection from "@/components/app-download-section";
-import {
-  HeroScrollMomentum,
-  HeroScrollParallax,
-  HeroScrollSnap,
-  HeroScrollStep,
-  HeroScrollTreeShowcase,
-  HeroScrollVerticalStory,
-} from "@/components/ui/hero-parallax";
 import HeroSection from "@/components/hero-section";
 
 export default function Home() {
@@ -145,39 +133,6 @@ export default function Home() {
     blogAutoplayRef.current && blogAutoplayRef.current.stop();
   const onMouseLeaveBlog = () =>
     blogAutoplayRef.current && blogAutoplayRef.current.reset();
-  const heroCategories = [
-    {
-      title: "Sponsor a Tree",
-      description: "Support long-term environmental care.",
-      image: "/images/hero/sponsor.png",
-      actionLabel: "Learn More",
-      actionLink: "/sponsor",
-      ctaLabel: "Sponsor Now",
-      ctaLink: "/checkout/sponsor",
-    },
-    {
-      title: "Adopt a Tree",
-      description: "Adopt and track a tree with full updates.",
-      image: "/images/hero/sponsor.png",
-      actionLabel: "View Details",
-      actionLink: "/adopt",
-      ctaLabel: "Adopt",
-      ctaLink: "/checkout/adopt",
-    },
-    {
-      title: "Feed a Tree",
-      description: "Provide nutrients and care for growing trees.",
-      image: "/images/hero/sponsor.png",
-      actionLabel: "How It Works",
-      actionLink: "/feed",
-      ctaLabel: "Feed",
-      ctaLink: "/checkout/feed",
-    },
-  ];
-
-  const heros = Array(15)
-    .fill(null)
-    .map((_, i) => heroCategories[i % heroCategories.length]);
 
   return (
     <div>
@@ -194,11 +149,11 @@ export default function Home() {
         <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {loadingProducts
             ? Array.from({ length: 4 }).map((_, i) => (
-                <ProductCardSkeleton key={i} />
-              ))
+              <ProductCardSkeleton key={i} />
+            ))
             : products.map((product: any) => (
-                <ProductCard key={product.slug} product={product} />
-              ))}
+              <ProductCard key={product.slug} product={product} />
+            ))}
         </div>
 
         <div className="text-center mt-8">

@@ -14,12 +14,12 @@ class CampaignService {
     page?: number;
   }): Promise<CampaignsResponse> {
     const response = await api.get<CampaignsResponse>("/campaigns", { params });
-    return response;
+    return response.data || { campaigns: [], meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 } };
   }
 
   async getById(id: string | number): Promise<CampaignResponse> {
     const response = await api.get<CampaignResponse>(`/campaigns/${id}`);
-    return response;
+    return response.data || { campaign: {} as any };
   }
 }
 

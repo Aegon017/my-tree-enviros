@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { useSearchParams } from "next/navigation";
 
 import { Suspense, useEffect, useState } from "react";
-import { orderService } from "@/services/order.services";
+import { ordersService } from "@/modules/orders/services/orders.service";
 
 export default function Page() {
   return (
@@ -27,47 +27,65 @@ export default function Page() {
 
 function PaymentSuccessPage() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("order_id") || "N/A";
-  const transactionId = searchParams.get("transaction_id") || "N/A";
-  const amount = parseFloat(searchParams.get("amount") || "0");
-  const internalOrderId = searchParams.get("internal_order_id");
+  const orderId = searchParams.get("order_id");
 
-  const [displayAmount, setDisplayAmount] = useState<number | null>(amount);
+  const [order, setOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    if (internalOrderId) {
-      const id = Number(internalOrderId);
+
+    if (orderId) {
+      const id = Number(orderId);
       if (!Number.isNaN(id) && id > 0) {
-        orderService
+        ordersService
           .getOrderById(id)
           .then((res) => {
-            const order = res?.data?.order as any;
-            const apiTotal = order?.total ?? order?.total_amount;
-            if (mounted && typeof apiTotal === "number") {
-              setDisplayAmount(apiTotal);
+            // Backend returns: { data: { order: {...} } }
+            const orderData = res?.data;
+            if (mounted && orderData) {
+              setOrder(orderData);
             }
           })
-          .catch(() => {});
+          .catch((err) => {
+            console.error('Failed to fetch order:', err);
+          })
+          .finally(() => {
+            if (mounted) setLoading(false);
+          });
+      } else {
+        setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
 
     return () => {
       mounted = false;
     };
-  }, [internalOrderId]);
+  }, [orderId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading order details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
       <div className="max-w-md w-full space-y-8">
-        {}
+        {/* Success Icon */}
         <div className="text-center">
           <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 dark:bg-green-900/20">
             <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
           </div>
         </div>
 
-        {}
+        {/* Success Message */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-foreground">
             Payment Successful!
@@ -78,7 +96,7 @@ function PaymentSuccessPage() {
           </p>
         </div>
 
-        {}
+        {/* Order Details Card */}
         <Card className="border-border">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg text-foreground">
@@ -90,21 +108,28 @@ function PaymentSuccessPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
-              {}
               <div className="space-y-1">
-                <p className="text-muted-foreground">Transaction ID</p>
-                <p className="font-medium text-foreground">{transactionId}</p>
+                <p className="text-muted-foreground">Order Number</p>
+                <p className="font-medium text-foreground">
+                  {order?.order_number || 'N/A'}
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-muted-foreground">Amount Paid</p>
                 <p className="font-medium text-foreground">
-                  ₹{(displayAmount ?? amount).toFixed(2)}
+                  {order?.formatted_total || `₹${(order?.total || 0).toFixed(2)}`}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-muted-foreground">Status</p>
+                <p className="font-medium text-foreground">
+                  {order?.status_label || order?.status || 'Pending'}
                 </p>
               </div>
               <div className="space-y-1">
                 <p className="text-muted-foreground">Date</p>
                 <p className="font-medium text-foreground">
-                  {new Date().toLocaleDateString()}
+                  {order?.paid_at ? new Date(order.paid_at).toLocaleDateString() : new Date().toLocaleDateString()}
                 </p>
               </div>
             </div>
@@ -120,7 +145,7 @@ function PaymentSuccessPage() {
           </CardContent>
         </Card>
 
-        {}
+        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
           <Button asChild variant="outline" className="flex-1">
             <Link href="/">
@@ -129,7 +154,7 @@ function PaymentSuccessPage() {
             </Link>
           </Button>
           <Button asChild className="flex-1 bg-primary text-primary-foreground">
-            <Link href="/orders">
+            <Link href="/my-orders">
               View Orders
               <ArrowRight className="h-4 w-4 ml-2" />
             </Link>

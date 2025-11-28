@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth-store";
-import { useCartStore } from "@/store/cart-store";
+import { useCartStore } from "../store/cart.store";
 import { CartItem } from "@/domain/cart/cart-item";
 
 export function useCart() {
@@ -65,6 +65,7 @@ export function useCart() {
   return {
     loading,
     authenticated,
+    cart,
     items,
     add,
     update,

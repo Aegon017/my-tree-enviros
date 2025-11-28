@@ -42,8 +42,8 @@ import { Separator } from "@/components/ui/separator";
 import type { FeedTree } from "@/types/feed-tree";
 import { authStorage } from "@/lib/auth-storage";
 import { campaignService } from "@/services/campaign.services";
-import { orderService } from "@/services/order.services";
-import { paymentService } from "@/services/payment.services";
+import { ordersService as orderService } from "@/modules/orders/services/orders.service";
+import { paymentService } from "@/modules/payments/services/payments.service";
 import type { DirectOrderRequest } from "@/types/campaign.types";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -244,25 +244,33 @@ const PaymentDialog = ({
 
         const orderResponse =
           await orderService.createDirectOrder(orderRequest);
-        const order = orderResponse.data?.order;
-        if (!order) throw new Error("Failed to create order");
 
-        const paymentResponse = await paymentService.initiatePayment(order.id);
-        const paymentData = paymentResponse.data;
+        // Backend returns: { order: {...}, payment: {...} }
+        // API client may wrap it, so check both
+        const responseData = orderResponse.data || orderResponse;
+        const order = responseData?.order;
+        const paymentData = responseData?.payment;
+
+        if (!order) {
+          console.error('Response:', orderResponse);
+          throw new Error("Failed to create order");
+        }
 
         const options = {
-          key: paymentData?.key,
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY || '',
           amount: paymentData?.amount,
           currency: paymentData?.currency,
+          order_id: paymentData?.order_id,
           name: "MyTree Enviros",
           description: `Support: ${campaignDetails.name}`,
-          order_id: paymentData?.razorpay_order_id,
           handler: async (response: any) => {
             try {
-              await paymentService.verifyPayment(order.id, {
+              // Verify payment using /checkout/verify
+              await paymentService.verifyPayment({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
+                order_reference: order.reference_number,
               });
 
               alert(
@@ -567,10 +575,10 @@ const Page = () => {
     const daysLeft = isExpired
       ? 0
       : Math.ceil(
-          (new Date(campaignData.campaign_details.expiration_date).getTime() -
-            Date.now()) /
-            (1000 * 60 * 60 * 24),
-        );
+        (new Date(campaignData.campaign_details.expiration_date).getTime() -
+          Date.now()) /
+        (1000 * 60 * 60 * 24),
+      );
 
     const topDonors = [...campaignData.donors]
       .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount))

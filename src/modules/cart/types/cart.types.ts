@@ -1,7 +1,7 @@
-import type { Product } from "./product.types";
-import type { Campaign, CampaignType } from "./campaign";
-import type { ProductVariant } from "./variant.types";
-import { Plan } from "./tree.types";
+import type { Product } from "@/types/product.types";
+import type { Campaign, CampaignType } from "@/types/campaign.types";
+import type { ProductVariant } from "@/types/variant.types";
+import { Plan } from "@/types/tree.types";
 
 export interface CartItem {
   id: number;

@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { cartService } from "@/services/cart.services";
+import { cartService } from "../services/cart.service";
 import { useAuthStore } from "@/store/auth-store";
-import { CartItem } from "@/types/cart.types";
+import { CartItem } from "../types/cart.types";
 
 interface CartState {
   cart: { items: CartItem[] };
