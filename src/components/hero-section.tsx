@@ -26,8 +26,8 @@ export default function Hero() {
           transition={{ duration: 0.7, ease: "easeOut", delay: 0.15 }}
           className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-10"
         >
-          Support nature’s recovery through simple, meaningful actions—
-          sponsor, adopt, or feed a tree.
+          Support nature’s recovery through simple, meaningful actions— sponsor,
+          adopt, or feed a tree.
         </motion.p>
 
         <motion.div

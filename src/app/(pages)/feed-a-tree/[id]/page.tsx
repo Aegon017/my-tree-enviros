@@ -242,7 +242,8 @@ const PaymentDialog = ({
           quantity: 1,
         };
 
-        const orderResponse = await orderService.createDirectOrder(orderRequest);
+        const orderResponse =
+          await orderService.createDirectOrder(orderRequest);
         const order = orderResponse.data?.order;
         if (!order) throw new Error("Failed to create order");
 
@@ -490,7 +491,10 @@ const Page = () => {
               updated_by: 0,
               trash: 0,
               status: 1,
-              main_image_url: c.thumbnail_url || (Array.isArray(c.image_urls) ? c.image_urls[0] : "") || "",
+              main_image_url:
+                c.thumbnail_url ||
+                (Array.isArray(c.image_urls) ? c.image_urls[0] : "") ||
+                "",
               city: {
                 id: 0,
                 name: c.location?.name || "",
@@ -563,10 +567,10 @@ const Page = () => {
     const daysLeft = isExpired
       ? 0
       : Math.ceil(
-        (new Date(campaignData.campaign_details.expiration_date).getTime() -
-          Date.now()) /
-        (1000 * 60 * 60 * 24),
-      );
+          (new Date(campaignData.campaign_details.expiration_date).getTime() -
+            Date.now()) /
+            (1000 * 60 * 60 * 24),
+        );
 
     const topDonors = [...campaignData.donors]
       .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount))

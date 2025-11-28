@@ -1,5 +1,8 @@
 import api from "@/services/http-client";
-import type { CampaignsResponse, CampaignResponse } from "@/types/campaign.types";
+import type {
+  CampaignsResponse,
+  CampaignResponse,
+} from "@/types/campaign.types";
 
 class CampaignService {
   async getAll(params?: {

@@ -35,7 +35,14 @@ import { useLocationTrees } from "@/hooks/use-location-trees";
 import { useBlogData } from "@/hooks/use-blog-data";
 import InteractiveHero from "@/components/interactive-hero";
 import AppDownloadSection from "@/components/app-download-section";
-import { HeroScrollMomentum, HeroScrollParallax, HeroScrollSnap, HeroScrollStep, HeroScrollTreeShowcase, HeroScrollVerticalStory } from "@/components/ui/hero-parallax";
+import {
+  HeroScrollMomentum,
+  HeroScrollParallax,
+  HeroScrollSnap,
+  HeroScrollStep,
+  HeroScrollTreeShowcase,
+  HeroScrollVerticalStory,
+} from "@/components/ui/hero-parallax";
 import HeroSection from "@/components/hero-section";
 
 export default function Home() {
@@ -146,7 +153,7 @@ export default function Home() {
       actionLabel: "Learn More",
       actionLink: "/sponsor",
       ctaLabel: "Sponsor Now",
-      ctaLink: "/checkout/sponsor"
+      ctaLink: "/checkout/sponsor",
     },
     {
       title: "Adopt a Tree",
@@ -155,7 +162,7 @@ export default function Home() {
       actionLabel: "View Details",
       actionLink: "/adopt",
       ctaLabel: "Adopt",
-      ctaLink: "/checkout/adopt"
+      ctaLink: "/checkout/adopt",
     },
     {
       title: "Feed a Tree",
@@ -164,10 +171,9 @@ export default function Home() {
       actionLabel: "How It Works",
       actionLink: "/feed",
       ctaLabel: "Feed",
-      ctaLink: "/checkout/feed"
-    }
+      ctaLink: "/checkout/feed",
+    },
   ];
-
 
   const heros = Array(15)
     .fill(null)
@@ -175,7 +181,7 @@ export default function Home() {
 
   return (
     <div>
-      <HeroSection   />
+      <HeroSection />
       <AppDownloadSection />
 
       <Section>
@@ -188,11 +194,11 @@ export default function Home() {
         <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {loadingProducts
             ? Array.from({ length: 4 }).map((_, i) => (
-              <ProductCardSkeleton key={i} />
-            ))
+                <ProductCardSkeleton key={i} />
+              ))
             : products.map((product: any) => (
-              <ProductCard key={product.slug} product={product} />
-            ))}
+                <ProductCard key={product.slug} product={product} />
+              ))}
         </div>
 
         <div className="text-center mt-8">

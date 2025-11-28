@@ -42,7 +42,6 @@ export interface CampaignResponse {
   campaign: Campaign;
 }
 
-
 // ─────────────────────────────────────────────
 // ✅ Orders & Payment Types
 // ─────────────────────────────────────────────
@@ -65,7 +64,6 @@ export interface OrderResponse {
   items: OrderItem[];
 }
 
-
 // ─────────────────────────────────────────────
 // ✅ Direct Campaign Order Request
 // ─────────────────────────────────────────────
@@ -83,7 +81,6 @@ export interface DirectOrderRequest {
   shipping_address_id?: number;
 }
 
-
 // ─────────────────────────────────────────────
 // ✅ Payment Initiation
 // ─────────────────────────────────────────────
@@ -94,13 +91,12 @@ export interface PaymentInitiateRequest {
 
 export interface PaymentInitiateResponse {
   razorpay_order_id: string;
-  amount: number;          // paise
-  amount_rupees: number;   // rupees
+  amount: number; // paise
+  amount_rupees: number; // rupees
   currency: string;
   key: string;
-  order_number: string;    // backend maps to reference_number
+  order_number: string; // backend maps to reference_number
 }
-
 
 // ─────────────────────────────────────────────
 // ✅ Payment Verification
