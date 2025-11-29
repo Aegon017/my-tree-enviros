@@ -473,8 +473,8 @@ const Page = () => {
       try {
         const response = await campaignService.getById(Number(id));
 
-        if (response.campaign) {
-          const c = response.campaign;
+        if (response.data?.campaign) {
+          const c = response.data.campaign;
 
           const mapped: ApiResponse["data"] = {
             campaign_id: c.id,
