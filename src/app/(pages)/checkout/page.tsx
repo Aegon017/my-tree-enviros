@@ -1,93 +1,54 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { Loader2, ShoppingBag } from "lucide-react";
-import { ApplyCoupon } from "@/components/apply-coupon";
-import RazorpayButton from "@/components/razorpay-button";
+import { ShoppingBag } from "lucide-react";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import ShippingAddresses from "@/components/shipping-address";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
-import { useCart } from "@/hooks/use-cart";
 import { LoginDialog } from "@/components/login-dialog";
-import { CartItem } from "@/domain/cart/cart-item";
+import { ApplyCoupon } from "@/components/apply-coupon";
+import api from "@/services/http-client";
+import { useCheckout } from "@/modules/checkout/hooks/use-checkout";
+import { CheckoutSummary, CheckoutItem } from "@/types/checkout";
 
-function CheckoutItemCard({ item }: { item: CartItem }) {
+function CheckoutItemCard({ item }: { item: CheckoutItem }) {
   const isProduct = item.type === "product";
-  const displayName = isProduct ? item.name : (item.tree?.name ?? "Tree");
-  const imageUrl = item.image_url ?? "/placeholder-image.jpg";
+  const name = item.name;
+  const img = item.image_url ?? "/placeholder-image.jpg";
 
   return (
     <Card className="mb-4">
       <CardContent className="p-4">
-        <div className="flex items-start gap-4">
+        <div className="flex gap-4">
           <div className="relative h-20 w-20 rounded-md overflow-hidden shrink-0">
-            <Image
-              src={imageUrl}
-              alt={displayName}
-              fill
-              className="object-cover"
-            />
+            <Image src={img} alt={name} fill className="object-cover" />
           </div>
-
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-base truncate">{displayName}</h4>
-
-            {isProduct && item.variant && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {[item.variant.color, item.variant.size, item.variant.planter]
-                  .filter(Boolean)
-                  .join(" • ")}
-              </p>
-            )}
-
+            <h4 className="font-semibold text-base truncate">{name}</h4>
             {!isProduct && (
               <>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {item.duration}{" "}
-                  {item.duration_unit ?? item.plan?.duration_unit ?? "year"}
+                  {item.duration} {item.duration_unit}
                 </p>
                 {item.dedication && (
                   <div className="text-sm mt-2 space-y-1">
-                    {item.dedication.name && (
-                      <p>
-                        <span className="font-medium">Name:</span>{" "}
-                        {item.dedication.name}
-                      </p>
-                    )}
-                    {item.dedication.occasion && (
-                      <p>
-                        <span className="font-medium">Occasion:</span>{" "}
-                        {item.dedication.occasion}
-                      </p>
-                    )}
-                    {item.dedication.message && (
-                      <p>
-                        <span className="font-medium">Message:</span>{" "}
-                        {item.dedication.message}
-                      </p>
-                    )}
+                    {item.dedication.name && <p><b>Name:</b> {item.dedication.name}</p>}
+                    {item.dedication.occasion && <p><b>Occasion:</b> {item.dedication.occasion}</p>}
+                    {item.dedication.message && <p><b>Message:</b> {item.dedication.message}</p>}
                   </div>
                 )}
               </>
             )}
-
-            <div className="flex justify-between items-center mt-2">
+            <div className="flex justify-between mt-2">
               <p className="text-sm font-medium">Qty: {item.quantity}</p>
-              <p className="font-bold">
-                ₹{(item.price * item.quantity).toFixed(2)}
-              </p>
+              <p className="font-bold">₹{Number(item.total_amount).toFixed(2)}</p>
             </div>
           </div>
         </div>
@@ -96,172 +57,173 @@ function CheckoutItemCard({ item }: { item: CartItem }) {
   );
 }
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
-  const { items, loading } = useCart();
-  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
-    null,
-  );
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [couponId, setCouponId] = useState<number | null>(null);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const { checkout } = useCheckout();
+
+  const [summary, setSummary] = useState<CheckoutSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [processing, setProcessing] = useState(false);
+
+  const fetchSummary = useCallback(async (code?: string) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (code) {
+        params.set("coupon_code", code);
+      } else {
+        params.delete("coupon_code");
+      }
+
+      const res = await api.get<any>(`/checkout?${params.toString()}`);
+      const data = res.data?.data ?? res.data;
+      setSummary(data);
+    } catch (error) {
+      console.error("Failed to fetch checkout summary", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      setIsLoginOpen(true);
-    } else {
-      setIsLoginOpen(false);
+    if (!user) {
+      setShowLoginDialog(true);
+      setLoading(false);
+      return;
     }
-  }, [isAuthenticated]);
+    fetchSummary(couponCode ?? undefined);
+  }, [fetchSummary, couponCode, user]);
 
-  const hasProductItems = useMemo(() => {
-    return items.some((item) => item.type === "product");
-  }, [items]);
-
-  const { baseTotal, totalItems } = useMemo(() => {
-    const total = items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0,
-    );
-    return {
-      baseTotal: total,
-      totalItems: items.length,
-    };
-  }, [items]);
-
-  const handleAddressSelect = (addressId: number | null) => {
-    setSelectedAddressId(addressId);
-  };
-
-  const handleCouponApplied = useCallback((discount: number, id: number) => {
-    setDiscountAmount(discount);
-    setCouponId(id);
-  }, []);
+  const handleCouponApplied = useCallback((discount: number, couponId: number, code: string) => {
+    setCouponCode(code);
+    fetchSummary(code);
+  }, [fetchSummary]);
 
   const handleCouponRemoved = useCallback(() => {
-    setDiscountAmount(0);
-    setCouponId(null);
-  }, []);
+    setCouponCode(null);
+    fetchSummary();
+  }, [fetchSummary]);
 
-  const orderTotal = useMemo(() => {
-    return Math.max(0, baseTotal - discountAmount);
-  }, [baseTotal, discountAmount]);
-
-  const taxCalculations = useMemo(() => {
-    const subtotalAfterDiscount = orderTotal;
-    const gstRate = 0.18;
-    const gstAmount = subtotalAfterDiscount * gstRate;
-    const cgstAmount = gstAmount / 2;
-    const sgstAmount = gstAmount / 2;
-    const totalWithTax = subtotalAfterDiscount + gstAmount;
+  const buildPayload = useCallback((): any => {
+    if (!summary) return null;
 
     return {
-      gst: gstAmount,
-      cgst: cgstAmount,
-      sgst: sgstAmount,
-      total: totalWithTax,
+      items: summary.items.map((item: CheckoutItem) => ({
+        type: item.type,
+        quantity: item.quantity,
+        amount: item.amount,
+        product_variant_id: item.product_variant_id,
+        plan_price_id: item.plan_price_id,
+        plan_id: item.plan_id,
+        tree_id: item.tree_id,
+        dedication: item.dedication,
+      })),
+      coupon_code: couponCode,
+      shipping_address_id: selectedAddress,
     };
-  }, [orderTotal]);
+  }, [summary, couponCode, selectedAddress]);
 
-  const isPaymentDisabled =
-    (hasProductItems && !selectedAddressId) || orderTotal <= 0 || loading;
+  const handlePayment = async () => {
+    if (!user) {
+      setShowLoginDialog(true);
+      return;
+    }
 
-  const productType = useMemo(() => {
-    const hasProducts = items.some((item) => item.type === "product");
-    const hasTrees = items.some(
-      (item) => item.type === "sponsor" || item.type === "adopt",
-    );
-    if (hasProducts && hasTrees) return 2;
-    if (hasProducts) return 2;
-    return 1;
-  }, [items]);
+    const payload = buildPayload();
+    if (!payload) return;
 
-  if (!isAuthenticated) {
+    const hasProducts = summary?.items.some((i: CheckoutItem) => i.type === "product");
+    if (hasProducts && !selectedAddress) {
+      alert("Please select a shipping address for product items.");
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      await checkout(payload);
+    } catch (error) {
+      console.error("Payment failed", error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const hasProducts = useMemo(
+    () => summary?.items.some((i: CheckoutItem) => i.type === "product"),
+    [summary]
+  );
+
+  const isPayDisabled = loading || !summary || summary.items.length === 0 || processing || (hasProducts && !selectedAddress);
+
+  if (!user) {
     return (
-      <Section className="min-h-screen pt-32">
-        <div className="container mx-auto px-4 py-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Login Required</h1>
-          <p className="text-muted-foreground mb-6">
-            Please login to view your cart and proceed to checkout.
-          </p>
-          <Button onClick={() => setIsLoginOpen(true)}>Login</Button>
-          <LoginDialog
-            open={isLoginOpen}
-            onOpenChange={setIsLoginOpen}
-            onSuccess={() => {
-              setIsLoginOpen(false);
-            }}
-          />
-        </div>
+      <Section>
+        <SectionTitle title="Checkout" />
+        <LoginDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} />
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-muted-foreground">Please log in to continue with checkout.</p>
+          </CardContent>
+        </Card>
       </Section>
     );
   }
 
   if (loading) {
     return (
-      <Section className="min-h-screen pt-32">
-        <div className="container mx-auto px-4 py-8">
-          <Skeleton className="h-8 w-48 mb-6" />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-6">
-              <Skeleton className="h-64 w-full" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-            <div className="space-y-6">
-              <Skeleton className="h-48 w-full" />
-              <Skeleton className="h-64 w-full" />
-            </div>
+      <Section>
+        <SectionTitle title="Checkout" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+          <div>
+            <Skeleton className="h-64 w-full" />
           </div>
         </div>
       </Section>
     );
   }
 
-  if (items.length === 0) {
+  if (!summary || summary.items.length === 0) {
     return (
-      <Section className="min-h-screen pt-32">
-        <div className="container mx-auto px-4 py-8 text-center">
-          <ShoppingBag className="mx-auto h-24 w-24 text-muted-foreground mb-4" />
-          <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
-          <p className="text-muted-foreground mb-6">
-            Add some items to your cart before checkout.
-          </p>
-          <Button onClick={() => router.push("/store")} size="lg">
-            Continue Shopping
-          </Button>
-        </div>
+      <Section>
+        <SectionTitle title="Checkout" />
+        <Card>
+          <CardContent className="p-8 text-center">
+            <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">Your cart is empty.</p>
+            <Button className="mt-4" onClick={() => router.push("/products")}>
+              Continue Shopping
+            </Button>
+          </CardContent>
+        </Card>
       </Section>
     );
   }
 
   return (
-    <Section className="min-h-screen pt-32">
-      <SectionTitle
-        title="Checkout"
-        align="center"
-        subtitle={`Review your order (${totalItems} item${totalItems !== 1 ? "s" : ""}), apply coupons, and complete your purchase`}
-      />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-        <div className="space-y-6">
-          {hasProductItems && (
+    <Section>
+      <SectionTitle title={`Review your order (${summary.items.length} items)`} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {hasProducts && (
             <Card>
               <CardHeader>
                 <CardTitle>Shipping Information</CardTitle>
-                <CardDescription>
-                  Select your shipping address for product delivery
-                </CardDescription>
+                <CardDescription>Select your shipping address</CardDescription>
               </CardHeader>
               <CardContent>
                 <ShippingAddresses
-                  onSelect={handleAddressSelect}
-                  selectedAddressId={selectedAddressId}
+                  selectedAddressId={selectedAddress}
+                  onSelect={setSelectedAddress}
                 />
-                {!selectedAddressId && (
-                  <p className="text-destructive text-sm mt-4 text-center font-medium">
-                    Please select a shipping address to proceed.
-                  </p>
-                )}
               </CardContent>
             </Card>
           )}
@@ -269,97 +231,84 @@ export default function CheckoutPage() {
           <Card>
             <CardHeader>
               <CardTitle>Order Items</CardTitle>
-              <CardDescription>
-                {totalItems} item{totalItems !== 1 ? "s" : ""} in your cart
-              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {items.map((item) => (
-                  <CheckoutItemCard
-                    key={item.id ?? item.clientId}
-                    item={item}
-                  />
-                ))}
-              </div>
+            <CardContent className="space-y-4">
+              {summary.items.map((item: CheckoutItem, idx: number) => (
+                <CheckoutItemCard key={idx} item={item} />
+              ))}
             </CardContent>
           </Card>
-        </div>
 
-        <div className="space-y-6">
           <ApplyCoupon
+            currentTotal={summary.subtotal}
             onCouponApplied={handleCouponApplied}
             onCouponRemoved={handleCouponRemoved}
-            currentTotal={baseTotal}
           />
+        </div>
 
-          <Card className="sticky top-24">
+        <div>
+          <Card className="sticky top-4">
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Subtotal</span>
-                  <span>₹{baseTotal.toFixed(2)}</span>
-                </div>
-
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-green-600 font-medium">
-                    <span>Discount</span>
-                    <span>-₹{discountAmount.toFixed(2)}</span>
-                  </div>
-                )}
-
-                <div className="flex justify-between text-muted-foreground text-sm">
-                  <span>GST (18%)</span>
-                  <span>₹{taxCalculations.gst.toFixed(2)}</span>
-                </div>
-
-                <div className="flex justify-between text-muted-foreground text-sm pl-4">
-                  <span>CGST (9%)</span>
-                  <span>₹{taxCalculations.cgst.toFixed(2)}</span>
-                </div>
-
-                <div className="flex justify-between text-muted-foreground text-sm pl-4">
-                  <span>SGST (9%)</span>
-                  <span>₹{taxCalculations.sgst.toFixed(2)}</span>
-                </div>
-
-                <div className="flex justify-between font-bold border-t pt-4 text-xl">
-                  <span>Total</span>
-                  <span>₹{taxCalculations.total.toFixed(2)}</span>
-                </div>
-
-                <div className="pt-6">
-                  <RazorpayButton
-                    type={4}
-                    productType={productType}
-                    shippingAddressId={selectedAddressId}
-                    amount={taxCalculations.total}
-                    cartType={1}
-                    label={`Pay ₹${taxCalculations.total.toFixed(2)}`}
-                    coupon_id={couponId ?? undefined}
-                  />
-
-                  {isPaymentDisabled && (
-                    <p className="text-destructive text-sm mt-4 text-center">
-                      {hasProductItems && !selectedAddressId
-                        ? "Please select a shipping address to proceed with payment."
-                        : "Please ensure your cart has valid items to proceed with payment."}
-                    </p>
-                  )}
-                </div>
-
-                <div className="text-xs text-center text-muted-foreground mt-4">
-                  By proceeding, you agree to our Terms of Service and Privacy
-                  Policy.
-                </div>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-medium">₹{summary.subtotal.toFixed(2)}</span>
               </div>
+
+              {summary.charges.map((charge: any, idx: number) => (
+                <div key={idx} className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{charge.label}</span>
+                  <span className="font-medium">₹{Number(charge.amount).toFixed(2)}</span>
+                </div>
+              ))}
+
+              {summary.discount > 0 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Discount</span>
+                  <span className="font-medium">-₹{summary.discount.toFixed(2)}</span>
+                </div>
+              )}
+
+              <div className="border-t pt-3 flex justify-between font-bold text-lg">
+                <span>Total</span>
+                <span>₹{summary.grand_total.toFixed(2)}</span>
+              </div>
+
+              <Button
+                className="w-full mt-4"
+                size="lg"
+                onClick={handlePayment}
+                disabled={isPayDisabled}
+              >
+                {processing ? "Processing..." : `Pay ₹${summary.grand_total.toFixed(2)}`}
+              </Button>
             </CardContent>
           </Card>
         </div>
       </div>
     </Section>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <Section>
+        <SectionTitle title="Checkout" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+          <div>
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      </Section>
+    }>
+      <CheckoutPageContent />
+    </Suspense>
   );
 }

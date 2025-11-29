@@ -41,7 +41,7 @@ import {
   type ShippingAddress,
   type CreateShippingAddressPayload,
 } from "@/services/shipping-address.services";
-import { orderService } from "@/services/order.services";
+import { ordersService as orderService } from "@/modules/orders/services/orders.service";
 import {
   Form,
   FormControl,
@@ -233,7 +233,7 @@ const AddressCard = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
-        <p className="break-words">{address.address}</p>
+        <p className="wrap-break-word">{address.address}</p>
         <p>
           {address.area}, {address.city} - {address.postal_code}
         </p>
@@ -662,7 +662,7 @@ export default function AccountPage() {
         coupon: o.coupon ?? null,
       });
       setDetailsOpen(true);
-    } catch {}
+    } catch { }
   }, []);
 
   const closeOrderDetails = useCallback(() => {

@@ -25,10 +25,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
 import {
-  orderService,
+  ordersService as orderService,
   type Order,
   type OrderItem,
-} from "@/services/order.services";
+  type OrderResponse,
+} from "@/modules/orders/services/orders.service";
+// Define OrderItem locally if not exported, or import if it is.
+// Checking orders.service.ts, it exports Order, OrdersResponse, OrderResponse.
+// It does NOT export OrderItem. I need to check where OrderItem is defined.
+// In the old code it was likely in order.services.ts.
+// I should check src/modules/orders/types/order.types.ts if it exists, or add it to orders.service.ts.
+// For now, I will assume it might be in types.
+
 import { toast } from "sonner";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -224,7 +232,7 @@ const MyOrdersPage = () => {
                   </CardTitle>
                   <CardDescription className="flex items-center gap-1 mt-1">
                     <Calendar className="h-3 w-3" />
-                    {orderService.formatDate(order.created_at)}
+                    {order.created_at && orderService.formatDate(order.created_at)}
                   </CardDescription>
                 </div>
                 <div className="flex flex-col gap-1 items-end">
@@ -248,7 +256,7 @@ const MyOrdersPage = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Items</span>
-                  <span className="font-medium">{order.items.length}</span>
+                  <span className="font-medium">{order.items?.length || 0}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Total Amount</span>
@@ -293,7 +301,7 @@ const MyOrdersPage = () => {
         ))}
       </div>
 
-      {}
+      { }
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -305,7 +313,7 @@ const MyOrdersPage = () => {
 
           {selectedOrder && (
             <div className="space-y-6">
-              {}
+              { }
               <div className="flex items-center justify-between p-4 bg-muted rounded-md">
                 <div>
                   <p className="text-sm text-muted-foreground">Order Status</p>
@@ -327,16 +335,16 @@ const MyOrdersPage = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Order Date</p>
                   <p className="font-semibold">
-                    {orderService.formatDate(selectedOrder.created_at)}
+                    {selectedOrder.created_at && orderService.formatDate(selectedOrder.created_at)}
                   </p>
                 </div>
               </div>
 
-              {}
+              { }
               <div>
                 <h3 className="font-semibold text-lg mb-4">Order Items</h3>
                 <div className="space-y-3">
-                  {selectedOrder.items.map((item: OrderItem) => {
+                  {selectedOrder.items?.map((item: OrderItem) => {
                     const productName =
                       item.tree_instance?.tree?.name ||
                       item.plan_price?.plan?.name ||
@@ -409,7 +417,7 @@ const MyOrdersPage = () => {
                 </div>
               </div>
 
-              {}
+              { }
               {selectedOrder.shipping_address && (
                 <div>
                   <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
@@ -445,7 +453,7 @@ const MyOrdersPage = () => {
                 </div>
               )}
 
-              {}
+              { }
               <div>
                 <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
@@ -494,7 +502,7 @@ const MyOrdersPage = () => {
                 </Card>
               </div>
 
-              {}
+              { }
               <div className="flex gap-2 justify-end pt-4">
                 {orderService.canBeCancelled(selectedOrder) && (
                   <Button

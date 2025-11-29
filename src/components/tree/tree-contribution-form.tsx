@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import AddToCartButton from "../add-to-cart-button";
-import RazorpayButton from "@/components/razorpay-button";
 import type { Tree } from "@/types/tree.types";
 
 const dedicationSchema = z.object({
@@ -35,6 +35,7 @@ export default function TreeContributionForm({
   tree: Tree;
   pageType: "sponsor" | "adopt";
 }) {
+  const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [selectedYears, setSelectedYears] = useState<number>(1);
   const [startPayment, setStartPayment] = useState(false);
@@ -250,18 +251,15 @@ export default function TreeContributionForm({
 
       {startPayment && selectedPlan && (
         <div className="mt-4">
-          <RazorpayButton
-            type={1}
-            productType={1}
-            cartType={2}
-            label={`${pageType === "sponsor" ? "Sponsor" : "Adopt"} Now`}
-            productId={tree.id}
-            amount={Number(totalPrice)}
-            quantity={quantity}
-            name={watchName}
-            occasion={watchOccasion}
-            message={watchMessage}
-          />
+          <Button
+            className="w-full"
+            onClick={() => {
+              // Navigate to checkout with buy_now mode
+              router.push(`/checkout?buy_now=true&type=${pageType}&plan_price_id=${selectedPlan.planPriceId}&quantity=${quantity}`);
+            }}
+          >
+            Proceed to Checkout
+          </Button>
         </div>
       )}
     </>

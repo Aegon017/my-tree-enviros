@@ -13,8 +13,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import PaginationWrapper from "@/components/pagination-wrapper";
 import type { Campaign } from "@/types/campaign.types";
 import type { BaseMeta } from "@/types/common.types";
@@ -117,8 +129,8 @@ const Page = () => {
     try {
       const f = cleanParams(getFilters());
       const response = await campaignService.getAll(f);
-      setCampaigns(response.campaigns || []);
-      setMeta(response.meta || null);
+      setCampaigns(response.data?.campaigns || []);
+      setMeta(response.data?.meta || null);
     } catch (err) {
       console.error("Error fetching campaigns:", err);
       setError("Failed to load campaigns");
@@ -183,7 +195,9 @@ const Page = () => {
 
           <SheetContent className="w-[380px] p-6">
             <SheetHeader>
-              <SheetTitle className="text-lg font-semibold">Sort Options</SheetTitle>
+              <SheetTitle className="text-lg font-semibold">
+                Sort Options
+              </SheetTitle>
             </SheetHeader>
 
             <div className="mt-6 space-y-6">
@@ -200,11 +214,15 @@ const Page = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="created_at-desc">Newest First</SelectItem>
+                    <SelectItem value="created_at-desc">
+                      Newest First
+                    </SelectItem>
                     <SelectItem value="created_at-asc">Oldest First</SelectItem>
                     <SelectItem value="name-asc">Name (A → Z)</SelectItem>
                     <SelectItem value="name-desc">Name (Z → A)</SelectItem>
-                    <SelectItem value="start_date-desc">Start Date (Newest)</SelectItem>
+                    <SelectItem value="start_date-desc">
+                      Start Date (Newest)
+                    </SelectItem>
                     <SelectItem value="end_date-asc">Ending Soon</SelectItem>
                   </SelectContent>
                 </Select>
@@ -231,101 +249,103 @@ const Page = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-8">
-        {loading && campaigns.length === 0
-          ? Array.from({ length: 6 }).map((_, i) => (
+        {loading && campaigns.length === 0 ? (
+          Array.from({ length: 6 }).map((_, i) => (
             <FeedTreeCardSkeleton key={i} />
           ))
-          : campaigns.length === 0
-            ? (
-              <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground">
-                  No campaigns available at the moment.
-                </p>
-              </div>
-            )
-            : campaigns.map((campaign) => {
-              const targetAmount = campaign.target_amount ?? 0;
-              const raisedAmount = campaign.raised_amount ?? 0;
-              const progress = calculateProgress(raisedAmount, targetAmount);
-              const expired = isExpired(
-                campaign.end_date ?? new Date().toISOString(),
-              );
+        ) : campaigns.length === 0 ? (
+          <div className="col-span-full text-center py-12">
+            <p className="text-muted-foreground">
+              No campaigns available at the moment.
+            </p>
+          </div>
+        ) : (
+          campaigns.map((campaign) => {
+            const targetAmount = campaign.target_amount ?? 0;
+            const raisedAmount = campaign.raised_amount ?? 0;
+            const progress = calculateProgress(raisedAmount, targetAmount);
+            const expired = isExpired(
+              campaign.end_date ?? new Date().toISOString(),
+            );
 
-              return (
-                <Card
-                  key={campaign.id}
-                  className="overflow-hidden hover:shadow-lg transition-shadow pt-0"
-                >
-                  <div className="relative h-48">
-                    <Image
-                      src={campaign.thumbnail_url ?? "/placeholder.svg"}
-                      alt={campaign.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
-                      priority
-                    />
-                    {expired && (
-                      <Badge
-                        variant="destructive"
-                        className="absolute top-2 right-2"
-                      >
-                        Expired
-                      </Badge>
-                    )}
+            return (
+              <Card
+                key={campaign.id}
+                className="overflow-hidden hover:shadow-lg transition-shadow pt-0"
+              >
+                <div className="relative h-48">
+                  <Image
+                    src={campaign.thumbnail_url ?? "/placeholder.svg"}
+                    alt={campaign.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
+                    priority
+                  />
+                  {expired && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute top-2 right-2"
+                    >
+                      Expired
+                    </Badge>
+                  )}
+                </div>
+
+                <CardHeader>
+                  <CardTitle className="line-clamp-2">
+                    {campaign.name}
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      <span>{campaign.location?.name ?? "—"}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        {campaign.end_date
+                          ? formatDate(campaign.end_date)
+                          : "No end date"}
+                      </span>
+                    </div>
                   </div>
 
-                  <CardHeader>
-                    <CardTitle className="line-clamp-2">{campaign.name}</CardTitle>
-                  </CardHeader>
-
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        <span>{campaign.location?.name ?? "—"}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>
-                          {campaign.end_date
-                            ? formatDate(campaign.end_date)
-                            : "No end date"}
-                        </span>
-                      </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="flex items-center gap-1">
+                        <Target className="h-4 w-4" />
+                        Goal: {formatCurrency(targetAmount)}
+                      </span>
+                      <span className="flex items-center gap-1 text-green-600">
+                        <Heart className="h-4 w-4" />
+                        Raised: {formatCurrency(raisedAmount)}
+                      </span>
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="flex items-center gap-1">
-                          <Target className="h-4 w-4" />
-                          Goal: {formatCurrency(targetAmount)}
-                        </span>
-                        <span className="flex items-center gap-1 text-green-600">
-                          <Heart className="h-4 w-4" />
-                          Raised: {formatCurrency(raisedAmount)}
-                        </span>
-                      </div>
-
-                      <Progress value={progress} className="w-full" />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{progress}% funded</span>
-                        <span>
-                          {formatCurrency(raisedAmount)} of{" "}
-                          {formatCurrency(targetAmount)}
-                        </span>
-                      </div>
+                    <Progress value={progress} className="w-full" />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{progress}% funded</span>
+                      <span>
+                        {formatCurrency(raisedAmount)} of{" "}
+                        {formatCurrency(targetAmount)}
+                      </span>
                     </div>
+                  </div>
 
-                    <Link href={`feed-a-tree/${campaign.id}`}>
-                      <Button className="w-full" disabled={expired}>
-                        {expired ? "Campaign Ended" : "Support This Campaign"}
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  <Link href={`feed-a-tree/${campaign.id}`}>
+                    <Button className="w-full" disabled={expired}>
+                      {expired ? "Campaign Ended" : "Support This Campaign"}
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
       </div>
 
       {meta && meta.last_page > 1 && (

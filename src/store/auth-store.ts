@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { authStorage } from "@/lib/auth-storage";
 import { authService } from "@/services/auth.services";
-import { cartService } from "@/services/cart.services";
-import { useCartStore } from "./cart-store";
+import { useCartStore } from "@/modules/cart/store/cart.store";
+import { cartService } from "@/modules/cart/services/cart.service";
 
 type User = any;
 

@@ -1,5 +1,9 @@
 import api from "@/services/http-client";
-import type { CampaignsResponse, CampaignResponse } from "@/types/campaign.types";
+import type {
+  CampaignsResponse,
+  CampaignResponse,
+} from "@/types/campaign.types";
+import type { ApiResponse } from "@/services/http-client";
 
 class CampaignService {
   async getAll(params?: {
@@ -9,15 +13,16 @@ class CampaignService {
     sort_order?: string;
     per_page?: number;
     page?: number;
-  }): Promise<CampaignsResponse> {
+  }): Promise<ApiResponse<CampaignsResponse>> {
     const response = await api.get<CampaignsResponse>("/campaigns", { params });
     return response;
   }
 
-  async getById(id: string | number): Promise<CampaignResponse> {
+  async getById(id: string | number): Promise<ApiResponse<CampaignResponse>> {
     const response = await api.get<CampaignResponse>(`/campaigns/${id}`);
     return response;
   }
 }
 
 export const campaignService = new CampaignService();
+

@@ -11,11 +11,11 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { orderService } from "@/services/order.services";
 import { toast } from "sonner";
+import { ordersService } from "@/modules/orders/services/orders.service";
 
 interface ApplyCouponProps {
-  onCouponApplied: (discount: number, couponId: number) => void;
+  onCouponApplied: (discount: number, couponId: number, code: string) => void;
   onCouponRemoved: () => void;
   currentTotal: number;
   disabled?: boolean;
@@ -35,13 +35,13 @@ export function ApplyCoupon({
     if (!couponCode.trim()) return;
     setLoading(true);
     try {
-      const response = await orderService.validateCoupon(
+      const response = await ordersService.validateCoupon(
         couponCode,
         currentTotal,
       );
       if (response.success && response.data) {
         setIsApplied(true);
-        onCouponApplied(response.data.discount, response.data.coupon_id);
+        onCouponApplied(response.data.discount, response.data.coupon_id, couponCode);
         toast.success("Coupon applied successfully");
       } else {
         toast.error(response.message || "Invalid coupon");

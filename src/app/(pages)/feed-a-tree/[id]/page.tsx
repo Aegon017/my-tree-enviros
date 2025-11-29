@@ -42,8 +42,8 @@ import { Separator } from "@/components/ui/separator";
 import type { FeedTree } from "@/types/feed-tree";
 import { authStorage } from "@/lib/auth-storage";
 import { campaignService } from "@/services/campaign.services";
-import { orderService } from "@/services/order.services";
-import { paymentService } from "@/services/payment.services";
+import { ordersService as orderService } from "@/modules/orders/services/orders.service";
+import { paymentService } from "@/modules/payments/services/payments.service";
 import type { DirectOrderRequest } from "@/types/campaign.types";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -242,26 +242,35 @@ const PaymentDialog = ({
           quantity: 1,
         };
 
-        const orderResponse = await orderService.createDirectOrder(orderRequest);
-        const order = orderResponse.data?.order;
-        if (!order) throw new Error("Failed to create order");
+        const orderResponse =
+          await orderService.createDirectOrder(orderRequest);
 
-        const paymentResponse = await paymentService.initiatePayment(order.id);
-        const paymentData = paymentResponse.data;
+        // Backend returns: { order: {...}, payment: {...} }
+        // API client may wrap it, so check both
+        const responseData = orderResponse.data || orderResponse;
+        const order = responseData?.order;
+        const paymentData = responseData?.payment;
+
+        if (!order) {
+          console.error('Response:', orderResponse);
+          throw new Error("Failed to create order");
+        }
 
         const options = {
-          key: paymentData?.key,
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY || '',
           amount: paymentData?.amount,
           currency: paymentData?.currency,
+          order_id: paymentData?.order_id,
           name: "MyTree Enviros",
           description: `Support: ${campaignDetails.name}`,
-          order_id: paymentData?.razorpay_order_id,
           handler: async (response: any) => {
             try {
-              await paymentService.verifyPayment(order.id, {
+              // Verify payment using /checkout/verify
+              await paymentService.verifyPayment({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
+                order_reference: order.reference_number,
               });
 
               alert(
@@ -464,8 +473,8 @@ const Page = () => {
       try {
         const response = await campaignService.getById(Number(id));
 
-        if (response.campaign) {
-          const c = response.campaign;
+        if (response.data?.campaign) {
+          const c = response.data.campaign;
 
           const mapped: ApiResponse["data"] = {
             campaign_id: c.id,
@@ -490,7 +499,10 @@ const Page = () => {
               updated_by: 0,
               trash: 0,
               status: 1,
-              main_image_url: c.thumbnail_url || (Array.isArray(c.image_urls) ? c.image_urls[0] : "") || "",
+              main_image_url:
+                c.thumbnail_url ||
+                (Array.isArray(c.image_urls) ? c.image_urls[0] : "") ||
+                "",
               city: {
                 id: 0,
                 name: c.location?.name || "",
