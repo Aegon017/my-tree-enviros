@@ -11,19 +11,24 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
-      - name: SSH Deploy
-        uses: appleboy/ssh-action@v1.2.2
+      - name: Use Node.js
+        uses: actions/setup-node@v6
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            cd /home/mytreeca/public_html
-            git fetch origin main
-            git reset --hard origin/main
-            npm ci
-            npm run build
-            pm2 restart mytree || pm2 start npm --name "mytree" -- start
+          node-version: '24'
+
+      - name: Installing Node dependencies
+        run: |
+          npm i
+          npm run build
+
+      - name: Deploying project
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          exclude: |
+            **/.git*
+            **/.git*/**
