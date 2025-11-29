@@ -129,8 +129,8 @@ const Page = () => {
     try {
       const f = cleanParams(getFilters());
       const response = await campaignService.getAll(f);
-      setCampaigns(response.campaigns || []);
-      setMeta(response.meta || null);
+      setCampaigns(response.data?.campaigns || []);
+      setMeta(response.data?.meta || null);
     } catch (err) {
       console.error("Error fetching campaigns:", err);
       setError("Failed to load campaigns");
