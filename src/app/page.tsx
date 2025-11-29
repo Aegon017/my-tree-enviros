@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/carousel";
 
 import { Button } from "@/components/ui/button";
-import { MapPin } from "lucide-react";
 
 import { productService } from "@/services/product.services";
 import { sliderService } from "@/services/slider.services";
@@ -31,7 +30,7 @@ import { useLocationStore } from "@/store/location-store";
 import { useLocationTrees } from "@/hooks/use-location-trees";
 import { useBlogData } from "@/hooks/use-blog-data";
 import AppDownloadSection from "@/components/app-download-section";
-import HeroSection from "@/components/hero-section";
+import CinematicScrollHero from "@/components/hero-section";
 
 export default function Home() {
   const { selected } = useLocationStore();
@@ -124,27 +123,23 @@ export default function Home() {
   const sliderPlugins = useMemo(() => [sliderAutoplayRef.current], []);
   const blogPlugins = useMemo(() => [blogAutoplayRef.current], []);
 
-  const onMouseEnterSlider = () =>
-    sliderAutoplayRef.current && sliderAutoplayRef.current.stop();
-  const onMouseLeaveSlider = () =>
-    sliderAutoplayRef.current && sliderAutoplayRef.current.reset();
-
   const onMouseEnterBlog = () =>
     blogAutoplayRef.current && blogAutoplayRef.current.stop();
   const onMouseLeaveBlog = () =>
     blogAutoplayRef.current && blogAutoplayRef.current.reset();
 
   return (
-    <div>
-      <HeroSection />
-      <Section>
+    <div className="bg-background">
+      <CinematicScrollHero />
+
+      <Section className="pt-16 md:pt-20">
         <SectionTitle
           title="Natural Products"
-          subtitle="From nature's bounty."
+          subtitle="Carefully curated from nature's bounty."
           align="center"
         />
 
-        <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="mt-8 grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
           {loadingProducts
             ? Array.from({ length: 4 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
@@ -154,22 +149,22 @@ export default function Home() {
             ))}
         </div>
 
-        <div className="text-center mt-8">
+        <div className="mt-10 text-center">
           <Link href="/store">
             <Button>View All Products</Button>
           </Link>
         </div>
       </Section>
 
-      <Section className="bg-muted">
+      <Section className="bg-muted/60">
         <SectionTitle
           title="Insights From Nature"
-          subtitle="Learn and explore."
+          subtitle="Stories, science, and slow growth."
           align="center"
         />
 
         {loadingBlogs ? (
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <BlogCardSkeleton key={i} />
             ))}
@@ -180,7 +175,7 @@ export default function Home() {
             plugins={blogPlugins}
             onMouseEnter={onMouseEnterBlog}
             onMouseLeave={onMouseLeaveBlog}
-            className="mt-10 max-w-6xl mx-auto"
+            className="mx-auto mt-10 max-w-6xl"
           >
             <CarouselContent>
               {blogs.map((b: any) => (
@@ -190,13 +185,14 @@ export default function Home() {
               ))}
             </CarouselContent>
 
-            <div className="flex justify-center mt-6 gap-4">
+            <div className="mt-6 flex justify-center gap-4">
               <CarouselPrevious />
               <CarouselNext />
             </div>
           </Carousel>
         )}
       </Section>
+
       <AppDownloadSection />
     </div>
   );
