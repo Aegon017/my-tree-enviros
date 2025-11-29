@@ -26,4 +26,4 @@ jobs:
             git reset --hard origin/main
             npm ci
             npm run build
-            pm2 restart mytreeTest || pm2 start npm --name "mytreeTest" -- start
+            pm2 restart mytree || pm2 start npm --name "mytree" -- start
