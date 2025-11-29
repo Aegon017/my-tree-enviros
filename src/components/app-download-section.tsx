@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function AppDownloadSection() {
   return (
-    <section className="w-full bg-muted flex justify-center py-24 px-4">
+    <section className="w-full bg-background flex justify-center py-24 px-4">
       <div
         className="
           w-full max-w-6xl
