@@ -137,8 +137,6 @@ export default function Home() {
   return (
     <div>
       <HeroSection />
-      <AppDownloadSection />
-
       <Section>
         <SectionTitle
           title="Natural Products"
@@ -199,6 +197,7 @@ export default function Home() {
           </Carousel>
         )}
       </Section>
+      <AppDownloadSection />
     </div>
   );
 }
