@@ -66,6 +66,7 @@ export interface CheckoutPreparePayload {
     coupon_code?: string;
     payment_method?: string;
     currency?: string;
+    shipping_address_id?: number;
 }
 
 export interface CheckoutPrepareResponse {

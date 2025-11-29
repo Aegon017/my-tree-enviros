@@ -22,6 +22,7 @@ interface Props {
   occasion?: string;
   message?: string;
   area_id?: number;
+  shipping_address_id?: number;
 }
 
 export default function RazorpayButton({
@@ -37,6 +38,7 @@ export default function RazorpayButton({
   occasion,
   message,
   area_id,
+  shipping_address_id,
 }: Props) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -50,6 +52,7 @@ export default function RazorpayButton({
       if (mode === "cart") {
         const payload = {
           coupon_code,
+          shipping_address_id,
           items: summary.items.map((i: any) => ({
             type: i.type,
             quantity: i.quantity,

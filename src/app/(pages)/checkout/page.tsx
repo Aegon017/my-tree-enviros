@@ -124,8 +124,9 @@ function CheckoutPageContent() {
         dedication: item.dedication,
       })),
       coupon_code: couponCode,
+      shipping_address_id: selectedAddress,
     };
-  }, [summary, couponCode]);
+  }, [summary, couponCode, selectedAddress]);
 
   const handlePayment = async () => {
     if (!user) {
@@ -221,6 +222,7 @@ function CheckoutPageContent() {
               <CardContent>
                 <ShippingAddresses
                   selectedAddressId={selectedAddress}
+                  onSelect={setSelectedAddress}
                 />
               </CardContent>
             </Card>
