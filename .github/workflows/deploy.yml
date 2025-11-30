@@ -67,18 +67,18 @@ jobs:
       - name: SSH Deploy to PRODUCTION
         uses: appleboy/scp-action@v1.0.0
         with:
-          host: ${{ secrets.SSH_HOST_PROD }}
-          username: ${{ secrets.SSH_USER_PROD }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "build/*"
           target: "/home/mytreeca/public_html"
 
       - name: Restart PRODUCTION server
         uses: appleboy/ssh-action@v1.2.4
         with:
-          host: ${{ secrets.SSH_HOST_PROD }}
-          username: ${{ secrets.SSH_USER_PROD }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/mytreeca/public_html
             pm2 restart mytreeProd || pm2 start npm --name "mytreeProd" -- start
