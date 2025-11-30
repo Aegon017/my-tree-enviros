@@ -24,7 +24,7 @@ jobs:
             git reset --hard origin/test
             npm ci --force
             npm run build
-            pm2 restart mytreeTest || pm2 start npm --name "mytreeTest" -- start
+            pm2 restart mytreeTest || pm2 start npm --name "mytreeTest" -- start -- -p 3001
 
   deploy-production:
     if: github.ref == 'refs/heads/main'
@@ -43,4 +43,4 @@ jobs:
             git reset --hard origin/main
             npm ci --force
             npm run build
-            pm2 restart mytreeProd || pm2 start npm --name "mytreeProd" -- star
+            pm2 restart mytreeProd || pm2 start npm --name "mytreeProd" -- start
