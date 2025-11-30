@@ -12,7 +12,7 @@ export default function AppDownloadSection() {
           rounded-2xl
           border border-border/30
           bg-background
-          p-16
+          p-8
           shadow-sm
           flex flex-col md:flex-row items-center justify-between
           gap-20
@@ -61,7 +61,6 @@ export default function AppDownloadSection() {
               rounded-2xl
               border border-border/40
               bg-background
-              p-6
               shadow-md
             "
           >
