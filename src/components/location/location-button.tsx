@@ -14,6 +14,10 @@ export function LocationButton() {
     sync();
   }, [sync]);
 
+  useEffect(() => {
+    if (!selected) setOpen(true);
+  }, [selected]);
+
   const label = selected
     ? `${selected.area || selected.city}, ${selected.city}`
     : "Select Location";

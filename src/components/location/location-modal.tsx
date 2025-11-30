@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import {
   Dialog,
@@ -14,14 +15,28 @@ import { useLocationStore } from "@/store/location-store";
 import { useLocationSearch } from "@/hooks/use-location-search";
 import { useCurrentLocation } from "@/hooks/use-current-location";
 
-export function LocationModal({
-  open,
-  onOpenChange,
-}: {
+interface LocationModalProps {
   open: boolean;
-  onOpenChange: (v: boolean) => void;
-}) {
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  onOpenChange: (open: boolean) => void;
+}
+
+interface PlaceResult {
+  place_id: string | number;
+  display_name: string;
+  lat: string | number;
+  lon: string | number;
+  address?: {
+    suburb?: string;
+    neighbourhood?: string;
+    city?: string;
+    town?: string;
+    village?: string;
+  };
+}
+
+export function LocationModal({ open, onOpenChange }: LocationModalProps) {
+  const [selectedItem, setSelectedItem] = useState<PlaceResult | null>(null);
+
   const { setLocation } = useLocationStore();
   const { query, results, loading, search } = useLocationSearch();
   const { getCurrentLocation, loading: geoLoading } = useCurrentLocation();
@@ -38,8 +53,8 @@ export function LocationModal({
         loc.data.address.town ||
         loc.data.address.village ||
         "",
-      lat: loc.lat,
-      lng: loc.lng,
+      lat: Number(loc.lat),
+      lng: Number(loc.lng),
     });
 
     onOpenChange(false);
@@ -47,6 +62,7 @@ export function LocationModal({
 
   function confirm() {
     if (!selectedItem) return;
+
     setLocation({
       address: selectedItem.display_name,
       area:
@@ -61,12 +77,27 @@ export function LocationModal({
       lat: Number(selectedItem.lat),
       lng: Number(selectedItem.lon),
     });
+
     onOpenChange(false);
   }
 
+  function blockClose(e: Event) {
+    e.preventDefault();
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl p-0 rounded-2xl overflow-hidden">
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) return;
+        onOpenChange(true);
+      }}
+    >
+      <DialogContent
+        className="max-w-xl p-0 rounded-2xl overflow-hidden"
+        onInteractOutside={blockClose}
+        onEscapeKeyDown={blockClose}
+      >
         <DialogHeader className="p-4 border-b bg-muted/40">
           <DialogTitle className="text-lg">Select Your Location</DialogTitle>
         </DialogHeader>
@@ -86,7 +117,6 @@ export function LocationModal({
             placeholder="Search for area, street, landmark..."
             value={query}
             onChange={(e) => search(e.target.value)}
-            className="w-full"
           />
         </div>
 
@@ -104,15 +134,17 @@ export function LocationModal({
           )}
 
           <div className="space-y-3">
-            {results.map((place) => (
+            {results.map((place: PlaceResult) => (
               <button
                 key={place.place_id}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition hover:bg-accent ${
-                  selectedItem?.place_id === place.place_id
-                    ? "border-primary bg-primary/5"
-                    : "border-muted"
-                }`}
-                onClick={() => setSelectedItem(place)}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition hover:bg-accent ${selectedItem?.place_id === place.place_id
+                  ? "border-primary bg-primary/5"
+                  : "border-muted"
+                  }`}
+                onClick={() => {
+                  setSelectedItem(place);
+                  setTimeout(confirm, 150);
+                }}
               >
                 <MapPin className="h-5 w-5 text-primary" />
                 <div>
@@ -124,7 +156,7 @@ export function LocationModal({
         </ScrollArea>
 
         <div className="p-4 border-t bg-muted/40 flex justify-end">
-          <Button onClick={confirm} disabled={!selectedItem}>
+          <Button disabled={!selectedItem} onClick={confirm}>
             Confirm Location
           </Button>
         </div>
