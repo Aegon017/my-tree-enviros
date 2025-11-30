@@ -30,7 +30,7 @@ import { useLocationStore } from "@/store/location-store";
 import { useLocationTrees } from "@/hooks/use-location-trees";
 import { useBlogData } from "@/hooks/use-blog-data";
 import AppDownloadSection from "@/components/app-download-section";
-import CinematicScrollHero from "@/components/hero-section";
+import HeroSection from "@/components/hero-section";
 
 export default function Home() {
   const { selected } = useLocationStore();
@@ -130,16 +130,17 @@ export default function Home() {
 
   return (
     <div className="bg-background">
-      <CinematicScrollHero />
+      <HeroSection />
 
-      <Section className="pt-16 md:pt-20">
+      {/* ---------------------- PRODUCTS ---------------------- */}
+      <Section className="pt-12 md:pt-20 lg:pt-24">
         <SectionTitle
           title="Natural Products"
           subtitle="Carefully curated from nature's bounty."
           align="center"
         />
 
-        <div className="mt-8 grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
           {loadingProducts
             ? Array.from({ length: 4 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
@@ -151,12 +152,13 @@ export default function Home() {
 
         <div className="mt-10 text-center">
           <Link href="/store">
-            <Button>View All Products</Button>
+            <Button size="lg">View All Products</Button>
           </Link>
         </div>
       </Section>
 
-      <Section className="bg-muted/60">
+      {/* ---------------------- BLOGS ---------------------- */}
+      <Section className="bg-muted/60 py-16 md:py-20">
         <SectionTitle
           title="Insights From Nature"
           subtitle="Stories, science, and slow growth."
@@ -164,7 +166,7 @@ export default function Home() {
         />
 
         {loadingBlogs ? (
-          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <BlogCardSkeleton key={i} />
             ))}
@@ -175,19 +177,22 @@ export default function Home() {
             plugins={blogPlugins}
             onMouseEnter={onMouseEnterBlog}
             onMouseLeave={onMouseLeaveBlog}
-            className="mx-auto mt-10 max-w-6xl"
+            className="mx-auto mt-10 w-full max-w-7xl"
           >
             <CarouselContent>
               {blogs.map((b: any) => (
-                <CarouselItem key={b.id} className="md:basis-1/2 lg:basis-1/3">
+                <CarouselItem
+                  key={b.id}
+                  className="basis-full sm:basis-1/2 lg:basis-1/3"
+                >
                   <BlogCard blog={b} />
                 </CarouselItem>
               ))}
             </CarouselContent>
 
             <div className="mt-6 flex justify-center gap-4">
-              <CarouselPrevious />
-              <CarouselNext />
+              <CarouselPrevious className="hidden md:block" />
+              <CarouselNext className="hidden md:block" />
             </div>
           </Carousel>
         )}
