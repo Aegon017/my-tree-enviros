@@ -1,0 +1,80 @@
+name: Deployment Workflow
+
+on:
+  push:
+    branches:
+      - test
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Install dependencies and build
+        run: |
+          npm ci
+          npm run build
+
+    outputs:
+      build_path: ${{ github.workspace }}/build
+
+
+  deploy-test:
+    if: github.ref == 'refs/heads/test'
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: SSH Deploy to TEST
+        uses: appleboy/ssh-action@v1.2.4
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/mytreeca/public_html/test.mytree.care
+            git fetch origin test
+            git reset --hard origin/test
+            npm ci
+            npm run build
+            pm2 restart mytreeTest || pm2 start npm --name "mytreeTest" -- start
+
+
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Upload build files
+        uses: actions/upload-artifact@v6
+        with:
+          name: web-build
+          path: build
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: web-build
+
+      - name: FTP Deploy to PRODUCTION
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: build
+          exclude: |
+            **/.git*
+            **/.git*/**
