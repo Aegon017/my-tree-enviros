@@ -16,7 +16,7 @@ export default function CinematicScrollHero() {
           priority
           className="object-cover object-center opacity-80"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/40 to-black/80" />
+        <div className="absolute inset-0 bg-linear-to-b from-black/40 via-black/40 to-black/80" />
       </div>
 
       <div className="relative z-10 flex h-full items-center justify-center px-6">
