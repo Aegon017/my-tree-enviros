@@ -7,45 +7,12 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Use Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-
-      - name: Install dependencies and build
-        run: |
-          npm ci
-          npm run build
-
-    outputs:
-      build_path: ${{ github.workspace }}/build
-
   deploy-test:
     if: github.ref == 'refs/heads/test'
-    needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
       - name: SSH Deploy to TEST
-        uses: appleboy/scp-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "build/*"
-          target: "/home/mytreeca/test.mytree.care"
-
-      - name: Run server restart commands
         uses: appleboy/ssh-action@v1.2.4
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -53,27 +20,18 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/mytreeca/test.mytree.care
+            git fetch origin test
+            git reset --hard origin/test
+            npm ci --force
+            npm run build
             pm2 restart mytreeTest || pm2 start npm --name "mytreeTest" -- start
 
   deploy-production:
     if: github.ref == 'refs/heads/main'
-    needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
       - name: SSH Deploy to PRODUCTION
-        uses: appleboy/scp-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "build/*"
-          target: "/home/mytreeca/public_html"
-
-      - name: Restart PRODUCTION server
         uses: appleboy/ssh-action@v1.2.4
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -81,4 +39,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/mytreeca/public_html
-            pm2 restart mytreeProd || pm2 start npm --name "mytreeProd" -- start
+            git fetch origin main
+            git reset --hard origin/main
+            npm ci --force
+            npm run build
+            pm2 restart mytreeProd || pm2 start npm --name "mytreeProd" -- star
