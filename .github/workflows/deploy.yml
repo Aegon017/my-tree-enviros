@@ -27,29 +27,33 @@ jobs:
     outputs:
       build_path: ${{ github.workspace }}/build
 
-
   deploy-test:
     if: github.ref == 'refs/heads/test'
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
 
       - name: SSH Deploy to TEST
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "build/*"
+          target: "/home/mytreeca/test.mytree.care"
+
+      - name: Run server restart commands
         uses: appleboy/ssh-action@v1.2.4
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/mytreeca/public_html/test.mytree.care
-            git fetch origin test
-            git reset --hard origin/test
-            npm ci
-            npm run build
+            cd /home/mytreeca/test.mytree.care
             pm2 restart mytreeTest || pm2 start npm --name "mytreeTest" -- start
-
 
   deploy-production:
     if: github.ref == 'refs/heads/main'
@@ -57,24 +61,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Upload build files
-        uses: actions/upload-artifact@v5
-        with:
-          name: web-build
-          path: build
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-      - name: Download build artifact
-        uses: actions/download-artifact@v6
+      - name: SSH Deploy to PRODUCTION
+        uses: appleboy/scp-action@v1.0.0
         with:
-          name: web-build
+          host: ${{ secrets.SSH_HOST_PROD }}
+          username: ${{ secrets.SSH_USER_PROD }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+          source: "build/*"
+          target: "/home/mytreeca/public_html"
 
-      - name: FTP Deploy to PRODUCTION
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+      - name: Restart PRODUCTION server
+        uses: appleboy/ssh-action@v1.2.4
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: build
-          exclude: |
-            **/.git*
-            **/.git*/**
+          host: ${{ secrets.SSH_HOST_PROD }}
+          username: ${{ secrets.SSH_USER_PROD }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+          script: |
+            cd /home/mytreeca/public_html
+            pm2 restart mytreeProd || pm2 start npm --name "mytreeProd" -- start
