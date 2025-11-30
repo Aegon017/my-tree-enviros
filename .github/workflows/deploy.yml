@@ -43,4 +43,4 @@ jobs:
             git reset --hard origin/main
             npm ci --force
             npm run build
-            pm2 restart mytreeProd || pm2 start npm --name "mytreeProd" -- star
+            pm2 restart mytreeProd || pm2 start npm --name "mytreeProd" -- start -- -p 8080
