@@ -1,160 +1,159 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { useRef, ReactNode } from "react";
 import Link from "next/link";
 import { WobbleCard } from "@/components/ui/wobble-card";
-import { CardHoverEffect } from "@/components/ui/card-hover-effect";
+
+interface ScrollFadeInProps {
+  children: ReactNode;
+  delay?: number;
+}
 
 export default function HeroSection() {
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"],
   });
 
-  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-  const midY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
-  const fgY = useTransform(scrollYProgress, [0, 1], ["0%", "60%"]);
+  const layer1 = useTransform(scrollYProgress, [0, 1], ["0%", "15%"]);
+  const layer2 = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
+  const layer3 = useTransform(scrollYProgress, [0, 1], ["0%", "55%"]);
 
   return (
     <section
       ref={containerRef}
-      className="relative w-full bg-background overflow-hidden pb-40"
+      className="relative w-full overflow-hidden bg-background pb-44"
     >
       <motion.img
         src="/parallax/bg-mountains.png"
         alt=""
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-70 z-0"
-        style={{ y: bgY }}
+        className="absolute inset-0 h-full w-full object-cover opacity-60"
+        style={{ y: layer1 }}
       />
 
       <motion.img
         src="/parallax/mid-fog.png"
         alt=""
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-60 z-10"
-        style={{ y: midY }}
+        className="absolute inset-0 h-full w-full object-cover opacity-70"
+        style={{ y: layer2 }}
       />
 
       <motion.img
         src="/parallax/fg-trees.png"
         alt=""
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-90 z-20"
-        style={{ y: fgY }}
+        className="absolute inset-0 h-full w-full object-cover opacity-90"
+        style={{ y: layer3 }}
       />
 
-      <div className="relative z-30 mx-auto flex max-w-6xl flex-col items-center gap-10 px-4 py-24 text-center md:py-32">
+      <div className="relative z-30 mx-auto flex max-w-5xl flex-col items-center gap-8 px-4 py-28 text-center">
         <motion.p
-          initial={{ opacity: 0, y: 6 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.5 }}
           className="text-xs uppercase tracking-[0.25em] text-muted-foreground"
         >
           My Tree Enviros
         </motion.p>
 
         <motion.h1
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
+          transition={{ duration: 0.55 }}
           className="max-w-4xl text-4xl font-semibold leading-tight text-foreground md:text-6xl"
         >
-          Grow trees. Track impact.
-          <span className="block bg-gradient-to-r from-green-600 to-emerald-400 bg-clip-text text-transparent">
-            Make the planet better.
+          Nature grows with your story.
+          <span className="block bg-linear-to-r from-green-600 to-emerald-400 bg-clip-text text-transparent">
+            Every tree begins a new chapter.
           </span>
         </motion.h1>
 
         <motion.p
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55 }}
+          transition={{ duration: 0.65 }}
           className="max-w-2xl text-base text-muted-foreground md:text-lg"
         >
-          Sponsor, adopt, and feed trees in real locations — and watch your impact grow.
+          Walk into a living journey. Sponsor, adopt, or nourish a tree and watch the world change through your actions.
         </motion.p>
       </div>
 
-      <div className="relative z-30 mx-auto mt-20 grid w-full max-w-6xl grid-cols-1 gap-6 px-4 md:grid-cols-3">
-
+      <div className="relative z-30 mx-auto mt-24 grid w-full max-w-6xl grid-cols-1 gap-8 px-4 md:grid-cols-3">
         <ScrollFadeIn>
           <div className="relative">
-            <WobbleCard containerClassName="min-h-[340px] bg-primary/10">
+            <WobbleCard containerClassName="min-h-58 bg-primary/10 rounded-2xl shadow-lg backdrop-blur-sm">
               <div className="space-y-4">
-                <h2 className="text-left text-2xl font-semibold text-foreground md:text-3xl">
+                <h2 className="uppercase text-left text-2xl font-semibold text-primary md:text-3xl">
                   Sponsor a Tree
                 </h2>
                 <p className="text-left text-muted-foreground">
-                  Plant the first seed of change. Sponsor a new tree and enable its journey.
+                  Begin the story of a new life. Your support plants hope in the earth.
                 </p>
               </div>
               <img
                 src="/trees/sponsor.png"
                 alt=""
-                className="absolute bottom-0 right-0 w-40 object-contain opacity-90"
+                className="absolute -bottom-20 -right-8 w-48 opacity-100 object-contain"
               />
             </WobbleCard>
-
             <Link href="/sponsor-a-tree" className="absolute inset-0 z-50" />
           </div>
         </ScrollFadeIn>
 
         <ScrollFadeIn delay={0.15}>
           <div className="relative">
-            <WobbleCard containerClassName="min-h-[340px] bg-emerald-600/20">
+            <WobbleCard containerClassName="min-h-58 bg-primary/15 rounded-2xl shadow-lg backdrop-blur-sm">
               <div className="space-y-4">
-                <h2 className="text-left text-2xl font-semibold text-foreground md:text-3xl">
+                <h2 className="uppercase text-primary text-left text-2xl font-semibold md:text-3xl">
                   Adopt a Tree
                 </h2>
                 <p className="text-left text-muted-foreground">
-                  Follow your tree’s growth with real-time photos, updates, and metrics.
+                  Witness growth in real time. Photos, updates, and life unfolding before you.
                 </p>
               </div>
               <img
                 src="/trees/adopt.png"
                 alt=""
-                className="absolute bottom-0 right-0 w-40 object-contain opacity-90"
+                className="absolute -bottom-20 -right-8 w-48 opacity-100 object-contain"
               />
             </WobbleCard>
-
             <Link href="/adopt-a-tree" className="absolute inset-0 z-50" />
           </div>
         </ScrollFadeIn>
 
         <ScrollFadeIn delay={0.3}>
           <div className="relative">
-            <WobbleCard containerClassName="min-h-[340px] bg-green-800/20">
+            <WobbleCard containerClassName="min-h-58 bg-primary/20 rounded-2xl shadow-lg backdrop-blur-sm">
               <div className="space-y-4">
-                <h2 className="text-left text-2xl font-semibold text-foreground md:text-3xl">
-                  Feed & Nurture
+                <h2 className="uppercase text-left text-2xl font-semibold text-primary md:text-3xl">
+                  Feed a Tree
                 </h2>
                 <p className="text-left text-muted-foreground">
-                  Support regular care — watering, nutrients, and protection.
+                  Support ongoing care—water, nutrients, and protection to keep life thriving.
                 </p>
               </div>
               <img
                 src="/trees/feed.png"
                 alt=""
-                className="absolute bottom-0 right-0 w-44 object-contain opacity-90"
+                className="absolute -bottom-20 -right-10 w-52 opacity-100 object-contain"
               />
             </WobbleCard>
-
             <Link href="/feed-a-tree" className="absolute inset-0 z-50" />
           </div>
         </ScrollFadeIn>
-
       </div>
     </section>
   );
 }
 
-function ScrollFadeIn({ children, delay = 0 }) {
+function ScrollFadeIn({ children, delay = 0 }: ScrollFadeInProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 40 }}
+      initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay }}
-      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.7, delay, ease: "easeOut" }}
+      viewport={{ once: true, margin: "-120px" }}
       className="h-full w-full"
     >
       {children}
