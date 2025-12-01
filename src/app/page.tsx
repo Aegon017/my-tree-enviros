@@ -157,10 +157,9 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* ---------------------- BLOGS ---------------------- */}
       <Section className="bg-muted/60 py-16 md:py-20">
         <SectionTitle
-          title="Insights From Nature"
+          title="Blogs"
           subtitle="Stories, science, and slow growth."
           align="center"
         />
