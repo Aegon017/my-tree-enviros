@@ -68,7 +68,6 @@ export default function ProductCard({ product }: { product: ProductListItem }) {
           )}
         </Link>
 
-        {/* PRICE */}
         <div className="mt-auto flex items-center gap-2">
           <span className="text-lg font-bold tracking-tight">
             {product.has_variants && "From: "}₹{price}

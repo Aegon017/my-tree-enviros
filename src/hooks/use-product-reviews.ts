@@ -10,35 +10,29 @@ import {
 } from "@/services/review.services";
 import { useAuthStore } from "@/store/auth-store";
 
-export function useProductReviews(slug: string) {
-  const [currentPage] = useState(1);
+export function useProductReviews(productId: number | undefined) {
   const [editingReviewId, setEditingReviewId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
   const isAuth = !!token;
 
-  const { data: canReviewData, mutate: mutateCanReview } = useSWR(
-    isAuth ? ["can-review", slug] : null,
-    () => productService.canReviewBySlug(slug).then((res) => res.data),
-  );
   const { data: reviewsData, mutate: mutateReviews } = useSWR(
-    ["reviews", slug, currentPage],
-    () =>
-      productService
-        .getReviewsBySlug(slug, currentPage)
-        .then((res) => res.data),
+    productId ? ["reviews", productId] : null,
+    () => productService.getReviewsByProductId(productId!),
   );
 
-  const reviews = reviewsData?.reviews ?? [];
-  const userReview = canReviewData?.review ?? null;
-  const canReview = canReviewData?.can_review;
-  const hasReviewed = canReviewData?.reviewed;
+  const reviews = Array.isArray(reviewsData?.data?.reviews)
+    ? reviewsData.data.reviews
+    : [];
+  const userReview = reviews.find((r: any) => r.user?.id === user?.id) ?? null;
+  const hasReviewed = !!userReview;
 
   const averageRating = useMemo(
     () =>
       reviews.length
         ? reviews.reduce((s: number, r: any) => s + r.rating, 0) /
-          reviews.length
+        reviews.length
         : 0,
     [reviews],
   );
@@ -47,21 +41,34 @@ export function useProductReviews(slug: string) {
     reviewId: number | null,
     values: ReviewFormValues,
   ) => {
-    if (!isAuth) return;
+    if (!isAuth || !productId) return;
     setIsSubmitting(true);
     try {
       if (reviewId) {
-        await reviewService.update(reviewId, slug, values);
+        await reviewService.update(reviewId, productId, values);
         toast.success("Review updated");
       } else {
-        await reviewService.submit(slug, values);
+        await reviewService.submit(productId, values);
         toast.success("Review added");
       }
       setEditingReviewId(null);
-      mutateCanReview();
+      mutateReviews();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const deleteReview = async (reviewId: number) => {
+    if (!isAuth || !productId) return;
+    setIsSubmitting(true);
+    try {
+      await reviewService.delete(reviewId, productId);
+      toast.success("Review deleted");
       mutateReviews();
     } catch {
-      toast.error("Review error");
+      toast.error("Failed to delete review");
     } finally {
       setIsSubmitting(false);
     }
@@ -70,7 +77,6 @@ export function useProductReviews(slug: string) {
   return {
     reviews,
     userReview,
-    canReview,
     hasReviewed,
     averageRating,
     reviewCount: reviews.length,
@@ -78,5 +84,8 @@ export function useProductReviews(slug: string) {
     setEditingReviewId,
     isSubmitting,
     submitReview,
+    deleteReview,
+    currentUserId: user?.id,
+    isAuth,
   };
 }

@@ -10,8 +10,8 @@ export const productService = {
   getProductBySlug: (slug: string) =>
     api.get<{ product: any }>(`/products/${slug}`),
 
-  getReviewsBySlug: (slug: string, page = 1) =>
-    api.get<any>(`/products/${slug}/reviews`, { params: { page } }),
+  getReviewsByProductId: (productId: number) =>
+    api.get<any>(`/products/${productId}/reviews`),
 
   canReviewBySlug: (slug: string) =>
     api.get<any>(`/products/${slug}/can-review`),

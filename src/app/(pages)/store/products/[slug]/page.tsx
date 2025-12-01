@@ -3,7 +3,7 @@
 import { use } from "react";
 import useSWR from "swr";
 import { Markup } from "interweave";
-import { Minus, Plus, Heart, Edit } from "lucide-react";
+import { Minus, Plus, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,9 @@ import AddToCartButton from "@/components/add-to-cart-button";
 import ImageGallery from "@/components/image-gallery";
 import { VariantSelector } from "@/components/variant-selector";
 import { LoginDialog } from "@/components/login-dialog";
+import { ReviewForm } from "@/components/review-form";
+import { ReviewList } from "@/components/review-list";
+import { ReviewSummary } from "@/components/review-summary";
 import { useProductState } from "@/hooks/use-product-state";
 import { useProductImages } from "@/hooks/use-product-images";
 import { useProductVariants } from "@/hooks/use-product-variants";
@@ -56,7 +59,6 @@ export default function ProductPage({
   const {
     reviews,
     userReview,
-    canReview,
     hasReviewed,
     averageRating,
     reviewCount,
@@ -64,7 +66,10 @@ export default function ProductPage({
     setEditingReviewId,
     isSubmitting,
     submitReview,
-  } = useProductReviews(slug);
+    deleteReview,
+    currentUserId,
+    isAuth,
+  } = useProductReviews(product?.id);
 
   const {
     toggleFavorite,
@@ -236,49 +241,45 @@ export default function ProductPage({
 
           <TabsContent value="reviews" className="pt-4">
             <Card>
-              <CardContent>
-                {reviews.length ? (
-                  <div className="space-y-6">
-                    {reviews.map((r: any) => (
-                      <div key={r.id} className="border-b pb-4">
-                        {editingReviewId === r.id ? (
-                          <h1>editing</h1>
-                        ) : (
-                          <>
-                            <div className="flex justify-between items-start">
-                              <div className="flex gap-2 items-center">
-                                <RatingStars rating={r.rating} size="sm" />
-                                <span className="font-semibold">
-                                  {r.user.name}
-                                </span>
-                              </div>
-                              <span className="text-sm text-muted-foreground">
-                                {new Date(r.created_at).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <p className="mt-2">{r.review}</p>
-                            {r.id === userReview?.id && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="mt-2"
-                                onClick={() => setEditingReviewId(r.id)}
-                              >
-                                <Edit className="h-4 w-4 mr-1" /> Edit
-                              </Button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    ))}
+              <CardContent className="pt-6">
+                {reviewCount > 0 && (
+                  <div className="mb-8 pb-6 border-b">
+                    <ReviewSummary
+                      averageRating={averageRating}
+                      totalReviews={reviewCount}
+                    />
                   </div>
-                ) : (
-                  <p className="text-muted-foreground">No reviews yet.</p>
                 )}
 
-                {canReview && !hasReviewed && editingReviewId === null && (
-                  <div className="mt-8">
-                    <h1>add-review-form</h1>
+                <ReviewList
+                  reviews={reviews}
+                  currentUserId={currentUserId}
+                  editingReviewId={editingReviewId}
+                  onEdit={setEditingReviewId}
+                  onCancelEdit={() => setEditingReviewId(null)}
+                  onSubmitEdit={submitReview}
+                  onDelete={deleteReview}
+                  isSubmitting={isSubmitting}
+                />
+
+                {isAuth && !hasReviewed && editingReviewId === null && (
+                  <div className="mt-8 pt-6 border-t">
+                    <h3 className="text-lg font-semibold mb-4">
+                      Write a Review
+                    </h3>
+                    <ReviewForm
+                      onSubmit={(values) => submitReview(null, values)}
+                      isSubmitting={isSubmitting}
+                    />
+                  </div>
+                )}
+
+                {!isAuth && (
+                  <div className="mt-8 pt-6 border-t text-center">
+                    <p className="text-muted-foreground mb-4">
+                      Please sign in to write a review
+                    </p>
+                    <Button onClick={() => setLoginOpen(true)}>Sign In</Button>
                   </div>
                 )}
               </CardContent>
