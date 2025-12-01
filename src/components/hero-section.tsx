@@ -27,13 +27,13 @@ export default function HeroSection() {
       className="relative w-full overflow-hidden bg-background pb-44"
     >
       <motion.img
-        src="/parallax/bg-mountains.png"
+        src="/hero-bg.jpeg"
         alt=""
         className="absolute inset-0 h-full w-full object-cover opacity-60"
         style={{ y: layer1 }}
       />
 
-      <motion.img
+      {/* <motion.img
         src="/parallax/mid-fog.png"
         alt=""
         className="absolute inset-0 h-full w-full object-cover opacity-70"
@@ -45,7 +45,7 @@ export default function HeroSection() {
         alt=""
         className="absolute inset-0 h-full w-full object-cover opacity-90"
         style={{ y: layer3 }}
-      />
+      /> */}
 
       <div className="relative z-30 mx-auto flex max-w-5xl flex-col items-center gap-8 px-4 py-28 text-center">
         <motion.p
@@ -82,13 +82,13 @@ export default function HeroSection() {
       <div className="relative z-30 mx-auto mt-24 grid w-full max-w-6xl grid-cols-1 gap-8 px-4 md:grid-cols-3">
         <ScrollFadeIn>
           <div className="relative">
-            <WobbleCard containerClassName="min-h-58 bg-muted/10 rounded-2xl shadow-lg backdrop-blur-sm">
+            <WobbleCard containerClassName="bg-muted/10 rounded-2xl shadow-lg backdrop-blur-sm">
               <div className="space-y-4">
                 <h2 className="uppercase text-left text-2xl font-semibold text-primary md:text-3xl">
                   Sponsor a Tree
                 </h2>
                 <p className="text-left text-muted-foreground">
-                  Begin the story of a new life. Your support plants hope in the earth.
+                  Sponsor a tree today and help restore nature, support green growth, and create a healthier planet.
                 </p>
               </div>
               <img
@@ -103,13 +103,13 @@ export default function HeroSection() {
 
         <ScrollFadeIn delay={0.15}>
           <div className="relative">
-            <WobbleCard containerClassName="min-h-58 bg-muted/15 rounded-2xl shadow-lg backdrop-blur-sm">
+            <WobbleCard containerClassName="bg-muted/15 rounded-2xl shadow-lg backdrop-blur-sm">
               <div className="space-y-4">
                 <h2 className="uppercase text-primary text-left text-2xl font-semibold md:text-3xl">
                   Adopt a Tree
                 </h2>
                 <p className="text-left text-muted-foreground">
-                  Witness growth in real time. Photos, updates, and life unfolding before you.
+                  Adopt a tree today and nurture nature’s growth, protect the environment, and create a greener, healthier future.
                 </p>
               </div>
               <img
@@ -124,13 +124,13 @@ export default function HeroSection() {
 
         <ScrollFadeIn delay={0.3}>
           <div className="relative">
-            <WobbleCard containerClassName="min-h-58 bg-muted/20 rounded-2xl shadow-lg backdrop-blur-sm">
+            <WobbleCard containerClassName="bg-muted/20 rounded-2xl shadow-lg backdrop-blur-sm">
               <div className="space-y-4">
                 <h2 className="uppercase text-left text-2xl font-semibold text-primary md:text-3xl">
                   Feed a Tree
                 </h2>
                 <p className="text-left text-muted-foreground">
-                  Support ongoing care—water, nutrients, and protection to keep life thriving.
+                  Join our campaigns to restore degraded ecological zones.
                 </p>
               </div>
               <img
