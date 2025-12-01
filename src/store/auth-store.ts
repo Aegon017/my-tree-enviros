@@ -3,6 +3,7 @@ import { authStorage } from "@/lib/auth-storage";
 import { authService } from "@/services/auth.services";
 import { useCartStore } from "@/modules/cart/store/cart.store";
 import { cartService } from "@/modules/cart/services/cart.service";
+import { toast } from "sonner";
 
 type User = any;
 
@@ -76,6 +77,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } finally {
       get().clearAuth();
       useCartStore.getState().clearCart();
+      toast.success("Signed out successfully");
     }
   },
 

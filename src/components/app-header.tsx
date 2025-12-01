@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Menu, X, User, Heart, ShoppingCart, Bell } from "lucide-react";
+import { Menu, User, Heart, ShoppingCart, Bell, LogIn, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -17,6 +17,13 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { LocationButton } from "./location/location-button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const NAV = [
   { href: "/", label: "Home" },
@@ -25,6 +32,61 @@ const NAV = [
   { href: "/feed-a-tree", label: "Feed A Tree" },
   { href: "/store", label: "Store" },
 ];
+
+function AccountMenu({ isAuthenticated, signOut }: any) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-primary"
+        >
+          <User className="w-5 h-5" />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="end" className="w-40">
+        {!isAuthenticated && (
+          <>
+            <DropdownMenuItem asChild>
+              <div className="flex items-center gap-2">
+                <LogIn />
+                <Link href="/sign-in">Sign In</Link>
+              </div>
+            </DropdownMenuItem>
+          </>
+        )}
+
+        {isAuthenticated && (
+          <>
+            <DropdownMenuItem asChild>
+              <div className="flex items-center gap-2">
+                <User />
+                <Link href="/my-profile">My Profile</Link>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <div className="flex items-center gap-2">
+                <ShoppingCart />
+                <Link href="/my-orders">My Orders</Link>
+              </div>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem onClick={signOut}>
+              <div className="flex items-center gap-2 cursor-pointer">
+                <LogOut />
+                Sign Out
+              </div>
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export default function Header() {
   const pathname = usePathname();
@@ -40,7 +102,7 @@ export default function Header() {
         initial={{ y: -18, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="w-full z-50 bg-background border-b"
+        className="w-full z-50"
       >
         <div className="mx-auto max-w-6xl px-3 py-3">
           <motion.div
@@ -77,7 +139,10 @@ export default function Header() {
                 <NavIcon href="/wishlist" icon={Heart} />
                 <NavIcon href="/cart" icon={ShoppingCart} />
                 <NavIcon href="/notifications" icon={Bell} />
-                <NavIcon href="/my-account" icon={User} />
+                <AccountMenu
+                  isAuthenticated={isAuthenticated}
+                  signOut={signOut}
+                />
               </motion.div>
             )}
 
@@ -86,38 +151,38 @@ export default function Header() {
             )}
           </motion.div>
         </div>
+      </motion.header>
 
-        {!isMobile && mounted && (
-          <motion.div
-            className="w-full flex justify-center pb-3"
-            initial={{ opacity: 0, y: -3 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-          >
-            <nav className="flex gap-8 bg-background border shadow-sm rounded-full px-10 py-2.5">
-              {NAV.map((item) => (
-                <motion.div
-                  key={item.href}
-                  whileHover={{ scale: 1.07 }}
-                  transition={{ type: "spring", stiffness: 220, damping: 16 }}
+      {!isMobile && mounted && (
+        <motion.div
+          className="w-full flex justify-center pb-3 sticky top-2 z-50"
+          initial={{ opacity: 0, y: -3 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <nav className="flex gap-8 bg-background border shadow-sm rounded-full px-10 py-2.5">
+            {NAV.map((item) => (
+              <motion.div
+                key={item.href}
+                whileHover={{ scale: 1.07 }}
+                transition={{ type: "spring", stiffness: 220, damping: 16 }}
+              >
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "text-sm font-medium transition-colors",
+                    pathname === item.href
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-primary"
+                  )}
                 >
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "text-sm font-medium transition-colors",
-                      pathname === item.href
-                        ? "text-primary"
-                        : "text-muted-foreground hover:text-primary"
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                </motion.div>
-              ))}
-            </nav>
-          </motion.div>
-        )}
-      </motion.header >
+                  {item.label}
+                </Link>
+              </motion.div>
+            ))}
+          </nav>
+        </motion.div>
+      )}
     </>
   );
 }
