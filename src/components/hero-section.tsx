@@ -61,10 +61,10 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55 }}
-          className="max-w-4xl text-4xl font-semibold leading-tight text-foreground md:text-6xl"
+          className="uppercase max-w-4xl text-4xl font-semibold leading-tight text-foreground md:text-6xl"
         >
           Nature grows with your story.
-          <span className="block bg-linear-to-r from-green-600 to-emerald-400 bg-clip-text text-transparent">
+          <span className="block text-primary">
             Every tree begins a new chapter.
           </span>
         </motion.h1>
@@ -82,7 +82,7 @@ export default function HeroSection() {
       <div className="relative z-30 mx-auto mt-24 grid w-full max-w-6xl grid-cols-1 gap-8 px-4 md:grid-cols-3">
         <ScrollFadeIn>
           <div className="relative">
-            <WobbleCard containerClassName="min-h-58 bg-primary/10 rounded-2xl shadow-lg backdrop-blur-sm">
+            <WobbleCard containerClassName="min-h-58 bg-muted/10 rounded-2xl shadow-lg backdrop-blur-sm">
               <div className="space-y-4">
                 <h2 className="uppercase text-left text-2xl font-semibold text-primary md:text-3xl">
                   Sponsor a Tree
@@ -103,7 +103,7 @@ export default function HeroSection() {
 
         <ScrollFadeIn delay={0.15}>
           <div className="relative">
-            <WobbleCard containerClassName="min-h-58 bg-primary/15 rounded-2xl shadow-lg backdrop-blur-sm">
+            <WobbleCard containerClassName="min-h-58 bg-muted/15 rounded-2xl shadow-lg backdrop-blur-sm">
               <div className="space-y-4">
                 <h2 className="uppercase text-primary text-left text-2xl font-semibold md:text-3xl">
                   Adopt a Tree
@@ -124,7 +124,7 @@ export default function HeroSection() {
 
         <ScrollFadeIn delay={0.3}>
           <div className="relative">
-            <WobbleCard containerClassName="min-h-58 bg-primary/20 rounded-2xl shadow-lg backdrop-blur-sm">
+            <WobbleCard containerClassName="min-h-58 bg-muted/20 rounded-2xl shadow-lg backdrop-blur-sm">
               <div className="space-y-4">
                 <h2 className="uppercase text-left text-2xl font-semibold text-primary md:text-3xl">
                   Feed a Tree
