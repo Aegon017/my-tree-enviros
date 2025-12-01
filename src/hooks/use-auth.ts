@@ -1,10 +1,10 @@
-import { authService } from "@/services/auth.services";
 import { useAuthStore } from "@/store/auth-store";
 import { useState, useEffect } from "react";
 
 export function useAuth() {
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -15,13 +15,13 @@ export function useAuth() {
     return {
       isAuthenticated: false,
       user: null,
-      signOut: () => authService.signOut(),
+      signOut: async () => { },
     };
   }
 
   return {
     isAuthenticated: !!token,
     user,
-    signOut: () => authService.signOut(),
+    signOut: logout,
   };
 }
