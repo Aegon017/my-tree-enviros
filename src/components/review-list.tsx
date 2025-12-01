@@ -25,7 +25,7 @@ interface ReviewListProps {
     onCancelEdit: () => void;
     onSubmitEdit: (
         reviewId: number,
-        values: { rating: number; comment: string }
+        values: { rating: number; comment?: string }
     ) => Promise<void>;
     onDelete?: (reviewId: number) => Promise<void>;
     isSubmitting?: boolean;

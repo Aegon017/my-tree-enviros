@@ -1,6 +1,6 @@
 import api from "./http-client";
 
-export type ReviewFormValues = { rating: number; comment: string };
+export type ReviewFormValues = { rating: number; comment?: string };
 
 export const reviewService = {
   async submit(productId: number, payload: ReviewFormValues) {
