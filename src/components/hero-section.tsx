@@ -130,7 +130,7 @@ export default function HeroSection() {
                   Feed a Tree
                 </h2>
                 <p className="text-left text-muted-foreground">
-                  Join our campaigns to restore degraded ecological zones.
+                  Join our campaigns to restore degraded ecological zones and help rebuild nature for healthier planet.
                 </p>
               </div>
               <img
