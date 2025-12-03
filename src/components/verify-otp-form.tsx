@@ -147,11 +147,11 @@ export function VerifyOtpForm({
 
   return (
     <div
-      className={cn("flex min-h-screen bg-background", className)}
+      className={cn("flex bg-background", className)}
       {...props}
     >
       {/* Left Side - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 py-12 md:py-0">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 py-8">
         <div className="w-full max-w-sm">
           {/* Header */}
           <div className="mb-8 space-y-3">
