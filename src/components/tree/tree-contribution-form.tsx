@@ -38,7 +38,7 @@ export default function TreeContributionForm({
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [selectedYears, setSelectedYears] = useState<number>(1);
-  const [startPayment, setStartPayment] = useState(false);
+
 
   const planOptions = useMemo(() => {
     if (!tree?.plan_prices) return [];
@@ -87,7 +87,10 @@ export default function TreeContributionForm({
       price: selectedPlan.price,
     };
     localStorage.setItem(`tree_details_${tree.id}`, JSON.stringify(details));
-    setStartPayment(true);
+
+    router.push(
+      `/checkout?buy_now=true&type=${pageType}&plan_price_id=${selectedPlan.planPriceId}&quantity=${quantity}`
+    );
   });
 
   return (
@@ -248,20 +251,6 @@ export default function TreeContributionForm({
           </Button>
         </div>
       </form>
-
-      {startPayment && selectedPlan && (
-        <div className="mt-4">
-          <Button
-            className="w-full"
-            onClick={() => {
-              // Navigate to checkout with buy_now mode
-              router.push(`/checkout?buy_now=true&type=${pageType}&plan_price_id=${selectedPlan.planPriceId}&quantity=${quantity}`);
-            }}
-          >
-            Proceed to Checkout
-          </Button>
-        </div>
-      )}
     </>
   );
 }

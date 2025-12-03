@@ -147,11 +147,11 @@ export function VerifyOtpForm({
 
   return (
     <div
-      className={cn("flex min-h-screen bg-background", className)}
+      className={cn("flex bg-background", className)}
       {...props}
     >
       {/* Left Side - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 py-12 md:py-0">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 py-8">
         <div className="w-full max-w-sm">
           {/* Header */}
           <div className="mb-8 space-y-3">
@@ -264,7 +264,7 @@ export function VerifyOtpForm({
       </div>
 
       {/* Right Side - Gradient Section */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-primary to-primary/80 relative overflow-hidden items-center justify-center">
+      <div className="hidden lg:flex w-1/2 bg-linear-to-br from-primary to-primary/80 relative overflow-hidden items-center justify-center">
         <div className="relative z-10 w-full h-full flex items-center justify-center p-8">
           <Card className="w-full max-w-sm bg-white/10 backdrop-blur-md border-white/20 p-8">
             <div className="space-y-6">
@@ -279,7 +279,7 @@ export function VerifyOtpForm({
 
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
                     <ArrowRight className="w-4 h-4 text-white" />
                   </div>
                   <div>
@@ -293,7 +293,7 @@ export function VerifyOtpForm({
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
                     <ArrowRight className="w-4 h-4 text-white" />
                   </div>
                   <div>
@@ -307,7 +307,7 @@ export function VerifyOtpForm({
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
                     <ArrowRight className="w-4 h-4 text-white" />
                   </div>
                   <div>
