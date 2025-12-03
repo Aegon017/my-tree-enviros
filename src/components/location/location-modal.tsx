@@ -97,6 +97,7 @@ export function LocationModal({ open, onOpenChange }: LocationModalProps) {
         className="max-w-xl p-0 rounded-2xl overflow-hidden"
         onInteractOutside={blockClose}
         onEscapeKeyDown={blockClose}
+        showCloseButton={false}
       >
         <DialogHeader className="p-4 border-b bg-muted/40">
           <DialogTitle className="text-lg">Select Your Location</DialogTitle>
