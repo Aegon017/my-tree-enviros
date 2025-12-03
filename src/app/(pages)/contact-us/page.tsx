@@ -31,7 +31,8 @@ const Page = () => {
                                     <div className="text-sm">
                                         <p className="font-medium">Office Location</p>
                                         <p className="text-muted-foreground">
-                                            Hitech City, Hyderabad, Telangana, India – 500081
+                                            My Tree Enviros India Pvt Ltd Org, Attn: Operations Manager,
+                                            Plot No. 21, Madhapur, Gafoornagar, Hyderabad, Telangana 500081.
                                         </p>
                                     </div>
                                 </div>
@@ -42,7 +43,7 @@ const Page = () => {
                                     </div>
                                     <div className="text-sm">
                                         <p className="font-medium">Phone</p>
-                                        <p className="text-muted-foreground">+91 98765 43210</p>
+                                        <p className="text-muted-foreground">+91 99482 33863</p>
                                     </div>
                                 </div>
 
@@ -52,7 +53,7 @@ const Page = () => {
                                     </div>
                                     <div className="text-sm">
                                         <p className="font-medium">Email</p>
-                                        <p className="text-muted-foreground">support@example.com</p>
+                                        <p className="text-muted-foreground">communication@mytree.care</p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -60,7 +61,7 @@ const Page = () => {
 
                         <Card className="overflow-hidden rounded-xl border py-0">
                             <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.368763501631!2d78.38262487509491!3d17.447753702877372!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93bf0a5d1e65%3A0xdc66cb3dd78dacda!2sHitech%20City%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1708701110000"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.451531533308!2d78.3847018746281!3d17.438089601343602!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb912d89ea1685%3A0xa5eed7b1e987d316!2sMY%20TREE%20ENVIROS!5e0!3m2!1sen!2sin!4v1764772791055!5m2!1sen!2sin"
                                 className="w-full h-64"
                                 loading="lazy"
                                 allowFullScreen
@@ -88,7 +89,7 @@ const Page = () => {
             <div className="mt-20 bg-muted/30 py-16">
                 <div className="max-w-6xl mx-auto text-center space-y-4">
                     <h3 className="text-xl font-semibold">Business Hours</h3>
-                    <p className="text-muted-foreground">Monday – Saturday: 9:00 AM – 6:00 PM</p>
+                    <p className="text-muted-foreground">Monday – Saturday: 9:30 AM – 6:30 PM</p>
                     <p className="text-muted-foreground">Sunday: Closed</p>
                 </div>
             </div>

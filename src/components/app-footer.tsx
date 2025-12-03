@@ -15,9 +15,10 @@ const footerData = {
     { name: "Contact Us", href: "/contact-us" },
   ],
   policyLinks: [
-    { name: "Terms & Conditions", href: "/terms" },
-    { name: "Privacy Policy", href: "/privacy" },
-    { name: "Refund Policy", href: "/refund" },
+    { name: "Terms & Conditions", href: "/terms-and-conditions" },
+    { name: "Privacy Policy", href: "/privacy-policy" },
+    { name: "Shipping Policy", href: "/shipping-policy" },
+    { name: "Cancellations & Returns", href: "/cancellations-and-refunds" },
   ],
   social: [
     { icon: Facebook, href: "https://facebook.com" },
