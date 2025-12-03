@@ -160,25 +160,20 @@ export default function Header() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
         >
-          <nav className="flex gap-8 bg-background border shadow-sm rounded-full px-10 py-2.5">
+          <nav className="flex gap-12 bg-background border shadow-sm rounded-full px-10 py-2.5">
             {NAV.map((item) => (
-              <motion.div
+              <Link
                 key={item.href}
-                whileHover={{ scale: 1.07 }}
-                transition={{ type: "spring", stiffness: 220, damping: 16 }}
+                href={item.href}
+                className={cn(
+                  "text-xl font-medium transition-colors",
+                  pathname === item.href
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-primary"
+                )}
               >
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "text-sm font-medium transition-colors",
-                    pathname === item.href
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-primary"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              </motion.div>
+                {item.label}
+              </Link>
             ))}
           </nav>
         </motion.div>

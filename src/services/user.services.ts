@@ -44,16 +44,22 @@ export const userService = {
     return await api.delete(`/users/${id}`);
   },
 
-  // Current user methods
   async getCurrentUser() {
     return await api.get<{ user: User }>("/me");
   },
 
-  async updateCurrentUser(payload: UpdateUserPayload) {
-    return await api.put<{ user: User }>("/me", payload);
+  async updateCurrentUser(payload: UpdateUserPayload | FormData) {
+    if (payload instanceof FormData) {
+      return await api.post<{ user: User }>("/me", payload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+    }
+
+    return await api.post<{ user: User }>("/me", payload);
   },
 
-  // Shipping address methods (delegating to shipping address service)
   async getShippingAddresses() {
     return await api.get<{ addresses: ShippingAddress[] }>(
       "/shipping-addresses",
