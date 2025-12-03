@@ -1,214 +1,329 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Package, Calendar, CreditCard, MapPin, Eye, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuthStore } from "@/store/auth-store";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/hooks/use-auth";
 import {
-  ordersService as orderService,
-  type Order,
-  type OrderItem,
-  type OrderResponse,
-} from "@/modules/orders/services/orders.service";
-// Define OrderItem locally if not exported, or import if it is.
-// Checking orders.service.ts, it exports Order, OrdersResponse, OrderResponse.
-// It does NOT export OrderItem. I need to check where OrderItem is defined.
-// In the old code it was likely in order.services.ts.
-// I should check src/modules/orders/types/order.types.ts if it exists, or add it to orders.service.ts.
-// For now, I will assume it might be in types.
+  Calendar,
+  Eye,
+  ShoppingCart,
+  X,
+  User as UserIcon,
+} from "lucide-react";
+import { ordersService as orderService } from "@/modules/orders/services/orders.service";
 
-import { toast } from "sonner";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+type OrderLite = {
+  id: number;
+  order_number?: string;
+  created_at?: string;
+  status?: string;
+  status_label?: string;
+  formatted_total?: string;
+  total_amount?: number;
+};
 
-const MyOrdersPage = () => {
-  const { isAuthenticated } = useAuth();
-  const router = useRouter();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [cancellingOrderId, setCancellingOrderId] = useState<number | null>(
-    null,
+type OrderDetails = {
+  id: number;
+  order_number?: string;
+  created_at?: string;
+  status?: string;
+  status_label?: string;
+  total_amount?: number;
+  formatted_total?: string;
+  items?: Array<{
+    id: number;
+    quantity: number;
+    formatted_price?: string;
+    formatted_subtotal?: string;
+    item?: {
+      type?: "tree" | "product" | "campaign";
+      name?: string;
+      sku?: string | null;
+      image?: string | null;
+      color?: string | null;
+      size?: string | null;
+      plan?: {
+        name?: string | null;
+        type?: string | null;
+        duration?: number | null;
+      } | null;
+      location?: unknown;
+    };
+  }>;
+  shipping_address?: {
+    id: number;
+    name: string;
+    phone: string;
+    address_line_1: string;
+    address_line_2?: string | null;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+  } | null;
+  coupon?: {
+    id: number;
+    code: string;
+    type: string;
+    value: number | string;
+  } | null;
+};
+
+const formatCurrency = (val?: number | string) => {
+  if (val == null) return "₹0.00";
+  if (typeof val === "string") return val;
+  return `₹${Number(val).toFixed(2)}`;
+};
+
+const formatDate = (date?: string) => {
+  if (!date) return "";
+  try {
+    return new Date(date).toLocaleDateString();
+  } catch {
+    return date;
+  }
+};
+
+const OrderStatusBadge = ({
+  status,
+  label,
+}: {
+  status?: string;
+  label?: string;
+}) => {
+  const text = label || status || "Unknown";
+  const variant = useMemo(() => {
+    const s = (status || "").toLowerCase();
+    if (["completed", "delivered"].includes(s)) return "default" as const;
+    if (["cancelled", "canceled"].includes(s)) return "destructive" as const;
+    if (["pending", "processing", "shipped"].includes(s))
+      return "secondary" as const;
+    return "secondary" as const;
+  }, [status]);
+  return <Badge variant={variant}>{text}</Badge>;
+};
+
+const EmptyState = ({
+  icon: Icon,
+  title,
+  description,
+  action,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}) => (
+  <div className="text-center py-10">
+    <Icon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+    <h3 className="text-lg font-medium mb-2">{title}</h3>
+    <p className="text-muted-foreground mb-4">{description}</p>
+    {action}
+  </div>
+);
+
+const OrderDetailsModal = ({
+  open,
+  onClose,
+  order,
+}: {
+  open: boolean;
+  onClose: () => void;
+  order: OrderDetails | null;
+}) => {
+  if (!open || !order) return null;
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-background rounded-md max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <Card>
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle>Order {order.order_number || order.id}</CardTitle>
+                <CardDescription>
+                  Placed on {formatDate(order.created_at)}
+                </CardDescription>
+              </div>
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <p>
+                  <strong>Status: </strong>
+                  <OrderStatusBadge
+                    status={order.status}
+                    label={order.status_label}
+                  />
+                </p>
+                <p>
+                  <strong>Total: </strong>
+                  {order.formatted_total || formatCurrency(order.total_amount)}
+                </p>
+              </div>
+              {order.shipping_address && (
+                <div className="space-y-1">
+                  <p className="font-medium">Shipping Address</p>
+                  <p>{order.shipping_address.name}</p>
+                  <p>{order.shipping_address.phone}</p>
+                  <p>
+                    {[
+                      order.shipping_address.address_line_1,
+                      order.shipping_address.address_line_2,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
+                  <p>
+                    {order.shipping_address.city},{" "}
+                    {order.shipping_address.state} -{" "}
+                    {order.shipping_address.postal_code},{" "}
+                    {order.shipping_address.country}
+                  </p>
+                </div>
+              )}
+            </div>
+            <Separator />
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Items</h3>
+              {!order.items || order.items.length === 0 ? (
+                <p className="text-muted-foreground">
+                  No items found for this order.
+                </p>
+              ) : (
+                order.items.map((it) => (
+                  <div
+                    key={it.id}
+                    className="flex items-center gap-4 p-3 border rounded-md"
+                  >
+                    <div className="w-16 h-16 rounded bg-muted flex items-center justify-center overflow-hidden">
+                      {it.item?.image ? (
+                        <img
+                          src={it.item?.image}
+                          alt={it.item?.name || "Item"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <ShoppingCart className="w-6 h-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {it.item?.name || "Item"}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Qty: {it.quantity}{" "}
+                        {it.item?.sku ? ` • SKU: ${it.item.sku}` : ""}
+                        {it.item?.color ? ` • Color: ${it.item.color}` : ""}
+                        {it.item?.size ? ` • Size: ${it.item.size}` : ""}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">
+                        {it.formatted_subtotal || it.formatted_price || "—"}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
+};
+
+export default function OrdersPage() {
+  const { token } = useAuthStore();
+  const isAuthenticated = !!token;
+
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [orders, setOrders] = useState<OrderLite[]>([]);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+
+  const loadOrders = useCallback(async () => {
+    setOrdersLoading(true);
+    try {
+      const res = await orderService.getOrders();
+      const list = res.data?.orders ?? [];
+      setOrders(
+        list.map((o: any) => ({
+          id: o.id,
+          order_number: o.order_number ?? o.order_ref ?? String(o.id),
+          created_at: o.created_at,
+          status: o.status,
+          status_label: o.status_label ?? o.order_status,
+          formatted_total:
+            o.formatted_total ??
+            (o.amount ? formatCurrency(o.amount) : undefined),
+          total_amount: o.total_amount ?? o.amount,
+        })),
+      );
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, []);
+
+  const openOrderDetails = useCallback(async (id: number) => {
+    try {
+      const res = await orderService.getOrderById(id);
+      const o = res.data?.order as any;
+      setOrderDetails({
+        id: o.id,
+        order_number: o.order_number ?? String(o.id),
+        created_at: o.created_at,
+        status: o.status,
+        status_label: o.status_label,
+        total_amount: o.total_amount,
+        formatted_total: o.formatted_total,
+        items: o.items,
+        shipping_address: o.shipping_address ?? null,
+        coupon: o.coupon ?? null,
+      });
+      setDetailsOpen(true);
+    } catch { }
+  }, []);
+
+  const closeOrderDetails = useCallback(() => {
+    setDetailsOpen(false);
+    setOrderDetails(null);
+  }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/sign-in");
-      return;
+    if (isAuthenticated) {
+      loadOrders();
     }
+  }, [isAuthenticated, loadOrders]);
 
-    const fetchOrders = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response = await orderService.getOrders();
-        if (response.success && response.data) {
-          setOrders(response.data.orders);
-        }
-      } catch (err) {
-        console.error("Failed to fetch orders:", err);
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchOrders();
-  }, [isAuthenticated, router]);
-
-  const handleViewDetails = (order: Order) => {
-    setSelectedOrder(order);
-    setIsDetailOpen(true);
-  };
-
-  const handleCancelOrder = async (orderId: number) => {
-    if (!confirm("Are you sure you want to cancel this order?")) {
-      return;
-    }
-
-    setCancellingOrderId(orderId);
-
-    try {
-      const response = await orderService.cancelOrder(orderId);
-      if (response.success) {
-        setOrders((prev) =>
-          prev.map((order) =>
-            order.id === orderId ? { ...order, status: "cancelled" } : order,
-          ),
-        );
-        toast.success("Order cancelled successfully");
-        setIsDetailOpen(false);
-      }
-    } catch (err) {
-      console.error("Failed to cancel order:", err);
-      toast.error("Failed to cancel order");
-    } finally {
-      setCancellingOrderId(null);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    const statusColors: Record<
-      string,
-      "default" | "secondary" | "destructive" | "outline"
-    > = {
-      pending: "secondary",
-      processing: "default",
-      completed: "outline",
-      cancelled: "destructive",
-      shipped: "default",
-      delivered: "outline",
-    };
-
-    return statusColors[status.toLowerCase()] || "default";
-  };
-
-  const getPaymentStatusColor = (status: string) => {
-    const statusColors: Record<
-      string,
-      "default" | "secondary" | "destructive" | "outline"
-    > = {
-      pending: "secondary",
-      completed: "outline",
-      failed: "destructive",
-      refunded: "secondary",
-    };
-
-    return statusColors[status.toLowerCase()] || "default";
-  };
-
-  if (isLoading) {
+  if (!isAuthenticated) {
     return (
       <Section>
-        <SectionTitle
-          title="My Orders"
-          align="center"
-          subtitle="Loading your orders..."
-        />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <Card key={`order-skeleton-${index}`}>
-              <CardHeader>
-                <Skeleton className="h-6 w-32 mb-2" />
-                <Skeleton className="h-4 w-full" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-20 w-full" />
-              </CardContent>
-              <CardFooter>
-                <Skeleton className="h-10 w-full" />
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      </Section>
-    );
-  }
-
-  if (error) {
-    return (
-      <Section>
-        <SectionTitle
-          title="My Orders"
-          align="center"
-          subtitle="Your order history"
-        />
-        <div className="text-center py-12">
-          <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Unable to load orders</h3>
-          <p className="text-muted-foreground mb-4">{error.message}</p>
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
-        </div>
-      </Section>
-    );
-  }
-
-  if (orders.length === 0) {
-    return (
-      <Section>
-        <SectionTitle
-          title="My Orders"
-          align="center"
-          subtitle="Your order history"
-        />
-        <div className="text-center py-12">
-          <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No orders yet</h3>
-          <p className="text-muted-foreground mb-4">
-            Start shopping to see your orders here!
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Button onClick={() => router.push("/sponsor-a-tree")}>
-              Browse Trees
+        <EmptyState
+          icon={UserIcon}
+          title="Please sign in"
+          description="You need to be signed in to view your orders."
+          action={
+            <Button asChild>
+              <a href="/sign-in">Go to Sign In</a>
             </Button>
-            <Button variant="outline" onClick={() => router.push("/store")}>
-              Browse Products
-            </Button>
-          </div>
-        </div>
+          }
+        />
       </Section>
     );
   }
@@ -218,316 +333,93 @@ const MyOrdersPage = () => {
       <SectionTitle
         title="My Orders"
         align="center"
-        subtitle={`You have ${orders.length} order${orders.length !== 1 ? "s" : ""}`}
+        subtitle="View your recent orders and their status."
       />
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {orders.map((order) => (
-          <Card key={order.id} className="overflow-hidden">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-lg">
-                    Order #{order.reference_number}
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-1 mt-1">
-                    <Calendar className="h-3 w-3" />
-                    {order.created_at && orderService.formatDate(order.created_at)}
-                  </CardDescription>
-                </div>
-                <div className="flex flex-col gap-1 items-end">
-                  <Badge variant={getStatusColor(order.status)}>
-                    {orderService.getOrderStatusText(order.status)}
-                  </Badge>
-                  <Badge
-                    variant={getPaymentStatusColor(
-                      order.paid_at ? "completed" : "pending",
-                    )}
-                  >
-                    {orderService.getPaymentStatusText(
-                      undefined,
-                      order.paid_at,
-                    )}
-                  </Badge>
-                </div>
+      <div className="max-w-4xl mx-auto">
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <CardTitle>Order History</CardTitle>
+                <CardDescription>
+                  View your recent orders
+                </CardDescription>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Items</span>
-                  <span className="font-medium">{order.items?.length || 0}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Total Amount</span>
-                  <span className="font-medium">₹{order.total.toFixed(2)}</span>
-                </div>
-                {order.discount > 0 && (
-                  <div className="flex items-center justify-between text-sm text-green-600">
-                    <span>Discount</span>
-                    <span>-₹{order.discount.toFixed(2)}</span>
-                  </div>
-                )}
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold">Final Amount</span>
-                  <span className="font-bold text-lg text-primary">
-                    ₹{order.total.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex gap-2">
-              <Button
-                className="flex-1"
-                variant="outline"
-                onClick={() => handleViewDetails(order)}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                View Details
+              <Button variant="outline" onClick={loadOrders}>
+                Refresh
               </Button>
-              {orderService.canBeCancelled(order) && (
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleCancelOrder(order.id)}
-                  disabled={cancellingOrderId === order.id}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-        ))}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {ordersLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <p>Loading orders...</p>
+              </div>
+            ) : orders.length === 0 ? (
+              <EmptyState
+                icon={ShoppingCart}
+                title="No orders yet"
+                description="You haven't placed any orders yet."
+                action={
+                  <Button asChild>
+                    <a href="/store">Start Shopping</a>
+                  </Button>
+                }
+              />
+            ) : (
+              <div className="space-y-3">
+                {orders.map((o) => (
+                  <div
+                    key={o.id}
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-md hover:bg-accent/50 transition-colors gap-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="bg-primary/10 p-3 rounded-md">
+                        <ShoppingCart className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">
+                          Order #{o.order_number || o.id}
+                        </p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {formatDate(o.created_at)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 ml-auto">
+                      <div className="text-right">
+                        <p className="font-semibold">
+                          {o.formatted_total ||
+                            formatCurrency(o.total_amount)}
+                        </p>
+                      </div>
+                      <OrderStatusBadge
+                        status={o.status}
+                        label={o.status_label}
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openOrderDetails(o.id)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      { }
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Order Details</DialogTitle>
-            <DialogDescription>
-              Order #{selectedOrder?.reference_number}
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedOrder && (
-            <div className="space-y-6">
-              { }
-              <div className="flex items-center justify-between p-4 bg-muted rounded-md">
-                <div>
-                  <p className="text-sm text-muted-foreground">Order Status</p>
-                  <p className="font-semibold">
-                    {orderService.getOrderStatusText(selectedOrder.status)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Payment Status
-                  </p>
-                  <p className="font-semibold">
-                    {orderService.getPaymentStatusText(
-                      undefined,
-                      selectedOrder.paid_at,
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Order Date</p>
-                  <p className="font-semibold">
-                    {selectedOrder.created_at && orderService.formatDate(selectedOrder.created_at)}
-                  </p>
-                </div>
-              </div>
-
-              { }
-              <div>
-                <h3 className="font-semibold text-lg mb-4">Order Items</h3>
-                <div className="space-y-3">
-                  {selectedOrder.items?.map((item: OrderItem) => {
-                    const productName =
-                      item.tree_instance?.tree?.name ||
-                      item.plan_price?.plan?.name ||
-                      (item as any).item?.name ||
-                      "Item";
-
-                    const productImage =
-                      item.tree_instance?.tree?.image_url ||
-                      (item as any).item?.image ||
-                      null;
-
-                    const isTree =
-                      item.type === "sponsor" ||
-                      item.type === "adopt" ||
-                      item.type === "tree";
-                    const isProduct = item.type === "product";
-
-                    const displayPrice = (item.total_amount ??
-                      item.amount * item.quantity) as number;
-
-                    return (
-                      <Card key={item.id}>
-                        <CardContent className="p-4">
-                          <div className="flex gap-4">
-                            <div className="relative w-20 h-20 shrink-0">
-                              {productImage ? (
-                                <Image
-                                  src={productImage}
-                                  alt={productName || "Product"}
-                                  fill
-                                  className="object-cover rounded"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-muted rounded flex items-center justify-center">
-                                  <Package className="h-8 w-8 text-muted-foreground" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold">{productName}</h4>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline">
-                                  {isTree
-                                    ? "Tree"
-                                    : isProduct
-                                      ? "Product"
-                                      : "Other"}
-                                </Badge>
-                                {item.type === "sponsor" && (
-                                  <Badge variant="secondary">Sponsor</Badge>
-                                )}
-                                {item.type === "adopt" && (
-                                  <Badge variant="secondary">Adopt</Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center justify-between mt-2">
-                                <span className="text-sm text-muted-foreground">
-                                  Qty: {item.quantity}
-                                </span>
-                                <span className="font-semibold">
-                                  ₹{displayPrice.toFixed(2)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-
-              { }
-              {selectedOrder.shipping_address && (
-                <div>
-                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    Shipping Address
-                  </h3>
-                  <Card>
-                    <CardContent className="p-4">
-                      <p className="font-semibold">
-                        {selectedOrder.shipping_address.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedOrder.shipping_address.phone}
-                      </p>
-                      <p className="text-sm mt-2">
-                        {selectedOrder.shipping_address.address_line1}
-                      </p>
-                      {selectedOrder.shipping_address.address_line2 && (
-                        <p className="text-sm">
-                          {selectedOrder.shipping_address.address_line2}
-                        </p>
-                      )}
-                      <p className="text-sm">
-                        {selectedOrder.shipping_address.city},{" "}
-                        {selectedOrder.shipping_address.state}{" "}
-                        {selectedOrder.shipping_address.pincode}
-                      </p>
-                      <p className="text-sm">
-                        {selectedOrder.shipping_address.country}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              { }
-              <div>
-                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Payment Information
-                </h3>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Subtotal</span>
-                        <span>₹{selectedOrder.total.toFixed(2)}</span>
-                      </div>
-                      {selectedOrder.discount > 0 && (
-                        <div className="flex items-center justify-between text-green-600">
-                          <span>Discount</span>
-                          <span>-₹{selectedOrder.discount.toFixed(2)}</span>
-                        </div>
-                      )}
-                      {selectedOrder.coupon?.code && (
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Coupon</span>
-                          <Badge variant="secondary">
-                            {selectedOrder.coupon.code}
-                          </Badge>
-                        </div>
-                      )}
-                      <Separator />
-                      <div className="flex items-center justify-between font-bold text-lg">
-                        <span>Total Paid</span>
-                        <span className="text-primary">
-                          ₹{selectedOrder.total.toFixed(2)}
-                        </span>
-                      </div>
-                      {(selectedOrder as any).transaction_id && (
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            Transaction ID
-                          </span>
-                          <span className="font-mono text-xs">
-                            {(selectedOrder as any).transaction_id}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              { }
-              <div className="flex gap-2 justify-end pt-4">
-                {orderService.canBeCancelled(selectedOrder) && (
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleCancelOrder(selectedOrder.id)}
-                    disabled={cancellingOrderId === selectedOrder.id}
-                  >
-                    {cancellingOrderId === selectedOrder.id
-                      ? "Cancelling..."
-                      : "Cancel Order"}
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  onClick={() => setIsDetailOpen(false)}
-                >
-                  Close
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <OrderDetailsModal
+        open={detailsOpen}
+        onClose={closeOrderDetails}
+        order={orderDetails}
+      />
     </Section>
   );
-};
-
-export default MyOrdersPage;
+}
