@@ -103,10 +103,10 @@ export function SigninForm({
 
   return (
     <div
-      className={cn("flex min-h-screen bg-background", className)}
+      className={cn("flex bg-background", className)}
       {...props}
     >
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 py-12 md:py-0">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 py-8">
         <div className="w-full max-w-sm">
           <div className="mb-8 space-y-3">
             <h1 className="text-3xl font-bold text-foreground">Welcome back</h1>
