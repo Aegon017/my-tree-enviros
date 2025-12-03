@@ -17,9 +17,9 @@ export default function HeroSection() {
     offset: ["start start", "end start"],
   });
 
-  const layer1 = useTransform(scrollYProgress, [0, 1], ["0%", "15%"]);
-  const layer2 = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
-  const layer3 = useTransform(scrollYProgress, [0, 1], ["0%", "55%"]);
+  const layer1 = useTransform(scrollYProgress, [0, 1], ["0%", "10%"]);
+  const layer2 = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const layer3 = useTransform(scrollYProgress, [0, 1], ["0%", "5%"]);
 
   return (
     <section
@@ -27,13 +27,13 @@ export default function HeroSection() {
       className="relative w-full overflow-hidden bg-background pb-44"
     >
       <motion.img
-        src="/hero-bg.jpeg"
+        src="/parallax/bg-mountains.png"
         alt=""
         className="absolute inset-0 h-full w-full object-cover opacity-60"
         style={{ y: layer1 }}
       />
 
-      {/* <motion.img
+      <motion.img
         src="/parallax/mid-fog.png"
         alt=""
         className="absolute inset-0 h-full w-full object-cover opacity-70"
@@ -45,7 +45,7 @@ export default function HeroSection() {
         alt=""
         className="absolute inset-0 h-full w-full object-cover opacity-90"
         style={{ y: layer3 }}
-      /> */}
+      />
 
       <div className="relative z-30 mx-auto flex max-w-5xl flex-col items-center gap-8 px-4 py-28 text-center">
         <motion.p
