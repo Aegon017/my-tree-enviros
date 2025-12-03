@@ -189,7 +189,7 @@ export default function TreeContributionForm({
           <CardContent className="p-6">
             <h3 className="text-xl font-semibold mb-6">Add Your Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="space-y-3">
                 <Label>Name</Label>
                 <Input
                   placeholder="Name on certificate"
@@ -200,7 +200,7 @@ export default function TreeContributionForm({
                 </p>
               </div>
 
-              <div>
+              <div className="space-y-3">
                 <Label>Occasion</Label>
                 <Input
                   placeholder="Birthday, Anniversary, etc."
@@ -211,7 +211,7 @@ export default function TreeContributionForm({
                 </p>
               </div>
 
-              <div className="md:col-span-2">
+              <div className="md:col-span-2 space-y-3">
                 <Label>Special Message</Label>
                 <Textarea
                   rows={3}
