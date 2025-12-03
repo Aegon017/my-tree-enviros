@@ -5,7 +5,6 @@ import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";
 import Footer from "@/components/app-footer";
 import Header from "@/components/app-header";
-import AppDownloadSection from "@/components/app-download-section";
 
 export const metadata: Metadata = {
   title: "My Tree Enviros",

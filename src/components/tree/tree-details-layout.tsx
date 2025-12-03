@@ -40,7 +40,7 @@ export default function TreeDetailsLayout({
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <div className="space-y-6 lg:sticky top-24 self-start">
+        <div className="space-y-6 lg:sticky top-24 self-start z-1">
           <ImageGallery images={tree.image_urls || []} name={tree.name} />
         </div>
 

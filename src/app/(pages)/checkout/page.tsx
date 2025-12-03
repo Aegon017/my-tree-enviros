@@ -247,7 +247,7 @@ function CheckoutPageContent() {
         </div>
 
         <div>
-          <Card className="sticky top-4">
+          <Card className="sticky top-16">
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
             </CardHeader>
