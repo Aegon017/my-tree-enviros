@@ -8,10 +8,11 @@ import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 const footerData = {
   quickLinks: [
     { name: "About Us", href: "/about" },
-    { name: "Order Tracking", href: "/track-order" },
-    { name: "Shipping & Delivery", href: "/shipping" },
-    { name: "Orders History", href: "/orders" },
-    { name: "My Account", href: "/account" },
+    { name: "Store", href: "/store" },
+    { name: "Feed A Tree", href: "/feed-a-tree" },
+    { name: "Orders History", href: "/my-orders" },
+    { name: "Blog", href: "/blog" },
+    { name: "Contact Us", href: "/contact-us" },
   ],
   policyLinks: [
     { name: "Terms & Conditions", href: "/terms" },

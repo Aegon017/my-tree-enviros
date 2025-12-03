@@ -93,75 +93,77 @@ export function LocationModal({ open, onOpenChange }: LocationModalProps) {
         onOpenChange(true);
       }}
     >
-      <DialogContent
-        className="max-w-xl p-0 rounded-2xl overflow-hidden"
-        onInteractOutside={blockClose}
-        onEscapeKeyDown={blockClose}
-        showCloseButton={false}
-      >
-        <DialogHeader className="p-4 border-b bg-muted/40">
-          <DialogTitle className="text-lg">Select Your Location</DialogTitle>
-        </DialogHeader>
+      <div className="px-4">
+        <DialogContent
+          className="max-w-xl p-0 rounded-2xl overflow-hidden"
+          onInteractOutside={blockClose}
+          onEscapeKeyDown={blockClose}
+          showCloseButton={false}
+        >
+          <DialogHeader className="p-4 border-b bg-muted/40">
+            <DialogTitle className="text-lg">Select Your Location</DialogTitle>
+          </DialogHeader>
 
-        <div className="p-4 space-y-4">
-          <Button
-            variant="secondary"
-            className="w-full flex items-center gap-2"
-            onClick={useMyLocation}
-            disabled={geoLoading}
-          >
-            <Crosshair className="h-4 w-4" />
-            {geoLoading ? "Detecting..." : "Use My Current Location"}
-          </Button>
+          <div className="p-4 space-y-4">
+            <Button
+              variant="secondary"
+              className="w-full flex items-center gap-2"
+              onClick={useMyLocation}
+              disabled={geoLoading}
+            >
+              <Crosshair className="h-4 w-4" />
+              {geoLoading ? "Detecting..." : "Use My Current Location"}
+            </Button>
 
-          <Input
-            placeholder="Search for area, street, landmark..."
-            value={query}
-            onChange={(e) => search(e.target.value)}
-          />
-        </div>
-
-        <ScrollArea className="h-80 px-4 pb-4">
-          {loading && (
-            <div className="flex justify-center py-10">
-              <Loader2 className="animate-spin h-6 w-6" />
-            </div>
-          )}
-
-          {!loading && results.length === 0 && query && (
-            <p className="text-center text-muted-foreground py-10">
-              No results found
-            </p>
-          )}
-
-          <div className="space-y-3">
-            {results.map((place: PlaceResult) => (
-              <button
-                key={place.place_id}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition hover:bg-accent ${selectedItem?.place_id === place.place_id
-                  ? "border-primary bg-primary/5"
-                  : "border-muted"
-                  }`}
-                onClick={() => {
-                  setSelectedItem(place);
-                  setTimeout(confirm, 150);
-                }}
-              >
-                <MapPin className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-medium text-sm">{place.display_name}</p>
-                </div>
-              </button>
-            ))}
+            <Input
+              placeholder="Search for area, street, landmark..."
+              value={query}
+              onChange={(e) => search(e.target.value)}
+            />
           </div>
-        </ScrollArea>
 
-        <div className="p-4 border-t bg-muted/40 flex justify-end">
-          <Button disabled={!selectedItem} onClick={confirm}>
-            Confirm Location
-          </Button>
-        </div>
-      </DialogContent>
+          <ScrollArea className="h-80 px-4 pb-4">
+            {loading && (
+              <div className="flex justify-center py-10">
+                <Loader2 className="animate-spin h-6 w-6" />
+              </div>
+            )}
+
+            {!loading && results.length === 0 && query && (
+              <p className="text-center text-muted-foreground py-10">
+                No results found
+              </p>
+            )}
+
+            <div className="space-y-3">
+              {results.map((place: PlaceResult) => (
+                <button
+                  key={place.place_id}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition hover:bg-accent ${selectedItem?.place_id === place.place_id
+                    ? "border-primary bg-primary/5"
+                    : "border-muted"
+                    }`}
+                  onClick={() => {
+                    setSelectedItem(place);
+                    setTimeout(confirm, 150);
+                  }}
+                >
+                  <MapPin className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium text-sm">{place.display_name}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
+
+          <div className="p-4 border-t bg-muted/40 flex justify-end">
+            <Button disabled={!selectedItem} onClick={confirm}>
+              Confirm Location
+            </Button>
+          </div>
+        </DialogContent>
+      </div>
     </Dialog>
   );
 }
