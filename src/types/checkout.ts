@@ -1,6 +1,6 @@
 export interface CheckoutItem {
     id: number;
-    type: "product" | "sponsor" | "adopt";
+    type: "product" | "sponsor" | "adopt" | "campaign";
     quantity: number;
     amount: number; // Unit price
     total_amount: number; // Line total
@@ -26,6 +26,9 @@ export interface CheckoutItem {
         occasion?: string;
         message?: string;
     };
+
+    // Campaign specific
+    campaign_id?: number;
 }
 
 export interface CheckoutCharge {

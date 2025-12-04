@@ -50,10 +50,12 @@ function AccountMenu({ isAuthenticated, signOut }: any) {
         {!isAuthenticated && (
           <>
             <DropdownMenuItem asChild>
-              <div className="flex items-center gap-2">
-                <LogIn />
-                <Link href="/sign-in">Sign In</Link>
-              </div>
+              <Link href="/sign-in" className="cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <LogIn />
+                  Sign In
+                </div>
+              </Link>
             </DropdownMenuItem>
           </>
         )}
@@ -61,16 +63,20 @@ function AccountMenu({ isAuthenticated, signOut }: any) {
         {isAuthenticated && (
           <>
             <DropdownMenuItem asChild>
-              <div className="flex items-center gap-2">
-                <User />
-                <Link href="/my-profile">My Profile</Link>
-              </div>
+              <Link href="/my-profile" className="cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <User />
+                  My Profile
+                </div>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <div className="flex items-center gap-2">
-                <ShoppingCart />
-                <Link href="/my-orders">My Orders</Link>
-              </div>
+              <Link href="/my-orders" className="cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart />
+                  My Orders
+                </div>
+              </Link>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />

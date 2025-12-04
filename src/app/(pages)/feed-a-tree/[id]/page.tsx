@@ -3,17 +3,15 @@
 import {
   ArrowLeft,
   Calendar,
-  CreditCard,
   Heart,
   IndianRupee,
   MapPin,
-  Shield,
   TreePine,
   Users,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Section from "@/components/section";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -38,14 +36,11 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import type { FeedTree } from "@/types/feed-tree";
-import { authStorage } from "@/lib/auth-storage";
 import { campaignService } from "@/services/campaign.services";
-import { ordersService as orderService } from "@/modules/orders/services/orders.service";
-import { paymentService } from "@/modules/payments/services/payments.service";
-import type { DirectOrderRequest } from "@/types/campaign.types";
+import { Markup } from "interweave";
 import { useAuth } from "@/hooks/use-auth";
+import { LoginDialog } from "@/components/login-dialog";
 
 interface ApiResponse {
   status: boolean;
@@ -72,12 +67,6 @@ const AMOUNT_OPTIONS = [
   { value: "5000", label: "₹5000" },
   { value: "custom", label: "Custom" },
 ] as const;
-
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-IN", {
@@ -177,288 +166,12 @@ const ProgressStats = ({
   );
 };
 
-const loadRazorpayScript = (): Promise<boolean> => {
-  return new Promise((resolve, reject) => {
-    if (window.Razorpay) {
-      resolve(true);
-      return;
-    }
 
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => reject(new Error("Failed to load Razorpay script"));
-    document.body.appendChild(script);
-  });
-};
-
-interface PaymentDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  campaignDetails: any;
-  campaignId: string;
-}
-
-const PaymentDialog = ({
-  open,
-  onOpenChange,
-  campaignDetails,
-  campaignId,
-}: PaymentDialogProps) => {
-  const [selectedAmount, setSelectedAmount] = useState("500");
-  const [customAmount, setCustomAmount] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const { isAuthenticated } = useAuth();
-
-  const finalAmount = useMemo(() => {
-    if (selectedAmount === "custom") {
-      return parseFloat(customAmount) || 0;
-    }
-    return parseFloat(selectedAmount);
-  }, [selectedAmount, customAmount]);
-
-  const handleAmountSelect = useCallback((value: string) => {
-    setSelectedAmount(value);
-    if (value !== "custom") {
-      setCustomAmount("");
-    }
-  }, []);
-
-  const processDirectPayment = useCallback(
-    async (amount: number) => {
-      try {
-        if (!isAuthenticated) {
-          window.location.href = "/sign-in";
-          return;
-        }
-
-        await loadRazorpayScript();
-
-        const orderRequest = {
-          item_type: "campaign" as const,
-          campaign_id: campaignDetails.campaign_id,
-          amount: amount,
-          quantity: 1,
-        };
-
-        const orderResponse =
-          await orderService.createDirectOrder(orderRequest);
-
-        // Backend returns: { order: {...}, payment: {...} }
-        // API client may wrap it, so check both
-        const responseData = orderResponse.data || orderResponse;
-        const order = responseData?.order;
-        const paymentData = responseData?.payment;
-
-        if (!order) {
-          console.error('Response:', orderResponse);
-          throw new Error("Failed to create order");
-        }
-
-        const options = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY || '',
-          amount: paymentData?.amount,
-          currency: paymentData?.currency,
-          order_id: paymentData?.order_id,
-          name: "MyTree Enviros",
-          description: `Support: ${campaignDetails.name}`,
-          handler: async (response: any) => {
-            try {
-              // Verify payment using /checkout/verify
-              await paymentService.verifyPayment({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                order_reference: order.reference_number,
-              });
-
-              alert(
-                `Thank you for your support! Payment of ${formatCurrency(amount)} has been processed successfully.`,
-              );
-              onOpenChange(false);
-              setSelectedAmount("500");
-              setCustomAmount("");
-
-              window.location.href = `/payment/success?order_id=${order.id}`;
-            } catch (error) {
-              console.error("Payment verification failed:", error);
-              alert("Payment verification failed. Please contact support.");
-              window.location.href = `/payment/failure?order_id=${order.id}`;
-            }
-          },
-          prefill: {
-            name: authStorage.getUser()?.name || "",
-            email: authStorage.getUser()?.email || "",
-          },
-          theme: {
-            color: "#16a34a",
-          },
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.open();
-      } catch (error) {
-        console.error("Direct payment error:", error);
-        throw error;
-      }
-    },
-    [campaignId, onOpenChange, campaignDetails?.name],
-  );
-
-  const handlePayment = useCallback(async () => {
-    if (finalAmount <= 0) {
-      alert("Please select a valid amount");
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      await processDirectPayment(finalAmount);
-    } catch (error) {
-      console.error("Direct payment failed:", error);
-      alert("Could not process payment. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [finalAmount, processDirectPayment]);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Support {campaignDetails.name}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          <div className="bg-muted/30 p-4 rounded-md">
-            <div className="flex items-center gap-3">
-              <div className="relative h-12 w-12">
-                <Image
-                  src={campaignDetails.main_image_url}
-                  alt={campaignDetails.name}
-                  fill
-                  className="object-cover rounded-md"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate">
-                  {campaignDetails.name}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {campaignDetails.area}, {campaignDetails.city.name}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <Label className="text-base">Select Amount to Support</Label>
-
-            <RadioGroup
-              value={selectedAmount}
-              onValueChange={handleAmountSelect}
-              className="grid grid-cols-3 gap-3"
-            >
-              {AMOUNT_OPTIONS.map((option) => (
-                <div key={option.value}>
-                  <RadioGroupItem
-                    value={option.value}
-                    id={option.value}
-                    className="peer sr-only"
-                  />
-                  <Label
-                    htmlFor={option.value}
-                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                  >
-                    <span className="font-semibold">{option.label}</span>
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-
-            {selectedAmount === "custom" && (
-              <div className="space-y-2">
-                <Label htmlFor="custom-amount">Enter Custom Amount</Label>
-                <div className="relative">
-                  <IndianRupee className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="custom-amount"
-                    type="number"
-                    placeholder="Enter amount in INR"
-                    value={customAmount}
-                    onChange={(e) => setCustomAmount(e.target.value)}
-                    className="pl-10"
-                    min="1"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-muted/30 p-4 rounded-md space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Selected Amount</span>
-              <span className="font-semibold">
-                {formatCurrency(finalAmount)}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Platform Fee</span>
-              <span className="font-semibold">₹0</span>
-            </div>
-            <Separator />
-            <div className="flex justify-between text-lg font-bold">
-              <span>Total Amount</span>
-              <span className="text-green-600">
-                {formatCurrency(finalAmount)}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Shield className="h-3 w-3" />
-            <span>Your payment is secure and encrypted</span>
-          </div>
-
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-              disabled={isProcessing}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handlePayment}
-              disabled={finalAmount <= 0 || isProcessing}
-              className="flex-1"
-            >
-              {isProcessing ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Pay {formatCurrency(finalAmount)}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
 
 const Page = () => {
   const params = useParams();
+  const router = useRouter();
+  const { user } = useAuth();
   const id = params.id as string;
 
   const [campaignData, setCampaignData] = useState<ApiResponse["data"] | null>(
@@ -466,7 +179,9 @@ const Page = () => {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [selectedAmount, setSelectedAmount] = useState("500");
+  const [customAmount, setCustomAmount] = useState("");
 
   useEffect(() => {
     const fetchFeedTree = async () => {
@@ -565,6 +280,40 @@ const Page = () => {
       day: "numeric",
     });
   }, []);
+
+  const finalAmount = useMemo(() => {
+    if (selectedAmount === "custom") {
+      return parseFloat(customAmount) || 0;
+    }
+    return parseFloat(selectedAmount);
+  }, [selectedAmount, customAmount]);
+
+  const handleAmountSelect = useCallback((value: string) => {
+    setSelectedAmount(value);
+    if (value !== "custom") {
+      setCustomAmount("");
+    }
+  }, []);
+
+  const handleProceedToCheckout = useCallback(() => {
+    if (!user) {
+      setShowLoginDialog(true);
+      return;
+    }
+
+    if (finalAmount <= 0) {
+      alert("Please select a valid amount");
+      return;
+    }
+
+    const params = new URLSearchParams({
+      mode: "buy_now",
+      type: "campaign",
+      campaign_id: id,
+      amount: finalAmount.toString(),
+    });
+    router.push(`/checkout?${params.toString()}`);
+  }, [user, finalAmount, id, router]);
 
   const campaignDetails = useMemo(() => {
     if (!campaignData) return null;
@@ -680,74 +429,16 @@ const Page = () => {
                 <TreePine className="h-5 w-5" />
                 Campaign Story
               </div>
-              <div
-                className="prose prose-lg max-w-none text-muted-foreground leading-relaxed"
-                dangerouslySetInnerHTML={{
-                  __html: campaign_details.description,
-                }}
+              <Markup
+                content={campaign_details.description ?? ""}
+                className="prose max-w-none dark:prose-invert"
               />
-            </CardContent>
-          </Card>
-
-          <Card className="border shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Location Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                <div className="space-y-3">
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-muted-foreground">Area</span>
-                    <span className="font-medium">{campaign_details.area}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-muted-foreground">City</span>
-                    <span className="font-medium">
-                      {campaign_details.city.name}
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-muted-foreground">State</span>
-                    <span className="font-medium">
-                      {campaign_details.state.name}
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-muted-foreground">Created</span>
-                    <span className="font-medium">
-                      {formatDate(campaign_details.created_at)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-muted-foreground">Last Updated</span>
-                    <span className="font-medium">
-                      {formatDate(campaign_details.updated_at)}
-                    </span>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
 
         <div className="space-y-6">
           <Card className="sticky top-20 border shadow-lg">
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="flex items-center justify-center gap-2 text-xl">
-                <Heart className="h-5 w-5 text-red-500" />
-                Support This Tree
-              </CardTitle>
-              <CardDescription className="text-base">
-                Join other supporters in nurturing this tree for a greener
-                future.
-              </CardDescription>
-            </CardHeader>
-
             <CardContent className="space-y-6">
               <ProgressStats
                 raised={raised_amount}
@@ -756,23 +447,73 @@ const Page = () => {
                 isExpired={campaignDetails.isExpired}
               />
 
+              {!campaignDetails.isExpired && (
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">Select Amount to Support</Label>
+
+                  <RadioGroup
+                    value={selectedAmount}
+                    onValueChange={handleAmountSelect}
+                    className="grid grid-cols-3 gap-2"
+                  >
+                    {AMOUNT_OPTIONS.map((option) => (
+                      <div key={option.value}>
+                        <RadioGroupItem
+                          value={option.value}
+                          id={`amount-${option.value}`}
+                          className="peer sr-only"
+                        />
+                        <Label
+                          htmlFor={`amount-${option.value}`}
+                          className="flex items-center justify-center rounded-md border-2 border-muted bg-transparent p-3 text-sm font-semibold hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                        >
+                          {option.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+
+                  {selectedAmount === "custom" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="custom-amount-input" className="text-sm">Enter Custom Amount</Label>
+                      <div className="relative">
+                        <IndianRupee className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="custom-amount-input"
+                          type="number"
+                          placeholder="Enter amount in INR"
+                          value={customAmount}
+                          onChange={(e) => setCustomAmount(e.target.value)}
+                          className="pl-10"
+                          min="1"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-muted/30 p-3 rounded-md">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Selected Amount</span>
+                      <span className="font-bold text-green-600">
+                        {formatCurrency(finalAmount)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <Button
                 className="w-full"
                 size="lg"
-                disabled={campaignDetails.isExpired}
-                onClick={() => setPaymentDialogOpen(true)}
+                disabled={campaignDetails.isExpired || finalAmount <= 0}
+                onClick={handleProceedToCheckout}
               >
                 {campaignDetails.isExpired
                   ? "Campaign Ended"
-                  : "Support This Tree"}
+                  : `Proceed to Checkout (${formatCurrency(finalAmount)})`}
               </Button>
 
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                <Shield className="h-3 w-3" />
-                <span>Secure & encrypted donation process</span>
-              </div>
-
-              <Separator />
+              <div className="border-t pt-4" />
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -832,12 +573,7 @@ const Page = () => {
         </div>
       </div>
 
-      <PaymentDialog
-        open={paymentDialogOpen}
-        onOpenChange={setPaymentDialogOpen}
-        campaignDetails={campaign_details}
-        campaignId={id}
-      />
+      <LoginDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} />
     </Section>
   );
 };

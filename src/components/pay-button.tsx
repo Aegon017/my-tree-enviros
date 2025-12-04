@@ -5,6 +5,12 @@ import { toast } from "sonner";
 import type { Options } from "@/types/razorpay";
 import { Button } from "./ui/button";
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 interface Props {
   options?: Options;
 }
