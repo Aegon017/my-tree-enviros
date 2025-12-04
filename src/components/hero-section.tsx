@@ -85,7 +85,7 @@ export default function HeroSection() {
             className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-primary"
           >
             Nature grows with your story
-            <span className="block text-2xl md:text-4xl lg:text-5xl font-light text-secondary mt-2">
+            <span className="block text-2xl md:text-4xl lg:text-5xl font-light text-foreground mt-2">
               Every tree begins a new chapter
             </span>
           </motion.h1>
