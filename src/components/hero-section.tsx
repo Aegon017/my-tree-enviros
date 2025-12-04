@@ -1,67 +1,51 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, ReactNode } from "react";
-import Link from "next/link";
-import { WobbleCard } from "@/components/ui/wobble-card";
-
-interface ScrollFadeInProps {
-  children: ReactNode;
-  delay?: number;
-}
+import { useRef } from "react";
 
 export default function HeroSection() {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"],
-  });
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
 
-  const layer1 = useTransform(scrollYProgress, [0, 1], ["0%", "10%"]);
-  const layer2 = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const layer3 = useTransform(scrollYProgress, [0, 1], ["0%", "5%"]);
+  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const fogY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
+  const treesY = useTransform(scrollYProgress, [0, 1], ["0%", "10%"]);
+
+  const fade = {
+    hidden: { opacity: 0, y: 40 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.8 } }
+  };
 
   return (
-    <section
-      ref={containerRef}
-      className="relative w-full overflow-hidden bg-background pb-44"
-    >
-      <motion.img
-        src="/parallax/bg-mountains.png"
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover opacity-60"
-        style={{ y: layer1 }}
+    <section ref={ref} className="relative w-full overflow-hidden bg-background">
+      <motion.div
+        style={{ y: bgY }}
+        className="absolute inset-0 bg-[url('/parallax/bg-mountains.png')] bg-cover bg-center opacity-60"
+      />
+      <motion.div
+        style={{ y: fogY }}
+        className="absolute inset-0 bg-[url('/parallax/mid-fog.png')] bg-cover bg-center opacity-60"
+      />
+      <motion.div
+        style={{ y: treesY }}
+        className="absolute inset-0 bg-[url('/parallax/fg-trees.png')] bg-cover bg-center opacity-90"
       />
 
-      <motion.img
-        src="/parallax/mid-fog.png"
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover opacity-70"
-        style={{ y: layer2 }}
-      />
-
-      <motion.img
-        src="/parallax/fg-trees.png"
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover opacity-90"
-        style={{ y: layer3 }}
-      />
-
-      <div className="relative z-30 mx-auto flex max-w-5xl flex-col items-center gap-8 px-4 py-28 text-center">
+      <div className="relative z-20 flex flex-col items-center text-center px-6 pt-40 pb-32">
         <motion.p
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-xs uppercase tracking-[0.25em] text-muted-foreground"
+          className="uppercase tracking-[0.3em] text-sm text-muted-foreground"
         >
           My Tree Enviros
         </motion.p>
 
         <motion.h1
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55 }}
-          className="uppercase max-w-4xl text-4xl font-semibold leading-tight text-foreground md:text-6xl"
+          transition={{ duration: 0.6 }}
+          className="text-4xl md:text-6xl max-w-4xl font-semibold uppercase leading-tight text-foreground"
         >
           Nature grows with your story.
           <span className="block text-primary">
@@ -70,93 +54,94 @@ export default function HeroSection() {
         </motion.h1>
 
         <motion.p
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65 }}
-          className="max-w-2xl text-base text-muted-foreground md:text-lg"
+          transition={{ duration: 0.7 }}
+          className="mt-4 max-w-2xl text-lg text-muted-foreground"
         >
           Walk into a living journey. Sponsor, adopt, or nourish a tree and watch the world change through your actions.
         </motion.p>
       </div>
 
-      <div className="relative z-30 mx-auto mt-24 grid w-full max-w-6xl grid-cols-1 gap-8 px-4 md:grid-cols-3">
-        <ScrollFadeIn>
-          <div className="relative">
-            <WobbleCard containerClassName="bg-muted/10 rounded-2xl shadow-lg backdrop-blur-sm">
-              <div className="space-y-4">
-                <h2 className="uppercase text-left text-2xl font-semibold text-primary md:text-3xl">
-                  Sponsor a Tree
-                </h2>
-                <p className="text-left text-muted-foreground">
-                  Sponsor a tree today and help restore nature, support green growth, and create a healthier planet.
-                </p>
-              </div>
-              <img
-                src="/trees/sponsor.png"
-                alt=""
-                className="absolute -bottom-20 -right-8 w-48 opacity-100 object-contain"
-              />
-            </WobbleCard>
-            <Link href="/sponsor-a-tree" className="absolute inset-0 z-50" />
-          </div>
-        </ScrollFadeIn>
+      <div className="relative z-30 w-full max-w-7xl mx-auto px-6 pb-40 space-y-16">
+        <div className="grid md:grid-cols-2 gap-6">
+          <motion.div
+            variants={fade}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="relative h-[360px] overflow-hidden rounded-3xl bg-background/40 backdrop-blur-xl border border-white/10 shadow-2xl flex items-center"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-background/40 to-muted/40" />
+            <div className="relative z-10 p-10 max-w-md">
+              <h2 className="font-mono text-3xl font-semibold text-foreground text-left">
+                Sponsor a Tree
+              </h2>
+              <p className="mt-3 text-muted-foreground text-left leading-relaxed">
+                Sponsor a tree today and help restore nature, support green growth, and create a healthier planet.
+              </p>
+            </div>
+            <motion.img
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9 }}
+              src="/trees/sponsor.png"
+              className="absolute right-0 bottom-0 w-64 object-contain pointer-events-none"
+            />
+          </motion.div>
 
-        <ScrollFadeIn delay={0.15}>
-          <div className="relative">
-            <WobbleCard containerClassName="bg-muted/15 rounded-2xl shadow-lg backdrop-blur-sm">
-              <div className="space-y-4">
-                <h2 className="uppercase text-primary text-left text-2xl font-semibold md:text-3xl">
-                  Adopt a Tree
-                </h2>
-                <p className="text-left text-muted-foreground">
-                  Adopt a tree today and nurture nature’s growth, protect the environment, and create a greener, healthier future.
-                </p>
-              </div>
-              <img
-                src="/trees/adopt.png"
-                alt=""
-                className="absolute -bottom-20 -right-8 w-48 opacity-100 object-contain"
-              />
-            </WobbleCard>
-            <Link href="/adopt-a-tree" className="absolute inset-0 z-50" />
-          </div>
-        </ScrollFadeIn>
+          <motion.div
+            variants={fade}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="relative h-[360px] rounded-3xl overflow-hidden bg-muted/40 backdrop-blur-xl border border-white/10 shadow-2xl flex items-center"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-muted/20" />
+            <div className="relative z-10 p-10 max-w-md">
+              <h2 className="font-mono text-3xl font-semibold text-foreground text-left">
+                Adopt a Tree
+              </h2>
+              <p className="mt-3 text-muted-foreground text-left leading-relaxed">
+                Adopt a tree today and nurture nature’s growth, protect the environment, and create a greener future.
+              </p>
+            </div>
+            <motion.img
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1 }}
+              src="/trees/adopt.png"
+              className="absolute right-0 bottom-0 w-56 object-contain pointer-events-none"
+            />
+          </motion.div>
+        </div>
 
-        <ScrollFadeIn delay={0.3}>
-          <div className="relative">
-            <WobbleCard containerClassName="bg-muted/20 rounded-2xl shadow-lg backdrop-blur-sm">
-              <div className="space-y-4">
-                <h2 className="uppercase text-left text-2xl font-semibold text-primary md:text-3xl">
-                  Feed a Tree
-                </h2>
-                <p className="text-left text-muted-foreground">
-                  Join our campaigns to restore degraded ecological zones and help rebuild nature for healthier planet.
-                </p>
-              </div>
-              <img
-                src="/trees/feed.png"
-                alt=""
-                className="absolute -bottom-20 -right-10 w-52 opacity-100 object-contain"
-              />
-            </WobbleCard>
-            <Link href="/feed-a-tree" className="absolute inset-0 z-50" />
+        <motion.div
+          variants={fade}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="relative h-[380px] rounded-3xl overflow-hidden bg-background/50 backdrop-blur-xl border border-white/10 shadow-2xl flex items-center"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-background/40 via-muted/40 to-muted/20" />
+          <div className="relative z-10 p-10 max-w-lg">
+            <h2 className="font-mono text-3xl font-semibold text-foreground text-left">
+              Feed a Tree
+            </h2>
+            <p className="mt-3 text-muted-foreground text-left leading-relaxed max-w-md">
+              Join our campaigns to restore degraded ecological zones and help rebuild nature for a healthier planet.
+            </p>
           </div>
-        </ScrollFadeIn>
+          <motion.img
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1 }}
+            src="/trees/feed.png"
+            className="absolute right-0 bottom-0 w-72 object-contain pointer-events-none"
+          />
+        </motion.div>
       </div>
     </section>
   );
 }
-
-function ScrollFadeIn({ children, delay = 0 }: ScrollFadeInProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, delay, ease: "easeOut" }}
-      viewport={{ once: true, margin: "-120px" }}
-      className="h-full w-full"
-    >
-      {children}
-    </motion.div>
-  );
-}
+  
