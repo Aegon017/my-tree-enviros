@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { GooglePlayIcon, AppleAppStoreIcon } from "./store-icons";
-import { ArrowUpRight } from "lucide-react";
-import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
+// Import necessary icons from react-icons/fa or fa6
+import { FaFacebook, FaInstagram, FaYoutube, FaLinkedin } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6'; // Correct import for the "X" logo
+import { ArrowUpRight } from 'lucide-react'; // Assuming you are using Lucide Icons for the arrow as in the original code
 
 const footerData = {
   quickLinks: [
-    { name: "About Us", href: "/about" },
+    { name: "About Us", href: "/about-us" },
     { name: "Store", href: "/store" },
     { name: "Feed A Tree", href: "/feed-a-tree" },
     { name: "Orders History", href: "/my-orders" },
@@ -21,10 +22,12 @@ const footerData = {
     { name: "Cancellations & Returns", href: "/cancellations-and-refunds" },
   ],
   social: [
-    { icon: Facebook, href: "https://facebook.com" },
-    { icon: Instagram, href: "https://instagram.com" },
-    { icon: Twitter, href: "https://twitter.com" },
-    { icon: Youtube, href: "https://youtube.com" },
+    // Use the imported React Icon components directly
+    { icon: FaFacebook, href: "www.facebook.com" },
+    { icon: FaInstagram, href: "www.instagram.com" },
+    { icon: FaXTwitter, href: "x.com" },
+    { icon: FaLinkedin, href: "www.linkedin.com" },
+    { icon: FaYoutube, href: "https://youtube.com" },
   ],
 };
 
@@ -55,6 +58,7 @@ export default function Footer() {
                     className="group flex items-center justify-between text-sm font-medium text-white/80 hover:text-white transition-colors"
                   >
                     {link.name}
+                    {/* The ArrowUpRight icon from Lucide React is used here */}
                     <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
                   </Link>
                 </li>
@@ -93,6 +97,7 @@ export default function Footer() {
                 href={s.href}
                 className="text-white/60 hover:text-white transition-colors"
               >
+                {/* Render the imported icon component */}
                 <s.icon className="h-5 w-5" />
               </Link>
             ))}

@@ -3,12 +3,41 @@
 import Section from "@/components/section"
 import SectionTitle from "@/components/section-title"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
 import { Mail, Phone, MapPin } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { toast } from "sonner"
+
+const formSchema = z.object({
+    name: z.string().min(2),
+    email: z.string().email(),
+    phone: z.string().min(5),
+    message: z.string().min(5)
+})
 
 const Page = () => {
+
+    const form = useForm({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            name: "",
+            email: "",
+            phone: "",
+            message: ""
+        }
+    })
+
+    const onSubmit = (values: z.infer<typeof formSchema>) => {
+        console.log(values)
+        toast.success("Your message has been successfully delivered.")
+        form.reset()
+    }
+
     return (
         <div className="bg-background">
             <div className="py-20 bg-linear-to-b from-muted/40 to-background">
@@ -43,7 +72,7 @@ const Page = () => {
                                     </div>
                                     <div className="text-sm">
                                         <p className="font-medium">Phone</p>
-                                        <p className="text-muted-foreground">+91 99482 33863</p>
+                                        <p className="text-muted-foreground">+91 89777 30561</p>
                                     </div>
                                 </div>
 
@@ -72,15 +101,68 @@ const Page = () => {
                     <div className="lg:col-span-2">
                         <Card className="p-8 shadow-md hover:shadow-xl transition-all">
                             <h3 className="text-2xl font-semibold mb-6">Send Us a Message</h3>
-                            <form className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <Input placeholder="Full Name" className="h-12" />
-                                    <Input placeholder="Email Address" type="email" className="h-12" />
-                                </div>
-                                <Input placeholder="Phone Number" className="h-12" />
-                                <Textarea placeholder="Your Message" rows={6} className="resize-none" />
-                                <Button className="w-full h-12 text-base">Submit Message</Button>
-                            </form>
+
+                            <Form {...form}>
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <FormField
+                                            control={form.control}
+                                            name="name"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <Input placeholder="Full Name" className="h-12" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <FormField
+                                            control={form.control}
+                                            name="email"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <Input placeholder="Email Address" type="email" className="h-12" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+
+                                    <FormField
+                                        control={form.control}
+                                        name="phone"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input placeholder="Phone Number" className="h-12" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="message"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Textarea placeholder="Your Message" rows={6} className="resize-none" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <Button type="submit" className="w-full h-12 text-base">
+                                        Submit Message
+                                    </Button>
+                                </form>
+                            </Form>
                         </Card>
                     </div>
                 </div>
