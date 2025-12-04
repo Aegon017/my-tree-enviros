@@ -121,6 +121,7 @@ export default function TreeContributionForm({
                     setQuantity(Math.max(1, Number(e.target.value || 1)))
                   }
                   className="w-16 text-center border-0"
+                  readOnly
                 />
                 <Button
                   variant="ghost"
