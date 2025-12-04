@@ -199,7 +199,7 @@ function CheckoutPageContent() {
           <CardContent className="p-8 text-center">
             <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground">Your cart is empty.</p>
-            <Button className="mt-4" onClick={() => router.push("/products")}>
+            <Button className="mt-4" onClick={() => router.push("/store/products")}>
               Continue Shopping
             </Button>
           </CardContent>
