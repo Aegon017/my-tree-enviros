@@ -152,6 +152,7 @@ function CheckoutPageContent() {
         plan_price_id: item.plan_price_id,
         plan_id: item.plan_id,
         tree_id: item.tree_id,
+        campaign_id: item.campaign_id,
         dedication: dedication || item.dedication,
       })),
       coupon_code: couponCode,
