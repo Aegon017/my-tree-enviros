@@ -119,7 +119,7 @@ const Page = () => {
                                 <p>If you have questions about this Shipping Policy, contact us:</p>
                                 <p>
                                     <strong>Email:</strong> communication@mytree.care<br />
-                                    <strong>Phone:</strong> +91 99482 33863 <br />
+                                    <strong>Phone:</strong> +91 89777 30561 <br />
                                     <strong>Hours:</strong> 9:30 AM to 6:30 PM
                                 </p>
                             </section>
