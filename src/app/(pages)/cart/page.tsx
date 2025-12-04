@@ -151,6 +151,7 @@ function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpe
                     onChange={(e) => quantityChange(Number(e.target.value))}
                     className="w-12 text-center border-x-0 bg-transparent"
                     disabled={isUpdating}
+                    readOnly
                   />
 
                   <Button disabled={isUpdating} onClick={() => quantityChange(item.quantity + 1)} size="icon" variant="ghost">

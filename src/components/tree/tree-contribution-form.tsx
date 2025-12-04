@@ -80,17 +80,18 @@ export default function TreeContributionForm({
 
   const handleSponsorNow = form.handleSubmit((values) => {
     if (!selectedPlan) return;
-    const details = {
-      ...values,
-      duration: selectedYears,
-      quantity,
-      price: selectedPlan.price,
-    };
-    localStorage.setItem(`tree_details_${tree.id}`, JSON.stringify(details));
 
-    router.push(
-      `/checkout?buy_now=true&type=${pageType}&plan_price_id=${selectedPlan.planPriceId}&quantity=${quantity}`
-    );
+    const params = new URLSearchParams({
+      mode: "buy_now",
+      type: pageType,
+      plan_price_id: selectedPlan.planPriceId.toString(),
+      quantity: quantity.toString(),
+      dedication_name: values.name,
+      dedication_occasion: values.occasion,
+      dedication_message: values.message,
+    });
+
+    router.push(`/checkout?${params.toString()}`);
   });
 
   return (

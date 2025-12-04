@@ -13,7 +13,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useSearchParams } from "next/navigation";
-
 import { Suspense, useEffect, useState } from "react";
 import { ordersService } from "@/modules/orders/services/orders.service";
 
@@ -41,15 +40,12 @@ function PaymentSuccessPage() {
         ordersService
           .getOrderById(id)
           .then((res) => {
-            // Backend returns: { data: { order: {...} } }
             const orderData = res?.data;
             if (mounted && orderData) {
               setOrder(orderData);
             }
           })
-          .catch((err) => {
-            console.error('Failed to fetch order:', err);
-          })
+          .catch(() => {})
           .finally(() => {
             if (mounted) setLoading(false);
           });
@@ -68,84 +64,110 @@ function PaymentSuccessPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading order details...</p>
-        </div>
+        <p className="text-muted-foreground">Loading order details...</p>
       </div>
     );
   }
 
+  const treeItem = order?.items?.[0];
+  const formattedAmount = `₹${Number(order?.grand_total || 0).toFixed(2)}`;
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
       <div className="max-w-md w-full space-y-8">
-        {/* Success Icon */}
         <div className="text-center">
           <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 dark:bg-green-900/20">
             <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
           </div>
         </div>
 
-        {/* Success Message */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">
-            Payment Successful!
-          </h1>
+          <h1 className="text-3xl font-bold">Payment Successful!</h1>
           <p className="text-muted-foreground">
-            Thank you for your purchase. Your payment has been processed
-            successfully.
+            Thank you for your contribution. Your payment has been processed.
           </p>
         </div>
 
-        {/* Order Details Card */}
-        <Card className="border-border">
+        <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg text-foreground">
-              Order Details
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Your order has been confirmed
-            </CardDescription>
+            <CardTitle className="text-lg">Order Details</CardTitle>
+            <CardDescription>Your order has been confirmed</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+
+          <CardContent className="space-y-4 text-sm">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <p className="text-muted-foreground">Order Number</p>
-                <p className="font-medium text-foreground">
-                  {order?.order_number || 'N/A'}
-                </p>
+                <p className="font-medium">{order?.reference_number}</p>
               </div>
+
               <div className="space-y-1">
                 <p className="text-muted-foreground">Amount Paid</p>
-                <p className="font-medium text-foreground">
-                  {order?.formatted_total || `₹${(order?.total || 0).toFixed(2)}`}
-                </p>
+                <p className="font-medium">{formattedAmount}</p>
               </div>
+
               <div className="space-y-1">
                 <p className="text-muted-foreground">Status</p>
-                <p className="font-medium text-foreground">
-                  {order?.status_label || order?.status || 'Pending'}
-                </p>
+                <p className="font-medium capitalize">{order?.status}</p>
               </div>
+
               <div className="space-y-1">
                 <p className="text-muted-foreground">Date</p>
-                <p className="font-medium text-foreground">
-                  {order?.paid_at ? new Date(order.paid_at).toLocaleDateString() : new Date().toLocaleDateString()}
+                <p className="font-medium">
+                  {order?.created_at
+                    ? new Date(order.created_at).toLocaleDateString()
+                    : ""}
                 </p>
               </div>
             </div>
 
-            <Separator className="bg-border" />
+            <Separator />
 
-            <Badge
-              variant="secondary"
-              className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-            >
+            <div className="space-y-1">
+              <p className="text-muted-foreground">Payment Method</p>
+              <p className="font-medium capitalize">
+                {order?.payment?.method || "Razorpay"}
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-muted-foreground">Transaction ID</p>
+              <p className="font-medium">
+                {order?.payment?.transaction_id || "N/A"}
+              </p>
+            </div>
+
+            {treeItem && (
+              <>
+                <Separator />
+
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Tree Sponsored</p>
+                  <p className="font-medium">{treeItem.tree_name}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Quantity</p>
+                  <p className="font-medium">{treeItem.quantity}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Tree Amount</p>
+                  <p className="font-medium">
+                    ₹{Number(treeItem.amount).toFixed(2)}
+                  </p>
+                </div>
+              </>
+            )}
+
+            <Separator />
+
+            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
               Payment Completed
             </Badge>
           </CardContent>
         </Card>
 
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
           <Button asChild variant="outline" className="flex-1">
             <Link href="/">
@@ -153,7 +175,8 @@ function PaymentSuccessPage() {
               Back to Home
             </Link>
           </Button>
-          <Button asChild className="flex-1 bg-primary text-primary-foreground">
+
+          <Button asChild className="flex-1">
             <Link href="/my-orders">
               View Orders
               <ArrowRight className="h-4 w-4 ml-2" />

@@ -11,6 +11,9 @@ import ShippingAddresses from "@/components/shipping-address";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { LoginDialog } from "@/components/login-dialog";
 import { ApplyCoupon } from "@/components/apply-coupon";
@@ -19,7 +22,6 @@ import { useCheckout } from "@/modules/checkout/hooks/use-checkout";
 import { CheckoutSummary, CheckoutItem } from "@/types/checkout";
 
 function CheckoutItemCard({ item }: { item: CheckoutItem }) {
-  const isProduct = item.type === "product";
   const name = item.name;
   const img = item.image_url ?? "/placeholder-image.jpg";
 
@@ -32,7 +34,12 @@ function CheckoutItemCard({ item }: { item: CheckoutItem }) {
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-base truncate">{name}</h4>
-            {!isProduct && (
+            {item.type === "campaign" && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Campaign Donation
+              </p>
+            )}
+            {(item.type === "sponsor" || item.type === "adopt") && (
               <>
                 <p className="text-sm text-muted-foreground mt-1">
                   {item.duration} {item.duration_unit}
@@ -69,6 +76,16 @@ function CheckoutPageContent() {
   const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [dedication, setDedication] = useState<{
+    name: string;
+    occasion: string;
+    message: string;
+  } | null>(null);
+
+  const allowCoupons = useMemo(
+    () => summary?.items.some((i) => i.type !== "campaign"),
+    [summary]
+  );
 
   const fetchSummary = useCallback(async (code?: string) => {
     setLoading(true);
@@ -96,8 +113,22 @@ function CheckoutPageContent() {
       setLoading(false);
       return;
     }
+
+    // Parse dedication from URL params
+    const dedicationName = searchParams.get('dedication_name');
+    const dedicationOccasion = searchParams.get('dedication_occasion');
+    const dedicationMessage = searchParams.get('dedication_message');
+
+    if (dedicationName || dedicationOccasion || dedicationMessage) {
+      setDedication({
+        name: dedicationName || '',
+        occasion: dedicationOccasion || '',
+        message: dedicationMessage || '',
+      });
+    }
+
     fetchSummary(couponCode ?? undefined);
-  }, [fetchSummary, couponCode, user]);
+  }, [fetchSummary, couponCode, user, searchParams]);
 
   const handleCouponApplied = useCallback((discount: number, couponId: number, code: string) => {
     setCouponCode(code);
@@ -121,12 +152,13 @@ function CheckoutPageContent() {
         plan_price_id: item.plan_price_id,
         plan_id: item.plan_id,
         tree_id: item.tree_id,
-        dedication: item.dedication,
+        campaign_id: item.campaign_id,
+        dedication: dedication || item.dedication,
       })),
       coupon_code: couponCode,
       shipping_address_id: selectedAddress,
     };
-  }, [summary, couponCode, selectedAddress]);
+  }, [summary, couponCode, selectedAddress, dedication]);
 
   const handlePayment = async () => {
     if (!user) {
@@ -199,7 +231,7 @@ function CheckoutPageContent() {
           <CardContent className="p-8 text-center">
             <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground">Your cart is empty.</p>
-            <Button className="mt-4" onClick={() => router.push("/products")}>
+            <Button className="mt-4" onClick={() => router.push("/store")}>
               Continue Shopping
             </Button>
           </CardContent>
@@ -239,11 +271,53 @@ function CheckoutPageContent() {
             </CardContent>
           </Card>
 
-          <ApplyCoupon
-            currentTotal={summary.subtotal}
-            onCouponApplied={handleCouponApplied}
-            onCouponRemoved={handleCouponRemoved}
-          />
+          {dedication && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Dedication Details</CardTitle>
+                <CardDescription>Edit your dedication information</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dedication-name">Name</Label>
+                  <Input
+                    id="dedication-name"
+                    value={dedication.name}
+                    onChange={(e) => setDedication({ ...dedication, name: e.target.value })}
+                    placeholder="Name on certificate"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dedication-occasion">Occasion</Label>
+                  <Input
+                    id="dedication-occasion"
+                    value={dedication.occasion}
+                    onChange={(e) => setDedication({ ...dedication, occasion: e.target.value })}
+                    placeholder="Birthday, Anniversary, etc."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dedication-message">Special Message</Label>
+                  <Textarea
+                    id="dedication-message"
+                    value={dedication.message}
+                    onChange={(e) => setDedication({ ...dedication, message: e.target.value })}
+                    placeholder="A message for the certificate"
+                    rows={3}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {allowCoupons && (
+            <ApplyCoupon
+              currentTotal={summary.subtotal}
+              onCouponApplied={handleCouponApplied}
+              onCouponRemoved={handleCouponRemoved}
+            />
+          )}
+
         </div>
 
         <div>
