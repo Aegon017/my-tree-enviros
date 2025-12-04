@@ -160,6 +160,7 @@ export default function ProductPage({
                     )
                   }
                   className="w-16 text-center border-0"
+                  readOnly
                 />
                 <Button
                   variant="ghost"
