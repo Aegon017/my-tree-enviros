@@ -21,7 +21,7 @@ const Page = () => {
                             <section>
                                 <h2 className="text-2xl font-bold mb-4">Our Commitment to You</h2>
                                 <p>
-                                    Thank you for choosing My Tree Enviros India Pvt Ltd Org (MyTree) for your gardening needs.
+                                    Thank you for choosing My Tree Enviros India Pvt Ltd for your gardening needs.
                                     We are committed to delivering your plants, seeds, and gardening tools safely and efficiently.
                                     As we ship live plants, our shipping process is carefully designed to ensure each plant arrives
                                     healthy and ready to thrive.

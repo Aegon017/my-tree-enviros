@@ -14,6 +14,7 @@ type Props = {
   treeId?: number;
   planId?: number;
   planPriceId?: number;
+  initiativeSiteId?: number | null;
   quantity?: number;
   dedication?: {
     name: string;
@@ -37,6 +38,7 @@ export default function AddToCartButton({
   treeId,
   planId,
   planPriceId,
+  initiativeSiteId,
   quantity = 1,
   dedication,
   disabled,
@@ -101,6 +103,7 @@ export default function AddToCartButton({
           tree_id: treeId,
           plan_id: planId,
           plan_price_id: planPriceId,
+          initiative_site_id: initiativeSiteId,
           quantity,
           dedication: required,
           tree: treeData,
