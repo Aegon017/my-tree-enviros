@@ -246,6 +246,14 @@ export const useCartStore = create<CartState>()(
               }
             }
           }
+
+          if (
+            payload.initiative_site_id !== undefined &&
+            item.type !== "product"
+          ) {
+            item.initiative_site_id = payload.initiative_site_id;
+          }
+
           set({ cart: { ...cart } });
         }
       },

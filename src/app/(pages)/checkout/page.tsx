@@ -51,6 +51,11 @@ function CheckoutItemCard({ item }: { item: CheckoutItem }) {
                     {item.dedication.message && <p><b>Message:</b> {item.dedication.message}</p>}
                   </div>
                 )}
+                {item.initiative_site_label && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    <b>Site:</b> {item.initiative_site_label}
+                  </p>
+                )}
               </>
             )}
             <div className="flex justify-between mt-2">
@@ -153,6 +158,7 @@ function CheckoutPageContent() {
         plan_id: item.plan_id,
         tree_id: item.tree_id,
         campaign_id: item.campaign_id,
+        initiative_site_id: item.initiative_site_id,
         dedication: dedication || item.dedication,
       })),
       coupon_code: couponCode,

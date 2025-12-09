@@ -26,6 +26,8 @@ export interface CheckoutItem {
         occasion?: string;
         message?: string;
     };
+    initiative_site_id?: number;
+    initiative_site_label?: string;
 
     // Campaign specific
     campaign_id?: number;
