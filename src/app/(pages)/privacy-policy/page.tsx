@@ -21,7 +21,7 @@ const Page = () => {
                             <section>
                                 <h2 className="text-2xl font-bold mb-4">Introduction</h2>
                                 <p>
-                                    This Privacy Policy describes how My Tree Enviros India Pvt Ltd Org (“we”, “us”, “our”)
+                                    This Privacy Policy describes how My Tree Enviros India Pvt Ltd (“we”, “us”, “our”)
                                     collects, uses, and discloses your personal information when you visit, use our services,
                                     or make a purchase from mytree.care (the “Site”) or otherwise communicate with us
                                     (collectively, the “Services”). “You” refers to any user of the Services, whether a customer,
@@ -193,7 +193,7 @@ const Page = () => {
                                 </p>
                                 <p>
                                     <strong>Email:</strong> communication@mytree.care<br />
-                                    <strong>Address:</strong> My Tree Enviros India Pvt Ltd Org, Attn: Operations Manager,
+                                    <strong>Address:</strong> My Tree Enviros India Pvt Ltd, Attn: Operations Manager,
                                     Plot No. 21, Madhapur, Gafoornagar, Hyderabad, Telangana 500081.
                                 </p>
                             </section>

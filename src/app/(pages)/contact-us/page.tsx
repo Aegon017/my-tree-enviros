@@ -60,7 +60,7 @@ const Page = () => {
                                     <div className="text-sm">
                                         <p className="font-medium">Office Location</p>
                                         <p className="text-muted-foreground">
-                                            My Tree Enviros India Pvt Ltd Org, Attn: Operations Manager,
+                                            My Tree Enviros India Pvt Ltd, Attn: Operations Manager,
                                             Plot No. 21, Madhapur, Gafoornagar, Hyderabad, Telangana 500081.
                                         </p>
                                     </div>

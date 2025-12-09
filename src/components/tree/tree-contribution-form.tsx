@@ -28,6 +28,10 @@ const dedicationSchema = z.object({
 
 type DedicationValues = z.infer<typeof dedicationSchema>;
 
+import { InitiativeSiteSelector } from "../initiative-site-selector";
+
+// ... existing imports
+
 export default function TreeContributionForm({
   tree,
   pageType,
@@ -38,6 +42,7 @@ export default function TreeContributionForm({
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [selectedYears, setSelectedYears] = useState<number>(1);
+  const [selectedSiteId, setSelectedSiteId] = useState<number | null>(null);
 
 
   const planOptions = useMemo(() => {
@@ -101,6 +106,16 @@ export default function TreeContributionForm({
           <h3 className="text-xl font-semibold mb-6">
             Configure Your {pageType === "sponsor" ? "Sponsorship" : "Adoption"}
           </h3>
+
+          {pageType === "sponsor" && (
+            <div className="mb-6">
+              <Label className="mb-2 block">Choose Planting Site (Optional)</Label>
+              <InitiativeSiteSelector
+                onSelect={(site) => setSelectedSiteId(site?.id ?? null)}
+                selectedSiteId={selectedSiteId}
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
@@ -234,6 +249,7 @@ export default function TreeContributionForm({
             treeId={tree.id}
             planId={selectedPlan?.planId}
             planPriceId={selectedPlan?.planPriceId}
+            initiativeSiteId={selectedSiteId}
             quantity={quantity}
             dedication={{
               name: watchName,
