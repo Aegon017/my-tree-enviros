@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useCart } from "@/modules/cart/hooks/use-cart";
 import { CartItem } from "@/domain/cart/cart-item";
+import { InitiativeSiteSelector } from "@/components/initiative-site-selector";
 
 const detailsSchema = z.object({
   name: z.string().min(1),
@@ -182,6 +183,15 @@ function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpe
                     ))}
                   </SelectContent>
                 </Select>
+              )}
+
+              {item.type !== "product" && (
+                <div className="w-[200px]">
+                  <InitiativeSiteSelector
+                    selectedSiteId={item.initiative_site_id}
+                    onSelect={(site) => onUpdateItem(itemId, { initiative_site_id: site?.id ?? null })}
+                  />
+                </div>
               )}
 
               {item.type !== "product" && (

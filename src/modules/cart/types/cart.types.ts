@@ -25,6 +25,7 @@ export interface CartItem {
   occasion?: string;
   message?: string;
   location_id?: number;
+  initiative_site_id?: number;
 
   campaign_type?: CampaignType;
   location?: string;
