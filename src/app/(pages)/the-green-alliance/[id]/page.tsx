@@ -21,13 +21,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import type { FeedTree } from "@/types/feed-tree";
 import { campaignService } from "@/services/campaign.services";
 import { Markup } from "interweave";
 import { useAuth } from "@/hooks/use-auth";
 import { LoginDialog } from "@/components/login-dialog";
+
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface ApiResponse {
   status: boolean;
@@ -54,19 +61,18 @@ const Page = () => {
   const { user } = useAuth();
   const id = params.id as string;
 
-  const [campaignData, setCampaignData] = useState<ApiResponse["data"] | null>(
-    null
-  );
+  const [campaignData, setCampaignData] =
+    useState<ApiResponse["data"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const [selectedUnits, setSelectedUnits] = useState("");
+
+  const [selectedUnits, setSelectedUnits] = useState("1");
 
   useEffect(() => {
     const fetchFeedTree = async () => {
       try {
         const response = await campaignService.getById(Number(id));
-
         if (response.data?.campaign) {
           const c = response.data.campaign;
 
@@ -137,7 +143,6 @@ const Page = () => {
           setCampaignData(mapped);
           return;
         }
-
         throw new Error("Campaign not found");
       } catch (err) {
         setError("Failed to load campaign details");
@@ -158,7 +163,7 @@ const Page = () => {
   }, []);
 
   const finalUnits = useMemo(
-    () => parseInt(selectedUnits) || 0,
+    () => parseInt(selectedUnits) || 1,
     [selectedUnits]
   );
 
@@ -169,10 +174,6 @@ const Page = () => {
       setShowLoginDialog(true);
       return;
     }
-    if (finalUnits <= 0) {
-      alert("Please select valid Green Units");
-      return;
-    }
 
     const params = new URLSearchParams({
       mode: "buy_now",
@@ -180,6 +181,7 @@ const Page = () => {
       campaign_id: id,
       amount: finalUnits.toString(),
     });
+
     router.push(`/checkout?${params.toString()}`);
   }, [user, finalUnits, id, router]);
 
@@ -211,9 +213,6 @@ const Page = () => {
       <Section>
         <div className="text-center py-12">
           <h1 className="text-2xl font-bold">Loading Campaign...</h1>
-          <p className="text-muted-foreground mt-2">
-            Please wait while we load the campaign details.
-          </p>
         </div>
       </Section>
     );
@@ -224,7 +223,7 @@ const Page = () => {
       <Section>
         <div className="text-center py-12">
           <h1 className="text-2xl font-bold text-destructive">
-            {error ? "Error Loading Campaign" : "Campaign Not Found"}
+            {error || "Campaign Not Found"}
           </h1>
           <Link
             href="/the-green-alliance"
@@ -271,11 +270,13 @@ const Page = () => {
                 <CardTitle className="text-3xl lg:text-4xl leading-tight">
                   {campaign_details.name}
                 </CardTitle>
+
                 <CardDescription className="flex flex-col sm:flex-row gap-3 text-base">
                   <span className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
                     {campaign_details.area}, {campaign_details.city.name}
                   </span>
+
                   <span className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     Ends {formatDate(campaign_details.expiration_date)}
@@ -289,6 +290,7 @@ const Page = () => {
                 <TreePine className="h-5 w-5" />
                 Campaign Story
               </div>
+
               <Markup
                 content={campaign_details.description ?? ""}
                 className="prose max-w-none dark:prose-invert"
@@ -306,26 +308,28 @@ const Page = () => {
                     Select Green Units
                   </Label>
 
-                  <select
-                    className="w-full border rounded-md p-2"
+                  <Select
                     value={selectedUnits}
-                    onChange={(e) => setSelectedUnits(e.target.value)}
+                    onValueChange={(val) => setSelectedUnits(val)}
                   >
-                    <option value="">Select Units</option>
-                    {Array.from({ length: 100 }, (_, i) => i + 1).map(
-                      (unit) => (
-                        <option key={unit} value={unit}>
-                          {unit} Green Units
-                        </option>
-                      )
-                    )}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select Units" />
+                    </SelectTrigger>
 
-                  {finalUnits > 0 && (
-                    <p className="text-base font-semibold text-primary">
-                      Total Amount: {formatMoney(totalMoney)} Rupees
-                    </p>
-                  )}
+                    <SelectContent>
+                      {Array.from({ length: 100 }, (_, i) => i + 1).map(
+                        (unit) => (
+                          <SelectItem key={unit} value={String(unit)}>
+                            {unit} Green Units
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+
+                  <p className="text-base font-semibold text-primary">
+                    Total Amount: {formatMoney(totalMoney)} Rupees
+                  </p>
                 </div>
               )}
 
