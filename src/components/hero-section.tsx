@@ -37,7 +37,7 @@ const chapters = [
     id: "feed",
     title: "The Green Alliance",
     subtitle: "Nurture ecosystems from within",
-    body: "Feeding brings harmony to the entire ecosystem. Join our campaigns to restore degraded zones and help rebuild nature for a healthier planet.",
+    body: "The Green Alliance is a collective action platform where members finance to take part and learn specific land rejuvenation efforts.",
     image: "/trees/feed.png",
     href: "/the-green-alliance",
     color: "bg-blue-500/10",
