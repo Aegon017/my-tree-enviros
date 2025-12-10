@@ -35,11 +35,11 @@ const chapters = [
   },
   {
     id: "feed",
-    title: "Feed a Tree",
+    title: "The Green Alliance",
     subtitle: "Nurture ecosystems from within",
     body: "Feeding brings harmony to the entire ecosystem. Join our campaigns to restore degraded zones and help rebuild nature for a healthier planet.",
     image: "/trees/feed.png",
-    href: "/feed-a-tree",
+    href: "/the-green-alliance",
     color: "bg-blue-500/10",
     hoverColor: "group-hover:bg-blue-500/20",
   },

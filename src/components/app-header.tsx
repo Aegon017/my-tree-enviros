@@ -29,7 +29,7 @@ const NAV = [
   { href: "/", label: "Home" },
   { href: "/sponsor-a-tree", label: "Sponsor A Tree" },
   { href: "/adopt-a-tree", label: "Adopt A Tree" },
-  { href: "/feed-a-tree", label: "Feed A Tree" },
+  { href: "/the-green-alliance", label: "The Green Alliance" },
   { href: "/store", label: "Store" },
 ];
 
