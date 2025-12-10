@@ -119,7 +119,7 @@ const Page = () => {
     });
 
     const qs = params.toString();
-    await router.push(qs ? `?${qs}` : "/feed-a-tree", { scroll: false });
+    await router.push(qs ? `?${qs}` : "/the-green-alliance", { scroll: false });
     fetchCampaigns();
   };
 
@@ -154,7 +154,7 @@ const Page = () => {
     return (
       <Section>
         <SectionTitle
-          title="Feed a Tree"
+          title="The Green Alliance"
           align="center"
           subtitle="Support our campaigns to nourish and sustain trees for a greener future."
         />
@@ -168,7 +168,7 @@ const Page = () => {
   return (
     <Section>
       <SectionTitle
-        title="Feed a Tree"
+        title="The Green Alliance"
         align="center"
         subtitle="Support our campaigns to nourish and sustain trees for a greener future."
       />
@@ -314,7 +314,7 @@ const Page = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="flex items-center gap-1">
                         <Target className="h-4 w-4" />
@@ -334,11 +334,11 @@ const Page = () => {
                         {formatCurrency(targetAmount)}
                       </span>
                     </div>
-                  </div>
+                  </div> */}
 
                   <Link href={`feed-a-tree/${campaign.id}`}>
                     <Button className="w-full" disabled={expired}>
-                      {expired ? "Campaign Ended" : "Support This Campaign"}
+                      {expired ? "Campaign Ended" : "Buy Credits"}
                     </Button>
                   </Link>
                 </CardContent>

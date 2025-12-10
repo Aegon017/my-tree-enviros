@@ -3,6 +3,7 @@
 import {
   ArrowLeft,
   Calendar,
+  CreditCard,
   Heart,
   IndianRupee,
   MapPin,
@@ -41,6 +42,7 @@ import { campaignService } from "@/services/campaign.services";
 import { Markup } from "interweave";
 import { useAuth } from "@/hooks/use-auth";
 import { LoginDialog } from "@/components/login-dialog";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ApiResponse {
   status: boolean;
@@ -59,23 +61,16 @@ interface ApiResponse {
   };
 }
 
+// CREDIT OPTIONS
 const AMOUNT_OPTIONS = [
-  { value: "200", label: "₹200" },
-  { value: "500", label: "₹500" },
-  { value: "1000", label: "₹1000" },
-  { value: "2000", label: "₹2000" },
-  { value: "5000", label: "₹5000" },
-  { value: "custom", label: "Custom" },
+  { value: "500", label: "500 Credits" },
+  { value: "custom", label: "Custom Credits" },
 ] as const;
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
+// FORMAT CREDITS
+const formatCredits = (amount: number) => `${amount} Credits`;
 
+// GET INITIALS
 const getInitials = (name: string) => {
   return name
     .split(" ")
@@ -105,7 +100,7 @@ const DonorAvatar = ({ name, amount }: DonorAvatarProps) => {
       </div>
       <div className="text-right">
         <p className="font-semibold text-green-600 text-sm">
-          {formatCurrency(parseFloat(amount))}
+          {formatCredits(parseFloat(amount))}
         </p>
       </div>
     </div>
@@ -118,55 +113,6 @@ interface ProgressStatsProps {
   daysLeft: number;
   isExpired: boolean;
 }
-
-const ProgressStats = ({
-  raised,
-  goal,
-  daysLeft,
-  isExpired,
-}: ProgressStatsProps) => {
-  const progress = Math.round((raised / goal) * 100);
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between py-2">
-        <span className="text-sm font-medium">Funding Progress</span>
-        <span className="text-lg font-bold text-primary">{progress}%</span>
-      </div>
-      <Progress value={progress} className="h-2" />
-
-      <div className="grid grid-cols-2 gap-4 text-center">
-        <div className="p-3 rounded-md bg-muted/30 border">
-          <div className="text-lg font-bold text-green-600">
-            {formatCurrency(raised)}
-          </div>
-          <div className="text-xs text-muted-foreground">Raised</div>
-        </div>
-        <div className="p-3 rounded-md bg-muted/30 border">
-          <div className="text-lg font-bold text-blue-600">
-            {formatCurrency(goal)}
-          </div>
-          <div className="text-xs text-muted-foreground">Goal</div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 text-sm">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Status</span>
-          <Badge variant={isExpired ? "destructive" : "default"}>
-            {isExpired ? "Ended" : "Active"}
-          </Badge>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Days Left</span>
-          <span className="font-medium">{daysLeft}</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-
 
 const Page = () => {
   const params = useParams();
@@ -302,7 +248,7 @@ const Page = () => {
     }
 
     if (finalAmount <= 0) {
-      alert("Please select a valid amount");
+      alert("Please select a valid credits amount");
       return;
     }
 
@@ -365,7 +311,7 @@ const Page = () => {
             {error || "The campaign you're looking for doesn't exist."}
           </p>
           <Link
-            href="/feed-a-tree"
+            href="/the-green-alliance"
             className="mt-4 inline-flex items-center gap-2 text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -440,21 +386,14 @@ const Page = () => {
         <div className="space-y-6">
           <Card className="sticky top-20 border shadow-lg">
             <CardContent className="space-y-6">
-              <ProgressStats
-                raised={raised_amount}
-                goal={campaignDetails.goalAmount}
-                daysLeft={campaignDetails.daysLeft}
-                isExpired={campaignDetails.isExpired}
-              />
-
               {!campaignDetails.isExpired && (
                 <div className="space-y-4">
-                  <Label className="text-sm font-medium">Select Amount to Support</Label>
+                  <Label className="text-sm font-medium">Select Credits</Label>
 
                   <RadioGroup
                     value={selectedAmount}
                     onValueChange={handleAmountSelect}
-                    className="grid grid-cols-3 gap-2"
+                    className="grid grid-cols-2 gap-2"
                   >
                     {AMOUNT_OPTIONS.map((option) => (
                       <div key={option.value}>
@@ -475,27 +414,37 @@ const Page = () => {
 
                   {selectedAmount === "custom" && (
                     <div className="space-y-2">
-                      <Label htmlFor="custom-amount-input" className="text-sm">Enter Custom Amount</Label>
+                      <Label htmlFor="custom-amount-input" className="text-sm">
+                        Enter Custom Credits
+                      </Label>
                       <div className="relative">
-                        <IndianRupee className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="custom-amount-input"
-                          type="number"
-                          placeholder="Enter amount in INR"
+                        <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Select
                           value={customAmount}
-                          onChange={(e) => setCustomAmount(e.target.value)}
-                          className="pl-10"
-                          min="1"
-                        />
+                          onValueChange={setCustomAmount}
+                        >
+                          <SelectTrigger className="pl-10 w-full">
+                            <SelectValue placeholder="Select credits" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectLabel>Custom Credits</SelectLabel>
+                              <SelectItem value="100">100 Credits</SelectItem>
+                              <SelectItem value="250">250 Credits</SelectItem>
+                              <SelectItem value="500">500 Credits</SelectItem>
+                              <SelectItem value="1000">1000 Credits</SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   )}
 
                   <div className="bg-muted/30 p-3 rounded-md">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Selected Amount</span>
+                      <span className="text-muted-foreground">Selected Credits</span>
                       <span className="font-bold text-green-600">
-                        {formatCurrency(finalAmount)}
+                        {formatCredits(finalAmount)}
                       </span>
                     </div>
                   </div>
@@ -510,7 +459,7 @@ const Page = () => {
               >
                 {campaignDetails.isExpired
                   ? "Campaign Ended"
-                  : `Proceed to Checkout (${formatCurrency(finalAmount)})`}
+                  : `Proceed to Checkout (${formatCredits(finalAmount)})`}
               </Button>
 
               <div className="border-t pt-4" />
