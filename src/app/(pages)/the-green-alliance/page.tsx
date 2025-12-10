@@ -338,7 +338,7 @@ const Page = () => {
 
                   <Link href={`the-green-alliance/${campaign.id}`}>
                     <Button className="w-full" disabled={expired}>
-                      {expired ? "Campaign Ended" : "Buy Credits"}
+                      {expired ? "Campaign Ended" : "Pay Now"}
                     </Button>
                   </Link>
                 </CardContent>
