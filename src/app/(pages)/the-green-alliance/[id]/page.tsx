@@ -317,10 +317,10 @@ const Page = () => {
                     </SelectTrigger>
 
                     <SelectContent>
-                      {Array.from({ length: 100 }, (_, i) => i + 1).map(
+                      {Array.from({ length: 10 }, (_, i) => i + 1).map(
                         (unit) => (
                           <SelectItem key={unit} value={String(unit)}>
-                            {unit} Green Units
+                            {unit}
                           </SelectItem>
                         )
                       )}
