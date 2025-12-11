@@ -100,8 +100,7 @@ const Page = () => {
                             <section>
                                 <h2 className="text-2xl font-bold mb-4">9. Governing Law</h2>
                                 <p>
-                                    These Terms and Conditions are governed by the laws of [Your Country/State]. Any
-                                    disputes will be handled in the courts of [Your Jurisdiction].
+                                    All aspects of the use of this website, the purchase of any products or services from My Tree Enviros, and any disputes arising therefrom shall be governed by and construed in accordance with the laws of the state of Telangana, India.
                                 </p>
                             </section>
 
