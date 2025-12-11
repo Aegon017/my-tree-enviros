@@ -58,7 +58,10 @@ const Page = () => {
                                 <h3 className="text-xl font-semibold mt-4 mb-2">2. How to Request a Refund</h3>
                                 <ul className="list-disc pl-6 space-y-2">
                                     <li>
-                                        WhatsApp us on <strong>{`{phone number}`}</strong> within
+                                        <a href="https://wa.me/918977730561" target="_blank" rel="noopener noreferrer">
+                                            WhatsApp us on <strong>+91 89777 30561</strong>
+                                        </a>
+                                        within
                                         <strong> 24 hours</strong> of delivery with:
                                         <ul className="list-disc pl-6 mt-2 space-y-1">
                                             <li>Clear images or a short video of the damaged product and packaging.</li>
