@@ -40,7 +40,7 @@ const Page = () => {
                                 <h2 className="text-2xl font-bold mb-4">2. Order Processing Time</h2>
                                 <h3 className="text-xl font-semibold mt-4 mb-2">Standard Products (Seeds & Tools)</h3>
                                 <p>
-                                    Orders for non-perishable items are processed and shipped within 1–3 business days.
+                                    All orders will be processed and delivered within 5 business days.
                                 </p>
 
                                 <h3 className="text-xl font-semibold mt-4 mb-2">Live Plants</h3>
