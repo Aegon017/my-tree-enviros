@@ -12,6 +12,7 @@ type Props = {
   type: "product" | "sponsor" | "adopt";
   variantId?: number;
   treeId?: number;
+  treeInstanceId?: number;
   planId?: number;
   planPriceId?: number;
   initiativeSiteId?: number | null;
@@ -36,6 +37,7 @@ export default function AddToCartButton({
   type,
   variantId,
   treeId,
+  treeInstanceId,
   planId,
   planPriceId,
   initiativeSiteId,
@@ -95,12 +97,16 @@ export default function AddToCartButton({
       }
 
       if (type === "sponsor" || type === "adopt") {
-        if (!treeId || !planId || !planPriceId)
+        if (!planId || !planPriceId)
           return toast.error("Invalid sponsorship/adoption details");
+
+        if (type === "sponsor" && !treeId) return toast.error("Invalid tree details");
+        if (type === "adopt" && !treeInstanceId) return toast.error("Invalid instance details");
 
         await add({
           type: type,
           tree_id: treeId,
+          tree_instance_id: treeInstanceId,
           plan_id: planId,
           plan_price_id: planPriceId,
           initiative_site_id: initiativeSiteId,

@@ -135,30 +135,36 @@ function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpe
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Quantity</span>
 
-                <div className="flex items-center border rounded-md">
-                  <Button
-                    disabled={isUpdating || item.quantity <= MIN_QUANTITY}
-                    onClick={() => quantityChange(item.quantity - 1)}
-                    size="icon"
-                    variant="ghost"
-                  >
-                    <Minus className="h-3 w-3" />
-                  </Button>
+                {item.type === "adopt" ? (
+                  <div className="px-4 py-2 border rounded-md bg-muted">
+                    <span className="font-semibold">1</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center border rounded-md">
+                    <Button
+                      disabled={isUpdating || item.quantity <= MIN_QUANTITY}
+                      onClick={() => quantityChange(item.quantity - 1)}
+                      size="icon"
+                      variant="ghost"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
 
-                  <Input
-                    type="number"
-                    min={1}
-                    value={item.quantity}
-                    onChange={(e) => quantityChange(Number(e.target.value))}
-                    className="w-12 text-center border-x-0 bg-transparent"
-                    disabled={isUpdating}
-                    readOnly
-                  />
+                    <Input
+                      type="number"
+                      min={1}
+                      value={item.quantity}
+                      onChange={(e) => quantityChange(Number(e.target.value))}
+                      className="w-12 text-center border-x-0 bg-transparent"
+                      disabled={isUpdating}
+                      readOnly
+                    />
 
-                  <Button disabled={isUpdating} onClick={() => quantityChange(item.quantity + 1)} size="icon" variant="ghost">
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </div>
+                    <Button disabled={isUpdating} onClick={() => quantityChange(item.quantity + 1)} size="icon" variant="ghost">
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {item.type !== "product" && item.available_plans && (
@@ -185,7 +191,7 @@ function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpe
                 </Select>
               )}
 
-              {item.type !== "product" && (
+              {item.type !== "product" && item.type !== "adopt" && (
                 <div className="w-[200px]">
                   <InitiativeSiteSelector
                     selectedSiteId={item.initiative_site_id}
