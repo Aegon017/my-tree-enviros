@@ -118,50 +118,47 @@ export default function TreeContributionForm({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <Label>Number of Trees</Label>
-              <div className="flex items-center border rounded-md bg-background justify-between">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                >
-                  -
-                </Button>
-                <Input
-                  type="number"
-                  min={1}
-                  max={999}
-                  value={quantity}
-                  onChange={(e) =>
-                    setQuantity(Math.max(1, Number(e.target.value || 1)))
-                  }
-                  className="w-16 text-center border-0"
-                  readOnly
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    setQuantity((q) =>
-                      pageType === "adopt"
-                        ? Math.min(adoptableLimit, q + 1)
-                        : q + 1,
-                    )
-                  }
-                >
-                  +
-                </Button>
+            {pageType === "sponsor" && (
+              <div className="space-y-3">
+                <Label>Number of Trees</Label>
+                <div className="flex items-center border rounded-md bg-background justify-between">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  >
+                    -
+                  </Button>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={999}
+                    value={quantity}
+                    onChange={(e) =>
+                      setQuantity(Math.max(1, Number(e.target.value || 1)))
+                    }
+                    className="w-16 text-center border-0"
+                    readOnly
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setQuantity((q) => q + 1)}
+                  >
+                    +
+                  </Button>
+                </div>
               </div>
-              {pageType === "adopt" &&
-                (adoptableLimit > 0 ? (
-                  <p className="text-sm text-green-600">
-                    {adoptableLimit} available
-                  </p>
-                ) : (
-                  <p className="text-sm text-red-600">No trees available</p>
-                ))}
-            </div>
+            )}
+
+            {pageType === "adopt" && (
+              <div className="space-y-3">
+                <Label>Quantity</Label>
+                <div className="flex items-center border rounded-md bg-muted px-4 py-2">
+                  <span className="font-semibold">1 Tree Instance</span>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-3">
               <Label>Duration</Label>
@@ -246,10 +243,11 @@ export default function TreeContributionForm({
         <div className="flex gap-3">
           <AddToCartButton
             type={pageType}
-            treeId={tree.id}
+            treeId={pageType === "sponsor" ? tree.id : undefined}
+            treeInstanceId={pageType === "adopt" ? tree.id : undefined}
             planId={selectedPlan?.planId}
             planPriceId={selectedPlan?.planPriceId}
-            initiativeSiteId={selectedSiteId}
+            initiativeSiteId={pageType === "sponsor" ? selectedSiteId : null}
             quantity={quantity}
             dedication={{
               name: watchName,
