@@ -135,7 +135,7 @@ export default function Home() {
       {/* ---------------------- PRODUCTS ---------------------- */}
       <Section className="pt-12 md:pt-20 lg:pt-24">
         <SectionTitle
-          title="Natural Products"
+          title="Shop Your Green Essentials"
           subtitle="Carefully curated from nature's bounty."
           align="center"
         />
