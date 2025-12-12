@@ -106,7 +106,6 @@ export default function ProductsPage() {
 
     const qs = params.toString();
     await router.push(qs ? `?${qs}` : "/store", { scroll: false });
-    // Immediately refresh products after updating URL
     fetchProducts();
   };
 
@@ -144,7 +143,6 @@ export default function ProductsPage() {
   }, []);
 
   useEffect(() => {
-    // re-fetch when `search` changes locally
     fetchProducts();
   }, [search]);
 
@@ -271,8 +269,8 @@ export default function ProductsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {loading && products.length === 0
           ? Array.from({ length: 12 }).map((_, i) => (
-              <ProductCardSkeleton key={i} />
-            ))
+            <ProductCardSkeleton key={i} />
+          ))
           : products.map((p) => <ProductCard key={p.id} product={p} />)}
       </div>
 

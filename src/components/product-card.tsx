@@ -20,7 +20,7 @@ export default function ProductCard({ product }: { product: ProductListItem }) {
     <Card className="group flex flex-col overflow-hidden rounded-xl bg-card transition-shadow hover:shadow-md py-0 gap-0">
       <Link
         href={`/store/products/${product.slug}`}
-        className="relative aspect-square w-full overflow-hidden sm:aspect-4/5"
+        className="relative aspect-square w-full overflow-hidden"
       >
         <Image
           src={img}
