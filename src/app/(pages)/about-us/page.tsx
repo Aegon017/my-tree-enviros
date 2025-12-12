@@ -21,15 +21,15 @@ const Page = () => {
                             <section>
                                 <h2 className="text-2xl font-bold mb-4">Who We Are</h2>
                                 <p>
-                                    My Tree Enviros is dedicated to building a greener, healthier planet through 
-                                    technology-driven afforestation and environmental stewardship. Through our digital 
-                                    ecosystem—available as both a mobile app and web platform—we empower individuals, 
-                                    schools, corporates, communities, and organizations to take meaningful action 
+                                    My Tree Enviros India Private Limited is dedicated to building a greener, healthier planet through
+                                    technology-driven afforestation and environmental stewardship. Through our digital
+                                    ecosystem—available as both a mobile app and web platform—we empower individuals,
+                                    schools, corporates, communities, and organizations to take meaningful action
                                     toward restoring India’s green cover.
                                 </p>
                                 <p>
-                                    We believe that every tree planted today creates a better tomorrow. With transparent 
-                                    tracking, smart technology, and deep community participation, My Tree Enviros makes 
+                                    We believe that every tree planted today creates a better tomorrow. With transparent
+                                    tracking, smart technology, and deep community participation, My Tree Enviros makes
                                     environmental contribution simple, impactful, and accessible to everyone.
                                 </p>
                             </section>
@@ -85,9 +85,9 @@ const Page = () => {
                             <section>
                                 <h2 className="text-2xl font-bold mb-4">Our Mission</h2>
                                 <p>
-                                    Our mission is to restore ecological balance by encouraging mass participation in 
-                                    tree planting, sustainability education, and long-term environmental care. We aim 
-                                    to plant millions of trees across India, enrich biodiversity, and inspire future 
+                                    Our mission is to restore ecological balance by encouraging mass participation in
+                                    tree planting, sustainability education, and long-term environmental care. We aim
+                                    to plant millions of trees across India, enrich biodiversity, and inspire future
                                     generations to take responsibility for the environment.
                                 </p>
                             </section>
@@ -106,8 +106,8 @@ const Page = () => {
                             <section>
                                 <h2 className="text-2xl font-bold mb-4">Join the Movement</h2>
                                 <p>
-                                    My Tree Enviros is more than an organization—it’s a movement for a sustainable future. 
-                                    Whether you adopt a tree, join a plantation drive, or promote green living, your 
+                                    My Tree Enviros is more than an organization—it’s a movement for a sustainable future.
+                                    Whether you adopt a tree, join a plantation drive, or promote green living, your
                                     contribution matters.
                                 </p>
                                 <p>
