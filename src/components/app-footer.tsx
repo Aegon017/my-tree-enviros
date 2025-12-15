@@ -4,10 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import QRCode from "react-qr-code";
 import { BACKEND_URL } from "@/services/http-client";
-// Import necessary icons from react-icons/fa or fa6
+import { useEffect, useState } from "react";
+import { appService } from "@/services/app.service";
 import { FaFacebook, FaInstagram, FaYoutube, FaLinkedin } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6'; // Correct import for the "X" logo
-import { ArrowUpRight } from 'lucide-react'; // Assuming you are using Lucide Icons for the arrow as in the original code
+import { FaXTwitter } from 'react-icons/fa6';
+import { ArrowUpRight } from 'lucide-react';
 
 const footerData = {
   quickLinks: [
@@ -25,7 +26,6 @@ const footerData = {
     { name: "Cancellations & Returns", href: "/cancellations-and-refunds" },
   ],
   social: [
-    // Use the imported React Icon components directly
     { icon: FaFacebook, href: "www.facebook.com" },
     { icon: FaInstagram, href: "www.instagram.com" },
     { icon: FaXTwitter, href: "x.com" },
@@ -35,6 +35,16 @@ const footerData = {
 };
 
 export default function Footer() {
+  const [links, setLinks] = useState<{ android_url: string; ios_url: string } | null>(null);
+
+  useEffect(() => {
+    appService.getSettings().then((response) => {
+      if (response.success && response.data) {
+        setLinks(response.data);
+      }
+    });
+  }, []);
+
   return (
     <footer className="bg-primary text-primary-foreground relative overflow-hidden">
       <div className="container mx-auto px-6 md:px-12 pt-24 pb-8 relative z-10">
@@ -50,7 +60,7 @@ export default function Footer() {
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
               <div className="flex flex-col gap-3">
-                <Link href="https://play.google.com" target="_blank">
+                <Link href={links?.android_url || "https://play.google.com"} target="_blank">
                   <div className="relative w-[140px] h-auto">
                     <Image
                       src="/google-play-badge.avif"
@@ -61,7 +71,7 @@ export default function Footer() {
                     />
                   </div>
                 </Link>
-                <Link href="https://apple.com/app-store" target="_blank">
+                <Link href={links?.ios_url || "https://apple.com/app-store"} target="_blank">
                   <div className="relative w-[140px] h-auto">
                     <Image
                       src="/app-store-badge.avif"
@@ -104,7 +114,6 @@ export default function Footer() {
                     className="group flex items-center justify-between text-sm font-medium text-white/80 hover:text-white transition-colors"
                   >
                     {link.name}
-                    {/* The ArrowUpRight icon from Lucide React is used here */}
                     <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
                   </Link>
                 </li>
@@ -143,7 +152,6 @@ export default function Footer() {
                 href={s.href}
                 className="text-white/60 hover:text-white transition-colors"
               >
-                {/* Render the imported icon component */}
                 <s.icon className="h-5 w-5" />
               </Link>
             ))}
