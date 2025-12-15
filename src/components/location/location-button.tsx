@@ -8,15 +8,15 @@ import { LocationModal } from "@/components/location/location-modal";
 
 export function LocationButton() {
   const [open, setOpen] = useState(false);
-  const { selected, sync } = useLocationStore();
+  const { selected, sync, hydrated } = useLocationStore();
 
   useEffect(() => {
     sync();
   }, [sync]);
 
   useEffect(() => {
-    if (!selected) setOpen(true);
-  }, [selected]);
+    if (hydrated && !selected) setOpen(true);
+  }, [selected, hydrated]);
 
   const label = selected
     ? `${selected.area || selected.city}, ${selected.city}`
