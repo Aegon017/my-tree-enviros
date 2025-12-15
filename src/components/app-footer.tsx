@@ -12,7 +12,7 @@ const footerData = {
     { name: "Store", href: "/store" },
     { name: "The Green Alliance", href: "/the-green-alliance" },
     { name: "Orders History", href: "/my-orders" },
-    { name: "Blog", href: "/blog" },
+    { name: "Blogs", href: "/blogs" },
     { name: "Contact Us", href: "/contact-us" },
   ],
   policyLinks: [
