@@ -18,6 +18,7 @@ export class ApiError extends Error {
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "";
+export const BACKEND_URL = BASE_URL.replace(/\/api\/?$/, "");
 
 export type RequestConfig = RequestInit & {
   params?: Record<string, any>;

@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import QRCode from "react-qr-code";
+import { BACKEND_URL } from "@/services/http-client";
 // Import necessary icons from react-icons/fa or fa6
 import { FaFacebook, FaInstagram, FaYoutube, FaLinkedin } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6'; // Correct import for the "X" logo
@@ -40,10 +43,53 @@ export default function Footer() {
             <h2 className="text-5xl md:text-7xl lg:text-8xl font-medium tracking-tighter leading-[0.9] text-white/40 mb-8">
               Grow your <span className="text-white">green future.</span>
             </h2>
-            <p className="text-xl text-white/80 font-light max-w-lg leading-relaxed">
+            <p className="text-xl text-white/80 font-light max-w-lg leading-relaxed mb-6">
               Join the movement towards a sustainable planet. Download the app
               and start your journey today.
             </p>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+              <div className="flex flex-col gap-3">
+                <Link href="https://play.google.com" target="_blank">
+                  <div className="relative w-[140px] h-auto">
+                    <Image
+                      src="/google-play-badge.avif"
+                      alt="Google Play"
+                      width={140}
+                      height={42}
+                      className="w-full h-auto opacity-90 hover:opacity-100 transition-opacity"
+                    />
+                  </div>
+                </Link>
+                <Link href="https://apple.com/app-store" target="_blank">
+                  <div className="relative w-[140px] h-auto">
+                    <Image
+                      src="/app-store-badge.avif"
+                      alt="App Store"
+                      width={140}
+                      height={42}
+                      className="w-full h-auto opacity-90 hover:opacity-100 transition-opacity"
+                    />
+                  </div>
+                </Link>
+              </div>
+
+              <div className="hidden sm:block h-24 w-px bg-white/10" />
+
+              <div className="flex items-center gap-4">
+                <div className="bg-white p-2 rounded-xl">
+                  <QRCode
+                    value={BACKEND_URL ? `${BACKEND_URL}/get-app` : ""}
+                    size={80}
+                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                    viewBox={`0 0 256 256`}
+                  />
+                </div>
+                <p className="text-sm text-white/60 max-w-[80px] leading-tight">
+                  Scan to download
+                </p>
+              </div>
+            </div>
           </div>
 
           <div>

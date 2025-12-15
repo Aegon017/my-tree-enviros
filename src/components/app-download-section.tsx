@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import QRCode from "react-qr-code";
+import { BACKEND_URL } from "@/services/http-client";
 
 export default function AppDownloadSection() {
   return (
@@ -60,16 +62,16 @@ export default function AppDownloadSection() {
             className="
               rounded-2xl
               border border-border/40
-              bg-background
+              bg-white
+              p-4
               shadow-md
             "
           >
-            <Image
-              src="/qr.svg"
-              alt="QR Code"
-              width={210}
-              height={210}
-              className="rounded-xl"
+            <QRCode
+              value={BACKEND_URL ? `${BACKEND_URL}/get-app` : ""}
+              size={210}
+              style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+              viewBox={`0 0 256 256`}
             />
           </div>
 
