@@ -58,7 +58,6 @@ export default function ProductPage({
 
   const {
     reviews,
-    userReview,
     hasReviewed,
     averageRating,
     reviewCount,

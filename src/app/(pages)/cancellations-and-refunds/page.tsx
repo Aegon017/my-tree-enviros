@@ -10,69 +10,164 @@ const Page = () => {
             <SectionTitle
                 title="Cancellation & Refund Policy"
                 align="center"
-                subtitle="Please review our cancellation and refund terms before placing an order."
+                subtitle="My Tree Enviros"
             />
 
             <Section className="lg:py-0">
                 <div className="max-w-5xl mx-auto">
-                    <Card className="shadow-sm border py-0">
-                        <CardContent className="prose prose-neutral dark:prose-invert max-w-none px-6">
+                    <Card className="border shadow-sm">
+                        <CardContent className="prose prose-neutral dark:prose-invert max-w-none px-6 py-6">
 
-                            <section>
-                                <h2 className="text-2xl font-bold mb-4">Cancellation Policy</h2>
-                                <ul className="list-disc pl-6 space-y-2">
-                                    <li>Orders can be cancelled within <strong>2 hours</strong> of placing the order.</li>
-                                    <li>Once your order has been processed, cancellations will no longer be possible.</li>
-                                </ul>
-                                <p>
-                                    For assistance, please contact our Customer Service team at
-                                    <strong> communication@mytree.care</strong>. We’re here to help!
-                                </p>
-                            </section>
+                            <p>
+                                This policy governs the cancellation of orders and the procedure for requesting a
+                                replacement or refund for products purchased from My Tree Enviros.
+                            </p>
 
-                            <section>
-                                <h2 className="text-2xl font-bold mb-4">How to Cancel</h2>
-                                <ul className="list-disc pl-6 space-y-2">
-                                    <li>
-                                        To request a cancellation, please email us at:
-                                        <strong> communication@mytree.care</strong>
-                                    </li>
-                                    <li>
-                                        Our Customer Support team will review your request and assist you through the cancellation process.
-                                    </li>
-                                </ul>
-                                <p>
-                                    Refunds for cancelled orders will be processed at the company’s discretion on a case-by-case basis.
-                                </p>
-                            </section>
+                            <h2>1. Order Cancellation Policy</h2>
 
-                            <section>
-                                <h2 className="text-2xl font-bold mb-4">Refund Policy</h2>
+                            <p>
+                                <strong>Pre-Shipment Cancellation:</strong> You may cancel your order for a full refund
+                                (100% of the order value) provided the order has not yet been shipped. Once your order
+                                has been marked as shipped or dispatched, it cannot be cancelled.
+                            </p>
 
-                                <h3 className="text-xl font-semibold mt-4 mb-2">1. Eligibility for Refunds</h3>
-                                <ul className="list-disc pl-6 space-y-2">
-                                    <li>The item delivered was incorrect.</li>
-                                    <li>The product was damaged or lost in transit.</li>
-                                </ul>
+                            <p>
+                                <strong>How to Cancel:</strong> To request a cancellation, please get in touch with our
+                                Customer Support Team immediately with your Order ID via email at
+                                <strong> communication@mytree.care</strong> or phone at
+                                <strong> +91 89777 30561</strong>.
+                            </p>
 
-                                <h3 className="text-xl font-semibold mt-4 mb-2">2. How to Request a Refund</h3>
-                                <ul className="list-disc pl-6 space-y-2">
-                                    <li>
-                                        WhatsApp us on <a href="https://wa.me/918977730561" target="_blank" rel="noopener noreferrer" className="no-underline"><strong>+91 89777 30561</strong></a>
-                                        &nbsp;within <strong>24 hours</strong> of delivery with:
-                                        <ul className="list-disc pl-6 mt-2 space-y-1">
-                                            <li>Clear images or a short video of the damaged product and packaging.</li>
-                                            <li>Your order number and details of the issue.</li>
-                                        </ul>
-                                    </li>
-                                    <li>Our team will review the request and confirm whether a refund is approved.</li>
-                                    <li>
-                                        Once approved, refunds are processed within <strong>24 hours</strong>.
-                                        Depending on your bank, the refunded amount will reflect in your account within
-                                        <strong> 3–5 business days</strong>.
-                                    </li>
-                                </ul>
-                            </section>
+                            <p>
+                                <strong>Refund for Cancellation:</strong> If the cancellation request is approved, the
+                                full refund will be initiated immediately and typically processed back to the original
+                                payment source within <strong>5–7 working days</strong>.
+                            </p>
+
+                            <h2>2. Replacement and Refund Policy (Post-Delivery)</h2>
+
+                            <p>
+                                Due to the perishable and delicate nature of live plants, our policy focuses primarily
+                                on replacement for products that are damaged in transit.
+                            </p>
+
+                            <h3>A. Eligibility for Replacement (within 10 days of delivery)</h3>
+
+                            <p>
+                                Replacement claims must be raised within 10 days of the delivery date. We offer
+                                replacement or reshipment for the following conditions:
+                            </p>
+
+                            <p>
+                                <strong>Live Plants (Trees & Saplings):</strong> Replacement is available only if the
+                                plant is severely damaged upon arrival and is deemed not curable. This includes:
+                            </p>
+
+                            <ul>
+                                <li>Completely uprooted from the soil.</li>
+                                <li>Major stems or branches are completely broken.</li>
+                                <li>The plant is completely dried out upon arrival.</li>
+                            </ul>
+
+                            <p>
+                                <strong>Note:</strong> Minor leaf damage, slight wilting, or soil spillage is normal
+                                during transit and does not qualify for a replacement, as these issues are typically
+                                resolved with proper watering and care.
+                            </p>
+
+                            <p>
+                                <strong>Non-Plant Products (Planters, Tools, Supplies):</strong> Replacement is available
+                                only if the product has visible damage, such as:
+                            </p>
+
+                            <ul>
+                                <li>Visible cracks or breaks on planters.</li>
+                                <li>Manufacturing defects or non-functional parts.</li>
+                            </ul>
+
+                            <p>
+                                <strong>Incorrect or Missing Items:</strong> If you receive a wrong product or if
+                                parts/items are missing from your order, we will reship the correct item(s).
+                            </p>
+
+                            <h3>B. Claim Procedure & Proof of Damage</h3>
+
+                            <ul>
+                                <li>
+                                    <strong>Contact:</strong> Raise a concern by contacting our Customer Support Team
+                                    within the 10-day window.
+                                </li>
+                                <li>
+                                    <strong>Visual Proof:</strong> Clear, high-resolution photographs or a short video
+                                    demonstrating the damage to the plant or product, especially in the original
+                                    packaging.
+                                </li>
+                                <li>
+                                    <strong>Empty Box Claim:</strong> If the package received is empty or contains
+                                    missing items, a video recording of the package being opened (unboxing video) is
+                                    mandatory for us to process a reshipment/refund.
+                                </li>
+                            </ul>
+
+                            <h3>C. Return of Products</h3>
+
+                            <p>
+                                My Tree Enviros generally does not require the return of live, damaged plants.
+                            </p>
+
+                            <p>
+                                For damaged non-plant products, we will instruct the customer if a return is
+                                necessary. Approved replacements will be delivered within 7–10 working days from the
+                                date the claim is approved.
+                            </p>
+
+                            <h2>3. Failed Delivery / Return to Origin (RTO) Policy</h2>
+
+                            <p>
+                                In cases where an order is returned to our facility (RTO) due to a fault or action on
+                                the customer's part, the following refund conditions apply:
+                            </p>
+
+                            <ul>
+                                <li>
+                                    <strong>Incorrect/Incomplete Address</strong><br />
+                                    Reshipment or Refund<br />
+                                    Reshipment: Shipping charges must be paid again by the customer.<br />
+                                    Refund: The refund will be processed after a 25% deduction from the total order
+                                    value to cover initial shipping, handling, and logistics costs.
+                                </li>
+                                <li>
+                                    <strong>Customer Unavailability</strong><br />
+                                    Reshipment or Refund<br />
+                                    Reshipment: Shipping charges must be paid again by the customer.<br />
+                                    Refund: A deduction of 25% of the total order value will apply.
+                                </li>
+                                <li>
+                                    <strong>Refusal to Accept Delivery</strong><br />
+                                    Refund Only<br />
+                                    A 25% deduction from the total order value will apply. Prepaid orders that are
+                                    refused are not eligible for a full refund.
+                                </li>
+                            </ul>
+
+                            <h2>4. General Refund Processing</h2>
+
+                            <p>
+                                <strong>Refund Initiation:</strong> Once a replacement or RTO refund request is
+                                approved, the refund will be initiated by My Tree Enviros within 7–10 working days.
+                            </p>
+
+                            <p>
+                                <strong>Refund Method:</strong> All refunds will be credited back to the original
+                                source of payment (e.g., credit card, debit card, bank account, or digital wallet).
+                                The time it takes for the credit to appear in your account depends on your bank.
+                            </p>
+
+                            <p>
+                                <strong>Products Purchased on Sale:</strong> Items purchased at a discounted price or
+                                during a sale are not eligible for a monetary refund, but will be covered by a
+                                replacement policy for damage, subject to stock availability.
+                            </p>
 
                         </CardContent>
                     </Card>
