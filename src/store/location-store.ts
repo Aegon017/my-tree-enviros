@@ -10,6 +10,7 @@ export type LocationData = {
 
 type LocationState = {
   selected: LocationData | null;
+  hydrated: boolean;
   setLocation: (loc: LocationData) => void;
   clear: () => void;
   sync: () => void;
@@ -17,6 +18,7 @@ type LocationState = {
 
 export const useLocationStore = create<LocationState>((set) => ({
   selected: null,
+  hydrated: false,
   setLocation: (loc) => {
     localStorage.setItem("mte_location", JSON.stringify(loc));
     set({ selected: loc });
@@ -28,5 +30,6 @@ export const useLocationStore = create<LocationState>((set) => ({
   sync: () => {
     const raw = localStorage.getItem("mte_location");
     if (raw) set({ selected: JSON.parse(raw) });
+    set({ hydrated: true });
   },
 }));
