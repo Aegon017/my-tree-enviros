@@ -3,6 +3,14 @@
 import Section from "@/components/section"
 import SectionTitle from "@/components/section-title"
 import { Card, CardContent } from "@/components/ui/card"
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
 
 const Page = () => {
     return (
@@ -14,7 +22,7 @@ const Page = () => {
             />
 
             <Section className="lg:py-0">
-                <div className="max-w-5xl mx-auto">
+                <div className="mx-auto max-w-5xl">
                     <Card className="border shadow-sm">
                         <CardContent className="prose prose-neutral dark:prose-invert max-w-none px-6 py-6">
 
@@ -128,33 +136,71 @@ const Page = () => {
                                 the customer's part, the following refund conditions apply:
                             </p>
 
-                            <ul>
-                                <li>
-                                    <strong>Incorrect/Incomplete Address</strong><br />
-                                    Reshipment or Refund<br />
-                                    Reshipment: Shipping charges must be paid again by the customer.<br />
-                                    Refund: The refund will be processed after a 25% deduction from the total order
-                                    value to cover initial shipping, handling, and logistics costs.
-                                </li>
-                                <li>
-                                    <strong>Customer Unavailability</strong><br />
-                                    Reshipment or Refund<br />
-                                    Reshipment: Shipping charges must be paid again by the customer.<br />
-                                    Refund: A deduction of 25% of the total order value will apply.
-                                </li>
-                                <li>
-                                    <strong>Refusal to Accept Delivery</strong><br />
-                                    Refund Only<br />
-                                    A 25% deduction from the total order value will apply. Prepaid orders that are
-                                    refused are not eligible for a full refund.
-                                </li>
-                            </ul>
+                            <div className="not-prose w-full">
+                                <Table className="w-full table-fixed">
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[30%] whitespace-normal wrap-break-word">
+                                                Reason for RTO (Customer Fault)
+                                            </TableHead>
+                                            <TableHead className="w-[20%] whitespace-normal wrap-break-word">
+                                                Available Options
+                                            </TableHead>
+                                            <TableHead className="w-[50%] whitespace-normal wrap-break-word">
+                                                Policy
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        <TableRow>
+                                            <TableCell className="whitespace-normal wrap-break-word">
+                                                Incorrect/Incomplete Address
+                                            </TableCell>
+                                            <TableCell className="whitespace-normal wrap-break-word">
+                                                Reshipment or Refund
+                                            </TableCell>
+                                            <TableCell className="whitespace-normal wrap-break-word">
+                                                Reshipment: Shipping charges must be paid again by the customer.
+                                                <br />
+                                                Refund: The refund will be processed after a 25% deduction from the total
+                                                order value to cover initial shipping, handling, and logistics costs.
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                            <TableCell className="whitespace-normal wrap-break-word">
+                                                Customer Unavailability
+                                            </TableCell>
+                                            <TableCell className="whitespace-normal wrap-break-word">
+                                                Reshipment or Refund
+                                            </TableCell>
+                                            <TableCell className="whitespace-normal wrap-break-word">
+                                                Reshipment: Shipping charges must be paid again by the customer.
+                                                <br />
+                                                Refund: A deduction of 25% of the total order value will apply.
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                            <TableCell className="whitespace-normal wrap-break-word">
+                                                Refusal to Accept Delivery
+                                            </TableCell>
+                                            <TableCell className="whitespace-normal wrap-break-word">
+                                                Refund Only
+                                            </TableCell>
+                                            <TableCell className="whitespace-normal wrap-break-words">
+                                                A 25% deduction from the total order value will apply. Prepaid orders that
+                                                are refused are not eligible for a full refund.
+                                            </TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </div>
+
 
                             <h2>4. General Refund Processing</h2>
 
                             <p>
                                 <strong>Refund Initiation:</strong> Once a replacement or RTO refund request is
-                                approved, the refund will be initiated by My Tree Enviros within 7–10 working days.
+                                approved, the refund will be initiated by My Tree Enviros within 7-10 working days.
                             </p>
 
                             <p>
