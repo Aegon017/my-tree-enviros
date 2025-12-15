@@ -4,8 +4,20 @@ import Image from "next/image";
 import Link from "next/link";
 import QRCode from "react-qr-code";
 import { BACKEND_URL } from "@/services/http-client";
+import { useEffect, useState } from "react";
+import { appService } from "@/services/app.service";
 
 export default function AppDownloadSection() {
+  const [links, setLinks] = useState<{ android_url: string; ios_url: string } | null>(null);
+
+  useEffect(() => {
+    appService.getSettings().then((response) => {
+      if (response.success && response.data) {
+        setLinks(response.data);
+      }
+    });
+  }, []);
+
   return (
     <section className="w-full bg-background flex justify-center py-24 px-4">
       <div
@@ -31,7 +43,7 @@ export default function AppDownloadSection() {
           </p>
 
           <div className="flex items-center gap-6">
-            <Link href="https://play.google.com" target="_blank">
+            <Link href={links?.android_url || "https://play.google.com"} target="_blank">
               <div className="relative w-full max-w-[190px] h-auto">
                 <Image
                   src="/google-play-badge.avif"
@@ -43,7 +55,7 @@ export default function AppDownloadSection() {
               </div>
             </Link>
 
-            <Link href="https://apple.com/app-store" target="_blank">
+            <Link href={links?.ios_url || "https://apple.com/app-store"} target="_blank">
               <div className="relative w-full max-w-[190px] h-auto">
                 <Image
                   src="/app-store-badge.avif"
