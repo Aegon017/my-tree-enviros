@@ -1,16 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { checkoutService } from "@/modules/checkout/services/checkout.service";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-export default function PhonePeCallbackPage() {
+function PhonePeCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    console.log(searchParams);
-
 
     const [verifying, setVerifying] = useState(true);
 
@@ -57,5 +55,17 @@ export default function PhonePeCallbackPage() {
             <p className="mt-4 text-lg font-medium">Verifying Payment...</p>
             <p className="text-muted-foreground">Please do not close this window.</p>
         </div>
+    );
+}
+
+export default function PhonePeCallbackPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-screen">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+        }>
+            <PhonePeCallbackContent />
+        </Suspense>
     );
 }
