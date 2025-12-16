@@ -2,10 +2,15 @@ import api from "@/services/http-client";
 import { CheckoutPreparePayload, CheckoutPrepareResponse } from "@/types/checkout";
 
 export interface CheckoutVerifyPayload {
-    razorpay_order_id: string;
-    razorpay_payment_id: string;
-    razorpay_signature: string;
-    order_reference: string;
+    razorpay_order_id?: string;
+    razorpay_payment_id?: string;
+    razorpay_signature?: string;
+    order_reference?: string;
+    code?: string;
+    merchantId?: string;
+    providerReferenceId?: string;
+    checksum?: string;
+    transaction_id?: string;
 }
 
 export interface CheckoutVerifyResponse {

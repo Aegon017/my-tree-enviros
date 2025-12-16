@@ -145,6 +145,8 @@ function CheckoutPageContent() {
     fetchSummary();
   }, [fetchSummary]);
 
+  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'phonepe'>('razorpay');
+
   const buildPayload = useCallback((): any => {
     if (!summary) return null;
 
@@ -163,8 +165,9 @@ function CheckoutPageContent() {
       })),
       coupon_code: couponCode,
       shipping_address_id: selectedAddress,
+      payment_method: paymentMethod,
     };
-  }, [summary, couponCode, selectedAddress, dedication]);
+  }, [summary, couponCode, selectedAddress, dedication, paymentMethod]);
 
   const handlePayment = async () => {
     if (!user) {
@@ -326,8 +329,48 @@ function CheckoutPageContent() {
 
         </div>
 
-        <div>
-          <Card className="sticky top-16">
+        <div className="space-y-6 sticky top-16 self-start">
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Method</CardTitle>
+              <CardDescription>Select how you want to pay</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 border p-4 rounded-md cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900" onClick={() => setPaymentMethod('razorpay')}>
+                  <input
+                    type="radio"
+                    id="pm_razorpay"
+                    name="payment_method"
+                    value="razorpay"
+                    checked={paymentMethod === 'razorpay'}
+                    onChange={() => setPaymentMethod('razorpay')}
+                    className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <label htmlFor="pm_razorpay" className="flex-1 cursor-pointer font-medium">
+                    Razorpay (Cards, UPI, NetBanking)
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-2 border p-4 rounded-md cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900" onClick={() => setPaymentMethod('phonepe')}>
+                  <input
+                    type="radio"
+                    id="pm_phonepe"
+                    name="payment_method"
+                    value="phonepe"
+                    checked={paymentMethod === 'phonepe'}
+                    onChange={() => setPaymentMethod('phonepe')}
+                    className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <label htmlFor="pm_phonepe" className="flex-1 cursor-pointer font-medium">
+                    PhonePe (UPI, Wallet, Cards)
+                  </label>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
             </CardHeader>
