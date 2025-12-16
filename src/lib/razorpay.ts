@@ -1,3 +1,11 @@
+declare global {
+  interface Window {
+    Razorpay: any;
+    PhonePeCheckout: {
+      transact: (obj: { tokenUrl: string; callback?: (response: any) => void; type?: string }) => Promise<void>;
+    };
+  }
+}
 export const loadRazorpay = (): Promise<boolean> => {
   return new Promise((resolve) => {
     const existing = document.querySelector("#razorpay-script");

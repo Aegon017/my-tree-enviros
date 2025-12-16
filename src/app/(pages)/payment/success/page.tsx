@@ -41,11 +41,17 @@ function PaymentSuccessPage() {
           .getOrderById(id)
           .then((res) => {
             const orderData = res?.data;
-            if (mounted && orderData) {
-              setOrder(orderData);
+            if (mounted) {
+              if (orderData) {
+                setOrder(orderData);
+              } else {
+                console.error("Order data missing in response", res);
+              }
             }
           })
-          .catch(() => {})
+          .catch((err) => {
+            console.error("Failed to fetch order", err);
+          })
           .finally(() => {
             if (mounted) setLoading(false);
           });
