@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -19,7 +20,9 @@ import { LoginDialog } from "@/components/login-dialog";
 import { ApplyCoupon } from "@/components/apply-coupon";
 import api from "@/services/http-client";
 import { useCheckout } from "@/modules/checkout/hooks/use-checkout";
+import { checkoutService } from "@/modules/checkout/services/checkout.service";
 import { CheckoutSummary, CheckoutItem } from "@/types/checkout";
+import { PaymentGateway } from "@/types/payment-gateway";
 
 function CheckoutItemCard({ item }: { item: CheckoutItem }) {
   const name = item.name;
@@ -81,6 +84,7 @@ function CheckoutPageContent() {
   const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [gateways, setGateways] = useState<PaymentGateway[]>([]);
   const [dedication, setDedication] = useState<{
     name: string;
     occasion: string;
@@ -145,7 +149,24 @@ function CheckoutPageContent() {
     fetchSummary();
   }, [fetchSummary]);
 
-  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'phonepe'>('razorpay');
+  const fetchGateways = useCallback(async () => {
+    try {
+      const res = await checkoutService.getPaymentGateways();
+      const list = res.data ?? [];
+      setGateways(list);
+      if (list.length > 0 && !paymentMethod) {
+        setPaymentMethod(list[0].slug);
+      }
+    } catch (error) {
+      console.error("Failed to fetch payment gateways", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGateways();
+  }, [fetchGateways]);
+
+  const [paymentMethod, setPaymentMethod] = useState<string>('');
 
   const buildPayload = useCallback((): any => {
     if (!summary) return null;
@@ -336,37 +357,34 @@ function CheckoutPageContent() {
               <CardDescription>Select how you want to pay</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2 border p-4 rounded-md cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900" onClick={() => setPaymentMethod('razorpay')}>
-                  <input
-                    type="radio"
-                    id="pm_razorpay"
-                    name="payment_method"
-                    value="razorpay"
-                    checked={paymentMethod === 'razorpay'}
-                    onChange={() => setPaymentMethod('razorpay')}
-                    className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <label htmlFor="pm_razorpay" className="flex-1 cursor-pointer font-medium">
-                    Razorpay (Cards, UPI, NetBanking)
-                  </label>
-                </div>
-
-                <div className="flex items-center space-x-2 border p-4 rounded-md cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900" onClick={() => setPaymentMethod('phonepe')}>
-                  <input
-                    type="radio"
-                    id="pm_phonepe"
-                    name="payment_method"
-                    value="phonepe"
-                    checked={paymentMethod === 'phonepe'}
-                    onChange={() => setPaymentMethod('phonepe')}
-                    className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <label htmlFor="pm_phonepe" className="flex-1 cursor-pointer font-medium">
-                    PhonePe (UPI, Wallet, Cards)
-                  </label>
-                </div>
-              </div>
+              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4">
+                {gateways.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">Loading payment methods...</p>
+                ) : (
+                  gateways.map((gateway) => (
+                    <Label
+                      key={gateway.id}
+                      htmlFor={`pm_${gateway.slug}`}
+                      className={`flex items-center justify-between border p-4 rounded-md cursor-pointer transition-all hover:bg-accent hover:text-accent-foreground ${paymentMethod === gateway.slug ? "border-primary bg-accent/50 shadow-sm" : "border-muted"
+                        }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <RadioGroupItem value={gateway.slug} id={`pm_${gateway.slug}`} />
+                        <span className="font-medium">{gateway.name}</span>
+                      </div>
+                      {gateway.image && (
+                        <div className="h-6 w-auto max-w-[80px]">
+                          <img
+                            src={gateway.image}
+                            alt={gateway.name}
+                            className="h-full w-auto object-contain"
+                          />
+                        </div>
+                      )}
+                    </Label>
+                  ))
+                )}
+              </RadioGroup>
             </CardContent>
           </Card>
 

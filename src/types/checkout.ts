@@ -69,7 +69,7 @@ export interface CheckoutPreparePayload {
         sponsor_quantity?: number;
     }>;
     coupon_code?: string;
-    payment_method?: 'razorpay' | 'phonepe';
+    payment_method?: string;
     currency?: string;
     shipping_address_id?: number;
 }

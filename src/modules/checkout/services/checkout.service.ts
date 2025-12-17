@@ -1,5 +1,6 @@
 import api from "@/services/http-client";
 import { CheckoutPreparePayload, CheckoutPrepareResponse } from "@/types/checkout";
+import { PaymentGateway } from "@/types/payment-gateway";
 
 export interface CheckoutVerifyPayload {
     razorpay_order_id?: string;
@@ -32,5 +33,9 @@ export const checkoutService = {
             "/checkout/verify",
             payload,
         );
+    },
+
+    async getPaymentGateways() {
+        return await api.get<PaymentGateway[]>("/payment-gateways");
     },
 };
