@@ -32,7 +32,7 @@ export function useProductReviews(productId: number | undefined) {
     () =>
       reviews.length
         ? reviews.reduce((s: number, r: any) => s + r.rating, 0) /
-        reviews.length
+          reviews.length
         : 0,
     [reviews],
   );

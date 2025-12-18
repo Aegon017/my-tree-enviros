@@ -87,20 +87,20 @@ export default function Page() {
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 justify-center">
               {loading && trees.length === 0
                 ? Array.from({ length: 10 }).map((_, i) => (
-                  <BasicTreeCardSkeleton key={i} />
-                ))
+                    <BasicTreeCardSkeleton key={i} />
+                  ))
                 : trees.map((tree) => (
-                  <Link
-                    key={tree.id}
-                    href={`/adopt-a-tree/${tree.id}`}
-                    className="transition-transform hover:scale-105"
-                  >
-                    <BasicTreeCard
-                      name={tree.name}
-                      image={tree.thumbnail_url}
-                    />
-                  </Link>
-                ))}
+                    <Link
+                      key={tree.id}
+                      href={`/adopt-a-tree/${tree.id}`}
+                      className="transition-transform hover:scale-105"
+                    >
+                      <BasicTreeCard
+                        name={tree.name}
+                        image={tree.thumbnail_url}
+                      />
+                    </Link>
+                  ))}
             </div>
 
             {!loading && trees.length === 0 && (

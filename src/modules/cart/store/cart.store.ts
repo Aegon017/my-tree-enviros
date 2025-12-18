@@ -57,8 +57,6 @@ export const useCartStore = create<CartState>()(
           return;
         }
 
-        // Guest Cart Logic - Note: Guest cart has limited functionality
-        // For full features including plan changes, user should log in
         const cart = get().cart;
 
         if (payload.type === "product") {
@@ -67,22 +65,28 @@ export const useCartStore = create<CartState>()(
           );
 
           if (existingItemIndex > -1) {
-            const item = cart.items[existingItemIndex];
-            item.quantity += payload.quantity;
-            set({ cart: { ...cart } });
+            const newItems = [...cart.items];
+            newItems[existingItemIndex] = {
+              ...newItems[existingItemIndex],
+              quantity: newItems[existingItemIndex].quantity + payload.quantity,
+            };
+            set({ cart: { ...cart, items: newItems } });
             return;
           }
         } else {
           const existingItemIndex = cart.items.findIndex(
             (item) =>
-              item.tree?.id === payload.tree_id &&
+              item.tree?.id === (payload.tree_id || payload.tree_instance_id) &&
               (item as any).plan_price_id === payload.plan_price_id,
           );
 
           if (existingItemIndex > -1) {
-            const item = cart.items[existingItemIndex];
-            item.quantity += payload.quantity;
-            set({ cart: { ...cart } });
+            const newItems = [...cart.items];
+            newItems[existingItemIndex] = {
+              ...newItems[existingItemIndex],
+              quantity: newItems[existingItemIndex].quantity + payload.quantity,
+            };
+            set({ cart: { ...cart, items: newItems } });
             return;
           }
         }
@@ -189,8 +193,7 @@ export const useCartStore = create<CartState>()(
           };
         }
 
-        cart.items.push(newItem);
-        set({ cart: { ...cart } });
+        set({ cart: { ...cart, items: [...cart.items, newItem] } });
       },
 
       updateItem: async (id, payload) => {
@@ -211,51 +214,58 @@ export const useCartStore = create<CartState>()(
 
         // Guest Logic
         const cart = get().cart;
-        const item = cart.items.find((i) => i.id === id || i.clientId === id);
-        if (item) {
-          if (payload.quantity) {
-            item.quantity = payload.quantity;
-          }
-          if (payload.dedication) {
-            item.dedication = payload.dedication;
-          }
-          if (
-            payload.plan_price_id &&
-            item.type !== "product" &&
-            item.available_plans
-          ) {
-            const selectedPlan = item.available_plans.find((plan: any) =>
-              plan.plan_prices.some(
-                (pp: any) => pp.id === payload.plan_price_id,
-              ),
-            );
-            if (selectedPlan) {
-              const selectedPlanPrice = selectedPlan.plan_prices.find(
-                (pp: any) => pp.id === payload.plan_price_id,
+        const newItems = cart.items.map((item) => {
+          if (item.id === id || item.clientId === id) {
+            const updatedItem = { ...item };
+
+            if (payload.quantity) {
+              updatedItem.quantity = payload.quantity;
+            }
+            if (payload.dedication) {
+              updatedItem.dedication = payload.dedication;
+            }
+            if (
+              payload.plan_price_id &&
+              updatedItem.type !== "product" &&
+              updatedItem.available_plans
+            ) {
+              const selectedPlan = updatedItem.available_plans.find(
+                (plan: any) =>
+                  plan.plan_prices.some(
+                    (pp: any) => pp.id === payload.plan_price_id,
+                  ),
               );
-              if (selectedPlanPrice) {
-                (item as any).plan_price_id = payload.plan_price_id;
-                item.duration = selectedPlan.duration;
-                (item as any).duration_unit = selectedPlan.duration_unit;
-                item.price = selectedPlanPrice.price;
-                (item as any).plan = {
-                  id: selectedPlan.id,
-                  duration: selectedPlan.duration,
-                  duration_unit: selectedPlan.duration_unit,
-                };
+              if (selectedPlan) {
+                const selectedPlanPrice = selectedPlan.plan_prices.find(
+                  (pp: any) => pp.id === payload.plan_price_id,
+                );
+                if (selectedPlanPrice) {
+                  (updatedItem as any).plan_price_id = payload.plan_price_id;
+                  updatedItem.duration = selectedPlan.duration;
+                  (updatedItem as any).duration_unit =
+                    selectedPlan.duration_unit;
+                  updatedItem.price = selectedPlanPrice.price;
+                  (updatedItem as any).plan = {
+                    id: selectedPlan.id,
+                    duration: selectedPlan.duration,
+                    duration_unit: selectedPlan.duration_unit,
+                  };
+                }
               }
             }
-          }
 
-          if (
-            payload.initiative_site_id !== undefined &&
-            item.type !== "product"
-          ) {
-            item.initiative_site_id = payload.initiative_site_id;
+            if (
+              payload.initiative_site_id !== undefined &&
+              updatedItem.type !== "product"
+            ) {
+              updatedItem.initiative_site_id = payload.initiative_site_id;
+            }
+            return updatedItem;
           }
+          return item;
+        });
 
-          set({ cart: { ...cart } });
-        }
+        set({ cart: { ...cart, items: newItems } });
       },
 
       removeItem: async (id) => {
@@ -276,8 +286,10 @@ export const useCartStore = create<CartState>()(
 
         // Guest Logic
         const cart = get().cart;
-        cart.items = cart.items.filter((i) => i.id !== id && i.clientId !== id);
-        set({ cart: { ...cart } });
+        const newItems = cart.items.filter(
+          (i) => i.id !== id && i.clientId !== id,
+        );
+        set({ cart: { ...cart, items: newItems } });
       },
 
       clearCart: async () => {

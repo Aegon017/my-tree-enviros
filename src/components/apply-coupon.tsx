@@ -41,7 +41,11 @@ export function ApplyCoupon({
       );
       if (response.success && response.data) {
         setIsApplied(true);
-        onCouponApplied(response.data.discount, response.data.coupon_id, couponCode);
+        onCouponApplied(
+          response.data.discount,
+          response.data.coupon_id,
+          couponCode,
+        );
         toast.success("Coupon applied successfully");
       } else {
         toast.error(response.message || "Invalid coupon");

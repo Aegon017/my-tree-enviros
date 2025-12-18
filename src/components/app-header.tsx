@@ -3,7 +3,15 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Menu, User, Heart, ShoppingCart, Bell, LogIn, LogOut } from "lucide-react";
+import {
+  Menu,
+  User,
+  Heart,
+  ShoppingCart,
+  Bell,
+  LogIn,
+  LogOut,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -175,7 +183,7 @@ export default function Header() {
                   "text-lg font-medium transition-colors",
                   pathname === item.href
                     ? "text-primary"
-                    : "text-muted-foreground hover:text-primary"
+                    : "text-muted-foreground hover:text-primary",
                 )}
               >
                 {item.label}

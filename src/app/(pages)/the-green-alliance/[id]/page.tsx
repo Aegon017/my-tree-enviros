@@ -8,7 +8,13 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import Section from "@/components/section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { campaignService } from "@/services/campaign.services";
 import { Markup } from "interweave";
 import { useAuth } from "@/hooks/use-auth";
@@ -72,7 +78,9 @@ export default function Page() {
   if (loading)
     return (
       <Section>
-        <div className="text-center py-12 text-xl font-semibold">Loading...</div>
+        <div className="text-center py-12 text-xl font-semibold">
+          Loading...
+        </div>
       </Section>
     );
 
@@ -80,7 +88,9 @@ export default function Page() {
     return (
       <Section>
         <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-red-600">{error || "Campaign Not Found"}</h1>
+          <h1 className="text-2xl font-bold text-red-600">
+            {error || "Campaign Not Found"}
+          </h1>
           <Link href="/the-green-alliance" className="inline-flex mt-4 gap-2">
             <ArrowLeft className="h-4 w-4" /> Back to Campaigns
           </Link>
@@ -111,11 +121,15 @@ export default function Page() {
               <CardTitle className="text-3xl">{campaign.name}</CardTitle>
               <CardDescription className="flex gap-4 text-base mt-2">
                 <span className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" /> {campaign.area}, {campaign.city}
+                  <MapPin className="h-4 w-4" /> {campaign.area},{" "}
+                  {campaign.city}
                 </span>
                 <span className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  Ends {new Date(campaign.expiration_date).toLocaleDateString("en-US")}
+                  Ends{" "}
+                  {new Date(campaign.expiration_date).toLocaleDateString(
+                    "en-US",
+                  )}
                 </span>
               </CardDescription>
             </CardHeader>
@@ -125,7 +139,10 @@ export default function Page() {
                 <TreePine className="h-5 w-5" /> Campaign Story
               </div>
 
-              <Markup content={campaign.description} className="prose dark:prose-invert" />
+              <Markup
+                content={campaign.description}
+                className="prose dark:prose-invert"
+              />
             </CardContent>
           </Card>
         </div>
@@ -138,7 +155,9 @@ export default function Page() {
               disabled={isExpired}
               onClick={handleCheckout}
             >
-              {isExpired ? "Campaign Ended" : `Proceed to Checkout (${totalMoney} Rupees)`}
+              {isExpired
+                ? "Campaign Ended"
+                : `Proceed to Checkout (${totalMoney} Rupees)`}
             </Button>
           </CardContent>
         </Card>
