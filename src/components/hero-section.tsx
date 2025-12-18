@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import { motion, useScroll, useTransform } from "framer-motion"
-import { useRef } from "react"
-import Link from "next/link"
-import { ArrowRight, Leaf } from "lucide-react"
+import Image from "next/image";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
+import Link from "next/link";
+import { ArrowRight, Leaf } from "lucide-react";
 
 const layers = [
   { src: "/parallax/bg-layer1.png", yEnd: "10%", opacity: "35%" },
   { src: "/parallax/bg-layer2.png", yEnd: "20%", opacity: "45%" },
-  { src: "/parallax/bg-layer3.png", yEnd: "30%", opacity: "55%" }
-]
+  { src: "/parallax/bg-layer3.png", yEnd: "30%", opacity: "55%" },
+];
 
 const chapters = [
   {
@@ -43,23 +43,23 @@ const chapters = [
     color: "bg-blue-500/10",
     hoverColor: "group-hover:bg-blue-500/20",
   },
-]
+];
 
 export default function HeroSection() {
-  const ref = useRef(null)
+  const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
-  })
+  });
 
-  const titleY = useTransform(scrollYProgress, [0, 0.5], ["0%", "60%"])
-  const titleOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0])
+  const titleY = useTransform(scrollYProgress, [0, 0.5], ["0%", "60%"]);
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
 
   return (
     <main ref={ref} className="relative w-full min-h-screen overflow-hidden">
       <div className="absolute inset-0 z-0 pointer-events-none">
         {layers.map((layer, i) => {
-          const y = useTransform(scrollYProgress, [0, 1], ["0%", layer.yEnd])
+          const y = useTransform(scrollYProgress, [0, 1], ["0%", layer.yEnd]);
           return (
             <motion.div key={i} style={{ y }} className="absolute inset-0">
               <Image
@@ -71,13 +71,16 @@ export default function HeroSection() {
                 style={{ opacity: layer.opacity }}
               />
             </motion.div>
-          )
+          );
         })}
         <div className="absolute inset-0 bg-linear-to-b from-background/10 via-background/40 to-background" />
       </div>
 
       <section className="relative z-10 flex flex-col items-center justify-center text-center min-h-screen px-6 pb-32">
-        <motion.div style={{ y: titleY, opacity: titleOpacity }} className="space-y-8 max-w-4xl mx-auto">
+        <motion.div
+          style={{ y: titleY, opacity: titleOpacity }}
+          className="space-y-8 max-w-4xl mx-auto"
+        >
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -96,7 +99,8 @@ export default function HeroSection() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto"
           >
-            Walk into a living journey. Sponsor, adopt, or nourish a tree and watch the world change through your actions.
+            Walk into a living journey. Sponsor, adopt, or nourish a tree and
+            watch the world change through your actions.
           </motion.p>
         </motion.div>
       </section>
@@ -118,11 +122,23 @@ export default function HeroSection() {
                 >
                   <div className="flex flex-col h-full">
                     <div className="mb-6 w-full aspect-square max-w-[200px] mx-auto rounded-2xl overflow-hidden shadow group-hover:scale-105 transition-transform duration-500">
-                      <Image src={item.image} alt={item.title} width={200} height={200} className="object-cover w-full h-full" />
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        width={200}
+                        height={200}
+                        className="object-cover w-full h-full"
+                      />
                     </div>
-                    <h3 className="text-2xl font-bold mb-2 group-hover:text-primary transition-colors">{item.title}</h3>
-                    <p className="text-sm font-medium text-primary mb-3">{item.subtitle}</p>
-                    <p className="text-muted-foreground text-sm leading-relaxed mb-6 flex-1">{item.body}</p>
+                    <h3 className="text-2xl font-bold mb-2 group-hover:text-primary transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm font-medium text-primary mb-3">
+                      {item.subtitle}
+                    </p>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-6 flex-1">
+                      {item.body}
+                    </p>
                     <div className="flex items-center text-primary font-semibold text-sm">
                       {item.title}
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -135,5 +151,5 @@ export default function HeroSection() {
         </div>
       </section>
     </main>
-  )
+  );
 }

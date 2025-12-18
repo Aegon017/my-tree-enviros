@@ -2,7 +2,11 @@ declare global {
   interface Window {
     Razorpay: any;
     PhonePeCheckout: {
-      transact: (obj: { tokenUrl: string; callback?: (response: any) => void; type?: string }) => Promise<void>;
+      transact: (obj: {
+        tokenUrl: string;
+        callback?: (response: any) => void;
+        type?: string;
+      }) => Promise<void>;
     };
   }
 }

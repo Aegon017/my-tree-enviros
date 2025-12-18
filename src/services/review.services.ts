@@ -4,7 +4,9 @@ export type ReviewFormValues = { rating: number; comment?: string };
 
 export const reviewService = {
   async submit(productId: number, payload: ReviewFormValues) {
-    return api.post(`/products/${productId}/reviews`, payload).then((r) => r.data);
+    return api
+      .post(`/products/${productId}/reviews`, payload)
+      .then((r) => r.data);
   },
 
   async update(reviewId: number, productId: number, payload: ReviewFormValues) {

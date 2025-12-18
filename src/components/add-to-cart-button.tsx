@@ -64,16 +64,19 @@ export default function AddToCartButton({
           item.type === "product" && item.product_variant_id === variantId,
       );
     }
-    if ((type === "sponsor" || type === "adopt") && treeId && planPriceId) {
+    if ((type === "sponsor" || type === "adopt") && planPriceId) {
+      const targetId = type === "sponsor" ? treeId : treeInstanceId;
+      if (!targetId) return false;
+
       return items.some(
         (item) =>
-          item.type !== "product" &&
-          item.tree?.id === treeId &&
+          item.type === type &&
+          item.tree?.id === targetId &&
           item.plan_price_id === planPriceId,
       );
     }
     return false;
-  }, [items, type, variantId, treeId, planPriceId]);
+  }, [items, type, variantId, treeId, treeInstanceId, planPriceId]);
 
   const handle = async () => {
     if (isInCart) {
@@ -100,8 +103,10 @@ export default function AddToCartButton({
         if (!planId || !planPriceId)
           return toast.error("Invalid sponsorship/adoption details");
 
-        if (type === "sponsor" && !treeId) return toast.error("Invalid tree details");
-        if (type === "adopt" && !treeInstanceId) return toast.error("Invalid instance details");
+        if (type === "sponsor" && !treeId)
+          return toast.error("Invalid tree details");
+        if (type === "adopt" && !treeInstanceId)
+          return toast.error("Invalid instance details");
 
         await add({
           type: type,
