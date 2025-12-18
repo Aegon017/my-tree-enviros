@@ -43,7 +43,11 @@ export function useCheckout() {
             } catch (e: any) {
               console.error(e);
               toast.error("Payment verification failed");
-              router.push("/payment/failure?reason=verification_failed");
+              router.push(
+                `/payment/failure?reason=${encodeURIComponent(
+                  "Payment verification failed",
+                )}&amount=${payment.amount / 100}`,
+              );
             }
           },
           prefill: {
@@ -60,7 +64,11 @@ export function useCheckout() {
         rzp1.on("payment.failed", function (response: any) {
           console.error(response.error);
           toast.error("Payment failed");
-          router.push("/payment/failure?reason=payment_failed");
+          router.push(
+            `/payment/failure?error=${encodeURIComponent(
+              response.error.description || "Payment failed",
+            )}&amount=${payment.amount / 100}`,
+          );
         });
         rzp1.open();
       } else if (payment.gateway === "phonepe") {
@@ -72,7 +80,7 @@ export function useCheckout() {
           if (window.PhonePeCheckout) {
             await window.PhonePeCheckout.transact({
               tokenUrl: payment.url!,
-              callback: () => {},
+              callback: () => { },
             });
           } else {
             window.location.href = payment.url!;

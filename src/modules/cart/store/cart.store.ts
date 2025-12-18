@@ -189,6 +189,7 @@ export const useCartStore = create<CartState>()(
               duration_unit: planData?.plan?.duration_unit || "year",
             },
             available_plans: availablePlans,
+            tree_id: tree.id,
             dedication: payload.dedication || null,
           };
         }

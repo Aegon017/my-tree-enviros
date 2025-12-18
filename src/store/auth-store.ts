@@ -58,7 +58,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (guestItems.length > 0) {
         try {
           for (const item of guestItems) {
-            await cartService.add(item);
+            const payload = { ...item };
+            // Ensure tree_id is present if it's a tree item
+            if (payload.tree?.id && !payload.tree_id) {
+              payload.tree_id = payload.tree.id;
+            }
+            await cartService.add(payload);
           }
           cartStore.resetGuestCart();
         } catch (e) {
