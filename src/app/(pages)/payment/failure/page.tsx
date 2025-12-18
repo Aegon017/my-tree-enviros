@@ -32,15 +32,15 @@ function PaymentFailurePage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
-      <div className="max-w-md w-full space-y-8">
-        {}
+      <div className="w-full max-w-lg space-y-8">
+        { }
         <div className="text-center">
           <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-red-100 dark:bg-red-900/20">
             <XCircle className="h-12 w-12 text-red-600 dark:text-red-400" />
           </div>
         </div>
 
-        {}
+        { }
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-foreground">Payment Failed</h1>
           <p className="text-muted-foreground">
@@ -48,18 +48,18 @@ function PaymentFailurePage() {
           </p>
         </div>
 
-        {}
+        { }
         <Alert
           variant="destructive"
           className="bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
         >
-          <AlertDescription className="text-red-800 dark:text-red-300">
+          <AlertDescription className="text-red-800 dark:text-red-300 break-words">
             {errorMessage}
           </AlertDescription>
         </Alert>
 
-        {}
-        <Card className="border-border">
+        { }
+        <Card className="border-border shadow-sm">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg text-foreground">
               Payment Summary
@@ -69,17 +69,20 @@ function PaymentFailurePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-muted-foreground">Amount</p>
-              <p className="font-medium text-foreground">
-                ₹{amount.toFixed(2)}
-              </p>
-            </div>
+            {amount > 0 && (
+              <>
+                <div className="flex justify-between items-center">
+                  <p className="text-muted-foreground">Amount</p>
+                  <p className="font-bold text-xl text-foreground">
+                    ₹{amount.toFixed(2)}
+                  </p>
+                </div>
+                <Separator className="bg-border" />
+              </>
+            )}
 
-            <Separator className="bg-border" />
-
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm font-medium text-foreground">
                 Possible reasons for failure:
               </p>
               <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
@@ -89,17 +92,10 @@ function PaymentFailurePage() {
                 <li>Network issues</li>
               </ul>
             </div>
-
-            <Badge
-              variant="secondary"
-              className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-            >
-              Payment Failed
-            </Badge>
           </CardContent>
         </Card>
 
-        {}
+        { }
         <div className="flex flex-col sm:flex-row gap-3">
           <Button asChild variant="outline" className="flex-1">
             <Link href="/">
