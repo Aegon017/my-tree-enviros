@@ -23,6 +23,7 @@ import {
   SheetContent,
   SheetTrigger,
   SheetClose,
+  SheetTitle,
 } from "@/components/ui/sheet";
 import { LocationButton } from "./location/location-button";
 import {
@@ -32,6 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 const NAV = [
   { href: "/", label: "Home" },
@@ -41,59 +43,55 @@ const NAV = [
   { href: "/store", label: "Store" },
 ];
 
-function AccountMenu({ isAuthenticated, signOut }: any) {
+type AccountMenuProps = {
+  isAuthenticated: boolean;
+  signOut: () => void;
+};
+
+function AccountMenu({ isAuthenticated, signOut }: AccountMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-primary"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
         >
-          <User className="w-5 h-5" />
+          <User className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-40">
+      <DropdownMenuContent align="end" className="w-44">
         {!isAuthenticated && (
-          <>
-            <DropdownMenuItem asChild>
-              <Link href="/sign-in" className="cursor-pointer">
-                <div className="flex items-center gap-2">
-                  <LogIn />
-                  Sign In
-                </div>
-              </Link>
-            </DropdownMenuItem>
-          </>
+          <DropdownMenuItem asChild>
+            <Link href="/sign-in" className="flex items-center gap-2">
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Link>
+          </DropdownMenuItem>
         )}
 
         {isAuthenticated && (
           <>
             <DropdownMenuItem asChild>
-              <Link href="/my-profile" className="cursor-pointer">
-                <div className="flex items-center gap-2">
-                  <User />
-                  My Profile
-                </div>
+              <Link href="/my-profile" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                My Profile
               </Link>
             </DropdownMenuItem>
+
             <DropdownMenuItem asChild>
-              <Link href="/my-orders" className="cursor-pointer">
-                <div className="flex items-center gap-2">
-                  <ShoppingCart />
-                  My Orders
-                </div>
+              <Link href="/my-orders" className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4" />
+                My Orders
               </Link>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem onClick={signOut}>
-              <div className="flex items-center gap-2 cursor-pointer">
-                <LogOut />
-                Sign Out
-              </div>
+            <DropdownMenuItem onClick={signOut} className="flex gap-2">
+              <LogOut className="h-4 w-4" />
+              Sign Out
             </DropdownMenuItem>
           </>
         )}
@@ -113,43 +111,57 @@ export default function Header() {
   return (
     <>
       <motion.header
-        initial={{ y: -18, opacity: 0 }}
+        initial={{ y: -16, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+        transition={{ duration: 0.35 }}
         className="w-full z-50"
       >
         <div className="mx-auto max-w-6xl px-3 py-3">
-          <motion.div
-            initial={{ opacity: 0.7 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="relative bg-background border shadow-sm rounded-2xl px-6 py-3 flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <LocationButton />
+          <div className="relative bg-background border border-border shadow-sm rounded-2xl px-4 md:px-6 py-2 md:py-3 flex flex-col md:flex-row justify-between gap-2">
+            <div className="flex items-center justify-between w-full md:w-auto">
+              <div className="flex items-center gap-2 z-10">
+                {isMobile && (
+                  <MobileNav
+                    authenticated={isAuthenticated}
+                    signOut={signOut}
+                  />
+                )}
+                {!isMobile && <LocationButton />}
+              </div>
+
+              {isMobile && (
+                <div className="absolute left-1/2 -translate-x-1/2">
+                  <AppLogo className="h-9" />
+                </div>
+              )}
+
+              {isMobile && (
+                <div className="flex items-center gap-1 z-10">
+                  <NavIcon href="/wishlist" icon={Heart} />
+                  <NavIcon href="/cart" icon={ShoppingCart} />
+                </div>
+              )}
             </div>
 
-            <motion.div
-              className="absolute inset-0 flex items-center justify-center pointer-events-none"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.45 }}
-            >
-              <motion.div
-                animate={{ scale: [1, 1.03, 1] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <AppLogo className="h-14 hidden md:block" />
-              </motion.div>
-            </motion.div>
+            {isMobile && (
+              <div className="w-full flex justify-center border-t border-border pt-1.5">
+                <LocationButton className="w-full justify-center" />
+              </div>
+            )}
 
             {!isMobile && (
-              <motion.div
-                className="flex items-center gap-1.5"
-                initial={{ opacity: 0, y: -3 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <motion.div
+                  animate={{ scale: [1, 1.03, 1] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  <AppLogo className="h-14" />
+                </motion.div>
+              </div>
+            )}
+
+            {!isMobile && (
+              <div className="flex items-center gap-1.5 z-10">
                 <NavIcon href="/wishlist" icon={Heart} />
                 <NavIcon href="/cart" icon={ShoppingCart} />
                 <NavIcon href="/notifications" icon={Bell} />
@@ -157,24 +169,19 @@ export default function Header() {
                   isAuthenticated={isAuthenticated}
                   signOut={signOut}
                 />
-              </motion.div>
+              </div>
             )}
-
-            {isMobile && (
-              <MobileNav authenticated={isAuthenticated} signOut={signOut} />
-            )}
-          </motion.div>
+          </div>
         </div>
       </motion.header>
 
       {!isMobile && mounted && (
         <motion.div
           className="w-full flex justify-center pb-3 sticky top-2 z-50"
-          initial={{ opacity: 0, y: -3 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
         >
-          <nav className="flex gap-12 bg-background border shadow-sm rounded-full px-10 py-2.5">
+          <nav className="flex gap-12 bg-background border border-border shadow-sm rounded-full px-10 py-2.5">
             {NAV.map((item) => (
               <Link
                 key={item.href}
@@ -182,8 +189,8 @@ export default function Header() {
                 className={cn(
                   "text-lg font-medium transition-colors",
                   pathname === item.href
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-primary",
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {item.label}
@@ -196,51 +203,63 @@ export default function Header() {
   );
 }
 
-function NavIcon({ href, icon: Icon }: any) {
+type NavIconProps = {
+  href: string;
+  icon: React.ElementType;
+};
+
+function NavIcon({ href, icon: Icon }: NavIconProps) {
   return (
     <motion.div whileHover={{ scale: 1.12 }}>
       <Button
         asChild
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-primary"
+        className="h-8 w-8 text-muted-foreground hover:text-foreground"
       >
         <Link href={href}>
-          <Icon className="w-5 h-5" />
+          <Icon className="h-5 w-5" />
         </Link>
       </Button>
     </motion.div>
   );
 }
 
-function MobileNav({ authenticated, signOut }: any) {
+type MobileNavProps = {
+  authenticated: boolean;
+  signOut: () => void;
+};
+
+function MobileNav({ authenticated, signOut }: MobileNavProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
         <motion.button
           whileTap={{ scale: 0.9 }}
-          className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-primary"
+          className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground"
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="h-5 w-5" />
         </motion.button>
       </SheetTrigger>
 
       <SheetContent side="left" className="w-[270px] p-0 bg-background">
-        <div className="p-5 border-b flex justify-between items-center">
-          <p className="font-semibold text-lg">My Tree Enviros</p>
+        <VisuallyHidden>
+          <SheetTitle>Mobile Navigation</SheetTitle>
+        </VisuallyHidden>
+
+        <div className="p-5 border-b border-border font-semibold text-lg">
+          My Tree Enviros
         </div>
 
-        <div className="py-3 flex flex-col gap-4">
+        <div className="py-3 flex flex-col">
           {NAV.map((item) => (
             <SheetClose asChild key={item.href}>
-              <motion.div whileTap={{ scale: 0.96 }}>
-                <Link
-                  href={item.href}
-                  className="px-4 py-3 text-sm hover:bg-accent"
-                >
-                  {item.label}
-                </Link>
-              </motion.div>
+              <Link
+                href={item.href}
+                className="px-4 py-3 text-sm hover:bg-accent"
+              >
+                {item.label}
+              </Link>
             </SheetClose>
           ))}
         </div>
@@ -251,7 +270,7 @@ function MobileNav({ authenticated, signOut }: any) {
               <SheetClose asChild>
                 <Link
                   href="/sign-in"
-                  className="text-center bg-primary text-primary-foreground py-2 rounded"
+                  className="text-center bg-foreground text-background py-2 rounded-md"
                 >
                   Sign In
                 </Link>
@@ -260,7 +279,7 @@ function MobileNav({ authenticated, signOut }: any) {
               <SheetClose asChild>
                 <Link
                   href="/sign-up"
-                  className="text-center border py-2 rounded"
+                  className="text-center border border-border py-2 rounded-md"
                 >
                   Sign Up
                 </Link>
@@ -270,7 +289,7 @@ function MobileNav({ authenticated, signOut }: any) {
             <Button
               onClick={signOut}
               variant="ghost"
-              className="w-full justify-start text-sm mt-2 text-primary"
+              className="w-full justify-start"
             >
               Sign Out
             </Button>
