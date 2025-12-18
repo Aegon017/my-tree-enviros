@@ -57,8 +57,6 @@ export const useCartStore = create<CartState>()(
           return;
         }
 
-        // Guest Cart Logic - Note: Guest cart has limited functionality
-        // For full features including plan changes, user should log in
         const cart = get().cart;
 
         if (payload.type === "product") {
@@ -231,10 +229,11 @@ export const useCartStore = create<CartState>()(
               updatedItem.type !== "product" &&
               updatedItem.available_plans
             ) {
-              const selectedPlan = updatedItem.available_plans.find((plan: any) =>
-                plan.plan_prices.some(
-                  (pp: any) => pp.id === payload.plan_price_id,
-                ),
+              const selectedPlan = updatedItem.available_plans.find(
+                (plan: any) =>
+                  plan.plan_prices.some(
+                    (pp: any) => pp.id === payload.plan_price_id,
+                  ),
               );
               if (selectedPlan) {
                 const selectedPlanPrice = selectedPlan.plan_prices.find(
@@ -243,7 +242,8 @@ export const useCartStore = create<CartState>()(
                 if (selectedPlanPrice) {
                   (updatedItem as any).plan_price_id = payload.plan_price_id;
                   updatedItem.duration = selectedPlan.duration;
-                  (updatedItem as any).duration_unit = selectedPlan.duration_unit;
+                  (updatedItem as any).duration_unit =
+                    selectedPlan.duration_unit;
                   updatedItem.price = selectedPlanPrice.price;
                   (updatedItem as any).plan = {
                     id: selectedPlan.id,
@@ -286,7 +286,9 @@ export const useCartStore = create<CartState>()(
 
         // Guest Logic
         const cart = get().cart;
-        const newItems = cart.items.filter((i) => i.id !== id && i.clientId !== id);
+        const newItems = cart.items.filter(
+          (i) => i.id !== id && i.clientId !== id,
+        );
         set({ cart: { ...cart, items: newItems } });
       },
 

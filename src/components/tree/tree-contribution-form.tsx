@@ -44,7 +44,6 @@ export default function TreeContributionForm({
   const [selectedYears, setSelectedYears] = useState<number>(1);
   const [selectedSiteId, setSelectedSiteId] = useState<number | null>(null);
 
-
   const planOptions = useMemo(() => {
     if (!tree?.plan_prices) return [];
     return tree.plan_prices.map((pp) => ({
@@ -131,7 +130,7 @@ export default function TreeContributionForm({
     });
 
     // @ts-ignore
-    if (pageType === 'sponsor' && values.initiative_site_id) {
+    if (pageType === "sponsor" && values.initiative_site_id) {
       // @ts-ignore
       params.append("initiative_site_id", values.initiative_site_id.toString());
     }
@@ -162,8 +161,8 @@ export default function TreeContributionForm({
                 selectedSiteId={selectedSiteId}
               />
               <p className="text-sm text-destructive mt-1">
-                {(form.formState.errors.initiative_site_id?.message as string) ||
-                  ""}
+                {(form.formState.errors.initiative_site_id
+                  ?.message as string) || ""}
               </p>
             </div>
           )}

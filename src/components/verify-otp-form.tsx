@@ -145,10 +145,7 @@ export function VerifyOtpForm({
   }, [countryCode, phone]);
 
   return (
-    <div
-      className={cn("flex bg-background", className)}
-      {...props}
-    >
+    <div className={cn("flex bg-background", className)} {...props}>
       {/* Left Side - Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 py-8">
         <div className="w-full max-w-sm">

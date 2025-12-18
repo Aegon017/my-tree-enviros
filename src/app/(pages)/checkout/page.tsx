@@ -10,7 +10,13 @@ import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import ShippingAddresses from "@/components/shipping-address";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,9 +55,21 @@ function CheckoutItemCard({ item }: { item: CheckoutItem }) {
                 </p>
                 {item.dedication && (
                   <div className="text-sm mt-2 space-y-1">
-                    {item.dedication.name && <p><b>Name:</b> {item.dedication.name}</p>}
-                    {item.dedication.occasion && <p><b>Occasion:</b> {item.dedication.occasion}</p>}
-                    {item.dedication.message && <p><b>Message:</b> {item.dedication.message}</p>}
+                    {item.dedication.name && (
+                      <p>
+                        <b>Name:</b> {item.dedication.name}
+                      </p>
+                    )}
+                    {item.dedication.occasion && (
+                      <p>
+                        <b>Occasion:</b> {item.dedication.occasion}
+                      </p>
+                    )}
+                    {item.dedication.message && (
+                      <p>
+                        <b>Message:</b> {item.dedication.message}
+                      </p>
+                    )}
                   </div>
                 )}
                 {item.initiative_site_label && (
@@ -63,7 +81,9 @@ function CheckoutItemCard({ item }: { item: CheckoutItem }) {
             )}
             <div className="flex justify-between mt-2">
               <p className="text-sm font-medium">Qty: {item.quantity}</p>
-              <p className="font-bold">₹{Number(item.total_amount).toFixed(2)}</p>
+              <p className="font-bold">
+                ₹{Number(item.total_amount).toFixed(2)}
+              </p>
             </div>
           </div>
         </div>
@@ -93,7 +113,7 @@ function CheckoutPageContent() {
 
   const allowCoupons = useMemo(
     () => summary?.items.some((i) => i.type !== "campaign"),
-    [summary]
+    [summary],
   );
 
   const fetchSummary = useCallback(async (code?: string) => {
@@ -124,25 +144,28 @@ function CheckoutPageContent() {
     }
 
     // Parse dedication from URL params
-    const dedicationName = searchParams.get('dedication_name');
-    const dedicationOccasion = searchParams.get('dedication_occasion');
-    const dedicationMessage = searchParams.get('dedication_message');
+    const dedicationName = searchParams.get("dedication_name");
+    const dedicationOccasion = searchParams.get("dedication_occasion");
+    const dedicationMessage = searchParams.get("dedication_message");
 
     if (dedicationName || dedicationOccasion || dedicationMessage) {
       setDedication({
-        name: dedicationName || '',
-        occasion: dedicationOccasion || '',
-        message: dedicationMessage || '',
+        name: dedicationName || "",
+        occasion: dedicationOccasion || "",
+        message: dedicationMessage || "",
       });
     }
 
     fetchSummary(couponCode ?? undefined);
   }, [fetchSummary, couponCode, user, searchParams]);
 
-  const handleCouponApplied = useCallback((discount: number, couponId: number, code: string) => {
-    setCouponCode(code);
-    fetchSummary(code);
-  }, [fetchSummary]);
+  const handleCouponApplied = useCallback(
+    (discount: number, couponId: number, code: string) => {
+      setCouponCode(code);
+      fetchSummary(code);
+    },
+    [fetchSummary],
+  );
 
   const handleCouponRemoved = useCallback(() => {
     setCouponCode(null);
@@ -166,7 +189,7 @@ function CheckoutPageContent() {
     fetchGateways();
   }, [fetchGateways]);
 
-  const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<string>("");
 
   const buildPayload = useCallback((): any => {
     if (!summary) return null;
@@ -199,7 +222,9 @@ function CheckoutPageContent() {
     const payload = buildPayload();
     if (!payload) return;
 
-    const hasProducts = summary?.items.some((i: CheckoutItem) => i.type === "product");
+    const hasProducts = summary?.items.some(
+      (i: CheckoutItem) => i.type === "product",
+    );
     if (hasProducts && !selectedAddress) {
       alert("Please select a shipping address for product items.");
       return;
@@ -217,10 +242,15 @@ function CheckoutPageContent() {
 
   const hasProducts = useMemo(
     () => summary?.items.some((i: CheckoutItem) => i.type === "product"),
-    [summary]
+    [summary],
   );
 
-  const isPayDisabled = loading || !summary || summary.items.length === 0 || processing || (hasProducts && !selectedAddress);
+  const isPayDisabled =
+    loading ||
+    !summary ||
+    summary.items.length === 0 ||
+    processing ||
+    (hasProducts && !selectedAddress);
 
   if (!user) {
     return (
@@ -229,7 +259,9 @@ function CheckoutPageContent() {
         <LoginDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} />
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground">Please log in to continue with checkout.</p>
+            <p className="text-muted-foreground">
+              Please log in to continue with checkout.
+            </p>
           </CardContent>
         </Card>
       </Section>
@@ -272,7 +304,9 @@ function CheckoutPageContent() {
 
   return (
     <Section>
-      <SectionTitle title={`Review your order (${summary.items.length} items)`} />
+      <SectionTitle
+        title={`Review your order (${summary.items.length} items)`}
+      />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {hasProducts && (
@@ -305,7 +339,9 @@ function CheckoutPageContent() {
             <Card>
               <CardHeader>
                 <CardTitle>Dedication Details</CardTitle>
-                <CardDescription>Edit your dedication information</CardDescription>
+                <CardDescription>
+                  Edit your dedication information
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -313,7 +349,9 @@ function CheckoutPageContent() {
                   <Input
                     id="dedication-name"
                     value={dedication.name}
-                    onChange={(e) => setDedication({ ...dedication, name: e.target.value })}
+                    onChange={(e) =>
+                      setDedication({ ...dedication, name: e.target.value })
+                    }
                     placeholder="Name on certificate"
                   />
                 </div>
@@ -322,7 +360,9 @@ function CheckoutPageContent() {
                   <Input
                     id="dedication-occasion"
                     value={dedication.occasion}
-                    onChange={(e) => setDedication({ ...dedication, occasion: e.target.value })}
+                    onChange={(e) =>
+                      setDedication({ ...dedication, occasion: e.target.value })
+                    }
                     placeholder="Birthday, Anniversary, etc."
                   />
                 </div>
@@ -331,7 +371,9 @@ function CheckoutPageContent() {
                   <Textarea
                     id="dedication-message"
                     value={dedication.message}
-                    onChange={(e) => setDedication({ ...dedication, message: e.target.value })}
+                    onChange={(e) =>
+                      setDedication({ ...dedication, message: e.target.value })
+                    }
                     placeholder="A message for the certificate"
                     rows={3}
                   />
@@ -347,7 +389,6 @@ function CheckoutPageContent() {
               onCouponRemoved={handleCouponRemoved}
             />
           )}
-
         </div>
 
         <div className="space-y-6 sticky top-16 self-start">
@@ -357,19 +398,31 @@ function CheckoutPageContent() {
               <CardDescription>Select how you want to pay</CardDescription>
             </CardHeader>
             <CardContent>
-              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4">
+              <RadioGroup
+                value={paymentMethod}
+                onValueChange={setPaymentMethod}
+                className="space-y-4"
+              >
                 {gateways.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">Loading payment methods...</p>
+                  <p className="text-muted-foreground text-sm">
+                    Loading payment methods...
+                  </p>
                 ) : (
                   gateways.map((gateway) => (
                     <Label
                       key={gateway.id}
                       htmlFor={`pm_${gateway.slug}`}
-                      className={`flex items-center justify-between border p-4 rounded-md cursor-pointer transition-all hover:bg-accent hover:text-accent-foreground ${paymentMethod === gateway.slug ? "border-primary bg-accent/50 shadow-sm" : "border-muted"
-                        }`}
+                      className={`flex items-center justify-between border p-4 rounded-md cursor-pointer transition-all hover:bg-accent hover:text-accent-foreground ${
+                        paymentMethod === gateway.slug
+                          ? "border-primary bg-accent/50 shadow-sm"
+                          : "border-muted"
+                      }`}
                     >
                       <div className="flex items-center space-x-3">
-                        <RadioGroupItem value={gateway.slug} id={`pm_${gateway.slug}`} />
+                        <RadioGroupItem
+                          value={gateway.slug}
+                          id={`pm_${gateway.slug}`}
+                        />
                         <span className="font-medium">{gateway.name}</span>
                       </div>
                       {gateway.image && (
@@ -395,20 +448,26 @@ function CheckoutPageContent() {
             <CardContent className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-medium">₹{summary.subtotal.toFixed(2)}</span>
+                <span className="font-medium">
+                  ₹{summary.subtotal.toFixed(2)}
+                </span>
               </div>
 
               {summary.charges.map((charge: any, idx: number) => (
                 <div key={idx} className="flex justify-between text-sm">
                   <span className="text-muted-foreground">{charge.label}</span>
-                  <span className="font-medium">₹{Number(charge.amount).toFixed(2)}</span>
+                  <span className="font-medium">
+                    ₹{Number(charge.amount).toFixed(2)}
+                  </span>
                 </div>
               ))}
 
               {summary.discount > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
                   <span>Discount</span>
-                  <span className="font-medium">-₹{summary.discount.toFixed(2)}</span>
+                  <span className="font-medium">
+                    -₹{summary.discount.toFixed(2)}
+                  </span>
                 </div>
               )}
 
@@ -423,7 +482,9 @@ function CheckoutPageContent() {
                 onClick={handlePayment}
                 disabled={isPayDisabled}
               >
-                {processing ? "Processing..." : `Pay ₹${summary.grand_total.toFixed(2)}`}
+                {processing
+                  ? "Processing..."
+                  : `Pay ₹${summary.grand_total.toFixed(2)}`}
               </Button>
             </CardContent>
           </Card>
@@ -435,20 +496,22 @@ function CheckoutPageContent() {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={
-      <Section>
-        <SectionTitle title="Checkout" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
+    <Suspense
+      fallback={
+        <Section>
+          <SectionTitle title="Checkout" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+            <div>
+              <Skeleton className="h-64 w-full" />
+            </div>
           </div>
-          <div>
-            <Skeleton className="h-64 w-full" />
-          </div>
-        </div>
-      </Section>
-    }>
+        </Section>
+      }
+    >
       <CheckoutPageContent />
     </Suspense>
   );

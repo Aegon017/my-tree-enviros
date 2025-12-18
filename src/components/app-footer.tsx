@@ -6,9 +6,9 @@ import QRCode from "react-qr-code";
 import { BACKEND_URL } from "@/services/http-client";
 import { useEffect, useState } from "react";
 import { appService } from "@/services/app.service";
-import { FaFacebook, FaInstagram, FaYoutube, FaLinkedin } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6';
-import { ArrowUpRight } from 'lucide-react';
+import { FaFacebook, FaInstagram, FaYoutube, FaLinkedin } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
+import { ArrowUpRight } from "lucide-react";
 
 const footerData = {
   quickLinks: [
@@ -35,7 +35,10 @@ const footerData = {
 };
 
 export default function Footer() {
-  const [links, setLinks] = useState<{ android_url: string; ios_url: string } | null>(null);
+  const [links, setLinks] = useState<{
+    android_url: string;
+    ios_url: string;
+  } | null>(null);
 
   useEffect(() => {
     appService.getSettings().then((response) => {
@@ -60,7 +63,10 @@ export default function Footer() {
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
               <div className="flex flex-col gap-3">
-                <Link href={links?.android_url || "https://play.google.com"} target="_blank">
+                <Link
+                  href={links?.android_url || "https://play.google.com"}
+                  target="_blank"
+                >
                   <div className="relative w-[140px] h-auto">
                     <Image
                       src="/google-play-badge.avif"
@@ -71,7 +77,10 @@ export default function Footer() {
                     />
                   </div>
                 </Link>
-                <Link href={links?.ios_url || "https://apple.com/app-store"} target="_blank">
+                <Link
+                  href={links?.ios_url || "https://apple.com/app-store"}
+                  target="_blank"
+                >
                   <div className="relative w-[140px] h-auto">
                     <Image
                       src="/app-store-badge.avif"

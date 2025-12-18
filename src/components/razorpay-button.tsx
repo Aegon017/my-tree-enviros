@@ -109,7 +109,7 @@ export default function RazorpayButton({
         },
         () => {
           router.push("/payment/failure");
-        }
+        },
       );
     } catch (e: any) {
       toast.error(e?.message || "Payment failed");
@@ -119,11 +119,7 @@ export default function RazorpayButton({
   };
 
   return (
-    <Button
-      className="w-full"
-      disabled={loading}
-      onClick={handlePayNow}
-    >
+    <Button className="w-full" disabled={loading} onClick={handlePayNow}>
       <Leaf className="mr-2 h-4 w-4" />
       {loading ? "Processing..." : label}
     </Button>

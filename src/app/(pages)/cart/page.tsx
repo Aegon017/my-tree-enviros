@@ -15,9 +15,22 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -66,7 +79,10 @@ function AddDetailModal({ open, onClose, item, onSave }: any) {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 grow overflow-hidden flex flex-col">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4 grow overflow-hidden flex flex-col"
+          >
             <ScrollArea className="grow pr-4">
               <div className="space-y-4">
                 {["name", "occasion", "message"].map((field) => (
@@ -78,7 +94,11 @@ function AddDetailModal({ open, onClose, item, onSave }: any) {
                       <FormItem>
                         <FormLabel className="capitalize">{field}</FormLabel>
                         <FormControl>
-                          {field === "message" ? <Textarea {...f} /> : <Input {...f} />}
+                          {field === "message" ? (
+                            <Textarea {...f} />
+                          ) : (
+                            <Input {...f} />
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -89,10 +109,19 @@ function AddDetailModal({ open, onClose, item, onSave }: any) {
             </ScrollArea>
 
             <div className="flex space-x-3 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="flex-1"
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1" disabled={form.formState.isSubmitting}>
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={form.formState.isSubmitting}
+              >
                 Save Details
               </Button>
             </div>
@@ -103,9 +132,16 @@ function AddDetailModal({ open, onClose, item, onSave }: any) {
   );
 }
 
-function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpenDetailModal }: any) {
+function CartItemComponent({
+  item,
+  isUpdating,
+  onUpdateItem,
+  onRemoveItem,
+  onOpenDetailModal,
+}: any) {
   const itemId = item.id ?? item.clientId;
-  const name = item.type === "product" ? item.name : item.tree?.name ?? "Tree";
+  const name =
+    item.type === "product" ? item.name : (item.tree?.name ?? "Tree");
 
   const price = Number(item.price);
   const lineTotal = price * item.quantity;
@@ -118,7 +154,6 @@ function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpe
     <Card className="mb-4 border rounded-xl shadow hover:shadow-lg transition">
       <CardContent className="p-4 md:p-6">
         <div className="flex items-start gap-4">
-
           <div className="relative h-20 w-20 rounded-md overflow-hidden">
             <Image
               src={item.image_url ?? "/placeholder-image.jpg"}
@@ -160,7 +195,12 @@ function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpe
                       readOnly
                     />
 
-                    <Button disabled={isUpdating} onClick={() => quantityChange(item.quantity + 1)} size="icon" variant="ghost">
+                    <Button
+                      disabled={isUpdating}
+                      onClick={() => quantityChange(item.quantity + 1)}
+                      size="icon"
+                      variant="ghost"
+                    >
                       <Plus className="h-3 w-3" />
                     </Button>
                   </div>
@@ -172,9 +212,13 @@ function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpe
                   value={String(item.duration)}
                   onValueChange={(value) => {
                     const selected = Number(value);
-                    const plan = item.available_plans.find((p: any) => p.duration === selected);
+                    const plan = item.available_plans.find(
+                      (p: any) => p.duration === selected,
+                    );
                     if (plan && plan.plan_prices?.length > 0) {
-                      onUpdateItem(itemId, { plan_price_id: plan.plan_prices[0].id });
+                      onUpdateItem(itemId, {
+                        plan_price_id: plan.plan_prices[0].id,
+                      });
                     }
                   }}
                 >
@@ -184,7 +228,8 @@ function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpe
                   <SelectContent>
                     {item.available_plans.map((p: any) => (
                       <SelectItem key={p.id} value={String(p.duration)}>
-                        {p.duration} {p.duration_unit} - ₹{p.plan_prices[0]?.price}
+                        {p.duration} {p.duration_unit} - ₹
+                        {p.plan_prices[0]?.price}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -195,13 +240,21 @@ function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpe
                 <div className="w-[200px]">
                   <InitiativeSiteSelector
                     selectedSiteId={item.initiative_site_id}
-                    onSelect={(site) => onUpdateItem(itemId, { initiative_site_id: site?.id ?? null })}
+                    onSelect={(site) =>
+                      onUpdateItem(itemId, {
+                        initiative_site_id: site?.id ?? null,
+                      })
+                    }
                   />
                 </div>
               )}
 
               {item.type !== "product" && (
-                <Button variant="outline" size="sm" onClick={() => onOpenDetailModal(item)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onOpenDetailModal(item)}
+                >
                   {item.dedication?.name ? "Edit Details" : "Add Details"}
                 </Button>
               )}
@@ -209,9 +262,21 @@ function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpe
 
             {item.dedication && (
               <div className="text-sm mt-2 space-y-1">
-                {item.dedication.name && <p><b>Name:</b> {item.dedication.name}</p>}
-                {item.dedication.occasion && <p><b>Occasion:</b> {item.dedication.occasion}</p>}
-                {item.dedication.message && <p><b>Message:</b> {item.dedication.message}</p>}
+                {item.dedication.name && (
+                  <p>
+                    <b>Name:</b> {item.dedication.name}
+                  </p>
+                )}
+                {item.dedication.occasion && (
+                  <p>
+                    <b>Occasion:</b> {item.dedication.occasion}
+                  </p>
+                )}
+                {item.dedication.message && (
+                  <p>
+                    <b>Message:</b> {item.dedication.message}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -219,11 +284,15 @@ function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpe
           <div className="flex flex-col items-end gap-4">
             <p className="text-xl font-bold">₹{lineTotal.toFixed(2)}</p>
 
-            <Button variant="ghost" size="icon" disabled={isUpdating} onClick={() => onRemoveItem(itemId)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={isUpdating}
+              onClick={() => onRemoveItem(itemId)}
+            >
               <Trash2 className="h-5 w-5 text-red-500" />
             </Button>
           </div>
-
         </div>
       </CardContent>
     </Card>
@@ -232,7 +301,10 @@ function CartItemComponent({ item, isUpdating, onUpdateItem, onRemoveItem, onOpe
 
 export default function CartPage() {
   const { items, loading, update, remove, clear } = useCart();
-  const subtotal = useMemo(() => items.reduce((s, i) => s + i.price * i.quantity, 0), [items]);
+  const subtotal = useMemo(
+    () => items.reduce((s, i) => s + i.price * i.quantity, 0),
+    [items],
+  );
 
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<CartItem | null>(null);
@@ -273,7 +345,9 @@ export default function CartPage() {
         open={detailModalOpen}
         onClose={() => setDetailModalOpen(false)}
         item={selectedItem}
-        onSave={(id: number, details: any) => update(id, { dedication: details })}
+        onSave={(id: number, details: any) =>
+          update(id, { dedication: details })
+        }
       />
     </div>
   );
@@ -314,7 +388,11 @@ function OrderSummary({ subtotal, onClearCart }: any) {
           <Button className="w-full mt-4">Proceed to Checkout</Button>
         </Link>
 
-        <Button variant="outline" className="w-full" onClick={() => onClearCart()}>
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => onClearCart()}
+        >
           Clear Cart
         </Button>
       </CardContent>

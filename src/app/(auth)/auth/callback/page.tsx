@@ -11,7 +11,7 @@ function CallbackContent() {
 
   useEffect(() => {
     if (token) {
-    authStorage.setToken(token);
+      authStorage.setToken(token);
       router.push("/");
     }
   }, [token, router]);

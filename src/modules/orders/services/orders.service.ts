@@ -2,131 +2,142 @@ import api from "@/services/http-client";
 import { ApiResponse } from "@/services/http-client";
 
 export interface OrderCharge {
-    type: 'tax' | 'shipping' | 'fee';
-    label: string;
-    amount: number;
+  type: "tax" | "shipping" | "fee";
+  label: string;
+  amount: number;
 }
 
 export interface OrderItem {
-    id: number;
-    type: string;
-    quantity: number;
-    amount: number;
-    total_amount: number;
-    tree_instance?: any;
-    plan_price?: any;
-    item?: any;
-    [key: string]: any;
+  id: number;
+  type: string;
+  quantity: number;
+  amount: number;
+  total_amount: number;
+  tree_instance?: any;
+  plan_price?: any;
+  item?: any;
+  [key: string]: any;
 }
 
 export interface Order {
-    id: number;
-    order_number: string;
-    reference_number?: string;
-    user_id: number;
-    status: string;
-    status_label?: string;
-    subtotal: number;
-    discount: number;
-    total: number;
-    tax: number;
-    shipping: number;
-    fee: number;
-    grand_total?: number;
-    gst_amount?: number;
-    cgst_amount?: number;
-    sgst_amount?: number;
-    formatted_subtotal?: string;
-    formatted_discount?: string;
-    formatted_total?: string;
-    formatted_gst?: string;
-    currency: string;
-    payment_method?: string;
-    paid_at?: string;
-    items?: OrderItem[];
-    shipping_address?: any;
-    coupon?: any;
-    charges?: OrderCharge[];
-    created_at?: string;
-    updated_at?: string;
+  id: number;
+  order_number: string;
+  reference_number?: string;
+  user_id: number;
+  status: string;
+  status_label?: string;
+  subtotal: number;
+  discount: number;
+  total: number;
+  tax: number;
+  shipping: number;
+  fee: number;
+  grand_total?: number;
+  gst_amount?: number;
+  cgst_amount?: number;
+  sgst_amount?: number;
+  formatted_subtotal?: string;
+  formatted_discount?: string;
+  formatted_total?: string;
+  formatted_gst?: string;
+  currency: string;
+  payment_method?: string;
+  paid_at?: string;
+  items?: OrderItem[];
+  shipping_address?: any;
+  coupon?: any;
+  charges?: OrderCharge[];
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface OrdersResponse extends ApiResponse<{
+export interface OrdersResponse
+  extends ApiResponse<{
     orders: Order[];
     meta: {
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
     };
-}> { }
+  }> {}
 
-export interface OrderResponse extends ApiResponse<{
+export interface OrderResponse
+  extends ApiResponse<{
     order: Order;
-}> { }
+  }> {}
 
 export const ordersService = {
-    async getOrders(params?: any) {
-        return await api.get<OrdersResponse["data"]>("/orders", { params });
-    },
+  async getOrders(params?: any) {
+    return await api.get<OrdersResponse["data"]>("/orders", { params });
+  },
 
-    async getOrderById(orderId: number | string) {
-        return await api.get<OrderResponse["data"]>(`/orders/${orderId}`);
-    },
+  async getOrderById(orderId: number | string) {
+    return await api.get<OrderResponse["data"]>(`/orders/${orderId}`);
+  },
 
-    async downloadInvoice(orderId: number | string) {
-        const response = await api.get(`/orders/${orderId}/invoice`);
-        return response;
-    },
+  async downloadInvoice(orderId: number | string) {
+    const response = await api.get(`/orders/${orderId}/invoice`);
+    return response;
+  },
 
-    async cancelOrder(orderId: number) {
-        return await api.post<{ success: boolean; message: string }>(`/orders/${orderId}/cancel`);
-    },
+  async cancelOrder(orderId: number) {
+    return await api.post<{ success: boolean; message: string }>(
+      `/orders/${orderId}/cancel`,
+    );
+  },
 
-    async createDirectOrder(data: any) {
-        const items = [{
-            type: String(data.item_type || data.type || 'campaign'),
-            campaign_id: data.campaign_id,
-            tree_id: data.tree_id,
-            plan_id: data.plan_id,
-            plan_price_id: data.tree_plan_price_id || data.plan_price_id,
-            tree_instance_id: data.tree_instance_id,
-            product_variant_id: data.product_variant_id,
-            sponsor_quantity: data.sponsor_quantity,
-            amount: data.amount,
-            quantity: data.quantity || 1,
-        }];
+  async createDirectOrder(data: any) {
+    const items = [
+      {
+        type: String(data.item_type || data.type || "campaign"),
+        campaign_id: data.campaign_id,
+        tree_id: data.tree_id,
+        plan_id: data.plan_id,
+        plan_price_id: data.tree_plan_price_id || data.plan_price_id,
+        tree_instance_id: data.tree_instance_id,
+        product_variant_id: data.product_variant_id,
+        sponsor_quantity: data.sponsor_quantity,
+        amount: data.amount,
+        quantity: data.quantity || 1,
+      },
+    ];
 
-        return await api.post<any>('/checkout/prepare', {
-            items,
-            coupon_code: data.coupon_code
-        });
-    },
+    return await api.post<any>("/checkout/prepare", {
+      items,
+      coupon_code: data.coupon_code,
+    });
+  },
 
-    async validateCoupon(code: string, amount: number) {
-        return await api.post<any>('/checkout/check-coupon', { coupon_code: code, amount });
-    },
+  async validateCoupon(code: string, amount: number) {
+    return await api.post<any>("/checkout/check-coupon", {
+      coupon_code: code,
+      amount,
+    });
+  },
 
-    formatDate(dateString: string) {
-        if (!dateString) return "";
-        return new Date(dateString).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        });
-    },
+  formatDate(dateString: string) {
+    if (!dateString) return "";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  },
 
-    getOrderStatusText(status: string) {
-        if (!status) return "Unknown";
-        return status.charAt(0).toUpperCase() + status.slice(1);
-    },
+  getOrderStatusText(status: string) {
+    if (!status) return "Unknown";
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  },
 
-    getPaymentStatusText(status?: string, paidAt?: string) {
-        if (paidAt) return "Paid";
-        return status ? (status.charAt(0).toUpperCase() + status.slice(1)) : "Pending";
-    },
+  getPaymentStatusText(status?: string, paidAt?: string) {
+    if (paidAt) return "Paid";
+    return status
+      ? status.charAt(0).toUpperCase() + status.slice(1)
+      : "Pending";
+  },
 
-    canBeCancelled(order: Order) {
-        return ['pending', 'processing'].includes(order.status);
-    }
+  canBeCancelled(order: Order) {
+    return ["pending", "processing"].includes(order.status);
+  },
 };

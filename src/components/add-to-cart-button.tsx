@@ -103,8 +103,10 @@ export default function AddToCartButton({
         if (!planId || !planPriceId)
           return toast.error("Invalid sponsorship/adoption details");
 
-        if (type === "sponsor" && !treeId) return toast.error("Invalid tree details");
-        if (type === "adopt" && !treeInstanceId) return toast.error("Invalid instance details");
+        if (type === "sponsor" && !treeId)
+          return toast.error("Invalid tree details");
+        if (type === "adopt" && !treeInstanceId)
+          return toast.error("Invalid instance details");
 
         await add({
           type: type,

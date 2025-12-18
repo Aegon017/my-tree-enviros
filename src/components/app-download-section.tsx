@@ -8,7 +8,10 @@ import { useEffect, useState } from "react";
 import { appService } from "@/services/app.service";
 
 export default function AppDownloadSection() {
-  const [links, setLinks] = useState<{ android_url: string; ios_url: string } | null>(null);
+  const [links, setLinks] = useState<{
+    android_url: string;
+    ios_url: string;
+  } | null>(null);
 
   useEffect(() => {
     appService.getSettings().then((response) => {
@@ -43,7 +46,10 @@ export default function AppDownloadSection() {
           </p>
 
           <div className="flex items-center gap-6">
-            <Link href={links?.android_url || "https://play.google.com"} target="_blank">
+            <Link
+              href={links?.android_url || "https://play.google.com"}
+              target="_blank"
+            >
               <div className="relative w-full max-w-[190px] h-auto">
                 <Image
                   src="/google-play-badge.avif"
@@ -55,7 +61,10 @@ export default function AppDownloadSection() {
               </div>
             </Link>
 
-            <Link href={links?.ios_url || "https://apple.com/app-store"} target="_blank">
+            <Link
+              href={links?.ios_url || "https://apple.com/app-store"}
+              target="_blank"
+            >
               <div className="relative w-full max-w-[190px] h-auto">
                 <Image
                   src="/app-store-badge.avif"

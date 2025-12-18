@@ -143,11 +143,11 @@ export default function Home() {
         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
           {loadingProducts
             ? Array.from({ length: 4 }).map((_, i) => (
-              <ProductCardSkeleton key={i} />
-            ))
+                <ProductCardSkeleton key={i} />
+              ))
             : products.map((product: any) => (
-              <ProductCard key={product.slug} product={product} />
-            ))}
+                <ProductCard key={product.slug} product={product} />
+              ))}
         </div>
 
         <div className="mt-10 text-center">

@@ -14,13 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  Calendar,
-  Eye,
-  ShoppingCart,
-  X,
-  User as UserIcon,
-} from "lucide-react";
+import { Calendar, Eye, ShoppingCart, X, User as UserIcon } from "lucide-react";
 import { ordersService as orderService } from "@/modules/orders/services/orders.service";
 
 const formatCurrency = (val?: number | string) => {
@@ -189,7 +183,7 @@ export default function OrdersPage() {
       const res = await orderService.getOrders();
       const data = res.data ?? [];
 
-      const list = Array.isArray(data) ? data : (data as any).orders ?? [];
+      const list = Array.isArray(data) ? data : ((data as any).orders ?? []);
 
       setOrders(
         list.map((o: any) => ({
@@ -198,7 +192,7 @@ export default function OrdersPage() {
           status: o.status,
           created_at: o.created_at,
           total: o.grand_total,
-        }))
+        })),
       );
     } finally {
       setOrdersLoading(false);
@@ -211,7 +205,7 @@ export default function OrdersPage() {
       const orderData = res.data;
       setOrderDetails(orderData);
       setDetailsOpen(true);
-    } catch { }
+    } catch {}
   }, []);
 
   const closeOrderDetails = useCallback(() => {
