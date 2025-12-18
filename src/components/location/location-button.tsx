@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 import { useLocationStore } from "@/store/location-store";
 import { LocationModal } from "@/components/location/location-modal";
+import { cn } from "@/lib/utils";
 
-export function LocationButton() {
+export function LocationButton({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const { selected, sync, hydrated } = useLocationStore();
 
@@ -26,12 +27,18 @@ export function LocationButton() {
     <>
       <Button
         variant="ghost"
-        className="p-0 h-auto text-sm font-medium flex items-center hover:text-primary"
+        className={cn(
+          "p-0 h-auto text-sm font-medium flex items-center hover:text-primary",
+          className
+        )}
         onClick={() => setOpen(true)}
       >
-        <MapPin className="h-4 w-4 mr-1 text-primary" />
-        {label}
+        <MapPin className="h-5 w-5 mr-1 text-primary" />
+        <span className="max-w-full md:max-w-[200px] truncate block">
+          {label}
+        </span>
       </Button>
+
 
       <LocationModal open={open} onOpenChange={setOpen} />
     </>
