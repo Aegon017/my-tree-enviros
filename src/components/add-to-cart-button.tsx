@@ -64,16 +64,19 @@ export default function AddToCartButton({
           item.type === "product" && item.product_variant_id === variantId,
       );
     }
-    if ((type === "sponsor" || type === "adopt") && treeId && planPriceId) {
+    if ((type === "sponsor" || type === "adopt") && planPriceId) {
+      const targetId = type === "sponsor" ? treeId : treeInstanceId;
+      if (!targetId) return false;
+
       return items.some(
         (item) =>
-          item.type !== "product" &&
-          item.tree?.id === treeId &&
+          item.type === type &&
+          item.tree?.id === targetId &&
           item.plan_price_id === planPriceId,
       );
     }
     return false;
-  }, [items, type, variantId, treeId, planPriceId]);
+  }, [items, type, variantId, treeId, treeInstanceId, planPriceId]);
 
   const handle = async () => {
     if (isInCart) {

@@ -73,18 +73,52 @@ export default function TreeContributionForm({
   const adoptableLimit =
     pageType === "adopt" ? (tree?.adoptable_count ?? 0) : Infinity;
 
-  const form = useForm<DedicationValues>({
-    resolver: zodResolver(dedicationSchema),
+  const schema = useMemo(() => {
+    const base = z.object({
+      name: z.string().min(1, "Name is required."),
+      occasion: z.string().min(1, "Occasion is required."),
+      message: z.string().min(1, "Message is required."),
+      initiative_site_id: z.number().optional(),
+    });
+
+    if (pageType === "sponsor") {
+      return base.extend({
+        initiative_site_id: z
+          .number()
+          .optional()
+          .refine((val) => !!val, { message: "Please select a planting site" }),
+      });
+    }
+
+    return base;
+  }, [pageType]);
+
+  type FormValues = z.infer<typeof schema>;
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
     mode: "onChange",
-    defaultValues: { name: "", occasion: "", message: "" },
+    defaultValues: {
+      name: "",
+      occasion: "",
+      message: "",
+      // @ts-ignore
+      initiative_site_id: undefined,
+    },
   });
 
   const watchName = form.watch("name");
   const watchOccasion = form.watch("occasion");
   const watchMessage = form.watch("message");
+  const watchSiteId = form.watch("initiative_site_id");
+
+  // Keep selectedSiteId state for external usages if any, or just sync
+  // We can just use form.watch for the selector too.
 
   const handleSponsorNow = form.handleSubmit((values) => {
     if (!selectedPlan) return;
+
+    // Validation is already handled by handleSubmit
 
     const params = new URLSearchParams({
       mode: "buy_now",
@@ -95,6 +129,12 @@ export default function TreeContributionForm({
       dedication_occasion: values.occasion,
       dedication_message: values.message,
     });
+
+    // @ts-ignore
+    if (pageType === 'sponsor' && values.initiative_site_id) {
+      // @ts-ignore
+      params.append("initiative_site_id", values.initiative_site_id.toString());
+    }
 
     router.push(`/checkout?${params.toString()}`);
   });
@@ -109,11 +149,22 @@ export default function TreeContributionForm({
 
           {pageType === "sponsor" && (
             <div className="mb-6">
-              <Label className="mb-2 block">Choose Planting Site (Optional)</Label>
+              <Label className="mb-2 block">
+                Choose Planting Site <span className="text-destructive">*</span>
+              </Label>
               <InitiativeSiteSelector
-                onSelect={(site) => setSelectedSiteId(site?.id ?? null)}
+                onSelect={(site) => {
+                  setSelectedSiteId(site?.id ?? null);
+                  form.setValue("initiative_site_id", site?.id as any, {
+                    shouldValidate: true,
+                  });
+                }}
                 selectedSiteId={selectedSiteId}
               />
+              <p className="text-sm text-destructive mt-1">
+                {(form.formState.errors.initiative_site_id?.message as string) ||
+                  ""}
+              </p>
             </div>
           )}
 
@@ -254,7 +305,10 @@ export default function TreeContributionForm({
               occasion: watchOccasion,
               message: watchMessage,
             }}
-            validateDedication={() => form.trigger()}
+            validateDedication={async () => {
+              const isValid = await form.trigger();
+              return isValid;
+            }}
             onSuccess={() => form.reset()}
             treeData={tree}
             planPriceData={selectedPlan}
