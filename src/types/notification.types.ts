@@ -1,11 +1,14 @@
 export interface Notification {
-  id: number;
+  id: string;
   title: string;
   message: string;
+  image?: string;
+  link?: string;
   send_to: string;
   user_ids: number[] | null;
   created_at: string;
   updated_at: string;
+  read_at: string | null;
 }
 
 export interface NotificationResponse {

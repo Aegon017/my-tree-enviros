@@ -131,7 +131,7 @@ export default function Header() {
 
               {isMobile && (
                 <div className="absolute left-1/2 -translate-x-1/2">
-                  <AppLogo className="h-9" />
+                  <AppLogo className="h-14" />
                 </div>
               )}
 
@@ -155,7 +155,7 @@ export default function Header() {
                   animate={{ scale: [1, 1.03, 1] }}
                   transition={{ duration: 3, repeat: Infinity }}
                 >
-                  <AppLogo className="h-14" />
+                  <AppLogo className="h-18" />
                 </motion.div>
               </div>
             )}
