@@ -5,7 +5,7 @@ export const productService = {
     return api.get<{ products: any[]; meta: any }>("/products", { params });
   },
 
-  getCategories: () => api.get<{ categories: any[] }>("/categories"),
+  getCategories: () => api.get<{ categories: any[] }>("/products/categories"),
 
   getProductBySlug: (slug: string) =>
     api.get<{ product: any }>(`/products/${slug}`),
