@@ -46,17 +46,19 @@ export default function TreeDetailsLayout({
 
         <div className="space-y-8">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-md px-2 py-1 border">
-              <svg
-                className="h-3 w-3"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path d="M12 2v20" />
-              </svg>
-              <span className="text-sm">{tree.age ?? 0} years old</span>
-            </div>
+            {pageType === "adopt" && (
+              <div className="inline-flex items-center gap-2 rounded-md px-2 py-1 border">
+                <svg
+                  className="h-3 w-3"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path d="M12 2v20" />
+                </svg>
+                <span className="text-sm">{tree.age ?? 0} years old</span>
+              </div>
+            )}
 
             <h1 className="text-4xl font-bold tracking-tight">{tree.name}</h1>
           </div>

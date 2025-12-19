@@ -53,7 +53,7 @@ function PaymentFailurePage() {
           variant="destructive"
           className="bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
         >
-          <AlertDescription className="text-red-800 dark:text-red-300 break-words">
+          <AlertDescription className="text-red-800 dark:text-red-300 wrap-break-word">
             {errorMessage}
           </AlertDescription>
         </Alert>
