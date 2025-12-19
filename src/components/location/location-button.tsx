@@ -15,10 +15,6 @@ export function LocationButton({ className }: { className?: string }) {
     sync();
   }, [sync]);
 
-  useEffect(() => {
-    if (hydrated && !selected) setOpen(true);
-  }, [selected, hydrated]);
-
   const label = selected
     ? `${selected.area || selected.city}, ${selected.city}`
     : "Select Location";

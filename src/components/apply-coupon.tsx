@@ -61,7 +61,7 @@ export function ApplyCoupon({
     setCouponCode("");
     setIsApplied(false);
     onCouponRemoved();
-    toast.info("Coupon removed");
+    toast.success("Coupon removed");
   };
 
   return (

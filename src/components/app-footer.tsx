@@ -13,9 +13,11 @@ import { FaXTwitter } from "react-icons/fa6";
 const footerData = {
   quickLinks: [
     { name: "About Us", href: "/about-us" },
-    { name: "Store", href: "/store" },
+    { name: "Sponsor a Tree", href: "/sponsor-a-tree" },
+    { name: "Adopt a Tree", href: "/adopt-a-tree" },
     { name: "Feed the Tree", href: "/feed-the-tree" },
-    { name: "Orders History", href: "/my-orders" },
+    { name: "Store", href: "/store" },
+    { name: "My Orders", href: "/my-orders" },
     { name: "Blogs", href: "/blogs" },
     { name: "Contact Us", href: "/contact-us" },
   ],
