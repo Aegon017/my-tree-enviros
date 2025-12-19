@@ -15,10 +15,6 @@ export function LocationButton({ className }: { className?: string }) {
     sync();
   }, [sync]);
 
-  useEffect(() => {
-    sync();
-  }, [sync]);
-
   const label = selected
     ? `${selected.area || selected.city}, ${selected.city}`
     : "Select Location";

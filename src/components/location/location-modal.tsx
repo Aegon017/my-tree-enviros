@@ -73,7 +73,7 @@ export function LocationModal({ open, onOpenChange }: LocationModalProps) {
       }}
     >
       <DialogContent
-        className="max-w-md p-0 gap-0 overflow-hidden bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl duration-300"
+        className="max-w-md w-[90%] rounded-2xl p-0 gap-0 overflow-hidden bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl duration-300 z-[200]"
         onInteractOutside={blockClose}
         onEscapeKeyDown={blockClose}
         showCloseButton={!!currentSelected}
@@ -88,7 +88,7 @@ export function LocationModal({ open, onOpenChange }: LocationModalProps) {
             <span className="text-primary">
               <MapPin className="fill-primary text-primary-foreground h-6 w-6 p-1 rounded-full bg-primary" />
             </span>
-            <span>Select Delivery Location</span>
+            <span>Set location</span>
           </h2>
 
           <div className="relative group">

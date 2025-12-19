@@ -157,7 +157,7 @@ export default function Header() {
             </div>
 
             {isMobile && (
-              <div className="w-full flex justify-center border-t border-border pt-1.5">
+              <div className="w-full flex justify-center border-t border-border pt-1.5 z-10">
                 <LocationButton className="w-full justify-center" />
               </div>
             )}
