@@ -31,7 +31,6 @@ export function useLocationSearch() {
   return { query, results, loading, search };
 }
 
-// Compatibility wrapper used by components that expect a `useLocation` hook.
 export function useLocation() {
   const selectedLocation = useLocationStore((s) => s.selected);
   const syncFromStorage = useLocationStore((s) => s.sync);

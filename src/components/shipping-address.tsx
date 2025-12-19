@@ -193,10 +193,17 @@ const AddressForm = ({
   const [postOffices, setPostOffices] = useState<PostOffice[]>([]);
   const [isLoadingPostOffices, setIsLoadingPostOffices] = useState(false);
 
-  const handleLocationChange = (lat: number, lng: number, address?: string) => {
+  const handleLocationChange = (lat: number, lng: number, address?: string, details?: any) => {
     form.setValue("latitude", lat);
     form.setValue("longitude", lng);
-    if (address) {
+
+    if (details) {
+      form.setValue("city", details.city || "");
+      form.setValue("area", details.area || "");
+      form.setValue("postal_code", details.postal_code || "");
+      form.setValue("address", details.street || address || "");
+    } else if (address) {
+      // Fallback (should not happen with new picker)
       const parts = address.split(", ");
       if (parts.length >= 2) {
         form.setValue("city", parts[parts.length - 2] || "");

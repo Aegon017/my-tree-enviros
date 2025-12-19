@@ -50,9 +50,7 @@ export const useFcmToken = () => {
             if (!messaging) return;
 
             const unsubscribe = onMessage(messaging, (payload) => {
-                // Customize how you handle foreground notifications here
                 console.log("Foreground message received:", payload);
-                // Example: Toast or In-app notification trigger
             });
 
             return () => unsubscribe();

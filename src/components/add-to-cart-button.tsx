@@ -24,6 +24,7 @@ type Props = {
   };
   disabled?: boolean;
   className?: string;
+  size?: "default" | "sm" | "lg" | "icon";
   validateDedication?: () => Promise<boolean | null>;
   onSuccess?: () => void;
   treeData?: any;
@@ -52,6 +53,7 @@ export default function AddToCartButton({
   variantData,
   productImages,
   className,
+  size,
 }: Props) {
   const { loading, add, items } = useCart();
   const token = useAuthStore((s) => s.token);
@@ -147,6 +149,8 @@ export default function AddToCartButton({
       onClick={handle}
       disabled={disabled || loading}
       loading={loading}
+      variant="default"
+      size={size}
       className={className ?? "flex gap-2"}
     >
       {isInCart ? (

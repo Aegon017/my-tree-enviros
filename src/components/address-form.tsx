@@ -88,6 +88,7 @@ export default function AddressForm({ onSaved }: { onSaved?: () => void }) {
         form.setValue("area", data.area || "");
         form.setValue("city", data.city || "");
         form.setValue("postal_code", data.postal_code || "");
+        form.setValue("address", data.street || ""); // Fill House/Street
         if (data.postal_code) {
           setLoadingPosts(true);
           const list = await getPostOffices(data.postal_code);

@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 interface Props {
   images: string[];
   name: string;
+  actionButton?: React.ReactNode;
 }
 
-export default function ImageGallery({ images, name }: Props) {
+export default function ImageGallery({ images, name, actionButton }: Props) {
   const [selected, setSelected] = useState(0);
   const [isZooming, setIsZooming] = useState(false);
   const [lensPos, setLensPos] = useState({ x: 0, y: 0 });
@@ -75,7 +76,7 @@ export default function ImageGallery({ images, name }: Props) {
       <div className="flex flex-col gap-4">
         <div
           ref={imgRef}
-          className="relative w-full h-[300px] md:h-[500px] rounded-2xl border bg-muted/30 overflow-hidden cursor-crosshair"
+          className="relative w-full h-[300px] md:h-[500px] rounded-2xl border bg-muted/30 overflow-hidden cursor-crosshair group"
           onMouseEnter={() => setIsZooming(true)}
           onMouseLeave={() => setIsZooming(false)}
           onMouseMove={handleMouseMove}
@@ -91,6 +92,13 @@ export default function ImageGallery({ images, name }: Props) {
             draggable={false}
             priority
           />
+
+          {/* Action Button Overlay */}
+          {actionButton && (
+            <div className="absolute top-4 right-4 z-10 transition-opacity duration-200">
+              {actionButton}
+            </div>
+          )}
 
           {isZooming && (
             <div
