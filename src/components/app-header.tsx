@@ -11,6 +11,11 @@ import {
   Bell,
   LogIn,
   LogOut,
+  Home,
+  HandHeart,
+  TreePine,
+  Sprout,
+  Store as StoreIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -37,11 +42,11 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useCart } from "@/modules/cart/hooks/use-cart";
 
 const NAV = [
-  { href: "/", label: "Home" },
-  { href: "/sponsor-a-tree", label: "Sponsor A Tree" },
-  { href: "/adopt-a-tree", label: "Adopt A Tree" },
-  { href: "/feed-the-tree", label: "Feed the Tree" },
-  { href: "/store", label: "Store" },
+  { href: "/", label: "Home", icon: Home },
+  { href: "/sponsor-a-tree", label: "Sponsor A Tree", icon: HandHeart },
+  { href: "/adopt-a-tree", label: "Adopt A Tree", icon: TreePine },
+  { href: "/feed-the-tree", label: "Feed the Tree", icon: Sprout },
+  { href: "/store", label: "Store", icon: StoreIcon },
 ];
 
 type AccountMenuProps = {
@@ -258,6 +263,8 @@ type MobileNavProps = {
 };
 
 function MobileNav({ authenticated, signOut }: MobileNavProps) {
+  const pathname = usePathname();
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -269,35 +276,47 @@ function MobileNav({ authenticated, signOut }: MobileNavProps) {
         </motion.button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-[270px] p-0 bg-background">
+      <SheetContent side="left" className="w-[300px] p-0 bg-background border-r">
         <VisuallyHidden>
           <SheetTitle>Mobile Navigation</SheetTitle>
         </VisuallyHidden>
 
-        <div className="p-5 border-b border-border font-semibold text-lg">
-          My Tree Enviros
+        <div className="p-6 border-b border-border/50">
+          <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
+            <span>My Tree Enviros</span>
+          </div>
         </div>
 
-        <div className="py-3 flex flex-col">
-          {NAV.map((item) => (
-            <SheetClose asChild key={item.href}>
-              <Link
-                href={item.href}
-                className="px-4 py-3 text-sm hover:bg-accent"
-              >
-                {item.label}
-              </Link>
-            </SheetClose>
-          ))}
+        <div className="py-4 px-3 flex flex-col gap-1">
+          {NAV.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <SheetClose asChild key={item.href}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "px-4 py-3 text-sm font-medium rounded-md flex items-center gap-3 transition-all duration-200",
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <item.icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")} />
+                  {item.label}
+                </Link>
+              </SheetClose>
+            );
+          })}
         </div>
 
-        <div className="p-4">
+        <div className="px-3 mt-auto pb-8">
+          <div className="h-px bg-border/50 my-4 mx-2" />
           {!authenticated ? (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3 px-2">
               <SheetClose asChild>
                 <Link
                   href="/sign-in"
-                  className="text-center bg-foreground text-background py-2 rounded-md"
+                  className="w-full flex items-center justify-center bg-primary text-primary-foreground font-medium py-2.5 rounded-lg shadow-sm hover:bg-primary/90 transition-colors"
                 >
                   Sign In
                 </Link>
@@ -306,20 +325,50 @@ function MobileNav({ authenticated, signOut }: MobileNavProps) {
               <SheetClose asChild>
                 <Link
                   href="/sign-up"
-                  className="text-center border border-border py-2 rounded-md"
+                  className="w-full flex items-center justify-center border border-input bg-background hover:bg-accent hover:text-accent-foreground font-medium py-2.5 rounded-lg transition-colors"
                 >
                   Sign Up
                 </Link>
               </SheetClose>
             </div>
           ) : (
-            <Button
-              onClick={signOut}
-              variant="ghost"
-              className="w-full justify-start"
-            >
-              Sign Out
-            </Button>
+            <div className="flex flex-col gap-1">
+              <SheetClose asChild>
+                <Link
+                  href="/my-profile"
+                  className={cn(
+                    "px-4 py-3 text-sm font-medium rounded-md flex items-center gap-3 transition-colors",
+                    pathname === "/my-profile" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <User className="h-5 w-5" />
+                  My Profile
+                </Link>
+              </SheetClose>
+              <SheetClose asChild>
+                <Link
+                  href="/my-orders"
+                  className={cn(
+                    "px-4 py-3 text-sm font-medium rounded-md flex items-center gap-3 transition-colors",
+                    pathname === "/my-orders" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  My Orders
+                </Link>
+              </SheetClose>
+
+              <div className="h-px bg-border/50 my-2 mx-2" />
+
+              <Button
+                onClick={signOut}
+                variant="ghost"
+                className="w-full justify-start px-4 h-12 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              >
+                <LogOut className="h-5 w-5 mr-3" />
+                Sign Out
+              </Button>
+            </div>
           )}
         </div>
       </SheetContent>

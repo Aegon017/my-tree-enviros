@@ -394,7 +394,7 @@ function CheckoutPageContent() {
         <div className="space-y-6 sticky top-16 self-start">
           <Card>
             <CardHeader>
-              <CardTitle>Payment Method</CardTitle>
+              <CardTitle>Payment Mode</CardTitle>
               <CardDescription>Select how you want to pay</CardDescription>
             </CardHeader>
             <CardContent>
@@ -412,11 +412,10 @@ function CheckoutPageContent() {
                     <Label
                       key={gateway.id}
                       htmlFor={`pm_${gateway.slug}`}
-                      className={`flex items-center justify-between border p-4 rounded-md cursor-pointer transition-all hover:bg-accent hover:text-accent-foreground ${
-                        paymentMethod === gateway.slug
-                          ? "border-primary bg-accent/50 shadow-sm"
-                          : "border-muted"
-                      }`}
+                      className={`flex items-center justify-between border p-4 rounded-md cursor-pointer transition-all hover:bg-accent hover:text-accent-foreground ${paymentMethod === gateway.slug
+                        ? "border-primary bg-accent/50 shadow-sm"
+                        : "border-muted"
+                        }`}
                     >
                       <div className="flex items-center space-x-3">
                         <RadioGroupItem
