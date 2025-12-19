@@ -12,7 +12,7 @@ import {
   LogIn,
   LogOut,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -34,12 +34,13 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useCart } from "@/modules/cart/hooks/use-cart";
 
 const NAV = [
   { href: "/", label: "Home" },
   { href: "/sponsor-a-tree", label: "Sponsor A Tree" },
   { href: "/adopt-a-tree", label: "Adopt A Tree" },
-  { href: "/the-green-alliance", label: "The Green Alliance" },
+  { href: "/feed-the-tree", label: "Feed the Tree" },
   { href: "/store", label: "Store" },
 ];
 
@@ -104,9 +105,12 @@ export default function Header() {
   const pathname = usePathname();
   const isMobile = useIsMobile();
   const { isAuthenticated, signOut } = useAuth();
+  const { items } = useCart();
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  const cartCount = items.length;
 
   return (
     <>
@@ -138,7 +142,11 @@ export default function Header() {
               {isMobile && (
                 <div className="flex items-center gap-1 z-10">
                   <NavIcon href="/wishlist" icon={Heart} />
-                  <NavIcon href="/cart" icon={ShoppingCart} />
+                  <NavIcon
+                    href="/cart"
+                    icon={ShoppingCart}
+                    count={cartCount}
+                  />
                 </div>
               )}
             </div>
@@ -163,7 +171,11 @@ export default function Header() {
             {!isMobile && (
               <div className="flex items-center gap-1.5 z-10">
                 <NavIcon href="/wishlist" icon={Heart} />
-                <NavIcon href="/cart" icon={ShoppingCart} />
+                <NavIcon
+                  href="/cart"
+                  icon={ShoppingCart}
+                  count={cartCount}
+                />
                 <NavIcon href="/notifications" icon={Bell} />
                 <AccountMenu
                   isAuthenticated={isAuthenticated}
@@ -206,11 +218,12 @@ export default function Header() {
 type NavIconProps = {
   href: string;
   icon: React.ElementType;
+  count?: number;
 };
 
-function NavIcon({ href, icon: Icon }: NavIconProps) {
+function NavIcon({ href, icon: Icon, count }: NavIconProps) {
   return (
-    <motion.div whileHover={{ scale: 1.12 }}>
+    <motion.div whileHover={{ scale: 1.12 }} className="relative">
       <Button
         asChild
         variant="ghost"
@@ -221,6 +234,20 @@ function NavIcon({ href, icon: Icon }: NavIconProps) {
           <Icon className="h-5 w-5" />
         </Link>
       </Button>
+      <AnimatePresence>
+        {count !== undefined && count > 0 && (
+          <motion.span
+            key="count-badge"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 500, damping: 25 }}
+            className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center bg-primary text-[10px] font-bold text-primary-foreground rounded-full border-2 border-background pointer-events-none"
+          >
+            {count > 9 ? "9+" : count}
+          </motion.span>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

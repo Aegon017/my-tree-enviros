@@ -91,7 +91,7 @@ export default function Page() {
           <h1 className="text-2xl font-bold text-red-600">
             {error || "Campaign Not Found"}
           </h1>
-          <Link href="/the-green-alliance" className="inline-flex mt-4 gap-2">
+          <Link href="/feed-the-tree" className="inline-flex mt-4 gap-2">
             <ArrowLeft className="h-4 w-4" /> Back to Campaigns
           </Link>
         </div>

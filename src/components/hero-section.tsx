@@ -1,160 +1,136 @@
 "use client";
 
-import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { motion, Variants } from "framer-motion";
+import { ArrowRight, Sprout, Heart, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const chapters = [
+const items = [
   {
     id: "sponsor",
     title: "Sponsor a Tree",
     subtitle: "Plant the seed of change",
-    body: "Your contribution becomes the spark that restores forests and builds a future rooted in life.",
     image: "/trees/sponsor.png",
     href: "/sponsor-a-tree",
-    accent: "from-emerald-400 to-green-600",
+    color: "from-emerald-950/90 to-emerald-900/50",
+    icon: Sprout,
   },
   {
     id: "adopt",
     title: "Adopt a Tree",
     subtitle: "Witness growth year after year",
-    body: "Follow the living journey of a tree and grow alongside nature over time.",
     image: "/trees/adopt.png",
     href: "/adopt-a-tree",
-    accent: "from-amber-400 to-orange-500",
+    color: "from-amber-950/90 to-amber-900/50",
+    icon: Heart,
   },
   {
-    id: "alliance",
-    title: "The Green Alliance",
-    subtitle: "Nurture ecosystems together",
-    body: "Join a collective effort that regenerates land and builds resilient ecosystems.",
+    id: "feed",
+    title: "Feed the Tree",
+    subtitle: "Nurture life from the roots",
     image: "/trees/feed.png",
-    href: "/the-green-alliance",
-    accent: "from-sky-400 to-blue-600",
+    href: "/feed-the-tree",
+    color: "from-blue-950/90 to-blue-900/50",
+    icon: Users,
   },
 ];
 
-export default function HeroExperience() {
-  const trackRef = useRef(null);
-  const { scrollYProgress } = useScroll({ target: trackRef });
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-66%"]);
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.2,
+    },
+  },
+};
 
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+export default function HeroSection() {
   return (
-    <main className="relative w-full bg-background overflow-hidden">
-      <section className="min-h-screen flex flex-col justify-center items-center px-6 text-center">
-        <motion.h1
+    <main className="relative w-full h-dvh bg-background flex flex-col overflow-hidden">
+      <section className="relative z-10 flex-none px-6 py-6 md:py-10 text-center bg-linear-to-b from-background/80 to-background/20 backdrop-blur-sm border-b border-border/10">
+        <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="text-4xl md:text-6xl lg:text-7xl font-bold text-primary"
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          className="max-w-5xl mx-auto space-y-4"
         >
-          A living journey begins
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.15 }}
-          className="mt-6 max-w-2xl text-muted-foreground text-lg md:text-xl"
-        >
-          Choose how you connect with nature — sponsor, adopt, or regenerate ecosystems.
-        </motion.p>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter text-foreground">
+            Nature grows with{" "}
+            <span className="text-primary/90">your story</span>
+          </h1>
+          <p className="text-muted-foreground/80 font-light text-base md:text-2xl max-w-2xl mx-auto leading-relaxed">
+            Every tree begins a new chapter. Choose your path to restore the
+            earth.
+          </p>
+        </motion.div>
       </section>
-
-      <section className="md:hidden">
-        <div className="h-screen overflow-y-scroll snap-y snap-mandatory">
-          {chapters.map((item) => (
-            <div
-              key={item.id}
-              className="snap-start min-h-screen flex items-center justify-center px-6"
-            >
-              <div className="w-full max-w-sm rounded-3xl bg-background border border-border/40 shadow-lg overflow-hidden">
-                <div className={`h-2 bg-gradient-to-r ${item.accent}`} />
-                <div className="p-6">
-                  <div className="relative w-full aspect-square rounded-2xl overflow-hidden mb-6">
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <h3 className="text-2xl font-bold">{item.title}</h3>
-                  <p className="text-primary text-sm font-medium mt-1">
-                    {item.subtitle}
-                  </p>
-                  <p className="text-muted-foreground text-sm mt-4 leading-relaxed">
-                    {item.body}
-                  </p>
-                  <Link
-                    href={item.href}
-                    className="inline-flex items-center mt-6 text-primary font-semibold text-sm"
-                  >
-                    Explore
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section
-        ref={trackRef}
-        className="hidden md:block relative h-[300vh]"
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="flex-1 flex flex-col md:flex-row w-full h-full"
       >
-        <div className="sticky top-0 h-screen flex items-center overflow-hidden">
+        {items.map((item) => (
           <motion.div
-            style={{ x }}
-            className="flex w-[300vw]"
+            key={item.id}
+            variants={itemVariants}
+            className="group relative flex-1 min-h-0 w-full md:h-full overflow-hidden border-b border-white/10 md:border-b-0 md:border-r last:border-0 bg-black"
           >
-            {chapters.map((item) => (
-              <div
-                key={item.id}
-                className="w-screen h-screen flex items-center justify-center px-24"
-              >
-                <div className="grid grid-cols-2 gap-16 items-center max-w-6xl">
-                  <div>
-                    <h2 className="text-5xl font-bold text-primary">
+            <Link href={item.href} className="flex w-full h-full">
+              <div className="absolute inset-0 z-0 overflow-hidden transform-gpu">
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  className="object-cover transition-transform duration-1000 ease-out group-hover:scale-110 opacity-90"
+                />
+                <div
+                  className={cn(
+                    "absolute inset-0 bg-linear-to-t md:bg-linear-to-b opacity-80 transition-opacity duration-500 group-hover:opacity-75",
+                    item.color
+                  )}
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-60" />
+              </div>
+
+              <div className="relative z-10 w-full h-full flex flex-row md:flex-col items-center justify-between p-6 md:p-12 text-white transition-all duration-500">
+                <div className="flex items-center md:items-start gap-5 md:flex-col md:gap-8 transform transition-transform duration-500 group-hover:-translate-y-2">
+                  <div className="p-3.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 group-hover:bg-white/20 group-hover:border-white/30 transition-all">
+                    <item.icon className="w-5 h-5 md:w-8 md:h-8 text-white/90" />
+                  </div>
+
+                  <div className="text-left space-y-1 md:space-y-3">
+                    <h2 className="text-2xl md:text-4xl font-bold leading-none tracking-tight">
                       {item.title}
                     </h2>
-                    <p className="text-primary/80 text-lg mt-2">
+                    <p className="text-white/70 font-medium text-xs md:text-lg tracking-wide uppercase opacity-0 -translate-y-2 md:opacity-100 md:translate-y-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-75">
                       {item.subtitle}
                     </p>
-                    <p className="text-muted-foreground text-lg mt-6 max-w-md">
-                      {item.body}
-                    </p>
-                    <Link
-                      href={item.href}
-                      className="inline-flex items-center mt-8 text-primary font-semibold"
-                    >
-                      Begin this chapter
-                      <ArrowRight className="w-5 h-5 ml-3" />
-                    </Link>
                   </div>
+                </div>
 
-                  <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    whileInView={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.6 }}
-                    className="relative aspect-square rounded-[3rem] overflow-hidden shadow-2xl"
-                  >
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </motion.div>
+                <div className="pl-4 md:pl-0 md:mt-auto md:w-full md:flex md:justify-end">
+                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-full border border-white/30 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-300 transform group-hover:scale-110">
+                    <ArrowRight className="w-5 h-5 md:w-7 md:h-7 -rotate-45 md:rotate-0 group-hover:rotate-0 transition-transform duration-500" />
+                  </div>
                 </div>
               </div>
-            ))}
+            </Link>
           </motion.div>
-        </div>
-      </section>
+        ))}
+      </motion.div>
     </main>
   );
 }
