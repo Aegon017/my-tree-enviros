@@ -1,15 +1,20 @@
-"use client";
-
-import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { reverseGeocode } from "@/lib/apiAddress";
+import MapPicker from "@/components/map-picker";
+import { useLocationStore } from "@/store/location-store";
+import { useEffect, useState, useRef } from "react";
 import { MapPin, Navigation } from "lucide-react";
-import { toast } from "sonner";
+
+export interface LocationDetails {
+  area: string;
+  city: string;
+  postal_code: string;
+  street: string;
+}
 
 interface LocationPickerProps {
   latitude?: number;
   longitude?: number;
-  onLocationChange: (lat: number, lng: number, address?: string) => void;
+  onLocationChange: (lat: number, lng: number, address?: string, details?: LocationDetails) => void;
 }
 
 export function LocationPicker({
@@ -23,41 +28,6 @@ export function LocationPicker({
   ]);
   const [isClient, setIsClient] = useState(false);
 
-  function InlineMap({
-    position,
-    onPositionChange,
-  }: {
-    position: [number, number];
-    onPositionChange: (lat: number, lng: number) => void;
-  }) {
-    const handleClick = (e: any) => {
-      const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const lng = position[1] + (x / rect.width - 0.5) * 0.1;
-      const lat = position[0] - (y / rect.height - 0.5) * 0.1;
-      onPositionChange(lat, lng);
-    };
-
-    return (
-      <div
-        className="h-full w-full bg-linear-to-br from-slate-100 to-white flex items-center justify-center text-sm text-muted-foreground cursor-pointer"
-        onClick={handleClick}
-      >
-        <div className="text-center">
-          <div>Click anywhere to set location</div>
-          <div className="mt-2">
-            Lat: {position[0].toFixed(6)}, Lng: {position[1].toFixed(6)}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const ClientMap = dynamic(() => Promise.resolve({ default: InlineMap }), {
-    ssr: false,
-  });
-
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -68,21 +38,60 @@ export function LocationPicker({
     }
   }, [latitude, longitude]);
 
+  const lastFetched = useRef<string | null>(null);
+
   const handlePositionChange = async (lat: number, lng: number) => {
+    // Prevent duplicate fetches for same coord (stops infinite loops)
+    const key = `${lat}-${lng}`;
+    if (lastFetched.current === key) {
+      // Just update local position UI if needed, but don't re-trigger parent/API
+      setPosition([lat, lng]);
+      return;
+    }
+    lastFetched.current = key;
+
     setPosition([lat, lng]);
 
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
-      );
-      const data = await response.json();
-      const address = data.display_name || "";
-      onLocationChange(lat, lng, address);
+      const data = await reverseGeocode(lat, lng);
+      // We want the display name for the address?
+      // apiAddress returns structured data (area, city, etc).
+      // But LocationPicker prop expects "address" string.
+      // Let's construct a nice address string or pass the structured one?
+      // The prop is `onLocationChange(lat, lng, address?: string)`
+
+      const parts = [
+        data.street,
+        data.area,
+        data.city,
+        data.postal_code
+      ].filter(Boolean).join(", ");
+
+      onLocationChange(lat, lng, parts, {
+        area: data.area || "",
+        city: data.city || "",
+        postal_code: data.postal_code || "",
+        street: data.street || "",
+      });
     } catch (error) {
       console.error("Error fetching address:", error);
       onLocationChange(lat, lng);
     }
   };
+
+  const { selected } = useLocationStore();
+
+  useEffect(() => {
+    if (latitude && longitude && (latitude !== 28.6139 || longitude !== 77.209)) {
+      return;
+    }
+
+    if (selected?.lat && selected?.lng) {
+      handlePositionChange(selected.lat, selected.lng);
+    } else {
+      handleUseMyLocation();
+    }
+  }, []);
 
   const handleUseMyLocation = () => {
     if ("geolocation" in navigator) {
@@ -90,23 +99,17 @@ export function LocationPicker({
         (position) => {
           const { latitude, longitude } = position.coords;
           handlePositionChange(latitude, longitude);
-          toast.success("Location detected successfully");
         },
         (error) => {
-          console.error("Error getting location:", error);
-          toast.error(
-            "Unable to get your location. Please enable location services.",
-          );
+          console.warn("Error getting location:", error);
         },
       );
-    } else {
-      toast.error("Geolocation is not supported by your browser");
     }
   };
 
   if (!isClient) {
     return (
-      <div className="h-[400px] bg-muted rounded-lg flex items-center justify-center">
+      <div className="h-[320px] bg-muted rounded-lg flex items-center justify-center">
         <p className="text-muted-foreground">Loading map...</p>
       </div>
     );
@@ -117,31 +120,15 @@ export function LocationPicker({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <MapPin className="h-4 w-4" />
-          <span>Click on the map or drag the marker to set your location</span>
+          <span>Click map or drag marker to pin location</span>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleUseMyLocation}
-          className="gap-2"
-        >
-          <Navigation className="h-4 w-4" />
-          Use My Location
-        </Button>
       </div>
 
-      <div className="h-[400px] rounded-lg overflow-hidden border">
-        <ClientMap
+      <div className="h-[320px] rounded-lg overflow-hidden border">
+        <MapPicker
           position={position}
-          onPositionChange={handlePositionChange}
+          onChange={([lat, lng]) => handlePositionChange(lat, lng)}
         />
-      </div>
-
-      <div className="text-xs text-muted-foreground">
-        <p>
-          Coordinates: {position[0].toFixed(6)}, {position[1].toFixed(6)}
-        </p>
       </div>
     </div>
   );
