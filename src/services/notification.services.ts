@@ -2,7 +2,7 @@ import api from "@/services/http-client";
 import type {
   Notification,
   NotificationResponse,
-  ApiResponse,
+  ApiResponse as ServiceApiResponse,
 } from "@/types/notification.types";
 
 export const notificationService = {
@@ -10,46 +10,55 @@ export const notificationService = {
     per_page?: number;
     page?: number;
   }): Promise<NotificationResponse> => {
-    const response = await api.get<NotificationResponse>("/notifications", {
-      params,
-    });
-    if (!response?.data) throw new Error("Invalid notifications response");
-    return response.data;
+    const response = await api.get<any>("/notifications", { params });
+    return {
+      status: true,
+      message: "Notifications fetched successfully",
+      data: response.data || [],
+    };
   },
 
-  getById: async (id: number): Promise<ApiResponse<Notification>> => {
-    const response = await api.get<ApiResponse<Notification>>(
-      `/notifications/${id}`,
-    );
-    if (!response?.data) throw new Error("Invalid notification response");
-    return response.data;
+  getById: async (id: string | number): Promise<ServiceApiResponse<Notification>> => {
+    const response = await api.get<any>(`/notifications/${id}`);
+    return {
+      status: true,
+      message: "Notification fetched successfully",
+      data: response.data,
+    };
   },
 
-  markAsRead: async (id: number): Promise<ApiResponse> => {
-    const response = await api.put<ApiResponse>(`/notifications/${id}/read`);
-    if (!response?.data) throw new Error("Invalid mark-as-read response");
-    return response.data;
+  markAsRead: async (id: string | number): Promise<ServiceApiResponse> => {
+    await api.post("/notifications/read", { ids: [String(id)] });
+    return { status: true, message: "Marked as read", data: [] };
   },
 
-  markAllAsRead: async (): Promise<ApiResponse> => {
-    const response = await api.put<ApiResponse>("/notifications/mark-all-read");
-    if (!response?.data) throw new Error("Invalid mark-all-read response");
-    return response.data;
+  markAllAsRead: async (): Promise<ServiceApiResponse> => {
+    await api.post("/notifications/read", { all: true });
+    return { status: true, message: "All marked as read", data: [] };
   },
 
-  delete: async (id: number): Promise<ApiResponse> => {
-    const response = await api.delete<ApiResponse>(`/notifications/${id}`);
-    if (!response?.data)
-      throw new Error("Invalid delete notification response");
-    return response.data;
+  delete: async (id: string | number): Promise<ServiceApiResponse> => {
+    await api.delete(`/notifications/${id}`);
+    return { status: true, message: "Notification deleted", data: [] };
   },
 
-  getUnreadCount: async (): Promise<ApiResponse<{ count: number }>> => {
-    const response = await api.get<ApiResponse<{ count: number }>>(
+  getUnreadCount: async (): Promise<ServiceApiResponse<{ count: number }>> => {
+    const response = (await api.get<any>(
       "/notifications/unread-count",
-    );
-    if (!response?.data) throw new Error("Invalid unread count response");
-    return response.data;
+    )) as any;
+    return {
+      status: true,
+      message: "Unread count fetched",
+      data: response,
+    };
+  },
+
+  saveDeviceToken: async (token: string): Promise<ServiceApiResponse> => {
+    await api.post("/device-tokens", {
+      token,
+      platform: "web",
+    });
+    return { status: true, message: "Device token saved", data: [] };
   },
 };
 
