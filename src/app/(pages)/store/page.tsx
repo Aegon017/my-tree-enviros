@@ -137,7 +137,6 @@ function ProductsContent() {
     fetchCategories();
   }, []);
 
-  // Fetch products whenever searchParams changes
   useEffect(() => {
     fetchProducts();
   }, [searchParams]);
