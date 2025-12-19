@@ -65,7 +65,7 @@ export default function MapPicker({
       }) => (
         <div className="relative h-full w-full">
           {/* Search Overlay */}
-          <div className="absolute top-2 left-2 right-2 z-[1001] bg-white rounded-md shadow-md p-2">
+          <div className="absolute top-2 left-2 right-2 z-1001 bg-white rounded-md shadow-md p-2">
             <input
               className="w-full text-sm p-2 border rounded-md outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="Search location..."

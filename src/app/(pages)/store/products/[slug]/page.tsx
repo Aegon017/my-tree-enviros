@@ -4,6 +4,8 @@ import { use } from "react";
 import useSWR from "swr";
 import { Markup } from "interweave";
 import { Minus, Plus, Heart } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +33,7 @@ export default function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
+  const router = useRouter();
 
   const {
     data: product,
@@ -102,11 +105,50 @@ export default function ProductPage({
   const variantId = productState.selectedVariant?.id;
   const inWishlist = productState.selectedVariant?.in_wishlist ?? false;
 
+  const handleBuyNow = () => {
+    if (!variantId) {
+      toast.error("Please select options first");
+      return;
+    }
+
+    // Construct checkout URL for immediate purchase
+    const params = new URLSearchParams();
+    params.set("mode", "buy_now");
+    params.set("type", "product");
+    params.set("variant_id", variantId.toString());
+    params.set("quantity", productState.quantity.toString());
+
+    router.push(`/checkout?${params.toString()}`);
+  };
+
+  const wishlistButton = (
+    <Button
+      variant="secondary"
+      size="icon"
+      className="h-10 w-10 rounded-full shadow-md bg-white/90 hover:bg-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm"
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!variantId) return setLoginOpen(true);
+        toggleFavorite(inWishlist);
+      }}
+      disabled={wishlistLoading || !variantId}
+    >
+      <Heart
+        className={`h-5 w-5 ${inWishlist ? "fill-red-500 text-red-500" : "text-gray-700 dark:text-gray-200"}`}
+      />
+      <span className="sr-only">{inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}</span>
+    </Button>
+  );
+
   return (
     <div className="container mx-auto px-4 py-4 max-w-6xl">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-6 lg:sticky top-24 self-start z-1">
-          <ImageGallery images={images.map((i) => i.url)} name={product.name} />
+          <ImageGallery
+            images={images.map((i) => i.url)}
+            name={product.name}
+            actionButton={wishlistButton}
+          />
         </div>
 
         <div className="space-y-6">
@@ -191,7 +233,8 @@ export default function ProductPage({
             </div>
           )}
 
-          <div className="flex gap-3">
+
+          <div className="grid grid-cols-2 gap-3 mt-6">
             <AddToCartButton
               type="product"
               quantity={productState.quantity}
@@ -199,21 +242,18 @@ export default function ProductPage({
               productData={product}
               variantData={productState.selectedVariant}
               productImages={images}
+              className="w-full"
+              size="lg"
             />
 
             <Button
-              variant="outline"
+              variant="default"
               size="lg"
-              onClick={() => {
-                if (!variantId) return setLoginOpen(true);
-                toggleFavorite(inWishlist);
-              }}
-              disabled={wishlistLoading || !variantId}
+              className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm"
+              onClick={handleBuyNow}
+              disabled={!productState.isInStock || !variantId}
             >
-              <Heart
-                className={`mr-2 h-5 w-5 ${inWishlist ? "fill-current text-red-500" : ""}`}
-              />
-              {inWishlist ? "In Wishlist" : "Wishlist"}
+              Buy Now
             </Button>
 
             <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
