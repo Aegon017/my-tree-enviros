@@ -39,7 +39,6 @@ const Page = () => {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
     toast.success("Your message has been successfully delivered.");
     form.reset();
   };

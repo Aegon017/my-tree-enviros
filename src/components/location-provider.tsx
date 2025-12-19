@@ -33,9 +33,9 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         const current = await getCurrentLocation();
         if (current) {
           useLocationStore.getState().setLocation({
-            address: current.data.display_name,
-            area: current.data.address.suburb || current.data.address.neighbourhood || "",
-            city: current.data.address.city || current.data.address.town || current.data.address.village || "",
+            address: [current.data.street, current.data.area, current.data.city, current.data.postal_code].filter(Boolean).join(", "),
+            area: current.data.area || "",
+            city: current.data.city || "",
             lat: Number(current.lat),
             lng: Number(current.lng),
           });
@@ -56,36 +56,6 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       setOpen(true);
     }
   }, [selected, detecting]);
-
-  useEffect(() => {
-    if (!selected) return;
-
-    (async () => {
-      try {
-        const current = await getCurrentLocation();
-        if (current && selected) {
-          const dist = getDistanceFromLatLonInKm(
-            selected.lat,
-            selected.lng,
-            Number(current.lat),
-            Number(current.lng)
-          );
-
-          if (dist > 1) {
-            useLocationStore.getState().setLocation({
-              address: current.data.display_name,
-              area: current.data.address.suburb || current.data.address.neighbourhood || "",
-              city: current.data.address.city || current.data.address.town || current.data.address.village || "",
-              lat: Number(current.lat),
-              lng: Number(current.lng),
-            });
-            toast.success("Location updated to your current location");
-          }
-        }
-      } catch (e) {
-      }
-    })();
-  }, [selected, getCurrentLocation]);
 
   return (
     <>

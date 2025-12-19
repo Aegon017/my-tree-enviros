@@ -1,4 +1,6 @@
 import { useState, useCallback } from "react";
+import { useLocationStore } from "@/store/location-store";
+import { reverseGeocode } from "@/lib/apiAddress";
 
 export function useCurrentLocation() {
   const [loading, setLoading] = useState(false);
@@ -21,21 +23,21 @@ export function useCurrentLocation() {
           const lng = pos.coords.longitude;
 
           try {
-            const res = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=en`,
-              {
-                headers: {
-                  "User-Agent": "MyTreeEnviros/1.0",
-                },
-              }
-            );
+            const data = await reverseGeocode(lat, lng);
+            const address = [
+              data.street,
+              data.area,
+              data.city,
+              data.postal_code
+            ].filter(Boolean).join(", ");
 
-            if (!res.ok) {
-              throw new Error("Failed to fetch address details");
-            }
-
-            const data = await res.json();
-            resolve({ lat, lng, data });
+            useLocationStore.getState().setLocation({
+              lat,
+              lng,
+              address,
+              area: data.area || "",
+              city: data.city || "",
+            }); resolve({ lat, lng, data });
           } catch (e) {
             resolve({
               lat,
