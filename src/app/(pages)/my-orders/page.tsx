@@ -131,9 +131,9 @@ const OrderDetailsModal = ({
                       className="flex gap-4 p-4 border rounded-xl bg-card hover:bg-accent/10 transition-colors"
                     >
                       <div className="w-20 h-20 bg-muted rounded-lg relative overflow-hidden shrink-0 border">
-                        {item.tree_instance?.image_url || item.tree?.image_url || item.product_variant?.image_url ? (
+                        {item.tree_instance?.image_url || item.tree?.image_url || item.product_variant?.image_url || item.campaign_details?.image_url ? (
                           <Image
-                            src={item.tree_instance?.image_url || item.tree?.image_url || item.product_variant?.image_url}
+                            src={item.tree_instance?.image_url || item.tree?.image_url || item.product_variant?.image_url || item.campaign_details?.image_url}
                             alt={item.name || "Item"}
                             fill
                             className="object-cover"
@@ -149,7 +149,7 @@ const OrderDetailsModal = ({
                         <div className="flex justify-between items-start">
                           <div>
                             <h4 className="font-semibold text-base">
-                              {item.tree?.name || item.product_variant?.product?.name || item.type || "Unknown Item"}
+                              {item.tree?.name || item.product_variant?.product?.name || item.campaign_details?.name || item.type || "Unknown Item"}
                             </h4>
                             <div className="text-sm text-muted-foreground capitalize flex flex-wrap gap-1 items-center">
                               <span>{item.type}</span>
@@ -407,9 +407,9 @@ export default function OrdersPage() {
                           {o.items?.slice(0, 2).map((item: any, idx: number) => (
                             <div key={idx} className="flex gap-4 items-center">
                               <div className="w-12 h-12 bg-muted rounded-md relative shrink-0 flex items-center justify-center border">
-                                {item.tree_instance?.image_url || item.tree?.image_url || item.product_variant?.image_url ? (
+                                {item.tree_instance?.image_url || item.tree?.image_url || item.product_variant?.image_url || item.campaign_details?.image_url ? (
                                   <Image
-                                    src={item.tree_instance?.image_url || item.tree?.image_url || item.product_variant?.image_url}
+                                    src={item.tree_instance?.image_url || item.tree?.image_url || item.product_variant?.image_url || item.campaign_details?.image_url}
                                     alt="Item"
                                     fill
                                     className="object-cover rounded-md"
@@ -419,7 +419,7 @@ export default function OrdersPage() {
                                 )}
                               </div>
                               <div>
-                                <p className="font-medium line-clamp-1">{item.tree?.name || item.product_variant?.product?.name || item.type}</p>
+                                <p className="font-medium line-clamp-1">{item.tree?.name || item.product_variant?.product?.name || item.campaign_details?.name || item.type}</p>
                                 <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                               </div>
                             </div>
