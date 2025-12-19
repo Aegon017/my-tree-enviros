@@ -14,7 +14,7 @@ const footerData = {
   quickLinks: [
     { name: "About Us", href: "/about-us" },
     { name: "Store", href: "/store" },
-    { name: "The Green Alliance", href: "/the-green-alliance" },
+    { name: "Feed the Tree", href: "/feed-the-tree" },
     { name: "Orders History", href: "/my-orders" },
     { name: "Blogs", href: "/blogs" },
     { name: "Contact Us", href: "/contact-us" },

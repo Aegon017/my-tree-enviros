@@ -12,6 +12,8 @@ export const metadata: Metadata = {
     "From vibrant flowering plants to lush tropical greens, we offer an incredible variety to turn your space into a living paradise.",
 };
 
+import FcmManager from "@/components/fcm-manager";
+
 export default function RootLayout({
   children,
 }: {
@@ -29,6 +31,7 @@ export default function RootLayout({
 
       <body>
         <NextTopLoader color="#715130" showSpinner={false} />
+        <FcmManager />
         <Header />
         {children}
         <Footer />

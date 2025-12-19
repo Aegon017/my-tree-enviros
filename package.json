@@ -56,6 +56,7 @@
     "filepond-plugin-image-preview": "^4.6.12",
     "filepond-plugin-image-resize": "^2.0.10",
     "filepond-plugin-image-transform": "^3.8.7",
+    "firebase": "^12.7.0",
     "input-otp": "^1.4.2",
     "interweave": "^13.1.1",
     "js-cookie": "^3.0.5",
