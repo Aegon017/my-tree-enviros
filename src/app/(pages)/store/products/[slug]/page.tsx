@@ -104,7 +104,7 @@ export default function ProductPage({
 
   return (
     <div className="container mx-auto px-4 py-4 max-w-6xl">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-6 lg:sticky top-24 self-start z-1">
           <ImageGallery images={images.map((i) => i.url)} name={product.name} />
         </div>
