@@ -4,7 +4,7 @@ import BreadcrumbNav from "@/components/breadcrumb-nav";
 import ProductCard from "@/components/product-card";
 import ProductCardSkeleton from "@/components/skeletons/product-card-skeleton";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Input } from "@/components/ui/input";
@@ -35,7 +35,7 @@ import { ProductCategory } from "@/types/category.types";
 import { BaseMeta } from "@/types/common.types";
 import { ProductListItem } from "@/types/product.types";
 
-export default function ProductsPage() {
+function ProductsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -44,7 +44,6 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Initialize search state from URL params
   const [search, setSearch] = useState(() => {
     const v = searchParams.get("search");
     return v && v !== "undefined" ? v : "";
@@ -138,7 +137,7 @@ export default function ProductsPage() {
     fetchCategories();
   }, []);
 
-  // Fetch products whenever searchParams changes (this handles category clicks, page changes errors, etc.)
+  // Fetch products whenever searchParams changes
   useEffect(() => {
     fetchProducts();
   }, [searchParams]);
@@ -172,9 +171,6 @@ export default function ProductsPage() {
           onChange={(e) => {
             const v = e.target.value;
             setSearch(v);
-            // Debouncing or immediate update? Original code was immediate.
-            // We update URL but wait for user to stop typing ideally.
-            // For now, keeping original behavior but using updateURL which triggers fetch via effect.
             updateURL({ search: v || undefined, page: 1 });
           }}
         />
@@ -326,5 +322,23 @@ export default function ProductsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container max-w-6xl mx-auto px-4 py-8 space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      }
+    >
+      <ProductsContent />
+    </Suspense>
   );
 }
