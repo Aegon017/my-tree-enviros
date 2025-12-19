@@ -5,7 +5,7 @@ import ProductCard from "@/components/product-card";
 import ProductCardSkeleton from "@/components/skeletons/product-card-skeleton";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -29,38 +29,35 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Filter } from "lucide-react";
 
 import PaginationWrapper from "@/components/pagination-wrapper";
+import { CategoryList } from "@/components/store/category-list";
 import { productService } from "@/services/product.services";
 import { ProductCategory } from "@/types/category.types";
 import { BaseMeta } from "@/types/common.types";
 import { ProductListItem } from "@/types/product.types";
 
-const getSearchParams = () =>
-  typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search)
-    : new URLSearchParams();
-
 export default function ProductsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [meta, setMeta] = useState<BaseMeta | null>(null);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Initialize search state from URL params
   const [search, setSearch] = useState(() => {
-    const v = getSearchParams().get("search");
+    const v = searchParams.get("search");
     return v && v !== "undefined" ? v : "";
   });
 
   const getFilters = () => {
-    const params = getSearchParams();
-    const pageRaw = params.get("page");
-    const sortByRaw = params.get("sort_by");
-    const sortOrderRaw = params.get("sort_order");
+    const pageRaw = searchParams.get("page");
+    const sortByRaw = searchParams.get("sort_by");
+    const sortOrderRaw = searchParams.get("sort_order");
 
-    const categoryRaw = params.get("category_id");
-    const searchRaw = params.get("search");
-    const stockRaw = params.get("in_stock");
+    const categoryRaw = searchParams.get("category_id");
+    const searchRaw = searchParams.get("search");
+    const stockRaw = searchParams.get("in_stock");
 
     return {
       page: pageRaw ? Number(pageRaw) : 1,
@@ -90,7 +87,8 @@ export default function ProductsPage() {
     );
 
   const updateURL = async (updates: Record<string, any>) => {
-    const params = getSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
+
     Object.entries(updates).forEach(([key, value]) => {
       if (
         value === undefined ||
@@ -105,8 +103,7 @@ export default function ProductsPage() {
     });
 
     const qs = params.toString();
-    await router.push(qs ? `?${qs}` : "/store", { scroll: false });
-    fetchProducts();
+    router.push(qs ? `?${qs}` : "/store", { scroll: false });
   };
 
   const fetchProducts = async () => {
@@ -139,14 +136,18 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchCategories();
-    fetchProducts();
   }, []);
 
+  // Fetch products whenever searchParams changes (this handles category clicks, page changes errors, etc.)
   useEffect(() => {
     fetchProducts();
-  }, [search]);
+  }, [searchParams]);
 
   const changePage = (p: number) => updateURL({ page: p });
+
+  const handleCategorySelect = (id: number | undefined) => {
+    updateURL({ category_id: id, page: 1 });
+  };
 
   const breadcrumbItems = [
     { title: "Home", href: "/" },
@@ -154,8 +155,14 @@ export default function ProductsPage() {
   ];
 
   return (
-    <div className="container max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="container max-w-6xl mx-auto px-4 py-8 space-y-8">
       <BreadcrumbNav items={breadcrumbItems} className="mb-6" />
+
+      <CategoryList
+        categories={categories}
+        selectedId={getFilters().category_id}
+        onSelect={handleCategorySelect}
+      />
 
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <Input
@@ -165,6 +172,9 @@ export default function ProductsPage() {
           onChange={(e) => {
             const v = e.target.value;
             setSearch(v);
+            // Debouncing or immediate update? Original code was immediate.
+            // We update URL but wait for user to stop typing ideally.
+            // For now, keeping original behavior but using updateURL which triggers fetch via effect.
             updateURL({ search: v || undefined, page: 1 });
           }}
         />
@@ -266,12 +276,48 @@ export default function ProductsPage() {
         </Sheet>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {loading && products.length === 0
-          ? Array.from({ length: 12 }).map((_, i) => (
+      <div className="min-h-[400px]">
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 12 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
-            ))
-          : products.map((p) => <ProductCard key={p.id} product={p} />)}
+            ))}
+          </div>
+        ) : products.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {products.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4">
+              <Filter className="w-10 h-10 text-muted-foreground opacity-50" />
+            </div>
+            <h3 className="text-xl font-semibold">No products found</h3>
+            <p className="text-muted-foreground mt-2 max-w-sm mx-auto">
+              We couldn't find any products matching your filters. Try adjusting
+              your search or category selection.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-6"
+              onClick={() => {
+                updateURL({
+                  search: undefined,
+                  category_id: undefined,
+                  sort_by: undefined,
+                  sort_order: undefined,
+                  in_stock: undefined,
+                  page: 1,
+                });
+                setSearch("");
+              }}
+            >
+              Clear all filters
+            </Button>
+          </div>
+        )}
       </div>
 
       {meta && meta.last_page > 1 && (
