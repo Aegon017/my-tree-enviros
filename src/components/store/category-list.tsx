@@ -28,7 +28,7 @@ export function CategoryList({
                 >
                     <div
                         className={cn(
-                            "w-20 h-20 rounded-full flex items-center justify-center border-2 transition-all duration-300 shadow-sm",
+                            "w-20 h-20 my-1 rounded-full flex items-center justify-center border-2 transition-all duration-300 shadow-sm",
                             !selectedId
                                 ? "border-primary bg-primary/10"
                                 : "border-transparent bg-muted group-hover:border-primary/50"
@@ -64,7 +64,7 @@ export function CategoryList({
                         >
                             <div
                                 className={cn(
-                                    "relative w-20 h-20 rounded-full overflow-hidden border-2 transition-all duration-300 shadow-sm",
+                                    "relative w-20 h-20 my-1 rounded-full overflow-hidden border-2 transition-all duration-300 shadow-sm",
                                     isSelected
                                         ? "border-primary"
                                         : "border-transparent bg-muted group-hover:border-primary/50"
