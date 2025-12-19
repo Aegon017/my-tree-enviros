@@ -26,11 +26,11 @@ const footerData = {
     { name: "Cancellations & Returns", href: "/cancellations-and-refunds" },
   ],
   social: [
-    { icon: FaFacebook, href: "https://www.facebook.com" },
-    { icon: FaInstagram, href: "https://www.instagram.com" },
-    { icon: FaXTwitter, href: "https://x.com" },
-    { icon: FaLinkedin, href: "https://www.linkedin.com" },
-    { icon: FaYoutube, href: "https://www.youtube.com" },
+    { icon: FaFacebook, href: "https://www.facebook.com/people/MY-TREE/61569788991619/" },
+    { icon: FaInstagram, href: "https://www.instagram.com/mytree_enviros/" },
+    { icon: FaXTwitter, href: "https://x.com/mytree70" },
+    { icon: FaLinkedin, href: "https://www.linkedin.com/company/mytree-enviros/posts/?feedView=all" },
+    { icon: FaYoutube, href: "https://www.youtube.com/@Mytreeenviros" },
   ],
 };
 
