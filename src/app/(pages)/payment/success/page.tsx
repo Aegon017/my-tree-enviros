@@ -75,8 +75,8 @@ function PaymentSuccessPage() {
     );
   }
 
-  const treeItem = order?.items?.[0];
   const formattedAmount = `₹${Number(order?.grand_total || 0).toFixed(2)}`;
+
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
@@ -143,28 +143,35 @@ function PaymentSuccessPage() {
               </p>
             </div>
 
-            {treeItem && (
-              <>
-                <Separator />
+            {order?.items?.map((item: any) => (
+              <div key={item.id}>
+                <Separator className="my-4" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground capitalize">
+                      {item.type === 'product' ? 'Product' :
+                        item.type === 'sponsor' ? 'Tree Sponsorship' :
+                          item.type === 'adopt' ? 'Tree Adoption' :
+                            item.type === 'campaign' ? 'Campaign' :
+                              item.type}
+                    </p>
+                    <p className="font-medium">{item.name || item.product_name || item.tree_name || "Item"}</p>
+                  </div>
 
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Tree Sponsored</p>
-                  <p className="font-medium">{treeItem.tree_name}</p>
-                </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Quantity</p>
+                    <p className="font-medium">{item.quantity}</p>
+                  </div>
 
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Quantity</p>
-                  <p className="font-medium">{treeItem.quantity}</p>
+                  <div className="col-span-2 space-y-1">
+                    <p className="text-muted-foreground">Amount</p>
+                    <p className="font-medium">
+                      ₹{Number(item.total_amount).toFixed(2)}
+                    </p>
+                  </div>
                 </div>
-
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Tree Amount</p>
-                  <p className="font-medium">
-                    ₹{Number(treeItem.amount).toFixed(2)}
-                  </p>
-                </div>
-              </>
-            )}
+              </div>
+            ))}
 
             <Separator />
 
