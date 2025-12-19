@@ -5,6 +5,7 @@ import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";
 import Footer from "@/components/app-footer";
 import Header from "@/components/app-header";
+import { LocationProvider } from "@/components/location-provider";
 
 export const metadata: Metadata = {
   title: "My Tree Enviros",
@@ -32,8 +33,10 @@ export default function RootLayout({
       <body>
         <NextTopLoader color="#715130" showSpinner={false} />
         <FcmManager />
-        <Header />
-        {children}
+        <LocationProvider>
+          <Header />
+          {children}
+        </LocationProvider>
         <Footer />
         <Toaster richColors position="top-center" closeButton={true} />
       </body>

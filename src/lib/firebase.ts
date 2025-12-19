@@ -10,9 +10,16 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const app = (() => {
+    if (!firebaseConfig.projectId) {
+        console.warn("Firebase projectId is missing. Firebase features will be disabled.");
+        return null;
+    }
+    return !getApps().length ? initializeApp(firebaseConfig) : getApp();
+})();
 
 export const getFirebaseMessaging = async () => {
+    if (!app) return null;
     const supported = await isSupported();
     return supported ? getMessaging(app) : null;
 };
