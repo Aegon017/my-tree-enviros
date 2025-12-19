@@ -75,7 +75,7 @@ export default function ImageGallery({ images, name }: Props) {
       <div className="flex flex-col gap-4">
         <div
           ref={imgRef}
-          className="relative w-full h-[500px] rounded-2xl border bg-muted/30 overflow-hidden cursor-crosshair"
+          className="relative w-full h-[300px] md:h-[500px] rounded-2xl border bg-muted/30 overflow-hidden cursor-crosshair"
           onMouseEnter={() => setIsZooming(true)}
           onMouseLeave={() => setIsZooming(false)}
           onMouseMove={handleMouseMove}
@@ -112,11 +112,10 @@ export default function ImageGallery({ images, name }: Props) {
                 key={idx}
                 variant="outline"
                 type="button"
-                className={`relative h-20 w-20 rounded-xl overflow-hidden border-2 transition-all duration-300 ${
-                  selected === idx
-                    ? "border-primary ring-2 ring-primary/20 scale-105"
-                    : "border-muted hover:border-muted-foreground/30"
-                }`}
+                className={`relative h-20 w-20 rounded-xl overflow-hidden border-2 transition-all duration-300 ${selected === idx
+                  ? "border-primary ring-2 ring-primary/20 scale-105"
+                  : "border-muted hover:border-muted-foreground/30"
+                  }`}
                 onClick={() => setSelected(idx)}
               >
                 <Image
@@ -140,8 +139,8 @@ export default function ImageGallery({ images, name }: Props) {
             top: 0,
             left: imgRef.current
               ? imgRef.current.getBoundingClientRect().right -
-                containerRect.left +
-                32
+              containerRect.left +
+              32
               : 0,
             width: `${zoomBoxSize}px`,
             height: `${zoomBoxSize}px`,
