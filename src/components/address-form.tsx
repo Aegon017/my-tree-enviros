@@ -30,6 +30,8 @@ import {
 import { toast } from "sonner";
 import { useLocationStore } from "@/store/location-store";
 import { useAuth } from "@/hooks/use-auth";
+import { useCurrentLocation } from "@/hooks/use-current-location";
+import { Crosshair, Loader2 } from "lucide-react";
 
 const AddressSchema = z.object({
   name: z.string().min(2),
@@ -50,6 +52,7 @@ export default function AddressForm({ onSaved }: { onSaved?: () => void }) {
   const [loadingPosts, setLoadingPosts] = useState(false);
   const { setLocation } = useLocationStore();
   const { isAuthenticated } = useAuth();
+  const { getCurrentLocation, loading: geoLoading } = useCurrentLocation();
 
   const form = useForm<AddressInputs>({
     resolver: zodResolver(AddressSchema),
@@ -66,12 +69,15 @@ export default function AddressForm({ onSaved }: { onSaved?: () => void }) {
   });
 
   useEffect(() => {
-    navigator.geolocation?.getCurrentPosition(
-      (pos) => setPosition([pos.coords.latitude, pos.coords.longitude]),
-      () => {},
-      { enableHighAccuracy: true },
-    );
+    handleDetectLocation();
   }, []);
+
+  async function handleDetectLocation() {
+    const loc = await getCurrentLocation();
+    if (loc) {
+      setPosition([Number(loc.lat), Number(loc.lng)]);
+    }
+  }
 
   useEffect(() => {
     if (!position) return;
