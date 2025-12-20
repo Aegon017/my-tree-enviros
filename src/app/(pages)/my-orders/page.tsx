@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { ordersService as orderService } from "@/modules/orders/services/orders.service";
 import Image from "next/image";
+import { toast } from "sonner";
 
 const formatCurrency = (val?: number | string) => {
   if (val == null) return "₹0.00";
@@ -89,6 +90,8 @@ const OrderDetailsModal = ({
   onClose: () => void;
   order: any;
 }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
   if (!open || !order) return null;
 
   const payment = order.payment;
@@ -262,8 +265,38 @@ const OrderDetailsModal = ({
         <div className="p-4 border-t bg-muted/10 flex justify-end gap-3">
           <Button variant="outline" onClick={onClose}>Close</Button>
           {order.status === 'paid' && (
-            <Button variant="default" onClick={() => window.open(`/api/v1/orders/${order.id}/invoice`, '_blank')}>
-              Download Invoice
+            <Button
+              variant="default"
+              disabled={isDownloading}
+              onClick={async () => {
+                try {
+                  setIsDownloading(true);
+                  toast.loading("Downloading invoice...", { id: "download-invoice" });
+
+                  const blob = await orderService.downloadInvoice(order.id);
+                  const url = window.URL.createObjectURL(blob);
+
+                  toast.dismiss("download-invoice");
+                  toast.success("Invoice downloaded! Redirecting...", { id: "redirect-invoice" });
+
+                  window.open(url, "_blank");
+                  setTimeout(() => window.URL.revokeObjectURL(url), 100);
+                } catch (error) {
+                  console.error("Failed to download invoice:", error);
+                  toast.error("Failed to download invoice.", { id: "download-invoice" });
+                } finally {
+                  setIsDownloading(false);
+                }
+              }}
+            >
+              {isDownloading ? (
+                <>
+                  <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                  Redirecting...
+                </>
+              ) : (
+                "Download Invoice"
+              )}
             </Button>
           )}
         </div>

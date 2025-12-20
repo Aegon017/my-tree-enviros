@@ -60,12 +60,12 @@ export interface OrdersResponse
       per_page: number;
       total: number;
     };
-  }> {}
+  }> { }
 
 export interface OrderResponse
   extends ApiResponse<{
     order: Order;
-  }> {}
+  }> { }
 
 export const ordersService = {
   async getOrders(params?: any) {
@@ -77,8 +77,34 @@ export const ordersService = {
   },
 
   async downloadInvoice(orderId: number | string) {
-    const response = await api.get(`/orders/${orderId}/invoice`);
-    return response;
+    const token = await import("@/lib/auth-storage").then((m) =>
+      m.authStorage.getToken(),
+    );
+    const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "";
+    const BACKEND_URL = BASE_URL.replace(/\/api\/?$/, "");
+    const url = `${BASE_URL}/orders/${orderId}/invoice`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/pdf",
+        "X-Platform": "web",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Invoice download failed", {
+        status: response.status,
+        statusText: response.statusText,
+        url,
+        errorText
+      });
+      throw new Error(`Failed to download invoice: ${response.status} ${errorText}`);
+    }
+
+    return await response.blob();
   },
 
   async cancelOrder(orderId: number) {
