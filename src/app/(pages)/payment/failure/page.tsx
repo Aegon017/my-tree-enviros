@@ -103,12 +103,6 @@ function PaymentFailurePage() {
               Back to Home
             </Link>
           </Button>
-          <Button asChild className="flex-1 bg-primary text-primary-foreground">
-            <Link href="/checkout">
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Try Again
-            </Link>
-          </Button>
         </div>
       </div>
     </div>
