@@ -9,7 +9,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -173,9 +173,21 @@ const AddressForm = ({
   ) => Promise<void>;
   isSubmitting: boolean;
 }) => {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
+  const defaultValues: FormValues = useMemo(() => editingAddress
+    ? {
+      name: editingAddress.name,
+      phone: editingAddress.phone,
+      address: editingAddress.address,
+      city: editingAddress.city,
+      area: editingAddress.area,
+      postal_code: editingAddress.postal_code,
+      latitude: editingAddress.latitude,
+      longitude: editingAddress.longitude,
+      post_office_name: editingAddress.post_office_name || "",
+      post_office_branch_type: editingAddress.post_office_branch_type || "",
+      is_default: editingAddress.is_default,
+    }
+    : {
       name: "",
       phone: "",
       address: "",
@@ -187,11 +199,22 @@ const AddressForm = ({
       post_office_name: "",
       post_office_branch_type: "",
       is_default: false,
-    },
+    }, [editingAddress]);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
   });
 
   const [postOffices, setPostOffices] = useState<PostOffice[]>([]);
   const [isLoadingPostOffices, setIsLoadingPostOffices] = useState(false);
+
+  // Reset form when dialog opens/closes or editingAddress changes
+  useEffect(() => {
+    if (open) {
+      form.reset(defaultValues);
+    }
+  }, [defaultValues, form, open]);
 
   const handleLocationChange = (lat: number, lng: number, address?: string, details?: any) => {
     form.setValue("latitude", lat);
@@ -221,10 +244,10 @@ const AddressForm = ({
           setPostOffices(response.PostOffice);
           if (response.PostOffice.length > 0) {
             const firstPO = response.PostOffice[0];
-            form.setValue("post_office_name", firstPO.Name);
-            form.setValue("post_office_branch_type", firstPO.BranchType);
-            form.setValue("city", firstPO.District);
-            form.setValue("area", firstPO.State);
+            form.setValue("post_office_name", firstPO.name);
+            form.setValue("post_office_branch_type", firstPO.branch_type);
+            form.setValue("city", firstPO.district);
+            form.setValue("area", firstPO.state);
           }
         } else {
           setPostOffices([]);
@@ -240,40 +263,6 @@ const AddressForm = ({
       setPostOffices([]);
     }
   };
-
-  useEffect(() => {
-    if (open) {
-      if (editingAddress) {
-        form.reset({
-          name: editingAddress.name,
-          phone: editingAddress.phone,
-          address: editingAddress.address,
-          city: editingAddress.city,
-          area: editingAddress.area,
-          postal_code: editingAddress.postal_code,
-          latitude: editingAddress.latitude,
-          longitude: editingAddress.longitude,
-          post_office_name: editingAddress.post_office_name || "",
-          post_office_branch_type: editingAddress.post_office_branch_type || "",
-          is_default: editingAddress.is_default,
-        });
-      } else {
-        form.reset({
-          name: "",
-          phone: "",
-          address: "",
-          city: "",
-          area: "",
-          postal_code: "",
-          latitude: 0,
-          longitude: 0,
-          post_office_name: "",
-          post_office_branch_type: "",
-          is_default: false,
-        });
-      }
-    }
-  }, [editingAddress, form, open]);
 
   const handleSubmit = async (values: FormValues) => {
     // provide a setter so parent can map backend validation errors into form
@@ -383,6 +372,7 @@ const AddressForm = ({
                 latitude={form.watch("latitude")}
                 longitude={form.watch("longitude")}
                 onLocationChange={handleLocationChange}
+                isEditing={!!editingAddress}
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -430,16 +420,16 @@ const AddressForm = ({
                     <Select
                       onValueChange={(value) => {
                         const selected = postOffices.find(
-                          (po) => po.Name === value,
+                          (po) => po.name === value,
                         );
                         if (selected) {
                           field.onChange(value);
                           form.setValue(
                             "post_office_branch_type",
-                            selected.BranchType,
+                            selected.branch_type,
                           );
-                          form.setValue("city", selected.District);
-                          form.setValue("area", selected.State);
+                          form.setValue("city", selected.district);
+                          form.setValue("area", selected.state);
                         }
                       }}
                       value={field.value}
@@ -451,8 +441,8 @@ const AddressForm = ({
                       </FormControl>
                       <SelectContent>
                         {postOffices.map((po) => (
-                          <SelectItem key={po.Name} value={po.Name}>
-                            {po.Name} - {po.BranchType}
+                          <SelectItem key={po.name} value={po.name}>
+                            {po.name} - {po.branch_type}
                           </SelectItem>
                         ))}
                       </SelectContent>
