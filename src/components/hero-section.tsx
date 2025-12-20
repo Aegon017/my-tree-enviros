@@ -81,7 +81,7 @@ export default function HeroSection() {
           <motion.div key={item.id} variants={itemVariants} className="group relative">
             <Link
               href={item.href}
-              className="flex flex-col gap-6 px-6 py-8 md:px-12 md:py-14 transition-colors duration-300 hover:bg-muted/40"
+              className="flex flex-col gap-6 px-6 py-8 md:px-12 md:py-14 transition-colors duration-300 hover:bg-muted/40 relative z-10"
             >
               <div className="flex items-center justify-between">
                 <div className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background">
