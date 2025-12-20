@@ -126,7 +126,7 @@ export default function Header() {
         className="w-full z-50"
       >
         <div className="mx-auto max-w-6xl px-3 py-3">
-          <div className="relative bg-background border border-border shadow-sm rounded-2xl px-4 md:px-6 py-2 md:py-3 flex flex-col md:flex-row justify-between gap-2">
+          <div className="relative bg-background border border-border shadow-sm rounded-2xl px-4 md:px-6 pt-4 pb-2 md:py-6 flex flex-col md:flex-row justify-between gap-8">
             <div className="flex items-center justify-between w-full md:w-auto">
               <div className="flex items-center gap-2 z-10">
                 {isMobile && (
@@ -140,7 +140,7 @@ export default function Header() {
 
               {isMobile && (
                 <div className="absolute left-1/2 -translate-x-1/2">
-                  <AppLogo className="h-14" />
+                  <AppLogo className="h-24" />
                 </div>
               )}
 
@@ -164,12 +164,7 @@ export default function Header() {
 
             {!isMobile && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <motion.div
-                  animate={{ scale: [1, 1.03, 1] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                >
-                  <AppLogo className="h-18" />
-                </motion.div>
+                <AppLogo className="h-24 mt-8" />
               </div>
             )}
 

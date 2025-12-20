@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 
 export function GET() {
-    const firebaseConfig = {
-        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-    };
+  const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  };
 
-    const workerScript = `
+  const workerScript = `
     importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
     importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
@@ -24,16 +24,49 @@ export function GET() {
       const notificationOptions = {
         body: payload.notification.body,
         icon: payload.notification.icon || '/icon.png', // Fallback icon
+        image: payload.notification.image,
         data: payload.data
       };
 
       self.registration.showNotification(notificationTitle, notificationOptions);
     });
+
+    self.addEventListener('notificationclick', function(event) {
+        console.log('[firebase-messaging-sw.js] Notification click Received.', event.notification.data);
+        event.notification.close();
+
+        // Check if there is a link in the data payload
+        const link = event.notification.data && event.notification.data.link;
+
+        if (link) {
+            event.waitUntil(
+                clients.openWindow(link)
+            );
+        } else {
+             // Default behavior: open root
+            event.waitUntil(
+                clients.matchAll({type: 'window'}).then(function(windowClients) {
+                    for (var i = 0; i < windowClients.length; i++) {
+                        var client = windowClients[i];
+                        if (client.url === '/' && 'focus' in client) {
+                            return client.focus();
+                        }
+                    }
+                    if (clients.openWindow) {
+                        return clients.openWindow('/');
+                    }
+                })
+            );
+        }
+    });
   `;
 
-    return new NextResponse(workerScript, {
-        headers: {
-            "Content-Type": "application/javascript",
-        },
-    });
+  return new NextResponse(workerScript, {
+    headers: {
+      "Content-Type": "application/javascript",
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0",
+    },
+  });
 }
