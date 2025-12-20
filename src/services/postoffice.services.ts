@@ -1,17 +1,17 @@
 import api from "./http-client";
 
 export interface PostOffice {
-  Name: string;
-  Description: string | null;
-  BranchType: string;
-  DeliveryStatus: string;
-  Circle: string;
-  District: string;
-  Division: string;
-  Region: string;
-  State: string;
-  Country: string;
-  Pincode: string;
+  name: string;
+  branch_type: string;
+  delivery_status: string;
+  circle: string;
+  district: string;
+  division: string;
+  region: string;
+  block: string;
+  state: string;
+  country: string;
+  pincode: string;
 }
 
 export interface PostOfficeResponse {
@@ -20,18 +20,39 @@ export interface PostOfficeResponse {
   PostOffice: PostOffice[] | null;
 }
 
-const INDIA_POST_API = "https://api.postalpincode.in";
+// Backend simplified response is PostOffice[] directly if successful, empty if failed?
+// Controller checks for "Success" internally and returns array of formatted POs.
+// So backend returns PostOffice[] directly.
 
 export const postOfficeService = {
   /**
-   * Search post offices by pincode
+   * Search post offices by pincode using backend API
    */
   async searchByPincode(pincode: string): Promise<PostOfficeResponse> {
     try {
-      const response = await fetch(`${INDIA_POST_API}/pincode/${pincode}`);
-      const data = await response.json();
-      // API returns an array with the response object as the first element
-      return Array.isArray(data) && data.length > 0 ? data[0] : data;
+      const response = await api.get<PostOffice[]>(`/address/post-offices`, {
+        params: { pincode },
+      });
+
+      const data = response.data;
+
+      // Adapt backend response to frontend expectation (PostOfficeResponse wrapper)
+      // The current frontend component expects { Status: "Success", PostOffice: [...] }
+
+      if (Array.isArray(data) && data.length > 0) {
+        return {
+          Message: "Success",
+          Status: "Success",
+          PostOffice: data,
+        };
+      }
+
+      return {
+        Message: "No records found",
+        Status: "Error",
+        PostOffice: null,
+      };
+
     } catch (error) {
       console.error("Error fetching post office data:", error);
       return {
@@ -44,20 +65,15 @@ export const postOfficeService = {
 
   /**
    * Search post offices by post office name
+   * NOTE: Backend doesn't seem to have a search-by-name endpoint yet, only index with pincode.
+   * We will keep this as dummy or remove if unused. It appears unused in the form.
    */
   async searchByPostOffice(name: string): Promise<PostOfficeResponse> {
-    try {
-      const response = await fetch(`${INDIA_POST_API}/postoffice/${name}`);
-      const data = await response.json();
-      // API returns an array with the response object as the first element
-      return Array.isArray(data) && data.length > 0 ? data[0] : data;
-    } catch (error) {
-      console.error("Error fetching post office data:", error);
-      return {
-        Message: "Error fetching data",
-        Status: "Error",
-        PostOffice: null,
-      };
-    }
+    // Not supported by backend yet
+    return {
+      Message: "Not supported",
+      Status: "Error",
+      PostOffice: null,
+    };
   },
 };

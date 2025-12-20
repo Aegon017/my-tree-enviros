@@ -15,12 +15,14 @@ interface LocationPickerProps {
   latitude?: number;
   longitude?: number;
   onLocationChange: (lat: number, lng: number, address?: string, details?: LocationDetails) => void;
+  isEditing?: boolean;
 }
 
 export function LocationPicker({
   latitude = 28.6139,
   longitude = 77.209,
   onLocationChange,
+  isEditing = false,
 }: LocationPickerProps) {
   const [position, setPosition] = useState<[number, number]>([
     latitude,
@@ -82,6 +84,10 @@ export function LocationPicker({
   const { selected } = useLocationStore();
 
   useEffect(() => {
+    if (isEditing) {
+      return;
+    }
+
     if (latitude && longitude && (latitude !== 28.6139 || longitude !== 77.209)) {
       return;
     }
