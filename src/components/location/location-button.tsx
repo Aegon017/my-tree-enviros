@@ -1,15 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 import { useLocationStore } from "@/store/location-store";
 import { LocationModal } from "@/components/location/location-modal";
 import { cn } from "@/lib/utils";
+import { useCurrentLocation } from "@/hooks/use-current-location";
 
 export function LocationButton({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const { selected, sync, hydrated } = useLocationStore();
+  const { getCurrentLocation } = useCurrentLocation();
+
+  useSWR(
+    "location-sync",
+    async () => {
+      sync();
+      await getCurrentLocation();
+      return localStorage.getItem("mte_location");
+    },
+    {
+      revalidateOnFocus: true,
+    }
+  );
 
   useEffect(() => {
     sync();
