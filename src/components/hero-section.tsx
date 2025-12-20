@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion, Variants } from "framer-motion";
 import { ArrowRight, Sprout, Heart, Users } from "lucide-react";
+import Image from "next/image";
 
 const items = [
   {
@@ -11,6 +12,7 @@ const items = [
     subtitle: "Plant the seed of change",
     href: "/sponsor-a-tree",
     icon: Sprout,
+    image: "/images/trees/sponsor.png",
   },
   {
     id: "adopt",
@@ -18,6 +20,7 @@ const items = [
     subtitle: "Witness growth year after year",
     href: "/adopt-a-tree",
     icon: Heart,
+    image: "/images/trees/adopt.png",
   },
   {
     id: "feed",
@@ -25,6 +28,7 @@ const items = [
     subtitle: "Nurture life from the roots",
     href: "/feed-the-tree",
     icon: Users,
+    image: "/images/trees/feed.png",
   },
 ];
 
@@ -74,7 +78,7 @@ export default function HeroSection() {
         className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border"
       >
         {items.map((item) => (
-          <motion.div key={item.id} variants={itemVariants} className="group">
+          <motion.div key={item.id} variants={itemVariants} className="group relative">
             <Link
               href={item.href}
               className="flex flex-col gap-6 px-6 py-8 md:px-12 md:py-14 transition-colors duration-300 hover:bg-muted/40"
@@ -98,6 +102,15 @@ export default function HeroSection() {
                 </p>
               </div>
             </Link>
+            <div className="absolute bottom-0 right-0">
+              <Image
+                src={item.image}
+                alt={item.title}
+                width={110}
+                height={100}
+                className="object-cover"
+              />
+            </div>
           </motion.div>
         ))}
       </motion.section>
