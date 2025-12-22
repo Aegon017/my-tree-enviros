@@ -53,6 +53,7 @@ import {
 import { ordersService as orderService } from "@/modules/orders/services/orders.service";
 import Image from "next/image";
 import { toast } from "sonner";
+import { OrderTimeline } from "@/components/order-timeline";
 
 const formatCurrency = (val?: number | string) => {
   if (val == null) return "₹0.00";
@@ -164,6 +165,9 @@ const OrderDetailsModal = ({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
+
+          <OrderTimeline order={order} />
+
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Package className="h-5 w-5 text-primary" />
             Order Items
