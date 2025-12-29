@@ -5,7 +5,6 @@ import { useAuthStore } from "@/store/auth-store";
 import Section from "@/components/section";
 import SectionTitle from "@/components/section-title";
 import {
-
   Card,
   CardContent,
   CardDescription,
@@ -13,10 +12,27 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+
+
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Calendar,
   Eye,
@@ -37,6 +53,7 @@ import {
 import { ordersService as orderService } from "@/modules/orders/services/orders.service";
 import Image from "next/image";
 import { toast } from "sonner";
+import { OrderTimeline } from "@/components/order-timeline";
 
 const formatCurrency = (val?: number | string) => {
   if (val == null) return "₹0.00";
@@ -85,18 +102,46 @@ const OrderDetailsModal = ({
   open,
   onClose,
   order,
+  onOrderCancelled,
 }: {
   open: boolean;
   onClose: () => void;
   order: any;
+  onOrderCancelled: () => void;
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [reasonError, setReasonError] = useState("");
 
   if (!open || !order) return null;
 
   const payment = order.payment;
   const subtotal = Number(order.subtotal || 0);
   const discount = Number(order.discount || 0);
+
+  const handleCancelOrder = async () => {
+    if (!cancellationReason || cancellationReason.trim().length < 5) {
+      setReasonError("Please provide a reason (min 5 characters).");
+      return;
+    }
+    setReasonError("");
+
+    try {
+      setIsCancelling(true);
+      toast.loading("Cancelling order...", { id: "cancel-order" });
+      await orderService.cancelOrder(order.id, cancellationReason);
+      toast.dismiss("cancel-order");
+      toast.success("Order cancelled successfully");
+      onOrderCancelled();
+      onClose();
+    } catch (error) {
+      console.error("Failed to cancel order:", error);
+      toast.error("Failed to cancel order", { id: "cancel-order" });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
@@ -120,6 +165,9 @@ const OrderDetailsModal = ({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
+
+          <OrderTimeline order={order} />
+
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Package className="h-5 w-5 text-primary" />
             Order Items
@@ -211,15 +259,6 @@ const OrderDetailsModal = ({
                         <span>-{formatCurrency(discount)}</span>
                       </div>
                     )}
-                    {/* Tax and Shipping Hidden as per request */}
-                    {/* <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tax</span>
-                      <span>{formatCurrency(tax)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Shipping</span>
-                      <span>{formatCurrency(shipping)}</span>
-                    </div> */}
                     <Separator />
                     <div className="flex justify-between font-bold text-lg pt-1">
                       <span>Total</span>
@@ -264,6 +303,72 @@ const OrderDetailsModal = ({
         </div>
         <div className="p-4 border-t bg-muted/10 flex justify-end gap-3">
           <Button variant="outline" onClick={onClose}>Close</Button>
+
+          {orderService.canBeCancelled(order) && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" disabled={isCancelling}>
+                  Cancel Order
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will cancel your order and initiate a refund if applicable.
+                  </AlertDialogDescription>
+                  <div className="py-2 space-y-2">
+                    <Label htmlFor="reason" className="text-foreground">Cancellation Reason <span className="text-destructive">*</span></Label>
+                    <Textarea
+                      id="reason"
+                      placeholder="Please tell us why you are cancelling..."
+                      value={cancellationReason}
+                      onChange={(e) => setCancellationReason(e.target.value)}
+                      className={reasonError ? "border-destructive" : ""}
+                    />
+                    {reasonError && <p className="text-xs text-destructive">{reasonError}</p>}
+                  </div>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => { setCancellationReason(""); setReasonError(""); }}>Cancel</AlertDialogCancel>
+                  <Button onClick={handleCancelOrder} variant="destructive" disabled={isCancelling}>
+                    {isCancelling ? "Cancelling..." : "Yes, Cancel Order"}
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+
+          {(order.status === 'cancelled' || order.status === 'refunded') && (
+            <Button
+              variant="outline"
+              disabled={isDownloading}
+              onClick={async () => {
+                try {
+                  setIsDownloading(true);
+                  toast.loading("Downloading Credit Note...", { id: "download-cn" });
+
+                  const blob = await orderService.downloadCreditNote(order.id);
+                  const url = window.URL.createObjectURL(blob);
+
+                  toast.dismiss("download-cn");
+                  toast.success("Credit Note downloaded!", { id: "redirect-cn" });
+
+                  window.open(url, "_blank");
+                  setTimeout(() => window.URL.revokeObjectURL(url), 100);
+                } catch (error) {
+                  console.error("Failed to download Credit Note:", error);
+                  toast.error("Failed to download Credit Note.", { id: "download-cn" });
+                } finally {
+                  setIsDownloading(false);
+                }
+              }}
+            >
+              <RefreshCcw className={`mr-2 h-4 w-4 ${isDownloading ? 'animate-spin' : ''}`} />
+              Download Credit Note
+            </Button>
+          )}
+
           {order.status === 'paid' && (
             <Button
               variant="default"
@@ -491,6 +596,7 @@ export default function OrdersPage() {
         open={detailsOpen}
         onClose={closeOrderDetails}
         order={orderDetails}
+        onOrderCancelled={loadOrders}
       />
     </Section>
   );
