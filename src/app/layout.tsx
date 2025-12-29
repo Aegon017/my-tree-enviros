@@ -23,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta name="google-site-verification" content="Z6dQ_Ht_UmUM7b07mKUoAoOom_xxGfmB5REdx1g_28E" />
         <Script
           id="razorpay-checkout-script"
           src="https://checkout.razorpay.com/v1/checkout.js"
