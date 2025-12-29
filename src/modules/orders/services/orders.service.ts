@@ -107,9 +107,40 @@ export const ordersService = {
     return await response.blob();
   },
 
-  async cancelOrder(orderId: number) {
+  async downloadCreditNote(orderId: number | string) {
+    const token = await import("@/lib/auth-storage").then((m) =>
+      m.authStorage.getToken(),
+    );
+    const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "";
+    const url = `${BASE_URL}/orders/${orderId}/credit-note`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/pdf",
+        "X-Platform": "web",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Credit Note download failed", {
+        status: response.status,
+        statusText: response.statusText,
+        url,
+        errorText
+      });
+      throw new Error(`Failed to download credit note: ${response.status} ${errorText}`);
+    }
+
+    return await response.blob();
+  },
+
+  async cancelOrder(orderId: number, reason: string) {
     return await api.post<{ success: boolean; message: string }>(
       `/orders/${orderId}/cancel`,
+      { reason }
     );
   },
 
@@ -164,6 +195,6 @@ export const ordersService = {
   },
 
   canBeCancelled(order: Order) {
-    return ["pending", "processing"].includes(order.status);
+    return ["pending", "processing", "paid"].includes(order.status);
   },
 };
