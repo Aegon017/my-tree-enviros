@@ -27,7 +27,6 @@ export const useFcmToken = () => {
 
                         if (currentToken) {
                             setToken(currentToken);
-                            // Sync token with backend
                             await notificationService.saveDeviceToken(currentToken);
                         } else {
                             console.warn(
